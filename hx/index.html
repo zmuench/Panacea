@@ -1,0 +1,1080 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Hx</title>
+<meta name="apple-mobile-web-app-title" content="Hx">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<meta name="theme-color" content="#EBEFF2">
+<style>
+/* Layout: one narrow working column, step rail on top, thumb-reach nav bar on the bottom.
+   Palette and type match ICU Rounder, Dispo and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
+:root{
+  --bg:#EBEFF2; --surface:#FFFFFF; --sunk:#F4F6F8; --ink:#14233A; --muted:#5A6A7E; --line:#D2DAE1;
+  --accent:#1D4ED0; --accent-ink:#FFFFFF; --accent-soft:#E1E9FB;
+  --pos:#A8261C; --pos-soft:#FBE7E5; --neg:#1D6E49; --neg-soft:#E1F2E9;
+  --warn:#7A5000; --warn-soft:#FBF0D9; --paper:#FBFCFD;
+  --f-display:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --f-note:"Source Serif 4",Georgia,"Times New Roman",serif;
+  color-scheme:light only;
+}
+html{background:var(--bg)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:0 120px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.topin{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:10px 8px;display:flex;align-items:center;gap:10px}
+.brandrow{display:flex;align-items:center;gap:9px;min-width:0}
+.logo{width:28px;height:28px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.25rem;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font-weight:400;font-size:.8rem;color:var(--muted);margin-top:3px}
+.sp{flex:1}
+.iconbtn{width:44px;padding:0;display:grid;place-items:center}
+.iconbtn svg{width:22px;height:22px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.iconbtn.on svg{stroke:var(--accent)}
+.btn{font:600 14px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 12px;cursor:pointer;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent;white-space:nowrap}
+.btn.sm{min-height:34px;padding:6px 10px;font-size:13px}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,textarea:focus-visible,.rail button:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+nav.rail{display:flex;gap:6px;overflow-x:auto;padding-inline:16px;padding-block:2px 10px;max-width:720px;margin:0 auto;scrollbar-width:none}
+nav.rail::-webkit-scrollbar{display:none}
+.rail button{flex:0 0 auto;font:400 .9rem var(--f-body);border:1px solid transparent;background:none;color:var(--muted);border-radius:999px;padding:6px 11px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.rail button.has{color:var(--ink)}
+.rail button.has::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.rail button.cur{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+.rail button.cur::after{background:var(--bg)}
+.banner{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner span{flex:1 1 200px}
+h1.step{font-family:var(--f-display);font-weight:700;font-size:1.6rem;line-height:1.15;margin:20px 0 4px;letter-spacing:-.01em;text-wrap:balance}
+h1.step .k{color:var(--accent);margin-right:8px}
+.lede{color:var(--muted);margin:0 0 14px;font-size:14px;max-width:60ch}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.sec h2{font:700 1rem var(--f-body);margin:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.sec h2 .aside{margin-left:auto;font:600 12px var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums}
+.sec h2 .aside.done{color:var(--neg)}
+.kind{font:700 .7rem var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font:400 .95rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;cursor:pointer;min-height:38px;display:inline-flex;align-items:center;gap:6px;text-align:left;line-height:1.2}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.chip.pos{background:var(--pos-soft);border-color:var(--pos);color:var(--pos);font-weight:700}
+.chip.neg{background:var(--neg-soft);border-color:var(--neg);color:var(--neg)}
+.chip .mark{font:700 15px var(--f-note);width:12px;text-align:center}
+.chip.rf{border-style:dashed;border-color:var(--pos)}
+.chip.rf::after{content:"red flag";font:700 .66rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--pos)}
+.legend{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+.legend span{display:inline-flex;gap:5px;align-items:center}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;border:1px solid}
+.dot.p{background:var(--pos-soft);border-color:var(--pos)} .dot.n{background:var(--neg-soft);border-color:var(--neg)} .dot.r{border-style:dashed;border-color:var(--pos)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em;min-width:0}
+input[type=text],input[type=number],input[type=search],textarea{font:400 16px var(--f-body);color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%;min-width:0}
+textarea{min-height:64px;resize:vertical;line-height:1.4}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ol{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent);font-size:11px;margin-right:6px}
+.fl{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.fld{display:flex;flex-direction:column;gap:6px}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;overflow:hidden;width:max-content;max-width:100%}
+.seg button{font:600 14px var(--f-note);border:none;background:var(--sunk);color:var(--ink);min-width:36px;height:38px;cursor:pointer;border-left:1px solid var(--line);font-variant-numeric:tabular-nums}
+.seg button:first-child{border-left:none}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.picker{display:flex;flex-direction:column;gap:14px}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp-h{font:700 .85rem var(--f-body);color:var(--muted)}
+.out{font:400 1.02rem/1.6 var(--f-note);min-height:300px;background:var(--paper);border-radius:12px}
+.coach{border-color:var(--pos);border-width:1.5px}
+.coach h2{color:var(--pos)}
+.coach .sub{font:700 .82rem var(--f-body);color:var(--muted);margin-top:4px}
+.ask{padding:8px 10px;border-left:3px solid var(--pos);background:var(--pos-soft);border-radius:0 8px 8px 0;color:var(--pos)}
+.ask input{background:var(--surface)}
+.exam li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);cursor:pointer}
+.exam li:first-child{border-top:none}
+.exam{list-style:none;margin:0;padding:0}
+.exam .box{flex:none;width:20px;height:20px;border:1.5px solid var(--line);border-radius:5px;display:grid;place-items:center;font:700 13px var(--f-body);color:var(--accent-ink);margin-top:1px}
+.exam li.done .box{background:var(--neg);border-color:var(--neg)}
+.exam li.done span.t{color:var(--muted);text-decoration:line-through}
+.exam .must{font:700 .66rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--pos);margin-left:6px}
+.fine{font-size:12px;color:var(--muted);margin:0}
+.ok{padding:9px 11px;border-radius:9px;background:var(--neg-soft);color:var(--neg);font-size:13px;font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;z-index:40}
+footer.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.barin{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:10px;display:flex;align-items:center;gap:10px}
+.barin .mid{flex:1;text-align:center;font:600 13px var(--f-body);color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.barin .mid b{color:var(--pos)}
+.barin .btn{min-width:92px}
+.privacy{font-size:12px;color:var(--muted);margin:22px 0 0;max-width:60ch}
+@media (max-width:420px){h1.step{font-size:1.45rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="top">
+  <div class="topin">
+    <div class="brandrow"><svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M8 8.5h8M8 12h5"/></svg><div class="brand">Hx<small>HPI builder</small></div></div>
+    <div class="sp"></div>
+    <button class="btn ghost iconbtn" id="example" type="button" aria-label="Load example case" title="Load example case"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l4 4v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M16 3v4h4M10 12h6M10 16h6"/><path d="M4 7v13a1 1 0 0 0 1 1"/></svg></button>
+    <button class="btn ghost" id="newpt" type="button">New patient</button>
+  </div>
+  <nav class="rail" id="rail" aria-label="Steps"></nav>
+</header>
+
+<div class="wrap">
+  <div id="notice"></div>
+  <main id="view"></main>
+  <p class="privacy">Nothing you enter is saved or sent anywhere. It stays on this screen until you tap New patient or close the page. Leave out names, MRNs, and dates of birth.</p>
+</div>
+
+<footer class="bar">
+  <div class="barin">
+    <button class="btn" id="back" type="button">Back</button>
+    <div class="mid" id="where"></div>
+    <button class="btn primary" id="next" type="button">Next</button>
+  </div>
+</footer>
+
+<script>
+/* ---------- complaint library ----------
+   Item prefixes: "!" red flag, "F:" female only, "M:" male only, "P:" pediatric only, "A:" adult only.
+   "item|question" asks for a detail when the item is marked positive; the answer is added in parentheses.
+   Section kinds: sx = symptoms (reports/denies), pmh = history (opening line / "no known history of"),
+   rf = risk factors and exposures, med = current medications, tx = tried before arrival, pick = choose one.
+   ex = exam findings to document; "!" marks findings that must not be missed. */
+const sx=(t,i)=>({k:'sx',t,i}), pmh=(t,i)=>({k:'pmh',t,i}), rf=(t,i,l,n)=>({k:'rf',t,i,l,n}),
+      med=i=>({k:'med',t:'Medications',i}), tx=i=>({k:'tx',t:'Tried before arrival',i}),
+      pick=(t,pre,i)=>({k:'pick',t,pre,i});
+const AC="an anticoagulant|Which one, and when was the last dose?";
+const AP="an antiplatelet agent|Which one?";
+const BLEED=[AC,AP];
+const CANCER="active cancer|What type, and current treatment?";
+const TOB="tobacco use|How much, and for how long?";
+const ETOH="alcohol use|How much, and when was the last drink?";
+const IVDU="IV drug use|When was the last use?";
+const TRAVEL="recent travel|Where, and when?";
+const NEWMED="new medications|Which ones?";
+const IMMUNO="immunocompromise|What is the cause?";
+const SURG="prior abdominal surgery|Which surgery, and when?";
+const PE=["prior DVT/PE|When, and how was it treated?","surgery or major trauma in the last 4 weeks|What, and when?","recent immobilization or long travel",CANCER,"estrogen use|Which product?","F:pregnancy or delivery in the last 6 weeks","known clotting disorder"];
+const TET=pick("Tetanus","Tetanus status is ",["up to date","not up to date","unknown"]);
+const HAND=pick("Hand dominance","The patient is ",["right-handed","left-handed"]);
+const IMM=pick("Immunizations","Immunizations are ",["up to date","not up to date","unknown"]);
+const NV=["!strength in each extremity","!sensation in each extremity"];
+const NVL=["!distal pulses","!capillary refill","!distal sensation","!motor function distal to the injury"];
+
+const C={
+/* ---- Cardiopulmonary ---- */
+chest_pain:{g:"Cardiopulmonary",name:"Chest pain",cc:"chest pain",f:"lqrs",preg:1,
+  loc:["substernal chest","left chest","right chest","epigastrium","whole chest"],
+  qual:["pressure","tightness","sharp","burning","tearing","aching"],
+  rad:["left arm","right arm","jaw","neck","back","area between the shoulder blades"],
+  agg:["exertion","deep breathing","palpation","movement","lying flat","eating","swallowing"],rel:["rest","sitting forward","antacids","nitroglycerin"],
+  sec:[sx("Associated symptoms",["shortness of breath","diaphoresis","nausea","vomiting","lightheadedness","!syncope","palpitations","cough","fever","!hemoptysis","!unilateral leg swelling or pain","!focal weakness or numbness","!abrupt pain maximal at onset","!pain in the back or abdomen"]),
+    pmh("Cardiac history",["CAD","prior MI|When?","prior stents or CABG|When, and where?","HTN","HLD","diabetes","CHF","AFib","aortic aneurysm","bicuspid aortic valve","connective tissue disease"]),
+    rf("Cardiac risk factors",[TOB,"family history of premature CAD","cocaine or stimulant use|What, and when was the last use?","obesity"],"Cardiac risk factors include","No"),
+    rf("PE risk factors",PE,"PE risk factors include","No"),
+    rf("Prior cardiac workup",["a stress test|When, and what was the result?","a cardiac catheterization|When, and what was found?","an echocardiogram|When, and what was the result?"],"Prior workup includes","No prior"),
+    med([AC,"daily aspirin","another antiplatelet agent|Which one?","a PDE-5 inhibitor|Which one, and when was the last dose?"]),
+    tx(["aspirin|What dose?","nitroglycerin|How many doses?","antacids"])],
+  ex:["general appearance and diaphoresis","!blood pressure in both arms","!radial and femoral pulses for asymmetry","!heart sounds, murmur, rub, or gallop","!lung sounds bilaterally","chest wall tenderness and whether it reproduces the pain","!JVD","abdominal tenderness","!calf tenderness or unilateral leg swelling","peripheral edema","focal neurologic deficit"]},
+sob:{g:"Cardiopulmonary",name:"Shortness of breath",cc:"shortness of breath",f:"",preg:1,
+  agg:["exertion","lying flat","cold air","allergens"],rel:["rest","sitting up","an inhaler"],
+  sec:[sx("Associated symptoms",["cough","sputum production","fever","wheezing","chest pain","!hemoptysis","orthopnea","paroxysmal nocturnal dyspnea","bilateral leg swelling","weight gain","!unilateral leg swelling or pain","!syncope","!inability to speak in full sentences"]),
+    pmh("Relevant history",["asthma","COPD","CHF","CAD","prior DVT/PE","OSA","interstitial lung disease"]),
+    rf("Severity markers",["home oxygen use|How many liters?","prior intubation|When, and for what?","prior ICU admission for breathing","a recent steroid course","a recent hospitalization|When, and for what?"],"Notable for","No"),
+    rf("PE risk factors",PE,"PE risk factors include","No"),
+    rf("Triggers and exposures",["missed medication doses|Which medication, and for how long?","a high-salt diet","a recent viral illness","allergen or smoke exposure","sick contacts",TOB],"Possible triggers include","No"),
+    med(["a home inhaler|Which one, and how often this week?","a diuretic|Which one, and what dose?",AC]),
+    tx(["albuterol|How many treatments?","a home nebulizer","an extra diuretic dose"])],
+  ex:["!work of breathing and accessory muscle use","!ability to speak in full sentences","!oxygen saturation and room air or oxygen","!lung sounds: wheezes, crackles, or decreased breath sounds","!tracheal position","!JVD","heart sounds and rhythm","peripheral edema","!calf tenderness or unilateral leg swelling","mental status","cyanosis"]},
+palpitations:{g:"Cardiopulmonary",name:"Palpitations",cc:"palpitations",f:"",preg:1,
+  agg:["exertion","caffeine","lying down"],rel:["rest","vagal maneuvers"],
+  sec:[sx("Associated symptoms",["!chest pain","!shortness of breath","lightheadedness","!syncope","diaphoresis","anxiety","heat intolerance","weight loss","tremor"]),
+    pmh("Relevant history",["AFib or flutter","SVT","structural heart disease","CHF","thyroid disease","prior ablation|When?","a pacemaker or ICD|Any recent shocks?"]),
+    rf("Triggers",["caffeine","alcohol","cocaine or stimulant use|What, and when was the last use?","decongestant use",NEWMED,"missed medication doses|Which medication?","sleep deprivation"],"Possible triggers include","No"),
+    rf("Family history",["!sudden cardiac death","arrhythmia or cardiomyopathy"],"Family history is notable for","No family history of"),
+    med(["a rate or rhythm control agent|Which one, and last dose?",AC,"thyroid medication|What dose?"]),
+    tx(["vagal maneuvers","an extra dose of rate control medication"])],
+  ex:["!heart rate and rhythm","heart sounds and murmur","!blood pressure","lung sounds","thyroid enlargement or tenderness","tremor","signs of volume depletion","peripheral edema"]},
+cough:{g:"Cardiopulmonary",name:"Cough / URI",cc:"cough and URI symptoms",f:"",
+  sec:[sx("Associated symptoms",["fever","chills","sore throat","congestion or rhinorrhea","sputum production","wheezing","shortness of breath","chest pain","!hemoptysis","myalgias","loss of taste or smell","ear pain","night sweats","weight loss"]),
+    pmh("Relevant history",["asthma","COPD","CHF","immunocompromise|What is the cause?"]),
+    rf("Exposures",["sick contacts",TRAVEL,TOB,"TB exposure","a recent hospitalization"],"Notable for","No"),
+    rf("Vaccines",["influenza vaccine","COVID vaccine"],"Up to date on","Not up to date on"),
+    med(["an ACE inhibitor","a home inhaler","an immunosuppressant|Which one?"]),
+    tx(["OTC cough or cold medication","acetaminophen or ibuprofen","a home inhaler"])],
+  ex:["!oxygen saturation","!work of breathing","!lung sounds: crackles, wheezes, or focal findings","tympanic membranes","pharynx","nasal mucosa and sinus tenderness","cervical lymphadenopathy","heart sounds"]},
+htn:{g:"Cardiopulmonary",name:"Elevated blood pressure",cc:"elevated blood pressure",f:"",
+  sec:[pick("Context","The elevated reading was ",["found at a clinic visit","found on a home check","found at a pharmacy","noted while symptomatic"]),
+    sx("Associated symptoms",["!headache","!chest pain","!shortness of breath","!vision changes","!focal weakness or numbness","!confusion","nausea or vomiting","epistaxis","leg swelling","!decreased urine output"]),
+    pmh("Relevant history",["HTN","CKD","prior stroke","CAD","CHF","F:preeclampsia"]),
+    rf("Contributors",["missed antihypertensive doses|Which medication, and for how long?","cocaine or stimulant use","NSAID or decongestant use","high-salt intake","recent alcohol cessation","F:pregnancy or delivery in the last 6 weeks"],"Possible contributors include","No"),
+    med(["antihypertensive medication|Which ones, and last doses?"]),
+    tx(["an extra dose of home blood pressure medication"])],
+  ex:["!repeat blood pressure, in both arms if elevated","!mental status","!focal neurologic deficit","!fundoscopic findings if able (papilledema, hemorrhages)","!heart sounds and new murmur","!lung sounds for crackles","JVD","peripheral edema","pulses"]},
+syncope:{g:"Cardiopulmonary",name:"Syncope",cc:"a syncopal episode",f:"",preg:1,
+  sec:[pick("Position at onset","The episode occurred while ",["standing","sitting","lying down","exerting","urinating or defecating","coughing"]),
+    pick("Witnessed","The episode was ",["witnessed","unwitnessed"]),
+    sx("Before the event",["lightheadedness","warmth or nausea","tunnel vision","warning symptoms before losing consciousness","!palpitations","!chest pain"]),
+    sx("During and after",["!head injury","tongue biting","incontinence","confusion after the event","!focal weakness after the event","!headache"]),
+    sx("Other symptoms",["!shortness of breath","!abdominal or back pain","!melena or hematochezia","vomiting or diarrhea","decreased oral intake"]),
+    pmh("Relevant history",["CHF","structural heart disease","aortic stenosis","arrhythmia","CAD","prior syncope|How many episodes, and any workup?","seizure disorder","diabetes"]),
+    rf("Family history",["!sudden cardiac death before age 50","inherited arrhythmia"],"Family history is notable for","No family history of"),
+    med(["an antihypertensive|Which one, any recent changes?","a diuretic","a QT-prolonging medication|Which one?",AC,"a new medication|Which one, and when started?"])],
+  ex:["!orthostatic vital signs","!heart sounds and murmur (especially aortic stenosis)","!heart rhythm","!head and face for trauma","!tongue for laceration","!focal neurologic deficit","abdominal tenderness or pulsatile mass","!stool guaiac if bleeding is suspected","lung sounds","peripheral edema"]},
+leg_swelling:{g:"Cardiopulmonary",name:"Leg pain / swelling",cc:"leg pain and swelling",f:"lqs",side:1,
+  loc:["calf","thigh","ankle","foot","whole leg"],qual:["aching","cramping","tight","sharp"],agg:["walking","standing"],rel:["elevation","rest"],
+  sec:[sx("Associated symptoms",["!chest pain","!shortness of breath","redness","warmth","fever","!cold or pale foot","!numbness or weakness","recent injury","orthopnea"]),
+    rf("DVT risk factors",PE.concat(["family history of clots"]),"DVT risk factors include","No"),
+    pmh("Relevant history",["CHF","CKD","liver disease","venous insufficiency","peripheral arterial disease"]),
+    med([AC,"a calcium channel blocker"])],
+  ex:["!calf circumference compared with the other side","calf tenderness","pitting edema and how far it extends","erythema and warmth","!distal pulses","!capillary refill and skin color","!sensation and motor function","palpable cord along the vein","skin breaks or wounds","!lung sounds and work of breathing"]},
+/* ---- Neuro ---- */
+headache:{g:"Neuro",name:"Headache",cc:"headache",f:"lqrs",preg:1,
+  loc:["frontal region","temporal region","occipital region","whole head","area behind the eyes","one side of the head"],
+  qual:["throbbing","pressure","sharp","band-like"],rad:["neck","shoulders"],
+  agg:["light","noise","bending or straining","lying down","standing up"],rel:["a dark quiet room","sleep","analgesics"],
+  sec:[sx("Red flags",["!thunderclap onset maximal within 1 minute","!worst headache of life","!fever","!neck stiffness","!focal weakness or numbness","!vision changes","!confusion","!syncope at onset","!jaw claudication","!onset with exertion or sex","!seizure"]),
+    sx("Associated symptoms",["nausea","vomiting","photophobia","phonophobia","aura","scalp tenderness"]),
+    pmh("Relevant history",["migraine","prior similar headaches","HTN","intracranial aneurysm","polycystic kidney disease","idiopathic intracranial hypertension"]),
+    rf("Risk factors",["recent head trauma|When, and how?",IMMUNO,CANCER,"!a new headache pattern after age 50","others at home with headaches (CO exposure)","family history of aneurysm or SAH"],"Notable for","No"),
+    med([AC,"analgesics on more than 10 days a month"]),
+    tx(["acetaminophen","an NSAID","a triptan","home migraine medication|Which one?"])],
+  ex:["!mental status","!cranial nerves","!pupils and extraocular movements","!fundoscopy for papilledema","!motor strength and pronator drift","!coordination and gait","!meningismus (neck stiffness)","temporal artery tenderness","sinus and dental tenderness","!skin for petechial rash if febrile","blood pressure"]},
+head_injury:{g:"Neuro",name:"Head injury",cc:"a head injury",f:"lqs",
+  loc:["frontal region","occipital region","parietal region","temporal region","face"],qual:["aching","throbbing","sharp"],
+  sec:[pick("Mechanism","Mechanism was ",["a fall from standing","a fall from height","an MVC","an assault","being struck by an object","a sports injury"]),
+    sx("Red flags",["!loss of consciousness","!amnesia for the event","!vomiting","!worsening headache","!confusion","!seizure","!focal weakness or numbness","!vision changes","!P:acting abnormally per caregiver"]),
+    sx("Associated symptoms",["neck pain","dizziness","scalp laceration","nausea","clear fluid from the nose or ear"]),
+    rf("Risk factors",["alcohol or drug use before the injury","a bleeding disorder","prior neurosurgery"],"Notable for","No"),
+    med(BLEED)],
+  ex:["!GCS","!pupils: size, symmetry, and reactivity","!scalp: hematoma, laceration, or step-off","!Battle sign (mastoid bruising)","!raccoon eyes","!hemotympanum","!CSF rhinorrhea or otorrhea","facial bones and malocclusion","!cervical spine midline tenderness","!cranial nerves","!motor strength and sensation in all extremities","!gait if able","P:fontanelle in infants"]},
+neck_injury:{g:"Neuro",name:"Neck pain / injury",cc:"neck pain",f:"lqrs",
+  loc:["midline posterior neck","left side of the neck","right side of the neck","trapezius"],qual:["aching","sharp","stiff"],rad:["shoulder","arm","upper back"],agg:["movement","turning the head"],rel:["rest","heat"],
+  sec:[pick("Mechanism","Mechanism was ",["an MVC","a fall","a diving injury","a sports injury","lifting","no injury"]),
+    sx("Red flags",["!numbness or tingling in the arms","!weakness in the arms or legs","!bowel or bladder changes","!fever","!neck stiffness with headache"]),
+    sx("Associated symptoms",["headache","decreased range of motion","muscle spasm"]),
+    rf("Risk factors",["ankylosing spondylitis or RA","prior neck surgery",IVDU,IMMUNO],"Notable for","No"),
+    pick("After the injury","After the injury, the patient was ",["ambulatory at the scene","not ambulatory at the scene"])],
+  ex:["!midline cervical spine tenderness or step-off","paraspinal tenderness","!range of motion (45 degrees rotation each way if safe)","!upper and lower extremity strength","!sensation and any sensory level","!reflexes","!rectal tone if cord injury is suspected","meningismus if febrile"]},
+dizzy:{g:"Neuro",name:"Dizziness / vertigo",cc:"dizziness",f:"",
+  agg:["head movement","standing up","rolling over in bed"],rel:["lying still","closing the eyes"],
+  sec:[pick("Type","The dizziness is described as ",["a spinning sensation","lightheadedness","imbalance","vague and hard to describe"]),
+    pick("Pattern","Episodes are ",["brief and triggered by position","continuous","spontaneous and recurrent"]),
+    sx("Central red flags",["!headache","!neck pain","!double vision","!slurred speech","!facial droop","!focal weakness or numbness","!difficulty walking"]),
+    sx("Associated symptoms",["nausea","vomiting","hearing loss","tinnitus","ear fullness","!chest pain","!palpitations","!syncope"]),
+    pmh("Stroke risk",["HTN","diabetes","AFib","prior stroke or TIA","HLD"]),
+    rf("Other factors",["a recent viral illness","recent neck trauma or chiropractic manipulation","decreased oral intake",NEWMED],"Notable for","No"),
+    med(["an antihypertensive",AC,"a sedating medication|Which one?"]),
+    tx(["meclizine"])],
+  ex:["!nystagmus: direction and whether it changes with gaze","!HINTS exam if continuous vertigo (head impulse, nystagmus, test of skew)","!Dix-Hallpike if positional","!cranial nerves","!finger-nose and heel-shin","!gait and truncal ataxia","!motor strength","tympanic membranes","orthostatic vital signs","heart rhythm"]},
+stroke:{g:"Neuro",name:"Stroke symptoms / focal deficit",cc:"focal neurologic symptoms",f:"",lkw:1,
+  sec:[sx("Deficits",["facial droop","slurred speech","word-finding difficulty","unilateral weakness","unilateral numbness","vision loss","double vision","difficulty walking"]),
+    sx("Associated symptoms",["!headache","!neck pain","!seizure at onset","!chest pain","confusion","vomiting"]),
+    pmh("Relevant history",["prior stroke or TIA|When, and any residual deficits?","AFib","HTN","diabetes","HLD","CAD"]),
+    rf("Thrombolytic considerations",["!surgery or a major procedure in the last 14 days","!GI or GU bleeding in the last 21 days","!prior intracranial hemorrhage","!head trauma in the last 3 months","a bleeding disorder"],"Thrombolytic considerations include","No"),
+    rf("Other factors",[TOB,"cocaine or stimulant use","recent neck trauma"],"Notable for","No"),
+    med(BLEED)],
+  ex:["!NIHSS","!point-of-care glucose","!level of consciousness and orientation","!speech: aphasia or dysarthria","!visual fields","!gaze deviation","!facial symmetry","!pronator drift and limb strength","!sensation","!limb ataxia","!neglect","heart rhythm and carotid bruits"]},
+numbness:{g:"Neuro",name:"Numbness / tingling",cc:"numbness and tingling",f:"l",side:1,
+  loc:["hand","fingers","arm","foot","leg","face","whole side of the body"],
+  sec:[pick("Distribution","Symptoms follow ",["one side of the body","both hands or feet","one limb","a single nerve or dermatome","no clear pattern"]),
+    sx("Red flags",["!weakness","!facial droop","!slurred speech","!vision changes","!bowel or bladder changes","!saddle anesthesia","!numbness spreading upward from the feet","!difficulty breathing or swallowing"]),
+    sx("Associated symptoms",["neck pain","back pain","a recent viral illness","rash in the same area","anxiety or rapid breathing"]),
+    pmh("Relevant history",["diabetes","B12 deficiency","multiple sclerosis","prior stroke","alcohol use disorder","cervical or lumbar disc disease"]),
+    rf("Risk factors",["repetitive hand or wrist use","recent chemotherapy","recent vaccination",ETOH],"Notable for","No")],
+  ex:["!strength in all four extremities","!sensation mapped by dermatome or nerve","!sensory level on the trunk","!reflexes, including any absent or brisk reflexes","!cranial nerves","!gait","!saddle sensation and rectal tone if back pain or bladder changes","Tinel and Phalen signs if hand symptoms","!distal pulses and capillary refill","skin for vesicular rash"]},
+weakness:{g:"Neuro",name:"Generalized weakness",cc:"generalized weakness",f:"",
+  sec:[sx("Associated symptoms",["fever","cough","urinary symptoms","decreased oral intake","vomiting","diarrhea","!chest pain","!shortness of breath","!focal weakness","!confusion","!melena","weight loss","falls","lightheadedness on standing","myalgias","!ascending weakness or numbness","!difficulty swallowing or breathing"]),
+    pmh("Relevant history",["diabetes","CKD","CHF",CANCER,"thyroid disease","adrenal insufficiency","myasthenia gravis"]),
+    rf("Other factors",["a recent illness",NEWMED,"recently stopped steroids","living alone"],"Notable for","No"),
+    med(["a diuretic","a new medication|Which one, and when started?","chronic steroids"])],
+  ex:["!mental status","!focal versus symmetric weakness, proximal and distal","!reflexes","!cranial nerves including ptosis","!gait","orthostatic vital signs","mucous membranes and volume status","lung sounds","abdominal exam","skin for pressure injuries","!stool guaiac if anemia suspected"]},
+ams:{g:"Neuro",name:"Altered mental status",cc:"altered mental status",f:"",lkw:1,
+  sec:[pick("Baseline","At baseline, the patient is ",["fully oriented and independent","mildly forgetful","moderately confused","dependent for daily care"]),
+    sx("Associated symptoms",["fever","headache","!head trauma","!seizure activity","!focal weakness","vomiting","urinary symptoms","cough","hallucinations","decreased oral intake","falls"]),
+    pmh("Relevant history",["dementia","diabetes","liver disease","CKD","seizure disorder","psychiatric illness","prior stroke"]),
+    rf("Exposures",[ETOH,"drug use|What, and when?","!possible ingestion|What, how much, and when?",NEWMED,IMMUNO],"Notable for","No"),
+    med(["an opioid","a benzodiazepine","an anticholinergic","insulin or a sulfonylurea",AC])],
+  ex:["!GCS and orientation","!point-of-care glucose","!pupils","!focal neurologic deficit","!meningismus","!signs of head trauma","asterixis","!toxidrome features: skin moisture, pupil size, bowel sounds","!temperature","skin: track marks, rash, jaundice","lung sounds","abdominal exam","!bladder distension"]},
+seizure:{g:"Neuro",name:"Seizure",cc:"a seizure",f:"",
+  sec:[pick("Description","The event was described as ",["generalized shaking","focal shaking","a staring spell"]),
+    pick("Witnessed","The event was ",["witnessed","unwitnessed"]),
+    sx("Associated features",["tongue biting","incontinence","post-event confusion","aura","!head injury","!more than one seizure","!seizure lasting over 5 minutes","!failure to return to baseline","!fever","!headache","!focal weakness after the event","!neck stiffness"]),
+    pmh("Relevant history",["seizure disorder|Usual seizure type and frequency?","prior head injury","brain tumor or neurosurgery","alcohol use disorder"]),
+    rf("Triggers",["missed antiseizure medication doses|How many?","sleep deprivation","alcohol use or withdrawal","drug use","a recent illness",NEWMED,"F:pregnancy or delivery in the last 6 weeks"],"Possible triggers include","No"),
+    med(["antiseizure medication|Which one, and what dose?"])],
+  ex:["!mental status and return to baseline","!tongue laceration","!head and face for trauma","!posterior shoulder dislocation","!focal deficit (Todd paralysis)","!meningismus if febrile","!pupils","!point-of-care glucose","skin for track marks or liver disease"]},
+/* ---- GI / GU ---- */
+abd_pain:{g:"GI / GU",name:"Abdominal pain",cc:"abdominal pain",f:"lqrs",preg:1,
+  loc:["right upper quadrant","left upper quadrant","right lower quadrant","left lower quadrant","epigastrium","periumbilical region","suprapubic region","whole abdomen"],
+  qual:["sharp","crampy","dull","burning","colicky"],rad:["back","shoulder","groin","chest"],
+  agg:["eating","movement","fatty foods"],rel:["a bowel movement","vomiting","lying still","antacids"],
+  sec:[sx("Associated symptoms",["nausea","vomiting","diarrhea","constipation","!fever","anorexia","!hematemesis","!melena or hematochezia","dysuria","hematuria","!inability to pass flatus","jaundice","chest pain","!pain out of proportion to how the abdomen feels","F:vaginal bleeding","F:vaginal discharge","M:testicular pain"]),
+    pmh("Relevant history",[SURG,"gallstones","pancreatitis","diverticulitis","IBD","peptic ulcer disease","kidney stones","AAA","cirrhosis","AFib"]),
+    rf("Risk factors",[ETOH,"NSAID use",IMMUNO,"recent antibiotics","sick contacts","F:prior ectopic pregnancy or tubal surgery","F:an IUD"],"Notable for","No"),
+    med([AC]),
+    tx(["antacids","analgesics","antiemetics"])],
+  ex:["!location of maximal tenderness","!peritoneal signs: guarding, rigidity, rebound","!Murphy sign","!McBurney point tenderness","distension and bowel sounds","!hernias: umbilical, inguinal, femoral","!CVA tenderness","!pulsatile mass if older","scleral icterus","F:pelvic exam if lower abdominal pain","M:testicular and inguinal exam","!rectal exam and guaiac if bleeding"]},
+vomiting:{g:"GI / GU",name:"Nausea / vomiting",cc:"nausea and vomiting",f:"",preg:1,
+  sec:[sx("Associated symptoms",["!hematemesis or coffee-ground emesis","!bilious emesis","abdominal pain","diarrhea","!fever","!headache","!chest pain","dizziness","decreased urine output","!inability to keep down fluids","!neck stiffness","!abdominal distension"]),
+    pmh("Relevant history",["diabetes",SURG,"gastroparesis","migraine","cyclic vomiting"]),
+    rf("Exposures",["sick contacts","suspect food",TRAVEL,"cannabis use|How often?",ETOH,NEWMED],"Notable for","No"),
+    tx(["an antiemetic|Which one?","oral rehydration","hot showers for relief"])],
+  ex:["!volume status: mucous membranes, skin turgor, capillary refill","!abdominal tenderness and peritoneal signs","distension and bowel sounds","!hernias","!mental status","!meningismus if headache or fever","scleral icterus","!point-of-care glucose if diabetic"]},
+diarrhea:{g:"GI / GU",name:"Diarrhea",cc:"diarrhea",f:"",
+  sec:[sx("Associated symptoms",["!blood in stool","!fever","abdominal pain","vomiting","!lightheadedness","decreased urine output","tenesmus","nocturnal stools","weight loss"]),
+    rf("Exposures",["recent antibiotics|Which one, and when?","a recent hospitalization","sick contacts",TRAVEL,"suspect food","untreated water",IMMUNO,"nursing facility residence"],"Notable for","No"),
+    pmh("Relevant history",["IBD","IBS","prior C. difficile"]),
+    tx(["loperamide","oral rehydration"])],
+  ex:["!volume status: mucous membranes, skin turgor, capillary refill","!orthostatic vital signs","!abdominal tenderness and peritoneal signs","distension","!stool appearance or guaiac if bloody","perianal skin"]},
+gi_bleed:{g:"GI / GU",name:"GI bleeding",cc:"GI bleeding",f:"",
+  sec:[pick("Presentation","Bleeding presents as ",["bright red blood per rectum","maroon stool","black tarry stool","hematemesis","coffee-ground emesis"]),
+    sx("Associated symptoms",["abdominal pain","!lightheadedness","!syncope","!chest pain","!shortness of breath","nausea","vomiting","weakness","retching before the bleeding"]),
+    pmh("Relevant history",["prior GI bleed|When, and what was the source?","peptic ulcer disease","varices or cirrhosis","diverticulosis","hemorrhoids","IBD","colon cancer","an aortic graft"]),
+    rf("Risk factors",[ETOH,"NSAID use","recent colonoscopy or polypectomy|When?"],"Notable for","No"),
+    med([AC,AP,"iron or bismuth","an SSRI"])],
+  ex:["!heart rate and blood pressure, orthostatics if stable","!conjunctival or skin pallor","!capillary refill and mental status","!abdominal tenderness and peritoneal signs","!stigmata of liver disease: jaundice, ascites, spider angiomata","!rectal exam: stool color, gross blood, guaiac","external hemorrhoids or fissure","!emesis appearance if vomiting"]},
+flank:{g:"GI / GU",name:"Flank pain / kidney stone",cc:"flank pain",f:"lqrs",preg:1,
+  loc:["left flank","right flank","both flanks"],qual:["colicky","sharp","constant ache"],rad:["groin","lower abdomen","testicle or labia"],
+  sec:[sx("Associated symptoms",["nausea","vomiting","hematuria","dysuria","urinary frequency","!fever or chills","!inability to urinate","!syncope"]),
+    pmh("Relevant history",["prior kidney stones|Did any need a procedure?","a single kidney or transplant","CKD","AAA","recurrent UTIs"]),
+    rf("Risk factors",[TOB],"Notable for","No"),
+    med([AC]),tx(["analgesics","tamsulosin"])],
+  ex:["!CVA tenderness","!abdominal tenderness and peritoneal signs","!pulsatile abdominal mass and femoral pulses if older","M:testicular exam for torsion","!temperature","lower extremity pulses","flank bruising"]},
+uti:{g:"GI / GU",name:"Urinary symptoms",cc:"urinary symptoms",f:"",preg:1,
+  sec:[sx("Associated symptoms",["dysuria","frequency","urgency","hematuria","suprapubic pain","!flank pain","!fever or chills","!nausea or vomiting","!confusion","F:vaginal discharge","F:vaginal itching","M:penile discharge","M:testicular pain"]),
+    pmh("Relevant history",["recurrent UTIs|How recent, and what organism?","kidney stones","diabetes","a urologic abnormality","M:BPH","immunocompromise"]),
+    rf("Risk factors",["an indwelling catheter","a recent urologic procedure","recent antibiotics","a new sexual partner","concern for STI exposure"],"Notable for","No"),
+    tx(["phenazopyridine","antibiotics|Which one, and when started?"])],
+  ex:["!temperature","!CVA tenderness","suprapubic tenderness","!bladder distension","!abdominal tenderness","F:pelvic exam if discharge or STI risk","M:genital and testicular exam if discharge or testicular pain","M:prostate tenderness if indicated"]},
+retention:{g:"GI / GU",name:"Urinary retention",cc:"urinary retention",f:"",
+  sec:[sx("Associated symptoms",["suprapubic pain","overflow incontinence","!back pain","!leg weakness or numbness","!saddle anesthesia","hematuria","dysuria","fever","constipation"]),
+    pmh("Relevant history",["M:BPH","prior retention","urethral stricture","M:prostate cancer","recent surgery|What, and when?","spinal disease"]),
+    med(["an anticholinergic","an antihistamine","an opioid","a decongestant"])],
+  ex:["!bladder distension and bladder scan volume","suprapubic tenderness","M:prostate exam","!lower extremity strength, sensation, and reflexes","!saddle sensation and rectal tone","genital exam: phimosis, meatal stenosis","!CVA tenderness"]},
+testicular:{g:"GI / GU",name:"Testicular pain",cc:"testicular pain",f:"lqrs",side:1,
+  loc:["testicle","scrotum","groin"],qual:["sharp","aching","heavy"],rad:["lower abdomen","flank"],
+  sec:[sx("Associated symptoms",["!sudden onset","!nausea or vomiting","swelling","redness","fever","dysuria","penile discharge","!trauma","prior episodes that resolved on their own","abdominal pain"]),
+    pmh("Relevant history",["undescended testis","prior torsion","hernia"]),
+    rf("Risk factors",["a new sexual partner","prior STI","recent heavy lifting"],"Notable for","No")],
+  ex:["!testicular lie (horizontal or high-riding)","!cremasteric reflex on each side","!location of tenderness: testis versus epididymis","blue dot sign","scrotal swelling and erythema","!inguinal hernia","penile discharge","!abdominal exam","Prehn sign"]},
+constipation:{g:"GI / GU",name:"Constipation",cc:"constipation",f:"",
+  sec:[sx("Associated symptoms",["abdominal pain","bloating","!vomiting","!inability to pass flatus","!abdominal distension","!blood in stool","!unintentional weight loss","!fever","rectal pain","urinary retention","!leg weakness or numbness"]),
+    pmh("Relevant history",["prior bowel obstruction",SURG,"colon cancer","hypothyroidism","IBS","diabetes"]),
+    rf("Risk factors",["a change in stool caliber","family history of colon cancer","decreased oral intake or activity"],"Notable for","No"),
+    med(["an opioid","an anticholinergic","iron","a calcium channel blocker"]),
+    tx(["a stool softener","a laxative|Which one?","an enema"])],
+  ex:["!abdominal distension and tenderness","!peritoneal signs","bowel sounds","!hernias","!rectal exam: impaction, mass, blood","perianal exam: fissure, hemorrhoids","!lower extremity strength and sensation if back pain"]},
+hematuria:{g:"GI / GU",name:"Hematuria",cc:"blood in the urine",f:"",preg:1,
+  sec:[pick("Timing","Blood is seen ",["throughout the stream","at the start of the stream","at the end of the stream"]),
+    sx("Associated symptoms",["clots","!inability to urinate","flank pain","dysuria","frequency","!fever","painless bleeding","!lightheadedness","easy bruising","a recent sore throat or skin infection","swelling of the face or legs"]),
+    pmh("Relevant history",["kidney stones","M:BPH","bladder or kidney cancer","CKD","a recent urologic procedure|What, and when?"]),
+    rf("Risk factors",[TOB,"occupational chemical exposure","recent trauma","strenuous exercise"],"Notable for","No"),
+    med([AC])],
+  ex:["!bladder distension","!CVA tenderness","suprapubic tenderness","!flank or abdominal bruising","M:genital exam and meatus","peripheral edema","blood pressure","skin for petechiae or bruising"]},
+rectal:{g:"GI / GU",name:"Rectal pain / bleeding",cc:"rectal pain",f:"lqs",
+  loc:["anus","perianal skin","buttock"],qual:["sharp","throbbing","burning","aching"],agg:["bowel movements","sitting"],rel:["sitz baths"],
+  sec:[sx("Associated symptoms",["bright red blood on the toilet paper","pain with bowel movements","constipation","!fever","perianal swelling","drainage","!heavy bleeding","!lightheadedness","itching","tissue protruding from the anus","!rapidly spreading redness or pain"]),
+    pmh("Relevant history",["hemorrhoids","anal fissure","IBD","prior perirectal abscess or fistula","diabetes","immunocompromise"]),
+    rf("Risk factors",["STI risk","a recent anal procedure"],"Notable for","No"),
+    med([AC]),tx(["sitz baths","hemorrhoid cream","a stool softener"])],
+  ex:["external inspection: hemorrhoids, fissure, skin tags","!perianal erythema, induration, fluctuance","!rectal exam: tenderness, mass, fluctuance, stool color","!signs of spread to the perineum or scrotum","anoscopy findings if performed","!temperature"]},
+/* ---- OB / GYN ---- */
+vag_bleed:{g:"OB / GYN",name:"Vaginal bleeding",cc:"vaginal bleeding",f:"lqs",preg:1,
+  loc:["lower abdomen","pelvis","back"],qual:["crampy","sharp","dull"],
+  sec:[sx("Associated symptoms",["clots","!soaking more than one pad an hour","!lightheadedness","!syncope","abdominal or pelvic pain","!passage of tissue","vaginal discharge","fever","!shoulder pain"]),
+    rf("Risk factors",["an IUD","prior ectopic pregnancy","prior miscarriage","a bleeding disorder","hormonal contraception|Which type?"],"Notable for","No"),
+    pmh("Relevant history",["fibroids","PCOS","endometriosis"]),
+    rf("Obstetric history",["prior pregnancies|Gravida and para?","known Rh-negative blood type"],"Obstetric history is notable for","No"),
+    med([AC])],
+  ex:["!heart rate, blood pressure, orthostatics","!abdominal tenderness and peritoneal signs","!pelvic exam: bleeding amount, clots, tissue at the os","!cervical os open or closed","!adnexal tenderness or mass","uterine size","!fetal heart tones if pregnant over 10 weeks","conjunctival pallor"]},
+pelvic:{g:"OB / GYN",name:"Pelvic pain / vaginal discharge",cc:"pelvic pain",f:"lqrs",preg:1,
+  loc:["suprapubic region","right lower quadrant","left lower quadrant","whole pelvis"],qual:["crampy","sharp","dull"],rad:["back","thigh"],
+  sec:[sx("Associated symptoms",["vaginal discharge","abnormal bleeding","dysuria","fever","nausea","vomiting","dyspareunia","!sudden onset","!lightheadedness or syncope","vaginal itching","odor"]),
+    rf("Risk factors",["new or multiple partners","prior STI","prior PID","prior ectopic pregnancy or tubal surgery","an IUD","ovarian cysts"],"Notable for","No")],
+  ex:["!abdominal tenderness and peritoneal signs","!cervical motion tenderness","!adnexal tenderness or mass","cervical discharge or friability","vaginal discharge appearance","!temperature","external genitalia lesions","RUQ tenderness (perihepatitis)"]},
+breast:{g:"OB / GYN",name:"Breast pain / mastitis",cc:"breast pain",f:"lqs",side:1,
+  loc:["upper outer breast","upper inner breast","lower outer breast","lower inner breast","areola","whole breast"],qual:["aching","burning","sharp","throbbing"],
+  sec:[sx("Associated symptoms",["redness","swelling","fever","chills","a lump","nipple discharge","!rapidly spreading redness","!lightheadedness"]),
+    rf("Risk factors",["breastfeeding","delivery in the last 3 months","cracked nipples","prior mastitis","nipple piercing",TOB],"Notable for","No"),
+    pmh("Relevant history",["breast cancer","diabetes","immunocompromise"])],
+  ex:["!extent of erythema and warmth","!fluctuance or abscess","discrete mass","nipple discharge or cracking","!axillary lymphadenopathy","!temperature","skin changes such as dimpling"]},
+/* ---- HEENT ---- */
+eye:{g:"HEENT",name:"Eye complaint",cc:"an eye complaint",f:"lqs",side:1,
+  loc:["eye"],qual:["sharp","gritty","aching","burning","itchy"],agg:["light","blinking"],
+  sec:[sx("Vision",["!vision loss","blurry vision","double vision","!flashes or floaters","!curtain over vision","!halos around lights"]),
+    sx("Associated symptoms",["redness","discharge","tearing","photophobia","foreign body sensation","headache","nausea","itching","!pain with eye movement"]),
+    rf("Risk factors",["contact lens use|Does the patient sleep in them?","trauma|How?","!chemical exposure|What substance, and was it irrigated?","grinding or hammering metal","recent eye surgery"],"Notable for","No"),
+    pmh("Relevant history",["glaucoma","prior eye surgery","diabetes","HTN"]),
+    tx(["eye drops|Which ones?","irrigation"])],
+  ex:["!visual acuity in each eye","!pupils and afferent pupillary defect","!extraocular movements","!visual fields","conjunctival injection and discharge","!fluorescein staining","!intraocular pressure (skip if open globe suspected)","!signs of open globe: teardrop pupil, Seidel sign","!hyphema","eyelid eversion for foreign body","periorbital swelling or erythema"]},
+sore_throat:{g:"HEENT",name:"Sore throat",cc:"sore throat",f:"s",
+  sec:[sx("Airway red flags",["!difficulty swallowing","!drooling","!muffled voice","!trismus","!neck swelling or stiffness","!shortness of breath or stridor"]),
+    sx("Associated symptoms",["fever","cough","rhinorrhea","ear pain","rash","swollen lymph nodes","fatigue"]),
+    rf("Exposures",["sick contacts","strep exposure",IMMUNO],"Notable for","No"),
+    pmh("Relevant history",["prior peritonsillar abscess","recurrent strep"]),
+    tx(["acetaminophen","ibuprofen","throat lozenges"])],
+  ex:["!voice quality (muffled or hot potato voice)","!drooling and ability to handle secretions","!trismus","!stridor and work of breathing","!uvula midline or deviated","tonsillar size, symmetry, and exudate","!soft palate bulging","anterior cervical lymphadenopathy","!neck swelling, tenderness, or stiffness","splenomegaly if mono is suspected","rash"]},
+ear:{g:"HEENT",name:"Ear pain",cc:"ear pain",f:"lqs",side:1,loc:["ear"],qual:["sharp","aching","pressure"],
+  sec:[sx("Associated symptoms",["hearing loss","ear drainage","fever","tinnitus","dizziness","congestion","sore throat","!swelling or redness behind the ear","!facial weakness","itching","!severe headache"]),
+    rf("Risk factors",["swimming","a foreign body","cotton swab use","recent air travel","trauma"],"Notable for","No"),
+    pmh("Relevant history",["diabetes","recurrent ear infections","ear tubes","immunocompromise"]),
+    tx(["ear drops|Which ones?","analgesics"])],
+  ex:["tympanic membrane: color, bulging, perforation","external canal: swelling, discharge, foreign body","pain with tragal pressure or pinna movement","!mastoid tenderness, swelling, or protruding auricle","!facial nerve function","hearing grossly","pharynx and dentition (referred pain)","preauricular and cervical lymph nodes"]},
+epistaxis:{g:"HEENT",name:"Epistaxis",cc:"epistaxis",f:"",
+  sec:[pick("Side","Bleeding is from the ",["left naris","right naris","both nares"]),
+    sx("Associated symptoms",["blood draining down the throat","!lightheadedness","!bleeding elsewhere","easy bruising","!hematemesis"]),
+    rf("Contributors",["nose picking or trauma","dry air","nasal spray use","a recent URI","cocaine use"],"Possible contributors include","No"),
+    pmh("Relevant history",["HTN","prior nosebleeds|How often, and any cautery or packing?","a bleeding disorder","liver disease","HHT"]),
+    med([AC,AP,"an NSAID"]),
+    tx(["direct pressure|For how long?","oxymetazoline"])],
+  ex:["!heart rate and blood pressure","!anterior bleeding site seen or not seen","!posterior pharynx for ongoing blood","septal hematoma or deviation","!conjunctival pallor","skin for bruising or petechiae"]},
+dental:{g:"HEENT",name:"Dental pain",cc:"dental pain",f:"lqs",
+  loc:["upper left teeth","upper right teeth","lower left teeth","lower right teeth"],qual:["throbbing","sharp","aching"],agg:["hot or cold","chewing"],
+  sec:[sx("Red flags",["!difficulty swallowing","!trismus","!swelling under the tongue or jaw","!difficulty breathing","!voice change"]),
+    sx("Associated symptoms",["facial swelling","fever","drainage","a broken tooth"]),
+    rf("Risk factors",["recent dental work","a known cavity","dental trauma"],"Notable for","No"),
+    pmh("Relevant history",["diabetes","immunocompromise"]),
+    tx(["analgesics","antibiotics|Which one, and since when?"])],
+  ex:["!involved tooth by number","percussion tenderness and mobility","gingival swelling or fluctuance","!trismus (interincisal opening)","!floor of mouth elevation or firmness","!submandibular or neck swelling","facial swelling and erythema","!voice quality","cervical lymphadenopathy"]},
+oral_swelling:{g:"HEENT",name:"Oral / facial swelling",cc:"oral and facial swelling",f:"l",
+  loc:["lips","tongue","floor of the mouth","jaw","cheek","eyelids","neck"],locPrep:"involving the",
+  sec:[sx("Airway red flags",["!difficulty breathing","!noisy breathing or stridor","!voice change","!drooling","!difficulty swallowing","!trismus"]),
+    sx("Associated symptoms",["fever","dental pain","hives","itching","abdominal pain","throat tightness"]),
+    pmh("Relevant history",["prior angioedema|How was it treated?","hereditary angioedema","a recent dental infection","diabetes"]),
+    rf("Risk factors",["recent dental work","poor dentition",IVDU,"a new food or medication exposure|What, and when?"],"Notable for","No"),
+    med(["an ACE inhibitor|How long has the patient been on it?","an ARB","an NSAID"]),
+    tx(["an antihistamine","an epinephrine auto-injector","steroids"])],
+  ex:["!voice quality (dysphonia or hot potato voice)","!stridor","!drooling and handling of secretions","!trismus","!tripod or sniffing position","!floor of mouth elevation or firmness","!tongue size and position","uvula position and swelling","tonsillar asymmetry","!dentition and any dental abscess","!neck swelling, crepitus, or tenderness","urticaria","!oxygen saturation and work of breathing"]},
+allergic:{g:"HEENT",name:"Allergic reaction",cc:"an allergic reaction",f:"",
+  sec:[pick("Trigger","The suspected trigger is ",["a food","a medication","an insect sting","latex","unknown"]),
+    sx("Skin and mucosa",["hives","itching","facial swelling","!lip or tongue swelling"]),
+    sx("Systemic symptoms",["!throat tightness","!voice change","!difficulty swallowing","!shortness of breath or wheezing","!vomiting","abdominal pain","diarrhea","!lightheadedness or syncope"]),
+    pmh("Relevant history",["prior anaphylaxis","asthma","angioedema","known food allergies"]),
+    med(["an ACE inhibitor","a beta-blocker","a prescribed epinephrine auto-injector"]),
+    tx(["diphenhydramine","another antihistamine","an epinephrine auto-injector|What time?","steroids"])],
+  ex:["!blood pressure and heart rate","!lip, tongue, and uvula swelling","!voice and stridor","!wheezing and work of breathing","!oxygen saturation","extent of urticaria","abdominal tenderness","mental status"]},
+/* ---- Trauma / MSK ---- */
+back_pain:{g:"Trauma / MSK",name:"Back pain",cc:"back pain",f:"lqrs",
+  loc:["lumbar spine","thoracic spine","left low back","right low back","midline back"],qual:["sharp","aching","spasm","burning"],rad:["buttock","left leg","right leg","both legs","abdomen"],
+  agg:["movement","bending","sitting"],rel:["rest","lying down","heat"],
+  sec:[sx("Red flags",["!saddle anesthesia","!urinary retention or incontinence","!bowel incontinence","!leg weakness","!fever","!unintentional weight loss","!pain at night or at rest","!abdominal pain","!tearing pain"]),
+    sx("Associated symptoms",["numbness or tingling","dysuria","hematuria"]),
+    rf("Risk factors",["!a history of cancer|What type, and when?","!IV drug use|When was the last use?","!a recent spinal procedure|What, and when?",IMMUNO,"osteoporosis or chronic steroids","recent trauma|How?","heavy lifting"],"Notable for","No"),
+    pmh("Relevant history",["prior back pain","prior back surgery|What, and when?","AAA","kidney stones"]),
+    med([AC]),
+    tx(["NSAIDs","acetaminophen","a muscle relaxant","heat or ice"])],
+  ex:["!midline spinal tenderness or step-off","paraspinal tenderness and spasm","!straight leg raise","!lower extremity strength by myotome","!sensation by dermatome","!patellar and Achilles reflexes","!saddle sensation","!rectal tone and post-void residual if red flags","!temperature","!abdominal exam and pulsatile mass if older","!femoral and distal pulses","CVA tenderness","skin for track marks or zoster"]},
+ext_injury:{g:"Trauma / MSK",name:"Extremity injury",cc:"an extremity injury",f:"lqs",side:1,
+  loc:["shoulder","upper arm","elbow","forearm","wrist","hand","finger","hip","thigh","knee","lower leg"],qual:["aching","sharp","throbbing"],agg:["movement","weight bearing"],rel:["rest","ice","immobilization"],
+  sec:[pick("Mechanism","Mechanism was ",["a fall onto an outstretched hand","a fall","a twisting injury","a direct blow","a crush injury","a sports injury"]),
+    HAND,
+    sx("Associated symptoms",["swelling","bruising","!deformity","!numbness or tingling","!weakness","!an open wound","inability to use the limb","other injuries","!pain out of proportion to the injury"]),
+    med([AC]),
+    tx(["ice","a splint or sling","analgesics"])],
+  ex:["!deformity and skin integrity (open fracture)","point tenderness by bone","swelling and ecchymosis","range of motion","!joint above and joint below","!snuffbox tenderness if wrist injury","!compartments soft or tense",...NVL,"!nerve-specific testing (radial, median, ulnar, axillary, peroneal as relevant)"]},
+ankle:{g:"Trauma / MSK",name:"Ankle / foot injury",cc:"an ankle injury",f:"lqs",side:1,
+  loc:["lateral ankle","medial ankle","midfoot","base of the fifth metatarsal","heel","toes"],qual:["aching","sharp","throbbing"],agg:["weight bearing","walking"],rel:["rest","elevation","ice"],
+  sec:[pick("Mechanism","Mechanism was ",["an inversion injury","an eversion injury","a fall","a direct blow","a crush injury"]),
+    pick("Weight bearing","Since the injury, the patient has been ",["able to bear weight","unable to bear weight"]),
+    sx("Associated symptoms",["swelling","bruising","a pop at the time of injury","!deformity","!numbness or tingling","knee pain"]),
+    rf("History",["prior injury to the same ankle"],"Notable for","No"),
+    tx(["ice","elevation","analgesics"])],
+  ex:["!Ottawa points: posterior edge and tip of each malleolus","!navicular and base of the fifth metatarsal tenderness","!ability to take 4 steps","!proximal fibula tenderness","swelling and ecchymosis","!Achilles integrity (Thompson test)","anterior drawer if tolerated",...NVL]},
+joint:{g:"Trauma / MSK",name:"Joint pain / swelling",cc:"joint pain and swelling",f:"lqs",side:1,
+  loc:["knee","hip","shoulder","elbow","wrist","ankle","hand","great toe"],qual:["aching","sharp","throbbing"],agg:["movement","weight bearing"],rel:["rest","ice"],
+  sec:[sx("Associated symptoms",["!fever","swelling","redness","warmth","!inability to move the joint or bear weight","other joints involved","rash","morning stiffness","recent trauma","a recent tick bite","!urethral discharge"]),
+    rf("Septic joint risk",["a prosthetic joint|When was it placed?","a recent joint injection or surgery","IV drug use","STI risk",IMMUNO],"Notable for","No"),
+    pmh("Relevant history",["gout","pseudogout","RA","osteoarthritis"]),
+    med(["a diuretic",AC])],
+  ex:["!effusion, warmth, and erythema","!pain with passive range of motion","active range of motion","!temperature","other joints involved","overlying skin for cellulitis or tophi","rash or pustules","!distal neurovascular status"]},
+mvc:{g:"Trauma / MSK",name:"MVC / multiple trauma",cc:"injuries after a motor vehicle collision",f:"lqs",preg:1,
+  loc:["head","neck","chest","abdomen","back","arm","leg"],qual:["aching","sharp"],
+  sec:[pick("Position","The patient was the ",["driver","front passenger","rear passenger","pedestrian","cyclist","motorcyclist"]),
+    pick("Restraint","The patient was ",["restrained","unrestrained"]),
+    pick("Helmet","The patient was ",["wearing a helmet","not wearing a helmet"]),
+    pick("Impact","The crash was ",["a head-on collision","a rear-end collision","a driver-side impact","a passenger-side impact","a rollover"]),
+    rf("Mechanism",["!airbag deployment","!high speed|Estimated speed?","!intrusion into the passenger space","!ejection","!death of another occupant","prolonged extrication","self-extrication"],"Mechanism is notable for","No"),
+    pick("After the crash","After the crash, the patient was ",["ambulatory at the scene","not ambulatory at the scene"]),
+    sx("Symptoms",["!loss of consciousness","!headache","!neck pain","!chest pain","!shortness of breath","!abdominal pain","!back pain","extremity pain","!numbness or weakness","!vomiting"]),
+    rf("Other factors",["alcohol or drug use before the crash"],"Notable for","No"),
+    med(BLEED)],
+  ex:["!primary survey: airway, breathing, circulation, disability, exposure","!GCS and pupils","!scalp, face, and basilar skull fracture signs","!cervical spine midline tenderness","!chest wall tenderness, crepitus, and breath sounds","!seat belt sign on chest or abdomen","!abdominal tenderness and distension","!pelvic stability","!thoracolumbar spine tenderness or step-off","!extremity deformity and distal pulses","!FAST result if done","!motor and sensory exam in all extremities","F:fundal height if pregnant"]},
+fall:{g:"Trauma / MSK",name:"Fall in an older adult",cc:"a fall",f:"lqs",
+  loc:["head","neck","hip","back","wrist","shoulder","knee"],qual:["aching","sharp"],
+  sec:[pick("Mechanism","The fall was ",["a mechanical trip or slip","from standing","down stairs","from a height","unwitnessed"]),
+    pick("Baseline","At baseline, the patient ",["walks independently","uses a cane","uses a walker","uses a wheelchair"]),
+    sx("Before the fall",["!lightheadedness","!chest pain or palpitations","!loss of consciousness"]),
+    sx("After the fall",["!head strike","!headache","!neck pain","!hip pain","!inability to bear weight","!confusion","!a long time on the floor|About how long?"]),
+    sx("Recent illness",["fever","urinary symptoms","cough","decreased oral intake"]),
+    rf("Fall risk",["prior falls|How many in the last year?","living alone",NEWMED,ETOH],"Notable for","No"),
+    med([AC,AP,"a sedative","an antihypertensive"])],
+  ex:["!head and scalp for trauma","!cervical spine tenderness","!hip: shortening, external rotation, pain with log roll","!pelvis and spine tenderness","!wrist and shoulder exam","!skin for pressure injury if long lie","!mental status","!focal neurologic deficit","!gait if safe","!orthostatic vital signs","heart rhythm and murmur"]},
+burn:{g:"Trauma / MSK",name:"Burn",cc:"a burn",f:"lqs",
+  loc:["face","hands","feet","genitals or perineum","a major joint","chest","arm","leg"],qual:["burning","stinging"],locPrep:"on the",
+  sec:[pick("Mechanism","Mechanism was ",["a flame burn","a scald burn","a contact burn","a chemical burn","an electrical injury"]),
+    sx("Inhalation and electrical",["!enclosed space exposure","!singed facial hair","!hoarseness","!cough or shortness of breath","!soot in the mouth","!loss of consciousness","!palpitations"]),
+    sx("Wound",["blistering","numbness of the burned area"]),
+    TET,tx(["cool water","ointment","a dressing"])],
+  ex:["!percent TBSA by partial and full thickness","!burn depth","!airway: singed nasal hair, soot, hoarseness, stridor","!circumferential burns and distal perfusion","!face, hands, feet, genitals, or joint involvement","!entry and exit wounds if electrical","!heart rhythm if electrical","!carbon monoxide or cyanide concern","!injury pattern concerning for nonaccidental trauma"]},
+bite:{g:"Trauma / MSK",name:"Animal / human bite",cc:"a bite wound",f:"lqs",
+  loc:["hand","finger","face","arm","leg"],qual:["aching","sharp","throbbing"],locPrep:"on the",
+  sec:[pick("Animal","The patient was bitten by ",["a dog","a cat","a human","a bat","a wild animal"]),
+    pick("Circumstances","The bite was ",["provoked","unprovoked"]),
+    pick("Animal vaccination","The animal's rabies vaccination status is ",["up to date","unknown","not vaccinated"]),
+    pick("Observation","The animal is ",["available for 10-day observation","not available for observation"]),
+    sx("Associated symptoms",["bleeding","swelling","!numbness or weakness","!fever","spreading redness","drainage","!limited finger movement"]),
+    pmh("Relevant history",["diabetes","asplenia","immunocompromise","liver disease"]),
+    TET,tx(["washing the wound"])],
+  ex:["!wound size, depth, and type (puncture, laceration, avulsion)","!tendon function through full range of motion","!joint capsule involvement, especially over knuckles","!signs of infection","!distal sensation and motor function","!distal pulses and capillary refill","foreign body or tooth fragment"]},
+/* ---- Skin / wound ---- */
+laceration:{g:"Skin / wound",name:"Laceration",cc:"a laceration",f:"ls",
+  loc:["scalp","face","lip","hand","finger","arm","leg","foot","trunk"],locPrep:"on the",
+  sec:[pick("Mechanism","The laceration was caused by ",["glass","a knife","metal","a fall","wood","machinery"]),
+    HAND,
+    sx("Associated symptoms",["!numbness","!weakness or difficulty moving","!persistent bleeding","!a possible foreign body","other injuries"]),
+    rf("Wound risk",["a contaminated wound","a bite wound","a crush component"],"Notable for","No"),
+    pmh("Relevant history",["diabetes","immunocompromise","keloids"]),
+    med([AC]),TET],
+  ex:["!length, depth, and shape","!tendon function, tested against resistance","!distal sensation (two-point if hand)","!distal pulses and capillary refill","!foreign body or exposed structures","contamination","!vermilion border involvement if lip","!joint involvement"]},
+abscess:{g:"Skin / wound",name:"Abscess / cellulitis",cc:"a skin infection",f:"lqs",
+  loc:["face","neck","axilla","arm","hand","buttock","groin","leg","foot"],qual:["throbbing","tender","burning"],locPrep:"on the",
+  sec:[sx("Associated symptoms",["!fever","chills","spreading redness","drainage","swelling","red streaking","!pain out of proportion to appearance","!lightheadedness"]),
+    rf("Risk factors",[IVDU,"prior MRSA","prior abscesses","a recent bite or wound","close contacts with similar lesions"],"Notable for","No"),
+    pmh("Relevant history",["diabetes","immunocompromise"]),
+    tx(["warm compresses","antibiotics|Which one, and since when?","drainage at home"])],
+  ex:["!size of induration and fluctuance","!border of erythema marked with time","!crepitus, bullae, or skin necrosis","!pain out of proportion to exam","lymphangitic streaking","regional lymphadenopathy","!involvement of hand, face, perineum, or a joint","!temperature and heart rate"]},
+rash:{g:"Skin / wound",name:"Rash",cc:"a rash",f:"lq",term:"The rash",locPrep:"on the",
+  loc:["face","trunk","arms","legs","hands and feet","groin","whole body"],qual:["itchy","painful","burning","asymptomatic"],
+  sec:[sx("Red flags",["!fever","!mucosal involvement","!blistering or skin peeling","!petechiae or purpura","!joint pain","!rapid spread"]),
+    sx("Associated symptoms",["itching","spreading","sore throat"]),
+    rf("Exposures",["new medications in the last 8 weeks|Which ones?","new soaps or products","recent travel","a tick bite","plant exposure","sick contacts",IMMUNO],"Notable for","No"),
+    tx(["an antihistamine","a topical steroid"])],
+  ex:["!morphology: macules, papules, vesicles, bullae, petechiae, purpura","!distribution, including palms and soles","!mucous membranes: mouth, eyes, genitals","!Nikolsky sign","!blanching or nonblanching","!temperature and appearance","lymphadenopathy","joint swelling"]},
+fb:{g:"Skin / wound",name:"Foreign body",cc:"a foreign body",f:"",
+  sec:[pick("Location","The foreign body is ",["in the ear","in the nose","in the eye","in the skin","swallowed","in the rectum or vagina"]),
+    pick("Object","The object is ",["!a button battery","!a magnet","a coin","glass","wood","metal","food"]),
+    pick("Witnessed","The event was ",["witnessed","unwitnessed"]),
+    sx("Associated symptoms",["pain","bleeding","discharge","!drooling or inability to swallow","!vomiting","!abdominal pain","!shortness of breath or stridor","!chest pain"]),
+    tx(["home removal"]),TET],
+  ex:["!object visualized and location","surrounding tissue injury","!airway and work of breathing if swallowed or aspirated","!lung sounds for unilateral wheeze","!drooling and handling of secretions","!abdominal exam if swallowed","!distal neurovascular status if in the skin","contralateral naris or ear checked"]},
+wound_check:{g:"Skin / wound",name:"Wound check / suture removal",cc:"a wound check",f:"",
+  sec:[pick("Reason","The patient is here for ",["suture removal","staple removal","a wound check"]),
+    sx("Wound symptoms",["redness","drainage","increasing pain","fever","wound opening","swelling"])],
+  ex:["!wound edges approximated or dehisced","!erythema, warmth, induration, or drainage","!fluctuance","number of sutures or staples removed","distal neurovascular status if extremity"]},
+/* ---- Endocrine / metabolic ---- */
+hyperglycemia:{g:"Endocrine / metabolic",name:"Hyperglycemia",cc:"hyperglycemia",f:"",
+  sec:[sx("Associated symptoms",["polyuria","polydipsia","!vomiting","!abdominal pain","!shortness of breath","!confusion","fever","weight loss","blurry vision","!decreased oral intake","dysuria","cough"]),
+    pmh("Relevant history",["type 1 diabetes","type 2 diabetes","prior DKA|How many episodes?","CKD"]),
+    rf("Triggers",["missed insulin doses|How many?","an insulin pump problem","a recent illness","recent steroid use"],"Possible triggers include","No"),
+    med(["insulin|Type and dose?","an SGLT2 inhibitor","oral diabetes medication|Which ones?"]),
+    tx(["correction insulin|How much?"])],
+  ex:["!mental status","!volume status: mucous membranes, skin turgor","!Kussmaul respirations or fruity breath","!abdominal tenderness","!infection source: lungs, skin, feet, urine","!point-of-care glucose and ketones"]},
+hypoglycemia:{g:"Endocrine / metabolic",name:"Hypoglycemia",cc:"hypoglycemia",f:"",
+  sec:[sx("Associated symptoms",["confusion","sweating","tremor","!seizure","!loss of consciousness","decreased oral intake","vomiting","!recurrent episodes"]),
+    rf("Triggers",["a missed meal","!intentional insulin overdose","alcohol use","a new or changed diabetes medication|Which one?","CKD","recent heavy exercise"],"Possible triggers include","No"),
+    med(["long-acting insulin|What dose?","a sulfonylurea|Which one, and what dose?"]),
+    rf("Treatment before arrival",["oral glucose","glucagon","IV dextrose|How much?"],"Treatment before arrival included","No prehospital")],
+  ex:["!mental status after treatment","!repeat point-of-care glucose","!focal neurologic deficit","!signs of injury from a fall or seizure","diaphoresis and tremor"]},
+abn_labs:{g:"Endocrine / metabolic",name:"Abnormal lab result",cc:"an abnormal lab result",f:"",
+  sec:[pick("Lab","The patient was referred for ",["an abnormal potassium","an abnormal sodium","a low hemoglobin","an elevated creatinine","an elevated INR","an elevated troponin","another abnormal result"]),
+    sx("Associated symptoms",["weakness","fatigue","!chest pain","!palpitations","!shortness of breath","!confusion","!bleeding","nausea","vomiting","decreased urine output","muscle cramps"]),
+    pmh("Relevant history",["CKD","ESRD on dialysis","CHF","cirrhosis",CANCER]),
+    rf("Contributors",["a recent medication change|What changed?","missed dialysis"],"Possible contributors include","No"),
+    med(["a diuretic","an ACE inhibitor or ARB","potassium supplements","warfarin"])],
+  ex:["!mental status","!heart rate and rhythm","volume status","!signs of bleeding if anemia or high INR","!stool guaiac if anemic","muscle strength and reflexes if potassium abnormal","peripheral edema"]},
+/* ---- Heme / renal ---- */
+sickle:{g:"Heme / renal",name:"Sickle cell pain crisis",cc:"sickle cell pain",f:"lqs",
+  loc:["back","chest","abdomen","arms","legs","joints"],qual:["aching","sharp","throbbing"],
+  sec:[pick("Compared with usual","The pain is ",["typical of prior crises","different from prior crises"]),
+    sx("Red flags",["!fever","!chest pain","!shortness of breath","!cough","!focal weakness or numbness","!severe headache","!abdominal pain or fullness","!priapism","!new fatigue or pallor","!vision changes"]),
+    pmh("Relevant history",["prior acute chest syndrome|How many times?","prior stroke","splenic sequestration","avascular necrosis","frequent admissions","a prior ICU stay"]),
+    rf("Triggers",["dehydration","cold exposure","a recent infection","missed hydroxyurea"],"Possible triggers include","No"),
+    med(["hydroxyurea","home opioids|Which one, and last dose?"]),
+    tx(["home opioids|What and when?","oral hydration"])],
+  ex:["!oxygen saturation and lung sounds","!temperature","!spleen size","!focal neurologic deficit","joint swelling and warmth","!priapism if reported","conjunctival pallor and scleral icterus","extremity swelling","!abdominal tenderness"]},
+dialysis:{g:"Heme / renal",name:"Dialysis patient complaint",cc:"a dialysis-related complaint",f:"",
+  sec:[pick("Schedule","The dialysis schedule is ",["Monday/Wednesday/Friday","Tuesday/Thursday/Saturday","home or peritoneal dialysis"]),
+    sx("Symptoms",["!a missed or shortened session|When was the last full session?","!shortness of breath","!chest pain","!palpitations","!weakness","swelling","!bleeding from the access","access pain or redness","fever","!loss of thrill in the access","abdominal pain","cloudy peritoneal fluid","low blood pressure during dialysis"]),
+    pmh("Relevant history",["CHF","diabetes","prior access clots|When?"]),
+    med([AC])],
+  ex:["!volume status: JVD, edema, crackles","!access thrill and bruit","!access site erythema, drainage, or bleeding","!heart rhythm","peritoneal catheter site and abdominal tenderness","!mental status","!oxygen saturation"]},
+/* ---- Tox / psych ---- */
+etoh:{g:"Tox / psych",name:"Alcohol intoxication",cc:"alcohol intoxication",f:"",
+  sec:[sx("Associated symptoms",["!head injury","!a fall","vomiting","!hematemesis","!abdominal pain","!chest pain","!seizure","!suicidal ideation","other drug use|What?"]),
+    rf("Drinking history",["daily drinking|How much per day?","prior withdrawal","!prior withdrawal seizures or DTs"],"Drinking history is notable for","No"),
+    pmh("Relevant history",["alcohol use disorder","cirrhosis","pancreatitis","GI bleed"]),
+    med([AC])],
+  ex:["!level of consciousness and ability to protect airway","!head and scalp for trauma","!pupils","!cervical spine tenderness","!focal neurologic deficit","!point-of-care glucose","!abdominal tenderness","!signs of withdrawal: tremor, diaphoresis","!clinical sobriety reassessment with time"]},
+withdrawal:{g:"Tox / psych",name:"Alcohol withdrawal",cc:"alcohol withdrawal symptoms",f:"",
+  sec:[sx("Withdrawal symptoms",["tremor","sweating","anxiety","nausea","vomiting","palpitations","insomnia","!hallucinations","!seizure","!confusion"]),
+    sx("Other symptoms",["!chest pain","!abdominal pain","!suicidal ideation"]),
+    rf("Withdrawal history",["!prior withdrawal seizures","!prior DTs","a prior ICU admission for withdrawal","benzodiazepine use","other drug use"],"Withdrawal history is notable for","No"),
+    tx(["alcohol to ease symptoms","benzodiazepines|Which, how much, and when?"])],
+  ex:["!CIWA score","!tremor","!diaphoresis","!orientation and hallucinations","!heart rate and blood pressure","!temperature","!signs of trauma","!stigmata of liver disease"]},
+overdose:{g:"Tox / psych",name:"Ingestion / overdose",cc:"an ingestion",f:"",
+  sec:[pick("Intent","The ingestion was ",["intentional","accidental","of unclear intent"]),
+    sx("Associated symptoms",["!suicidal ideation","nausea","vomiting","!confusion or drowsiness","!seizure","!chest pain","!palpitations","abdominal pain","!shortness of breath","tinnitus"]),
+    rf("Safety",["prior suicide attempts|How many, and most recent when?","!access to firearms|Are they secured?","alcohol co-ingestion","other medications at home|Which ones?"],"Notable for","No"),
+    pmh("Psychiatric history",["depression","bipolar disorder","substance use disorder"]),
+    rf("Prehospital care",["naloxone|How much, and response?","induced vomiting"],"Prehospital care included","No prehospital")],
+  ex:["!mental status and GCS","!heart rate, blood pressure, respiratory rate, temperature","!pupil size","!skin: diaphoretic or dry, flushed","!bowel sounds","!muscle tone, clonus, and reflexes","!signs of trauma or self-harm","!point-of-care glucose","!toxidrome identified"]},
+psych:{g:"Tox / psych",name:"Psychiatric evaluation",cc:"a psychiatric concern",f:"",
+  sec:[sx("Symptoms",["depressed mood","anxiety","!suicidal ideation","!suicidal plan or intent|What is the plan?","!homicidal ideation","!auditory or visual hallucinations","paranoia","decreased sleep","decreased need for sleep","!inability to care for self","substance use|What, and when?"]),
+    rf("Risk and supports",["prior suicide attempts|How many, and most recent when?","prior psychiatric admissions","!access to firearms|Are they secured?","a recent loss or major stressor","an outpatient psychiatrist or therapist","psychiatric medication nonadherence"],"Notable for","No"),
+    pmh("Psychiatric history",["depression","anxiety","bipolar disorder","schizophrenia","PTSD","substance use disorder"]),
+    med(["psychiatric medication|Which ones?"])],
+  ex:["!appearance and behavior","!orientation and level of consciousness","!thought process and content","!suicidal or homicidal ideation with plan","!hallucinations or responding to internal stimuli","!insight and judgment","!signs of self-harm","!vital signs and signs of intoxication or withdrawal","!focal neurologic deficit (medical cause screen)"]},
+/* ---- Fever / infection ---- */
+fever:{g:"Fever / infection",name:"Fever (adult)",cc:"fever",f:"",
+  sec:[sx("Source review",["chills","rigors","cough","shortness of breath","sore throat","!headache","!neck stiffness","!confusion","abdominal pain","vomiting","diarrhea","dysuria","flank pain","rash","joint pain","skin redness or a wound","night sweats","weight loss"]),
+    rf("High-risk features",[IMMUNO,"!active chemotherapy|When was the last dose?",TRAVEL,"sick contacts",IVDU,"an indwelling line or device","a recent hospitalization or surgery","recent antibiotics","nursing facility residence"],"Notable for","No"),
+    pmh("Relevant history",["diabetes",CANCER,"asplenia","HIV","a transplant"]),
+    tx(["acetaminophen|Last dose when?","ibuprofen|Last dose when?"])],
+  ex:["!temperature, heart rate, blood pressure","!mental status","!meningismus","pharynx and tympanic membranes","!lung sounds","!heart murmur","!abdominal tenderness","!CVA tenderness","!skin: rash, petechiae, cellulitis, wounds","!indwelling lines or devices","joint effusion","!perirectal or sacral wounds if bedbound"]},
+/* ---- Environmental ---- */
+heat:{g:"Environmental",name:"Heat illness",cc:"heat exposure",f:"",
+  sec:[sx("Symptoms",["!confusion","!seizure","!syncope","headache","nausea or vomiting","muscle cramps","!absence of sweating","weakness","decreased urine output","dark urine"]),
+    rf("Risk factors",["exertion in the heat","high ambient temperature without air conditioning","stimulant use","alcohol use"],"Notable for","No"),
+    med(["an anticholinergic","a diuretic","an antipsychotic","a beta-blocker"])],
+  ex:["!core (rectal) temperature","!mental status","skin: hot, dry, or diaphoretic","!volume status","!focal neurologic deficit and ataxia","muscle tenderness","!heart rate and blood pressure"]},
+cold:{g:"Environmental",name:"Cold exposure / frostbite",cc:"cold exposure",f:"l",side:1,
+  loc:["fingers","toes","ears","nose","face","feet","hands"],locPrep:"involving the",
+  sec:[sx("Symptoms",["numbness","pain on rewarming","blisters","skin discoloration","shivering","!confusion","!clumsiness or slurred speech"]),
+    rf("Risk factors",["prolonged exposure|About how long?","wet clothing","alcohol or drug use","lack of shelter","prior cold injury","peripheral vascular disease",TOB],"Notable for","No"),
+    tx(["rewarming at home|How?"])],
+  ex:["!core temperature","!mental status","!affected tissue: color, blisters (clear or hemorrhagic)","!sensation of affected areas","!capillary refill and pulses","mobility of affected digits","!heart rhythm if hypothermic"]},
+envenom:{g:"Environmental",name:"Envenomation / sting",cc:"an envenomation",f:"l",side:1,
+  loc:["hand","finger","foot","arm","leg","face","trunk"],locPrep:"on the",
+  sec:[pick("Source","The patient was bitten or stung by ",["a snake","a spider","a scorpion","a bee or wasp","a marine animal","an unknown creature"]),
+    sx("Local symptoms",["pain","swelling","!swelling spreading up the limb","bleeding from the bite","!skin discoloration or blistering"]),
+    sx("Systemic symptoms",["!numbness or tingling","!muscle cramps or rigidity","!weakness","nausea","vomiting","!shortness of breath","!lip or tongue swelling","!bleeding from gums or elsewhere","!lightheadedness","metallic taste"]),
+    rf("Details",["the creature seen or brought in","a tourniquet applied|When?","a prior reaction to stings"],"Notable for","No"),
+    tx(["ice","an antihistamine","an epinephrine auto-injector"])],
+  ex:["!bite or sting site and fang marks","!swelling margin marked with time","!limb circumference","!compartments soft or tense","!distal pulses, sensation, and motor","!bleeding: gums, IV sites, petechiae","!neuro: ptosis, fasciculations, cranial nerves","!airway and lung sounds","!blood pressure and heart rate"]},
+/* ---- Pediatric ---- */
+peds_fever:{g:"Pediatric",name:"Pediatric fever",cc:"fever",f:"",
+  sec:[sx("Associated symptoms",["decreased oral intake","decreased wet diapers","vomiting","diarrhea","cough","congestion","ear pulling","rash","fussiness","sore throat","urinary symptoms"]),
+    sx("Red flags",["!lethargy or hard to wake","!inconsolable crying","!difficulty breathing","!seizure","!neck stiffness","!petechial rash"]),
+    IMM,
+    rf("Risk factors",["sick contacts","daycare attendance",TRAVEL,"!prematurity|Gestational age at birth?","recent antibiotics"],"Notable for","No"),
+    pmh("Relevant history",["chronic medical conditions","prior UTI","congenital heart disease"]),
+    tx(["acetaminophen|Last dose when?","ibuprofen|Last dose when?"])],
+  ex:["!general appearance and interaction (well or toxic)","!temperature, heart rate, respiratory rate, oxygen saturation","!capillary refill and hydration","!fontanelle in infants","!meningismus","tympanic membranes","pharynx","!lung sounds and work of breathing","!abdominal tenderness","!skin: petechiae, purpura, rash","genitourinary exam","extremities for limp or joint swelling"]},
+peds_resp:{g:"Pediatric",name:"Pediatric cough / wheeze / stridor",cc:"cough and difficulty breathing",f:"",
+  sec:[sx("Associated symptoms",["cough","barky cough","fever","congestion","wheezing","decreased oral intake","decreased wet diapers","vomiting after coughing","ear pulling"]),
+    sx("Red flags",["!stridor","!retractions","!fast breathing","!pauses in breathing or color change","!drooling","!choking episode"]),
+    IMM,
+    rf("Risk factors",["sick contacts","daycare attendance","prior wheezing","secondhand smoke"],"Notable for","No"),
+    pmh("Relevant history",["asthma","prematurity|Gestational age at birth?","prior intubation","congenital heart disease","chronic lung disease"]),
+    tx(["albuterol|How many treatments?","steroids","nasal suction","acetaminophen"])],
+  ex:["!respiratory rate and oxygen saturation","!work of breathing: retractions, nasal flaring, grunting, head bobbing","!stridor at rest or only when agitated","!lung sounds: wheezes, crackles, focal decreased sounds","!mental status and interaction","!drooling and position of comfort","!hydration and capillary refill","tympanic membranes","pharynx"]},
+peds_gi:{g:"Pediatric",name:"Pediatric vomiting / diarrhea",cc:"vomiting and diarrhea",f:"",
+  sec:[sx("Associated symptoms",["vomiting","diarrhea","fever","abdominal pain","decreased oral intake"]),
+    sx("Red flags",["!bilious vomiting","!bloody stool","!projectile vomiting","!decreased urine output","!lethargy","!decreased tears","!intermittent severe pain with legs drawn up","!abdominal distension"]),
+    IMM,
+    rf("Risk factors",["sick contacts","daycare attendance",TRAVEL,"recent antibiotics","a suspect food","!possible ingestion|What, and when?"],"Notable for","No"),
+    pmh("Relevant history",["prior abdominal surgery","prematurity","failure to thrive"]),
+    tx(["oral rehydration","ondansetron"])],
+  ex:["!general appearance and mental status","!weight compared with prior","!capillary refill","!mucous membranes and tears","!fontanelle in infants","skin turgor","!abdominal tenderness, distension, or mass","!inguinal hernias and testicular exam","perianal skin","!stool appearance if available"]},
+crying:{g:"Pediatric",name:"Fussy / crying infant",cc:"fussiness and crying",f:"",
+  sec:[pick("Feeding","Feeding is ",["normal","decreased","refusing feeds"]),
+    sx("Associated symptoms",["!fever","vomiting","!bilious vomiting","diarrhea","!bloody stool","constipation","!lethargy","!breathing difficulty","rash","!crying that cannot be consoled"]),
+    rf("Risk factors",["prematurity","sick contacts","vaccines in the last 48 hours","a recent fall or injury|What happened?"],"Notable for","No")],
+  ex:["!full unclothed exam","!hair tourniquet check: fingers, toes, penis","!fontanelle","!skin for bruising, especially in a non-mobile infant","!fluorescein for corneal abrasion","tympanic membranes","!abdominal exam","!inguinal hernias and testicles","!extremities for tenderness or swelling","anus for fissure","!temperature and heart rate"]},
+brue:{g:"Pediatric",name:"BRUE / apparent life-threatening event",cc:"a brief resolved unexplained event",f:"",
+  sec:[pick("Color change","Color change was ",["cyanosis","pallor","redness","none"]),
+    pick("Tone","Tone during the event was ",["limp","stiff","normal"]),
+    pick("Breathing","Breathing during the event was ",["absent","decreased","irregular","normal"]),
+    rf("Event details",["!a duration over 1 minute","!CPR by a trained responder","choking or gagging","onset during or after feeding","!abnormal movements","!more than one event"],"The event involved","The event did not involve"),
+    sx("Associated symptoms",["!fever","a recent illness","cough","vomiting"]),
+    rf("Risk factors",["!prematurity|Gestational age at birth?","!prior events","!family history of sudden unexplained death","secondhand smoke","!recent trauma"],"Notable for","No")],
+  ex:["!vital signs with oxygen saturation","!general appearance and interaction","!fontanelle and head circumference","!skin for bruising or petechiae","!tone and neurologic exam","!airway and lung sounds","heart sounds and murmur","growth parameters","!eyes and frenulum if abuse is a concern"]},
+/* ---- General ---- */
+postop:{g:"General",name:"Post-operative complication",cc:"a post-operative complication",f:"",
+  sec:[sx("Symptoms",["wound redness","wound drainage","increasing pain","!fever","vomiting","!shortness of breath","!chest pain","!leg swelling","inability to urinate","inability to pass flatus or stool","!bleeding","!lightheadedness"]),
+    rf("Surgery",["a recent surgery|What procedure, and when?","drains or tubes in place","hospital discharge in the last week"],"Notable for","No"),
+    med([AC,"an opioid|Which one?"])],
+  ex:["!wound: erythema, drainage, dehiscence, hematoma","!abdominal tenderness and peritoneal signs if abdominal surgery","!calf tenderness or swelling","!lung sounds","drains and tubes","!bladder distension","!temperature and heart rate"]},
+refill:{g:"General",name:"Medication refill",cc:"a medication refill request",f:"",
+  sec:[sx("Symptoms",["symptoms of the underlying condition","!withdrawal symptoms"]),
+    rf("Circumstances",["inability to reach the prescriber","a lost prescription","running out early","a controlled substance"],"Notable for","No")],
+  ex:["vital signs","focused exam for the underlying condition","!signs of withdrawal if relevant"]},
+other:{g:"General",name:"Other",cc:"",f:"lqrs",
+  sec:[sx("Associated symptoms",["fever","chills","nausea","vomiting","!chest pain","!shortness of breath","!lightheadedness","!focal weakness or numbness"]),
+    med(BLEED)],
+  ex:["vital signs","focused exam of the affected area","!any red flag findings for the presenting problem"]}
+};
+/* complaints where the main problem is not pain: onset names the problem, pain is asked separately */
+const MAIN={
+  vag_bleed:{n:'The bleeding',v:'began',ap:1,locPain:1},
+  head_injury:{n:'The injury',v:'occurred',ap:1,lv:'involves the'},
+  ext_injury:{n:'The injury',v:'occurred',ap:1,lv:'involves the'},
+  ankle:{n:'The injury',v:'occurred',ap:1,lv:'involves the'},
+  mvc:{n:'The crash',v:'occurred',ap:1,locPain:1},
+  fall:{n:'The fall',v:'occurred',ap:1,locPain:1},
+  burn:{n:'The burn',v:'occurred',ap:1,lv:'involves the'},
+  bite:{n:'The bite',v:'occurred',ap:1},
+  laceration:{n:'The injury',v:'occurred',ap:1},
+  abscess:{n:'The swelling',v:'began',ap:1},
+  eye:{n:'Symptoms',v:'began',pl:1,ap:1,lv:'involve the'},
+  oral_swelling:{n:'The swelling',v:'began',lv:'involves the'},
+  numbness:{n:'The numbness',v:'began',lv:'involves the'},
+  envenom:{n:'The bite or sting',v:'occurred'},
+  cold:{n:'Symptoms',v:'began',pl:1,lv:'involve the'}
+};
+Object.keys(MAIN).forEach(k=>{C[k].main=MAIN[k];});
+const GROUPS=["Cardiopulmonary","Neuro","GI / GU","OB / GYN","HEENT","Trauma / MSK","Skin / wound","Endocrine / metabolic","Heme / renal","Tox / psych","Fever / infection","Environmental","Pediatric","General"];
+const COURSE=["worsening","improving","unchanged","resolved"];
+
+/* ---------- helpers ---------- */
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function joinL(a,c){a=a.filter(Boolean);if(a.length<=1)return a.join('');if(a.length===2)return a[0]+' '+c+' '+a[1];return a.slice(0,-1).join(', ')+', '+c+' '+a[a.length-1];}
+const andL=a=>joinL(a,'and'),orL=a=>joinL(a,'or');
+const cap=t=>t?t[0].toUpperCase()+t.slice(1):t;
+const sent=t=>{t=String(t||'').trim();if(!t)return'';t=cap(t);return /[.!?]$/.test(t)?t:t+'.';};
+function P(raw){let t=raw,red=false,only=null,ask='';const bar=t.indexOf('|');if(bar>=0){ask=t.slice(bar+1);t=t.slice(0,bar);}if(t[0]==='!'){red=true;t=t.slice(1);}const m=t.match(/^([FMPA]):/);if(m){only=m[1];t=t.slice(2);}return{red,only,t,ask};}
+const shown=t=>cap(t.replace(/^(a|an) /,''));
+function ageY(){const a=parseFloat(s.age);if(isNaN(a))return null;return s.unit==='y.o.'?a:s.unit==='m.o.'?a/12:a/365;}
+function child(){const y=ageY();return y==null?null:y<18;}
+function visible(it){
+  if(it.only==='F')return s.sex!=='male';
+  if(it.only==='M')return s.sex!=='female';
+  if(it.only==='P')return child()!==false;
+  if(it.only==='A')return child()!==true;
+  return true;}
+const cc=()=>s.cc?C[s.cc]:null;
+const TRI=['sx','pmh','rf','med','tx'];
+
+/* ---------- state ---------- */
+function blank(){return{step:0,age:'',unit:'y.o.',sex:'',arr:'',src:[],interp:'',lim:[],cc:null,ccText:'',q:'',
+  onset:'',dur:'',apain:'',concern:'',opmh:'',idet:{},exDone:{},ago:'',agoU:'hours',course:'',prior:'',ctx:'',lkw:'',side:'',loc:[],qual:[],rad:[],sev:null,agg:[],rel:[],
+  picks:{},marks:{},det:{},resp:'',preg:'',lmp:'',ga:'',extra:'',out:'',dirty:false,example:false};}
+let s=blank();
+
+function items(){ // every visible tri-state item: {si,ii,key,it,sec}
+  const c=cc();if(!c)return[];const r=[];
+  c.sec.forEach((sec,si)=>{if(!TRI.includes(sec.k))return;sec.i.forEach((raw,ii)=>{const it=P(raw);if(visible(it))r.push({si,ii,key:si+'.'+ii,it,sec});});});
+  return r;}
+function tally(){const all=items();const left=all.filter(x=>!s.marks[x.key]);return{all:all.length,left:left.length,red:left.filter(x=>x.it.red).length,leftList:left};}
+
+/* ---------- HPI writer ---------- */
+function build(){
+  const c=cc();if(!c)return'';const out=[];
+  const lab=(it,key)=>{const d=(s.idet[key]||'').trim();return d?it.t+' ('+d+')':it.t;};
+  const secPN=(si,sec)=>{const pos=[],neg=[];sec.i.forEach((raw,ii)=>{const it=P(raw);if(!visible(it))return;const key=si+'.'+ii,m=s.marks[key];if(m==='p')pos.push(lab(it,key));if(m==='n')neg.push(it.t);});return{pos,neg};};
+  const by=k=>{const pos=[],neg=[];c.sec.forEach((sec,si)=>{if(sec.k!==k)return;const r=secPN(si,sec);pos.push(...r.pos);neg.push(...r.neg);});return{pos,neg};};
+  const He=s.sex==='male'?'He':s.sex==='female'?'She':'The patient';
+  const cg=child()&&s.src.includes('caregiver')&&!s.src.includes('patient');
+  const subj=cg?'Caregiver':He;
+  // opening line (fixed template; *** marks a blank to fill in Epic)
+  const unit={'y.o.':'y/o','m.o.':'m/o','days old':'d/o'}[s.unit];
+  const ag=String(s.age).trim();
+  const art=/^8/.test(ag)||/^1[18]$/.test(ag)?'an':'a';
+  const sx1={male:'M',female:'F'}[s.sex]||'***';
+  const ph=by('pmh');
+  const other=s.opmh.split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+  const pmhAll=ph.pos.concat(other);
+  const ccp=s.cc==='other'?(s.ccText||'***'):c.cc;
+  out.push(`The patient is ${ag?art+' '+ag:'a ***'} ${unit} ${sx1} with a PMHx of ${pmhAll.length?andL(pmhAll):'***'} presenting today for evaluation of ${ccp}.`);
+  const arr={ems:'via EMS',transfer:'as a transfer from an outside facility',referral:'on referral from clinic',family:'with family'}[s.arr];
+  // second line: only when someone other than the patient helped, an interpreter was used, or history was limited
+  const helped=s.src.filter(x=>x!=='patient');
+  if(helped.length){const m={patient:'the patient',family:'family',caregiver:'caregiver',ems:'EMS',chart:'chart review',facility:'facility staff'};out.push('History was obtained from '+andL(s.src.map(x=>m[x]))+'.');}
+  if(s.interp)out.push((/^[aeiou]/i.test(s.interp)?'An ':'A ')+s.interp+' interpreter was used.');
+  if(s.lim.length)out.push('History is limited by '+andL(s.lim)+'.');
+  if(arr)out.push(`${He} arrived ${arr}.`);
+  // OLDCARTS, combined into a few sentences in that order
+  const m=c.main||{},ap=!!m.ap,ev=m.v==='occurred';
+  const pain=(c.f||'').includes('q')&&!ap;
+  const N=m.n||(pain?(c.term||'The pain'):'Symptoms');
+  const pl=m.n?!!m.pl:!pain, It=pl?'They':'It';
+  const v=(sg,p)=>pl?p:sg;
+  const adv=ev?'':({sudden:'suddenly',gradual:'gradually'}[s.onset]||'');
+  const ago=s.ago?('about '+s.ago+' '+(parseFloat(s.ago)===1?s.agoU.replace(/s$/,''):s.agoU)+' ago'):'';
+  const began=adv||ago||s.ctx;
+  if(began)out.push(sent(N+' '+(m.v||'began')+' '+[adv,ago].filter(Boolean).join(' ')+ctxPhrase(s.ctx,{male:'him',female:'her'}[s.sex])).replace(/ \./,'.'));
+  if(c.lkw&&s.lkw)out.push(sent('Last known well was '+s.lkw));
+  let subjUsed=!!began;
+  const clause=(cl)=>{if(!cl.length)return;const j=cl.length===2&&cl.some(x=>/ and /.test(x))?cl.join(', and '):joinL(cl,'and');out.push((subjUsed?It:N)+' '+j+'.');subjUsed=true;};
+  const prep=c.locPrep||'in the';
+  const sidePre=s.side&&s.side!=='bilateral'?s.side+' ':'', sidePost=s.side==='bilateral'?' bilaterally':'';
+  const locTxt=s.loc.length?sidePre+andL(s.loc)+sidePost:'';
+  const lv=m.lv||`${v('is','are')} located ${prep}`;
+  // L, D, C for the main complaint
+  const g1=[];
+  if(!(ap&&m.locPain)){
+    if(locTxt)g1.push(`${lv} ${locTxt}`);
+    else if(s.side)g1.push(s.side==='bilateral'?`${v('is','are')} bilateral`:`${v('is','are')} on the ${s.side} side`);}
+  const dur={constant:`${v('has','have')} been constant since onset`,seconds:`${v('comes','come')} in episodes lasting seconds`,minutes:`${v('comes','come')} in episodes lasting minutes`,hours:`${v('comes','come')} in episodes lasting hours`}[s.dur];
+  if(dur&&!ev)g1.push(dur);
+  if(!ap&&s.qual.length)g1.push(`${v('is','are')} described as ${andL(s.qual)}`);
+  if(!ap)clause(g1);
+  const ar=[];if(s.agg.length)ar.push('worse with '+andL(s.agg));if(s.rel.length)ar.push('better with '+andL(s.rel));
+  const radTxt=s.rad.includes('none')?'none':(s.rad.length?andL(s.rad):'');
+  // A, R
+  if(!ap){const g2=[];
+    if(ar.length)g2.push(`${v('is','are')} ${ar.join(' and ')}`);
+    if(radTxt==='none')g2.push(`${v('does','do')} not radiate`);else if(radTxt)g2.push(`${v('radiates','radiate')} to the ${radTxt}`);
+    clause(g2);}
+  // T, S
+  const g3=[];
+  const tc={worsening:`${v('has','have')} been getting worse`,improving:`${v('has','have')} been improving`,unchanged:`${v('has','have')} been unchanged since onset`,resolved:`${v('has','have')} since resolved`}[s.course];
+  if(tc&&!ev)g3.push(tc);
+  if(!ap&&s.sev!=null)g3.push(`${v('is','are')} rated ${s.sev}/10 in severity`);
+  if(ap)clause(g1.concat(g3));else clause(g3);
+  // associated pain, for complaints where pain is not the main problem
+  if(ap&&s.apain==='no')out.push('There is no associated pain.');
+  if(ap&&s.apain==='yes'){
+    let t='There is associated pain'+(m.locPain&&locTxt?' in the '+locTxt:'');
+    const pp=[];
+    if(s.qual.length)pp.push('described as '+andL(s.qual));
+    if(ar.length)pp.push(ar.join(' and '));
+    if(radTxt==='none')pp.push('without radiation');else if(radTxt)pp.push('radiating to the '+radTxt);
+    const p2=[];
+    if(ev){const pd={constant:'has been constant since the '+N.replace(/^The /,'').toLowerCase(),seconds:'comes in episodes lasting seconds',minutes:'comes in episodes lasting minutes',hours:'comes in episodes lasting hours'}[s.dur];if(pd)p2.push(pd);
+      const pt={worsening:'has been getting worse',improving:'has been improving',unchanged:'has been unchanged since onset',resolved:'has since resolved'}[s.course];if(pt)p2.push(pt);}
+    if(s.sev!=null){if(p2.length)p2.unshift('is rated '+s.sev+'/10');else pp.push('rated '+s.sev+'/10');}
+    out.push(t+(pp.length?', '+(pp.length===2&&pp.some(x=>/ and /.test(x))?pp.join(', and '):joinL(pp,'and')):'')+'.');
+    if(p2.length)out.push('It '+joinL(p2,'and')+'.');}
+  if(s.prior==='first')out.push('This is the first episode of these symptoms.');
+  if(s.prior==='similar')out.push(`${He} has had similar episodes in the past.`);
+  // complaint-specific picks
+  c.sec.forEach((sec,si)=>{if(sec.k==='pick'&&s.picks[si]!=null){out.push(sent(sec.pre+P(sec.i[s.picks[si]]).t));}});
+  // associated symptoms
+  const sv=by('sx');
+  if(sv.pos.length)out.push(`${subj} reports ${andL(sv.pos)}.`);
+  if(sv.neg.length)out.push(`${subj} denies ${orL(sv.neg)}.`);
+  c.sec.forEach((sec,si)=>{if(sec.k==='sx'&&s.det[si])out.push(sent(s.det[si]));});
+  if(ph.neg.length)out.push(`${He} has no known history of ${orL(ph.neg)}.`);
+  c.sec.forEach((sec,si)=>{if(sec.k==='pmh'&&s.det[si])out.push(sent(s.det[si]));});
+  // risk factors, meds, treatment
+  c.sec.forEach((sec,si)=>{
+    if(!['rf','med','tx'].includes(sec.k))return;
+    const {pos,neg}=secPN(si,sec);
+    if(sec.k==='rf'){if(pos.length)out.push((sec.l||'Notable for')+' '+andL(pos)+'.');if(neg.length)out.push((sec.n||'No')+' '+orL(neg.map(x=>x.replace(/^(a|an|the) /,'')))+'.');}
+    if(sec.k==='med'){if(pos.length)out.push(`${He} takes ${andL(pos)}.`);if(neg.length)out.push(`${He} is not taking ${orL(neg)}.`);}
+    if(sec.k==='tx'){const rv={full:' with relief',partial:' with partial relief',none:' without relief'}[s.resp]||'';if(pos.length)out.push(`${He} tried ${andL(pos)} prior to arrival${rv}.`);if(neg.length)out.push(`${He} has not tried ${orL(neg)}.`);}
+    if(s.det[si])out.push(sent(s.det[si]));});
+  // pregnancy
+  if(pregOn()){
+    if(s.lmp)out.push(sent('LMP was '+s.lmp));
+    const pv={possible:'Pregnancy is possible.',not:'She reports pregnancy is not possible.',unsure:'She is unsure whether she is pregnant.',pregnant:'She is currently pregnant'+(s.ga?' at '+s.ga:'')+'.'}[s.preg];
+    if(pv)out.push(pv);}
+  if(s.extra)out.push(sent(s.extra));
+  // fixed closing lines
+  out.push(`The patient's chief concern is ${(s.concern||'').trim().replace(/\.$/,'')||ccp}.`);
+  out.push(`${He} denies any further complaints today.`);
+  return out.join(' ');}
+/* turn whatever was typed about how it started into a phrase that fits after "began ... ago" */
+function ctxPhrase(raw,obj){
+  let t=String(raw||'').trim().replace(/[.]+$/,'');if(!t)return'';
+  const low=t.toLowerCase();
+  if(/^(none|nothing|n\/a|na|unknown|unprovoked|spontaneous(ly)?|no (clear |obvious |known |specific )?(inciting event|trigger|cause|precipitant|reason))$/.test(low))return' without an inciting event';
+  if(/^(denies|no) /.test(low))return' without '+t.replace(/^(denies|no) /i,'').replace(/^any /i,'');
+  if(/^(while|after|during|at|upon|on|when|in|following|since|before|with|without|from|shortly|immediately|right|just)\b/.test(low))return' '+t;
+  if(/^(woke|waking|awoke)( (up|him|her|the patient))? from sleep$/.test(low))return' and woke '+(obj||'the patient')+' from sleep';
+  if(/^\w+ing\b/.test(low))return' while '+t;
+  return' in the setting of '+t;}
+function pregOn(){const c=cc();if(!c||!c.preg||s.sex!=='female')return false;const y=ageY();return y==null||(y>=10&&y<=55);}
+
+/* ---------- views ---------- */
+const STEPS=['Patient','Complaint','Story','Pertinents','HPI'];
+const chip=(a,v,on,label,extra='')=>`<button type="button" class="chip${on?' on':''}" data-a="${a}" data-v="${esc(v)}" ${extra}>${esc(label)}</button>`;
+const multi=(a,arr,list,labels)=>`<div class="chips">${list.map((v,i)=>chip(a,v,arr.includes(v),labels?labels[i]:shown(v))).join('')}</div>`;
+const one=(a,cur,list,labels)=>`<div class="chips">${list.map((v,i)=>chip(a,v,cur===v,labels?labels[i]:shown(v))).join('')}</div>`;
+
+function vPatient(){
+  return `<h1 class="step"><span class="k">1</span>Patient</h1><p class="lede">Who the story is about and where it came from. Age and sex also decide which questions show up later, like pregnancy and prostate items.</p>
+  <div class="sec"><div class="grid">
+    <label class="f">Age<input id="age" type="number" inputmode="decimal" data-t="age" value="${esc(s.age)}" placeholder="45"></label>
+    <div class="fld"><span class="fl">Unit</span>${one('unit',s.unit,['y.o.','m.o.','days old'],['Years','Months','Days'])}</div></div>
+    <div class="fld"><span class="fl">Sex</span>${one('sex',s.sex,['female','male'],['Female','Male'])}</div>
+    <label class="f">Other PMHx, separated by commas<input id="opmh" type="text" data-t="opmh" value="${esc(s.opmh)}" placeholder="asthma, hypothyroidism"></label>
+    <p class="fine">Added to the opening line along with any history you mark positive on the Pertinents screen.</p>
+    <div class="fld"><span class="fl">Arrival</span>${one('arr',s.arr,['walkin','ems','family','referral','transfer'],['Walk-in','EMS','With family','Clinic referral','Transfer'])}</div></div>
+  <div class="sec"><h2>Source of history</h2>${multi('src',s.src,['patient','family','caregiver','ems','chart','facility'],['Patient','Family','Caregiver','EMS','Chart review','Facility staff'])}
+    <label class="f">Interpreter language<input id="interp" type="text" data-t="interp" value="${esc(s.interp)}" placeholder="Spanish"></label>
+    <div class="fld"><span class="fl">History limited by</span>${multi('lim',s.lim,['altered mental status','clinical acuity','intoxication','patient age','language barrier'],['Altered mental status','Acuity','Intoxication','Patient age','Language barrier'])}</div></div>`;}
+
+function vComplaint(){
+  const q=s.q.trim().toLowerCase();
+  const groups=GROUPS.map(g=>{const ks=Object.keys(C).filter(k=>C[k].g===g&&(!q||C[k].name.toLowerCase().includes(q)));if(!ks.length)return'';
+    return `<div class="grp"><div class="grp-h">${esc(g)}</div><div class="chips">${ks.map(k=>chip('cc',k,s.cc===k,C[k].name)).join('')}</div></div>`;}).join('');
+  return `<h1 class="step"><span class="k">2</span>Chief complaint</h1><p class="lede">Pick the complaint. Each one loads its own checklist of pertinent positives, negatives, and red flags.</p>
+  <div class="sec"><input type="search" id="q" data-t="q" value="${esc(s.q)}" placeholder="Search complaints" aria-label="Search complaints">
+    <div class="picker">${groups||'<p class="fine">No complaint matches that search. Try a shorter word, or pick Other.</p>'}</div>
+    ${s.cc==='other'?`<label class="f">Chief complaint, as it should read in the note<input id="ccText" type="text" data-t="ccText" value="${esc(s.ccText)}" placeholder="right hand numbness"></label>`:''}</div>`;}
+
+function vStory(){
+  const c=cc();if(!c)return needCC();
+  const f=c.f||'',m=c.main||{},ap=!!m.ap;const L=(k,t)=>`<span class="fl"><b class="ol">${k}</b>${t}</span>`;
+  const mainName=m.n?m.n.replace(/^The /,'').toLowerCase():'symptoms';const ev=m.v==='occurred';
+  let h=`<h1 class="step"><span class="k">3</span>Story</h1><p class="lede">Laid out in OLDCARTS order: onset, location, duration, character, aggravating and alleviating factors, radiation, timing, and severity.</p>
+  <div class="sec"><h2>Chief concern</h2>
+    <label class="f">What worries the patient most, in their words<input id="concern" type="text" data-t="concern" value="${esc(s.concern)}" placeholder="${esc(s.cc==='other'?'***':c.cc)}"></label>
+    <p class="fine">Closes the HPI. Leave blank to use the chief complaint.</p></div>
+  <div class="sec"><h2>Onset of the ${esc(mainName)}</h2>
+    ${ev?'':`<div class="fld">${L('O','How it started')}${one('onset',s.onset,['sudden','gradual'])}</div>`}
+    <div class="grid"><label class="f">How long ago<input id="ago" type="number" inputmode="decimal" data-t="ago" value="${esc(s.ago)}" placeholder="2"></label>
+      <div class="fld"><span class="fl">Unit</span>${one('agoU',s.agoU,['minutes','hours','days','weeks','months'])}</div></div>
+    <label class="f">What were they doing when it started?<input id="ctx" type="text" data-t="ctx" value="${esc(s.ctx)}" placeholder="carrying groceries up stairs"></label>
+    <div class="chips">${['no inciting event','at rest','during exertion','woke from sleep','after eating'].map(x=>chip('ctxq',x,s.ctx===x,cap(x))).join('')}</div>
+    ${c.lkw?`<label class="f">Last known well<input id="lkw" type="text" data-t="lkw" value="${esc(s.lkw)}" placeholder="21:30 per spouse"></label>`:''}</div>`;
+  const locF=()=>(f.includes('l')&&c.loc)?`<div class="fld">${L('L','Location')}${multi('loc',s.loc,c.loc)}</div>`:'';
+  const sideF=()=>c.side?`<div class="fld">${L('L','Side')}${one('side',s.side,['left','right','bilateral'])}</div>`:'';
+  const painF=()=>{let x='';
+    if(f.includes('q')&&c.qual)x+=`<div class="fld">${L('C','Character')}${multi('qual',s.qual,c.qual)}</div>`;
+    if(c.agg)x+=`<div class="fld">${L('A','Aggravated by')}${multi('agg',s.agg,c.agg)}</div>`;
+    if(c.rel)x+=`<div class="fld">${L('A','Alleviated by')}${multi('rel',s.rel,c.rel)}</div>`;
+    if(f.includes('r'))x+=`<div class="fld">${L('R','Radiation')}${multi('rad',s.rad,['none'].concat(c.rad||[]),['No radiation'].concat((c.rad||[]).map(shown)))}</div>`;
+    if(f.includes('s'))x+=`<div class="fld">${L('S','Severity (0 to 10)')}<div class="seg">${[...Array(11).keys()].map(n=>`<button type="button" class="${s.sev===n?'on':''}" data-a="sev" data-v="${n}">${n}</button>`).join('')}</div></div>`;
+    return x;};
+  const timeF=`<div class="fld">${L('D','Duration')}${one('dur',s.dur,['constant','seconds','minutes','hours'],['Constant since onset','Episodes last seconds','Episodes last minutes','Episodes last hours'])}</div>
+    <div class="fld">${L('T','Timing')}${one('course',s.course,COURSE,['Worsening','Improving','Unchanged','Resolved'])}</div>
+    <div class="fld"><span class="fl">Prior episodes</span>${one('prior',s.prior,['first','similar'],['First episode','Similar before'])}</div>`;
+  if(ap){
+    const mainBody=sideF()+(m.locPain?'':locF())+(ev?'':timeF);
+    if(mainBody)h+=`<div class="sec"><h2>The ${esc(mainName)}</h2>${mainBody}</div>`;
+    h+=`<div class="sec"><h2>Associated pain</h2>
+      <div class="fld"><span class="fl">Is there pain with it?</span>${one('apain',s.apain,['yes','no'],['Yes','No'])}</div>
+      ${s.apain==='yes'?(m.locPain?locF():'')+painF()+(ev?timeF:''):''}</div>`;
+  } else {
+    h+=`<div class="sec"><h2>Character and timing</h2>${sideF()}${locF()}${timeF}${painF()}</div>`;
+  }
+  c.sec.forEach((sec,si)=>{if(sec.k!=='pick')return;
+    h+=`<div class="sec"><h2>${esc(sec.t)}</h2><div class="chips">${sec.i.map((raw,ii)=>{const it=P(raw);return chip('pick',si+'.'+ii,s.picks[si]===ii,shown(it.t));}).join('')}</div></div>`;});
+  return h;}
+function triChip(x){const v=s.marks[x.key];const cls=v==='p'?' pos':v==='n'?' neg':(x.it.red?' rf':'');
+  return `<button type="button" class="chip${cls}" data-a="tri" data-v="${x.key}" aria-label="${esc(shown(x.it.t))}${v==='p'?', yes':v==='n'?', no':', not asked'}"><span class="mark">${v==='p'?'+':v==='n'?'−':''}</span>${esc(shown(x.it.t))}</button>`;}
+const KIND={sx:'Ask about',pmh:'Past history',rf:'Risk factors',med:'Medications',tx:'Tried at home'};
+
+function vPert(){
+  const c=cc();if(!c)return needCC();const all=items();
+  let h=`<h1 class="step"><span class="k">4</span>Pertinents</h1><p class="lede">Tap once for yes, twice for no, a third time to clear. Anything left blank stays out of the note and shows up on the HPI screen as still to ask.</p>
+  <div class="legend"><span><i class="dot p"></i>Positive</span><span><i class="dot n"></i>Negative</span><span><i class="dot r"></i>Red flag not yet asked</span></div>`;
+  if(pregOn())h+=`<div class="sec"><h2>Pregnancy<span class="kind">${esc(KIND.rf)}</span></h2>
+    <div class="grid"><label class="f">LMP<input id="lmp" type="text" data-t="lmp" value="${esc(s.lmp)}" placeholder="about 3 weeks ago"></label></div>
+    ${one('preg',s.preg,['possible','not','unsure','pregnant'],['Possible','Not possible','Unsure','Currently pregnant'])}
+    ${s.preg==='pregnant'?`<label class="f">Gestational age<input id="ga" type="text" data-t="ga" value="${esc(s.ga)}" placeholder="8 weeks by LMP"></label>`:''}</div>`;
+  c.sec.forEach((sec,si)=>{if(!TRI.includes(sec.k))return;
+    const mine=all.filter(x=>x.si===si);if(!mine.length)return;
+    const done=mine.filter(x=>s.marks[x.key]).length;
+    h+=`<div class="sec"><h2>${esc(sec.t)}<span class="kind">${KIND[sec.k]}</span><span class="aside${done===mine.length?' done':''}">${done} of ${mine.length}</span></h2>
+      <div class="chips">${mine.map(triChip).join('')}</div>
+      ${mine.filter(x=>s.marks[x.key]==='p'&&x.it.ask).map(x=>`<label class="f ask">${esc(shown(x.it.t))}: ${esc(x.it.ask)}<input type="text" id="i-${x.key}" data-i="${x.key}" value="${esc(s.idet[x.key]||'')}"></label>`).join('')}
+      ${sec.k==='tx'&&mine.some(x=>s.marks[x.key]==='p')?`<div class="fld"><span class="fl">Response</span>${one('resp',s.resp,['full','partial','none'],['Relief','Partial relief','No relief'])}</div>`:''}
+      <div class="row"><button type="button" class="btn sm" data-a="restneg" data-v="${si}">Mark the rest negative</button></div>
+      <input type="text" id="det-${si}" data-d="${si}" value="${esc(s.det[si]||'')}" placeholder="${esc(detHint(sec))}" aria-label="Details for ${esc(sec.t)}"></div>`;});
+  return h;}
+function detHint(sec){return{sx:'Details, such as timing or severity',pmh:'Details, such as dates or prior workup',rf:'Details',med:'Details, such as drug name, dose, last dose',tx:'Details, such as dose and time'}[sec.k]||'Details';}
+
+function vHPI(){
+  const c=cc();if(!c)return needCC();
+  if(!s.dirty)s.out=build();
+  const t=tally();
+  let coach='';
+  if(t.left){const red=t.leftList.filter(x=>x.it.red),rest=t.leftList.filter(x=>!x.it.red);
+    const grp={};rest.forEach(x=>{(grp[x.sec.t]=grp[x.sec.t]||[]).push(x);});
+    coach=`<div class="sec coach"><h2>Still to ask<span class="aside">${t.left} of ${t.all}</span></h2>
+      <p class="fine">Tap to answer here. Unanswered items stay out of the note.</p>
+      ${red.length?`<div class="sub">Red flags</div><div class="chips">${red.map(triChip).join('')}</div>`:''}
+      ${Object.keys(grp).map(g=>`<div class="sub">${esc(g)}</div><div class="chips">${grp[g].map(triChip).join('')}</div>`).join('')}</div>`;}
+  else coach=`<div class="ok">Every pertinent item for ${esc(c.name.toLowerCase())} has an answer.</div>`;
+  return `<h1 class="step"><span class="k">5</span>HPI</h1><p class="lede">Edit freely before copying. If you change answers after editing, tap Rebuild to start from the new answers.</p>
+  ${s.dirty?`<div class="banner"><span>You edited this text, so new answers are not added until you rebuild.</span><button class="btn sm" type="button" data-a="rebuild">Rebuild</button></div>`:''}
+  <div class="sec"><textarea id="out" class="out" aria-label="HPI text">${esc(s.out)}</textarea>
+    <div class="row"><button class="btn primary" type="button" data-a="copy">Copy HPI</button>
+    <label class="f" style="flex:1 1 220px">Add a closing line<input id="extra" type="text" data-t="extra" value="${esc(s.extra)}" placeholder="Seen at urgent care yesterday, told to come here"></label></div></div>
+  ${coach}
+  ${examCard(c)}`;}
+function examItems(c){return (c.ex||[]).map((raw,i)=>({i,it:P(raw)})).filter(x=>visible(x.it));}
+function examCard(c){
+  const xs=examItems(c);if(!xs.length)return'';
+  const done=xs.filter(x=>s.exDone[x.i]).length;
+  return `<div class="sec"><h2>Next steps: exam to document<span class="aside${done===xs.length?' done':''}">${done} of ${xs.length}</span></h2>
+    <p class="fine">Findings to examine and document for ${esc(c.name.toLowerCase())}. Items marked Must are the ones that change management. Tap to check off.</p>
+    <ul class="exam">${xs.map(x=>`<li class="${s.exDone[x.i]?'done':''}" data-a="exck" data-v="${x.i}" role="checkbox" aria-checked="${!!s.exDone[x.i]}" tabindex="0"><span class="box">${s.exDone[x.i]?'✓':''}</span><span class="t">${esc(cap(x.it.t))}${x.it.red?'<span class="must">Must</span>':''}</span></li>`).join('')}</ul>
+    <div class="row"><button class="btn sm" type="button" data-a="copyex">Copy as exam template</button></div></div>`;}
+function needCC(){return `<h1 class="step">Pick a complaint first</h1><p class="lede">The questions here depend on the chief complaint.</p><button class="btn primary" type="button" data-a="go" data-v="1">Choose a complaint</button>`;}
+
+/* ---------- render ---------- */
+const $=id=>document.getElementById(id);
+function render(){
+  $('rail').innerHTML=STEPS.map((n,i)=>`<button type="button" class="${i===s.step?'cur':''} ${hasStep(i)?'has':''}" data-a="go" data-v="${i}">${n}</button>`).join('');
+  $('view').innerHTML=[vPatient,vComplaint,vStory,vPert,vHPI][s.step]();
+  $('notice').innerHTML=s.example?`<div class="banner"><span>This is an example chest pain case. Tap New patient to start your own.</span></div>`:'';
+  $('example').classList.toggle('on',s.example);
+  footer();}
+function footer(){
+  $('back').disabled=s.step===0;$('back').style.visibility=s.step===0?'hidden':'visible';
+  $('next').textContent=s.step===4?'Copy':'Next';
+  const c=cc();if(!c){$('where').textContent='No complaint chosen';return;}
+  const t=tally();
+  $('where').innerHTML=esc(c.name)+' · '+(t.left?`${t.left} to ask${t.red?` · <b>${t.red} red flag${t.red>1?'s':''}</b>`:''}`:'all asked');}
+function hasStep(i){const c=cc();
+  if(i===0)return !!(s.age||s.sex);if(i===1)return !!s.cc;
+  if(i===2)return !!(s.onset||s.dur||s.ago||s.loc.length||Object.keys(s.picks).length);
+  if(i===3)return Object.keys(s.marks).length>0;return false;}
+
+function toggle(arr,v){const i=arr.indexOf(v);if(i>=0)arr.splice(i,1);else arr.push(v);}
+function resetCC(){Object.assign(s,{apain:'',idet:{},exDone:{},side:'',loc:[],qual:[],rad:[],sev:null,agg:[],rel:[],picks:{},marks:{},det:{},resp:'',lkw:'',dirty:false});}
+function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),1600);}
+function copyText(text,msg){const done=()=>toast(msg);const fall=()=>{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){toast('Copy failed. Select the text and copy it manually.');}t.remove();};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,fall);else fall();}
+function copy(){
+  const ta=$('out');const text=ta?ta.value:build();
+  const done=()=>toast('HPI copied');
+  const fall=()=>{if(ta){ta.focus();ta.select();try{document.execCommand('copy');done();}catch(e){toast('Text selected. Copy it from the menu.');}}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,fall);else fall();}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
+  const singles=['unit','sex','arr','onset','dur','apain','agoU','course','prior','side','preg','resp'];
+  if(singles.includes(a)){s[a]=s[a]===v?(a==='unit'||a==='agoU'?s[a]:''):v;}
+  else if(['src','lim','loc','qual','agg','rel'].includes(a))toggle(s[a],v);
+  else if(a==='rad'){if(v==='none')s.rad=s.rad.includes('none')?[]:['none'];else{s.rad=s.rad.filter(x=>x!=='none');toggle(s.rad,v);}}
+  else if(a==='ctxq'){s.ctx=s.ctx===v?'':v;}
+  else if(a==='sev'){const n=+v;s.sev=s.sev===n?null:n;}
+  else if(a==='cc'){if(s.cc!==v){s.cc=v;resetCC();}s.example=false;render();s.step=2;window.scrollTo(0,0);}
+  else if(a==='pick'){const[si,ii]=v.split('.').map(Number);s.picks[si]=s.picks[si]===ii?null:ii;if(s.picks[si]==null)delete s.picks[si];}
+  else if(a==='tri'){const m=s.marks[v];if(!m)s.marks[v]='p';else if(m==='p')s.marks[v]='n';else delete s.marks[v];}
+  else if(a==='restneg'){items().filter(x=>x.si===+v&&!s.marks[x.key]).forEach(x=>s.marks[x.key]='n');}
+  else if(a==='go'){s.step=+v;window.scrollTo(0,0);}
+  else if(a==='rebuild'){s.dirty=false;}
+  else if(a==='copy'){copy();return;}
+  else if(a==='exck'){if(s.exDone[v])delete s.exDone[v];else s.exDone[v]=true;}
+  else if(a==='copyex'){const c=cc();copyText('Exam findings to document:\n'+examItems(c).map(x=>'- '+cap(x.it.t)+': ***').join('\n'),'Exam template copied');return;}
+  else if(a==='clear'){newPatient();return;}
+  else return;
+  render();});
+document.addEventListener('keydown',e=>{const li=e.target.closest&&e.target.closest('li[data-a]');if(li&&(e.key==='Enter'||e.key===' ')){e.preventDefault();li.click();}});
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.dataset.t){s[el.dataset.t]=el.value;
+    if(el.dataset.t==='q'){const pos=el.selectionStart;render();const q=$('q');q.focus();try{q.setSelectionRange(pos,pos);}catch(_){}}
+    else if(el.dataset.t==='age'){footer();}
+    else if(el.dataset.t==='extra'&&!s.dirty){s.out=build();const o=$('out');if(o)o.value=s.out;}
+    else footer();}
+  else if(el.dataset.d!=null){s.det[el.dataset.d]=el.value;}
+  else if(el.dataset.i!=null){s.idet[el.dataset.i]=el.value;}
+  else if(el.id==='out'){s.out=el.value;if(!s.dirty){s.dirty=true;const n=document.createElement('div');n.className='banner';n.innerHTML='<span>You edited this text, so new answers are not added until you rebuild.</span><button class="btn sm" type="button" data-a="rebuild">Rebuild</button>';el.closest('.sec').before(n);}}});
+document.addEventListener('change',e=>{if(e.target.dataset.t==='age')render();});
+$('back').onclick=()=>{if(s.step>0){s.step--;render();window.scrollTo(0,0);}};
+$('next').onclick=()=>{if(s.step===4){copy();return;}if(s.step===1&&!s.cc){toast('Pick a complaint first');return;}s.step++;render();window.scrollTo(0,0);};
+function newPatient(){s=blank();render();window.scrollTo(0,0);}
+$('newpt').onclick=newPatient;
+$('example').onclick=()=>{example();window.scrollTo(0,0);};
+
+/* ---------- example case ---------- */
+function example(){
+  s=blank();Object.assign(s,{age:'58',sex:'male',arr:'ems',src:['patient','ems'],cc:'chest_pain',onset:'sudden',ago:'2',agoU:'hours',prior:'first',ctx:'carrying groceries up stairs',dur:'constant',concern:'that this could be a heart attack',
+    loc:['substernal chest'],qual:['pressure'],rad:['left arm','jaw'],sev:7,agg:['exertion'],rel:['rest'],resp:'partial',step:4,example:true});
+  const set={p:['shortness of breath','diaphoresis','nausea','HTN','HLD','tobacco use','aspirin','nitroglycerin'],
+    n:['vomiting','syncope','hemoptysis','unilateral leg swelling or pain','focal weakness or numbness','abrupt pain maximal at onset','fever','CAD','prior MI','prior stents or CABG','prior DVT/PE','surgery or major trauma in the last 4 weeks','recent immobilization or long travel','active cancer','an anticoagulant','a PDE-5 inhibitor']};
+  C.chest_pain.sec.forEach((sec,si)=>sec.i.forEach((raw,ii)=>{const t=P(raw).t;if(set.p.includes(t))s.marks[si+'.'+ii]='p';else if(set.n.includes(t))s.marks[si+'.'+ii]='n';}));
+  const dt={'tobacco use':'1 pack per day for 30 years','aspirin':'324 mg','nitroglycerin':'1 sublingual dose'};
+  C.chest_pain.sec.forEach((sec,si)=>sec.i.forEach((raw,ii)=>{const t=P(raw).t;if(dt[t]&&s.marks[si+'.'+ii]==='p')s.idet[si+'.'+ii]=dt[t];}));
+  s.opmh='GERD';
+  render();}
+example();
+</script>
+
+</body></html>
