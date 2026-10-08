@@ -135,6 +135,7 @@ details.sys[open]>summary{border-bottom:1px solid var(--line)}
 const SYSTEMS=[
  {id:'hd',name:'Hemodynamics',short:'Hemo',items:[
   'Vasoactive infusions (pressors, inotropes, antihypertensives)',
+  ['hdw','Pressor wean plan'],
   'Blood pressure goals',
   'Dysrhythmias: tachy, brady, blocks',
   'Oxygen delivery and consumption',
@@ -189,7 +190,7 @@ const SYSTEMS=[
   'Free water (adjust to sodium)',
   'Metabolic cart and nitrogen balance',
   'TPN: needed? Planned duration']}
-].map(s=>({...s,items:s.items.map((t,i)=>({id:s.id+(i+1),t}))}));
+].map(s=>({...s,items:(n=>s.items.map(t=>Array.isArray(t)?{id:t[0],t:t[1]}:{id:s.id+(++n),t}))(0)}));
 
 /* ---------- guidance: hover (or tap ⓘ) on each consideration ----------
    Each entry: [bullets, sources]. Summaries of major guidelines and trials as of Oct 2026. */
@@ -199,6 +200,18 @@ hd1:[['Norepinephrine first line. Add vasopressin as norepinephrine escalates (n
  'Peripheral pressors are acceptable short term through a proximal, well-running IV while central access is placed.',
  'Hydrocortisone 200 mg/day for ongoing pressor need (2021 trigger: norepinephrine ≥0.25 µg/kg/min for ≥4 h).'],
  'SSC 2026; SSC 2021'],
+hdw:[['When to start: MAP steady at goal with perfusion improving (lactate falling, capillary refill normal, UOP returning). Lower one agent at a time in small steps, e.g. norepinephrine by 0.02–0.05 µg/kg/min every 15–30 min, and pause around procedures and sedation boluses.',
+ 'Norepinephrine + vasopressin: wean norepinephrine first to a low dose, then stop vasopressin. Stopping vasopressin first causes more hypotension (DOVSS and observational data).',
+ 'Triple therapy: drop epinephrine first, especially if it is driving lactate or tachyarrhythmias.',
+ 'Sedation-driven hypotension: trim propofol or dexmedetomidine and lean on analgesia before turning up a pressor.',
+ 'Older adults: a MAP of 60–65 is acceptable and lets the wean go faster (65 trial). A higher MAP didn\'t help overall in chronic HTN (SEPSISPAM), though it lowered RRT need in that subgroup.',
+ 'Hydrocortisone: continue until off pressors, then stop or taper per local practice; watch BP for a day after stopping.',
+ 'Midodrine doesn\'t shorten IV pressor time in septic shock (MIDAS); don\'t start it just to speed the wean.',
+ 'Stalled wean: look for adrenal insufficiency, occult bleeding, an uncontrolled source, high PEEP or auto-PEEP, tamponade, RV failure, low iCa, severe acidosis, and drug causes. Echo it.',
+ 'De-resuscitation: low-dose norepinephrine can be continued while diuresing or running UF; don\'t wait for zero pressor to start fluid removal.',
+ 'Cardiogenic shock: wean inotropes slowly and recheck lactate and ScvO₂ after each step. Milrinone lingers with AKI.',
+ 'Neuro (CPP or vasospasm goals): wean only once the BP goal itself has been relaxed.'],
+ 'SSC 2026; DOVSS 2018; 65 trial 2020; SEPSISPAM 2014; MIDAS 2020; APROCCHSS 2018; ADRENAL 2018', true],
 hd2:[['Septic shock: initial MAP target 65, managed as a range. In patients ≥65 y, 60–65 is reasonable (65 trial).',
  'ICH: SBP ~140 for presenting SBP 150–220; avoid dropping below 130.',
  'Ischemic stroke: <180/105 after thrombolysis or thrombectomy; permissive up to 220/120 if no reperfusion therapy.',
@@ -484,7 +497,7 @@ function vPatient(p){
   <p class="sub" style="margin:-4px 0 12px">Hover an item, or tap ⓘ, for current guidance. Summaries as of Oct 2026; check local protocols and dosing.</p>
   ${SYSTEMS.map(s=>{const ss=sysStats(x,s);const pn=px&&px.n&&px.n[s.id];
     return`<details class="sys" data-sys="${s.id}" ${open[s.id]?'open':''}><summary><span class="nm">${s.name}</span>${ss.flags?`<span class="fl">${ss.flags} !</span>`:''}<span class="ct ${ss.done===ss.n?'done':''}">${ss.done}/${ss.n}</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-    <div class="sysbody">${s.items.map(it=>{const m=x.m[it.id]||'';const tp=TIPS[it.id];const on=view.tips&&view.tips[it.id];return`<div class="item${on?' tipon':''}" data-m="${m}" data-item="${it.id}"><button class="mkbtn" data-act="mark" data-item="${it.id}"><span class="mk">${GLYPH[m]}</span><span class="it">${esc(it.t)}</span></button>${tp?`<button class="info" data-act="tip" data-item="${it.id}" aria-expanded="${on?'true':'false'}" aria-controls="tip-${it.id}" aria-label="Guidance"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></svg></button><div class="tip" id="tip-${it.id}" role="tooltip"><ul>${tp[0].map(b=>`<li>${esc(b)}</li>`).join('')}</ul><div class="src">${esc(tp[1])}</div></div>`:''}</div>`}).join('')}
+    <div class="sysbody">${s.items.map(it=>{const m=x.m[it.id]||'';const tp=TIPS[it.id];const on=view.tips&&view.tips[it.id];return`<div class="item${on?' tipon':''}" data-m="${m}" data-item="${it.id}"><button class="mkbtn" data-act="mark" data-item="${it.id}"><span class="mk">${GLYPH[m]}</span><span class="it">${esc(it.t)}</span></button>${tp?`<button class="info" data-act="tip" data-item="${it.id}" aria-expanded="${on?'true':'false'}" aria-controls="tip-${it.id}" aria-label="Guidance"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></svg></button><div class="tip" id="tip-${it.id}" role="tooltip"><ul>${tp[0].map(b=>{const k=tp[2]?b.indexOf(': '):-1;return`<li>${k>0&&k<48?`<b>${esc(b.slice(0,k))}:</b>${esc(b.slice(k+1))}`:esc(b)}</li>`}).join('')}</ul><div class="src">${esc(tp[1])}</div></div>`:''}</div>`}).join('')}
     <div class="fld"><span>${s.short} notes</span><textarea data-act="note" data-sys="${s.id}" rows="2" placeholder="Plan, numbers, what to follow">${esc(x.n&&x.n[s.id]||'')}</textarea></div>
     ${pn?`<div class="prev"><b>${fmt(pd)}:</b> ${esc(pn)}</div>`:''}
     <div class="sysfoot"><button class="linkbtn" data-act="sysall" data-sys="${s.id}">Mark rest reviewed</button><button class="linkbtn" data-act="sysna" data-sys="${s.id}">Rest N/A</button><button class="linkbtn" data-act="sysclear" data-sys="${s.id}" style="color:var(--muted)">Clear</button></div>
