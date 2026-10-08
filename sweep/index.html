@@ -72,7 +72,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
 .bar i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .2s}
 
 /* systems */
-details.sys{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+details.sys{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
 details.sys>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer;min-height:56px}
 details.sys>summary::-webkit-details-marker{display:none}
 details.sys>summary .nm{flex:1;font-weight:700;font-size:1.05rem}
@@ -83,8 +83,9 @@ details.sys>summary .chev{width:16px;height:16px;fill:none;stroke:var(--muted);s
 details.sys[open]>summary .chev{transform:rotate(90deg)}
 details.sys[open]>summary{border-bottom:1px solid var(--line)}
 .sysbody{padding:6px 14px 14px}
-.item{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;font:inherit;font-size:.98rem;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--line);padding:11px 0;cursor:pointer;min-height:48px}
+.item{position:relative;display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 4px;border-bottom:1px solid var(--line)}
 .item:last-of-type{border-bottom:0}
+.mkbtn{flex:1;min-width:0;display:flex;align-items:flex-start;gap:12px;text-align:left;font:inherit;font-size:.98rem;color:var(--ink);background:none;border:0;padding:11px 0;cursor:pointer;min-height:48px}
 .mk{flex:none;width:28px;height:28px;border-radius:8px;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:.95rem;background:var(--paper)}
 .item[data-m="ok"] .mk{background:var(--ok);border-color:var(--ok);color:#fff}
 .item[data-m="flag"] .mk{background:var(--warn);border-color:var(--warn);color:#fff}
@@ -92,6 +93,18 @@ details.sys[open]>summary{border-bottom:1px solid var(--line)}
 .item[data-m="na"] .it{color:var(--na);text-decoration:line-through}
 .item[data-m="flag"] .it{font-weight:700}
 .it{padding-top:3px}
+.info{flex:none;width:36px;height:36px;margin-top:7px;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.info svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}
+.info:hover,.item.tipon .info{color:var(--accent);background:var(--accent-soft)}
+.tip{display:none;flex-basis:100%;font-size:.88rem;line-height:1.45;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:10px 12px;margin:0 0 12px 40px}
+.tip ul{margin:0;padding-left:16px}.tip li{margin:3px 0}
+.tip .src{margin-top:6px;font-size:.76rem;color:var(--muted)}
+.item.tipon .tip{display:block}
+@media (hover:hover) and (pointer:fine){
+  .item:not(.tipon) .tip{display:block;position:absolute;left:40px;right:0;top:calc(100% - 6px);z-index:6;margin:0;box-shadow:0 10px 28px rgba(20,35,58,.18);visibility:hidden;opacity:0;pointer-events:none;transition:opacity .1s,visibility 0s .1s}
+  .item.up:not(.tipon) .tip{top:auto;bottom:calc(100% - 6px)}
+  .item:not(.tipon):hover .tip{visibility:visible;opacity:1;transition:opacity .15s .35s,visibility 0s .35s}
+}
 .sysfoot{display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:8px}
 .prev{font-size:.85rem;color:var(--muted);margin:6px 0 0;padding:8px 10px;background:var(--bg);border-radius:8px;white-space:pre-wrap}
 .prev b{color:var(--ink)}
@@ -177,6 +190,235 @@ const SYSTEMS=[
   'Metabolic cart and nitrogen balance',
   'TPN: needed? Planned duration']}
 ].map(s=>({...s,items:s.items.map((t,i)=>({id:s.id+(i+1),t}))}));
+
+/* ---------- guidance: hover (or tap ⓘ) on each consideration ----------
+   Each entry: [bullets, sources]. Summaries of major guidelines and trials as of Oct 2026. */
+const TIPS={
+hd1:[['Norepinephrine first line. Add vasopressin as norepinephrine escalates (no fixed threshold; many add it around 0.25–0.5 µg/kg/min). Epinephrine next if MAP is still inadequate.',
+ 'Cardiac dysfunction with ongoing hypoperfusion despite adequate MAP and volume: add an inotrope (dobutamine), or use epinephrine alone.',
+ 'Peripheral pressors are acceptable short term through a proximal, well-running IV while central access is placed.',
+ 'Hydrocortisone 200 mg/day for ongoing pressor need (2021 trigger: norepinephrine ≥0.25 µg/kg/min for ≥4 h).'],
+ 'SSC 2026; SSC 2021'],
+hd2:[['Septic shock: initial MAP target 65, managed as a range. In patients ≥65 y, 60–65 is reasonable (65 trial).',
+ 'ICH: SBP ~140 for presenting SBP 150–220; avoid dropping below 130.',
+ 'Ischemic stroke: <180/105 after thrombolysis or thrombectomy; permissive up to 220/120 if no reperfusion therapy.',
+ 'Aortic dissection: HR <60 and SBP 100–120. Other hypertensive emergencies: lower MAP no more than 25% in the first hour.'],
+ 'SSC 2026; AHA/ASA ICH 2022; AHA/ASA AIS 2019; ACC/AHA aortic 2022; ACC/AHA HTN 2017'],
+hd3:[['Keep K ≥4 and Mg ≥2. Check QT-prolonging drugs, central line tip position, and whether pressors (β-agonists) are driving the tachycardia.',
+ 'New AF in sepsis: treat the trigger first. Rate control with a β-blocker if BP tolerates, or amiodarone. Synchronized cardioversion if unstable.',
+ 'Symptomatic bradycardia: atropine 1 mg; if ineffective, epinephrine or dopamine infusion, or transcutaneous pacing. Look for dexmedetomidine, β-blockers, hyperkalemia.',
+ 'Mobitz II or complete heart block: pads on, cardiology for pacing.'],
+ 'AHA ACLS 2025; ACC/AHA/ACCP/HRS AF 2023'],
+hd4:[['DO₂ = CO × (1.34 × Hgb × SaO₂ + 0.003 × PaO₂) × 10.',
+ 'Track perfusion: lactate every 2–4 h while elevated, capillary refill ≤3 s, ScvO₂ ≥70%, mentation, UOP. CRT-targeted resuscitation performs at least as well as lactate-targeted (ANDROMEDA-SHOCK).',
+ 'Low ScvO₂: raise delivery (CO, Hgb, SaO₂) or cut consumption (fever, shivering, agitation, work of breathing).',
+ 'Venous–arterial PCO₂ gap >6 mmHg suggests inadequate flow even with a normal ScvO₂.'],
+ 'SSC 2021/2026; ANDROMEDA-SHOCK'],
+hd5:[['In shock, look daily with POCUS or echo: LVEF, RV size (RV:LV >1 abnormal), TAPSE <17 mm, septal flattening, IVC, pericardial effusion.',
+ 'RV failure: avoid fluid loading, keep sinus rhythm, hold MAP with norepinephrine ± vasopressin, lower PVR (fix hypoxemia, hypercapnia, acidosis; inhaled pulmonary vasodilators), inotrope if low output. Keep plateau and PEEP no higher than needed.',
+ 'LV failure: diuresis and afterload reduction if BP allows; inotrope for low output; SCAI shock stage guides escalation to mechanical support.'],
+ 'AHA RV failure statement 2018; SCAI shock classification 2022'],
+hd6:[['Trend troponin with ECGs. Separate type 1 MI (plaque rupture: ACS pathway, cardiology) from type 2 (supply–demand: treat anemia, tachycardia, hypotension, hypoxemia).',
+ 'Antiplatelets and anticoagulation for type 1 MI must be weighed against bleeding risk in the ICU.',
+ 'With cardiovascular disease, keep Hgb ≥8 (AABB 2023). In acute MI with anemia, a liberal target of 10 trended toward benefit (MINT).'],
+ '4th Universal Definition of MI; ACC/AHA ACS 2025; AABB 2023; MINT 2023'],
+
+rs1:[['Document mode, VT in mL/kg PBW, PEEP, FiO₂, plateau pressure, driving pressure, and the last ABG.',
+ 'Oxygen target SpO₂ ~92–96% for most; avoid hyperoxia. 88–92% in hypercapnic COPD; 88–95% acceptable in ARDS.',
+ 'Daily VAP bundle: HOB 30–45°, oral care, subglottic suction if available, paired SAT/SBT.'],
+ 'BMJ oxygen rapid recommendation 2018; ARDSNet; SHEA VAP 2022'],
+rs2:[['Name the indication: hypoxemic failure, hypercapnic failure, airway protection, or procedure/sedation. It decides what liberation readiness looks like.',
+ 'Has the original reason resolved? If not, what is the barrier today (secretions, mental status, fluid, weakness)?',
+ 'ARDS by the 2024 global definition: acute, bilateral opacities not fully from cardiac failure, P/F ≤300 or SpO₂/FiO₂ ≤315 (SpO₂ ≤97%), including patients on HFNC ≥30 L/min.'],
+ 'Global ARDS definition (Matthay, AJRCCM 2024); ATS 2024'],
+rs3:[['Lung-protective ventilation: VT 6 mL/kg PBW (4–8), plateau ≤30, driving pressure ≤15 when possible.',
+ 'PBW: men 50 + 0.91 × (height cm − 152.4); women 45.5 + 0.91 × (height cm − 152.4).',
+ 'Moderate–severe ARDS: higher PEEP, without prolonged recruitment maneuvers.',
+ 'Ask what changed overnight and why: FiO₂ creep, PEEP changes, desaturation, new asynchrony.'],
+ 'ATS ARDS 2024; ARDSNet'],
+rs4:[['Severe ARDS (P/F <150): prone ≥12 h/day (PROSEVA used ≥16 h). Consider early neuromuscular blockade. VV-ECMO for selected refractory cases. Corticosteroids are suggested for ARDS.',
+ 'Permissive hypercapnia is fine to pH ~7.20–7.25 unless raised ICP or RV failure.',
+ 'Look for asynchrony, auto-PEEP (expiratory hold), and plateau after any VT or PEEP change.',
+ 'Once off pressors, conservative fluids (FACTT).'],
+ 'ATS ARDS 2024; SCCM corticosteroids 2024; PROSEVA; FACTT'],
+rs5:[['Pair a daily sedation interruption with an SBT (ABC trial). SBT 30–120 min on pressure support 5–8 cmH₂O rather than T-piece or CPAP.',
+ 'Ready when: cause improving, FiO₂ ≤0.4–0.5, PEEP ≤5–8, hemodynamically stable on little or no pressor, following commands, manageable secretions, adequate cough. RSBI <105 supports.',
+ 'High risk for stridor: cuff leak test; if absent, give steroids ≥4 h before extubation.',
+ 'High risk for failure (>65 y, cardiac or lung disease, >24 h on vent): extubate to NIV or HFNC; NIV especially if hypercapnic or BMI >30.'],
+ 'ATS/CHEST liberation 2017; ERS/ATS NIV 2017'],
+rs6:[['Possible VAP (new infiltrate plus fever, secretions, worse oxygenation): cultures before antibiotics; 7 days of therapy for most.',
+ 'Effusion or pneumothorax on POCUS or CXR: drain if large or limiting ventilation.',
+ 'Bronchospasm: inhaled SABA/SAMA, systemic steroids for asthma or COPD exacerbation. Severe CAP: hydrocortisone 200 mg/day started early.',
+ 'Unexplained hypoxemia with RV strain: think PE.'],
+ 'IDSA/ATS HAP/VAP 2016; SCCM corticosteroids 2024 (CAPE COD)'],
+
+nr1:[['Name the diagnosis and the day count, e.g. SAH day 5 (vasospasm window days 3–14).',
+ 'Prevent secondary injury: avoid hypoxemia, hypotension, hypo- and hyperglycemia, fever, hyponatremia.',
+ 'HOB 30°, neck neutral, ETT ties not compressing the jugulars.'],
+ 'AHA/ASA aSAH 2023; BTF TBI 4th ed. 2016'],
+nr2:[['Report components (e.g. E2 VT M5). Motor score is the most prognostic piece; FOUR score works well in intubated patients.',
+ 'A drop of ≥2 points: CT head, glucose, Na, ABG, and consider nonconvulsive status (EEG).',
+ 'Screen delirium at least daily with CAM-ICU or ICDSC.'],
+ 'PADIS 2018'],
+nr3:[['Analgesia first. Assess pain with CPOT or BPS. Light sedation, RASS −2 to 0, unless there is a reason for deep sedation.',
+ 'Dexmedetomidine over propofol for light sedation in ventilated adults (conditional). Avoid benzodiazepine infusions.',
+ 'Daily sedation interruption paired with SBT. Propofol >48 h or >4 mg/kg/h: watch triglycerides and for PRIS.',
+ 'Delirium: no recommendation for or against antipsychotics. Melatonin suggested for sleep and delirium. Enhanced early mobilization suggested.'],
+ 'PADIS 2025 focused update; PADIS 2018'],
+nr4:[['Size, symmetry, reactivity. With quantitative pupillometry, NPi <3 is abnormal and a falling trend is concerning.',
+ 'New anisocoria or a fixed pupil: treat as herniation until proven otherwise. HOB up, hyperosmolar therapy (mannitol 0.5–1 g/kg or hypertonic saline), emergent CT, neurosurgery.',
+ 'Corneal, cough, gag, oculocephalic. Note what sedation was running at the time of exam.'],
+ 'AAN/AAP/CNS/SCCM brain death 2023; ENLS'],
+nr5:[['ICH: SBP ~140; avoid <130.',
+ 'Ischemic stroke: <180/105 after thrombolysis or thrombectomy. After thrombectomy, avoid intensive lowering below 140 (ENCHANTED2/MT, OPTIMAL-BP).',
+ 'aSAH: before securing, keep SBP <160 (common practice). Nimodipine 60 mg q4h for 21 days. Euvolemia; avoid hypotension.',
+ 'TBI: SBP ≥100 (age 50–69) or ≥110 (15–49 or >70); CPP 60–70.'],
+ 'AHA/ASA ICH 2022; AHA/ASA aSAH 2023; BTF 2016'],
+nr6:[['Status epilepticus: benzodiazepine, then levetiracetam 60 mg/kg (max 4.5 g), fosphenytoin 20 PE/kg, or valproate 40 mg/kg (ESETT: equivalent). Refractory: continuous infusion with cEEG.',
+ 'Severe TBI: 7 days of prophylaxis for early seizures.',
+ 'ICH: no routine prophylaxis.',
+ 'Levels: free phenytoin with low albumin. Carbapenems sharply lower valproate levels.'],
+ 'AES 2016; ESETT 2019; NCS SE 2012; BTF 2016; AHA ICH 2022'],
+nr7:[['Treat ICP >22 mmHg; CPP 60–70.',
+ 'Tier 0–1: HOB 30°, analgesia and sedation, normothermia, PaCO₂ 35–45, Na goal, hyperosmolar therapy (mannitol or hypertonic saline), CSF drainage.',
+ 'Higher tiers: mild hypocapnia (32–35), neuromuscular blockade, barbiturates, decompressive craniectomy.',
+ 'Hyperventilation below 30 only as a brief bridge for herniation.'],
+ 'BTF 2016; SIBICC 2019'],
+
+rn1:[['KDIGO by urine: <0.5 mL/kg/h for 6–12 h (stage 1), ≥12 h (stage 2), <0.3 for ≥24 h or anuria ≥12 h (stage 3).',
+ 'Oliguria: flush or bladder-scan the Foley, check volume status, MAP, and nephrotoxins.',
+ 'Furosemide stress test (1–1.5 mg/kg): <200 mL in 2 h predicts progression to stage 3.',
+ 'Pull the urinary catheter as soon as hourly output isn\'t needed.'],
+ 'KDIGO AKI 2012'],
+rn2:[['Delivered effluent dose 20–25 mL/kg/h; prescribe ~25–30 to cover downtime.',
+ 'Net UF typically 1–1.5 mL/kg/h. Rates >1.75 mL/kg/h are associated with higher mortality (observational). Reassess hourly against the daily goal and pressor need.',
+ 'Regional citrate anticoagulation preferred if not contraindicated. Total/ionized Ca ratio >2.5 suggests citrate accumulation.',
+ 'Re-dose antibiotics for CRRT clearance.'],
+ 'KDIGO AKI 2012; RENAL; ATN; Murugan 2019'],
+rn3:[['Daily weights and cumulative balance since admission. Fluid accumulation >10% of body weight is linked to worse outcomes.',
+ 'After resuscitation, actively remove fluid (diuretics or UF).',
+ 'POCUS: B-lines, IVC, VExUS for venous congestion.'],
+ 'SSC 2026; FACTT'],
+rn4:[['KDIGO: Cr rise ≥0.3 in 48 h or ≥1.5× baseline in 7 days.',
+ 'Creatinine lags and is diluted by fluid; eGFR equations are invalid when Cr isn\'t steady.',
+ 'Renally dose everything. Avoid nephrotoxins where you can: NSAIDs, aminoglycosides, unnecessary contrast, vancomycin + piperacillin-tazobactam.',
+ 'High BUN:Cr: GI bleed, steroids, catabolism, prerenal state.'],
+ 'KDIGO AKI 2012'],
+rn5:[['Balanced crystalloids over 0.9% saline.',
+ 'Judge fluid responsiveness with dynamic measures (passive leg raise with stroke volume change, pulse pressure variation), not CVP or exam alone.',
+ 'Free water deficit = TBW × (Na/140 − 1); TBW ≈ 0.6 × kg (men), 0.5 (women), less in older adults.',
+ 'Albumin when large crystalloid volumes are needed.'],
+ 'SSC 2026; SSC 2021; SMART'],
+rn6:[['Diuretics treat volume overload, not AKI itself.',
+ 'Urgent RRT: refractory hyperkalemia, acidosis, or volume overload; uremic complications; dialyzable toxins.',
+ 'Without an urgent indication, starting early doesn\'t help (STARRT-AKI), and waiting far beyond the usual triggers may harm (AKIKI-2). Reassess daily.',
+ 'CRRT and intermittent HD have similar survival. Use CRRT for unstable hemodynamics or raised ICP.'],
+ 'KDIGO AKI 2012; STARRT-AKI 2020; AKIKI-2 2021'],
+
+ab1:[['Steps: pH → primary process → compensation → anion gap → delta-delta.',
+ 'Winter\'s: expected PaCO₂ = 1.5 × HCO₃ + 8 ± 2. Metabolic alkalosis: PaCO₂ ≈ 0.7 × HCO₃ + 21.',
+ 'Respiratory acidosis: HCO₃ rises ~1 per 10 mmHg PaCO₂ acutely, ~3.5–4 chronically.',
+ 'VBG pH runs ~0.03 lower than arterial; fine for trends.'],
+ 'Standard acid–base physiology'],
+ab2:[['AG = Na − (Cl + HCO₃); normal ~8–12 (lab-specific).',
+ 'Correct for albumin: add 2.5 per 1 g/dL below 4.',
+ 'Delta-delta (ΔAG/ΔHCO₃): <1 suggests a coexisting non-gap acidosis; >2 a coexisting metabolic alkalosis.',
+ 'High gap: lactate, ketones (euglycemic DKA with SGLT2 inhibitors), uremia, toxic alcohols (osmolar gap >10), propylene glycol (lorazepam), 5-oxoproline (acetaminophen).'],
+ 'Standard acid–base physiology'],
+ab3:[['Treat the cause. Sodium bicarbonate for severe metabolic acidemia (pH ≤7.20) with AKI.',
+ 'Hyperchloremic acidosis from saline: switch to balanced fluids.',
+ 'Ventilated respiratory acidosis: raise rate before VT; permissive hypercapnia unless raised ICP or RV failure.',
+ 'Metabolic alkalosis: replace chloride and K; acetazolamide if volume overloaded.'],
+ 'SSC 2021; BICAR-ICU 2018'],
+
+id1:[['Note the day number and a planned stop date. Typical: CAP 5 days, HAP/VAP 7, uncomplicated gram-negative bacteremia 7 (BALANCE), complicated intra-abdominal 4 after source control (STOP-IT).',
+ 'β-lactams by extended infusion after a loading dose (strong).',
+ 'No empiric anaerobic coverage in low-risk infection; no routine empiric antifungals.',
+ 'Procalcitonin plus clinical judgment can support stopping.'],
+ 'SSC 2026; SSC 2021; ATS/IDSA CAP 2019; IDSA/ATS HAP/VAP 2016; BALANCE 2024'],
+id2:[['De-escalate once organism and susceptibilities are known (strong).',
+ 'Negative MRSA nares PCR has a high NPV for MRSA pneumonia; consider stopping vancomycin.',
+ 'S. aureus bacteremia: repeat cultures, echo, ID consult. Candidemia: remove lines, repeat cultures, eye exam.'],
+ 'SSC 2026; IDSA candidiasis 2016'],
+id3:[['List presumed and confirmed sources.',
+ 'No clear source: lines, C. difficile, sinusitis (NG/ETT), acalculous cholecystitis, pressure injury, VAP, catheter-associated UTI.',
+ 'Not every fever is infection: DVT/PE, drugs, transfusion, pancreatitis, adrenal insufficiency.',
+ 'Remove an intravascular device that is a possible source once other access is in place.'],
+ 'SSC 2021; IDSA/SCCM fever in ICU 2023'],
+id4:[['Control the source (drain, debride, remove device) as soon as medically and logistically practical.',
+ 'Necrotizing soft-tissue infection: emergent surgery.',
+ 'Not improving at 48–72 h: re-image and look for an uncontrolled source before broadening antibiotics.'],
+ 'SSC 2021/2026'],
+id5:[['Vancomycin: AUC/MIC 400–600, not trough-based dosing.',
+ 'Aminoglycosides: extended-interval dosing with levels; avoid in AKI where possible.',
+ 'Toxicities to watch: cefepime neurotoxicity in renal failure, linezolid cytopenias and serotonin syndrome, QT with fluoroquinolones and azoles, CK with daptomycin, carbapenem–valproate interaction.',
+ 'Adjust doses for renal function and CRRT.'],
+ 'ASHP/IDSA/PIDS/SIDP vancomycin 2020'],
+
+hm1:[['RBCs: transfuse at Hgb <7 for most ICU patients; 7.5 after cardiac surgery; 8 with preexisting cardiovascular disease.',
+ 'Platelets (2025): prophylactic at <10k in critical illness; CVC at a compressible site <10k; LP <20k; IR <20k (low-risk) or <50k (high-risk); major surgery <50k. ICH with plt >100k, including on antiplatelets: no transfusion.',
+ 'New thrombocytopenia: sepsis/DIC, drugs, dilution, HIT (4Ts score), TTP (schistocytes).'],
+ 'AABB 2023 RBC; AABB/ICTMG platelets 2025'],
+hm2:[['In stable patients, give one unit at a time, then recheck.',
+ 'Watch for TACO (volume) and TRALI (within 6 h): check volume status and CXR if oxygenation worsens.',
+ 'Massive transfusion: balanced ratios (1:1:1), keep iCa >1.1, use viscoelastic testing if available.'],
+ 'AABB 2023; PROPPR'],
+hm3:[['Know the indication, agent, target (e.g. heparin anti-Xa 0.3–0.7), last level, next check, and plan around procedures.',
+ 'Reversal: warfarin, vitamin K plus 4F-PCC; Xa inhibitors, andexanet or 4F-PCC; dabigatran, idarucizumab; heparin, protamine.'],
+ 'ACC ECDP bleeding on oral anticoagulants 2020; ASH VTE 2018'],
+hm4:[['Know the source, what\'s been done (endoscopy, IR, surgery), and what comes next if it continues.',
+ 'Upper GI bleed: restrictive Hgb 7, IV PPI. Variceal: add octreotide and ceftriaxone.',
+ 'TXA: trauma within 3 h (CRASH-2). Not for GI bleeding (HALT-IT).',
+ 'Fix coagulopathy: fibrinogen >150–200, platelets >50k, reverse anticoagulants.'],
+ 'ACG UGIB 2021; Baveno VII; CRASH-2; HALT-IT'],
+hm5:[['Pharmacologic prophylaxis for everyone without a contraindication; LMWH preferred over UFH.',
+ 'Bleeding or high bleeding risk: IPCs. Adding IPCs on top of drug prophylaxis gives no extra benefit (PREVENT).',
+ 'Reassess daily and start drug prophylaxis once bleeding risk passes.',
+ 'Related: stress-ulcer prophylaxis with a PPI lowered clinically important GI bleeding in ventilated patients (REVISE).'],
+ 'SSC 2021; ASH VTE 2018; PREVENT 2019; REVISE 2024'],
+
+en1:[['Start insulin at glucose ≥180; target 140–180 mg/dL.',
+ 'Avoid tight control (80–110): higher mortality in NICE-SUGAR. Avoid <70.',
+ 'Fingerstick glucose is unreliable in shock; use arterial or venous samples.'],
+ 'SSC 2021; NICE-SUGAR; ADA Standards of Care 2026'],
+en2:[['IV insulin infusion for persistent hyperglycemia in shock, DKA, or HHS.',
+ 'Transition: give basal insulin ~2 h before stopping the drip, around 60–80% of the 24 h requirement.',
+ 'Tube feeds held: hold nutritional insulin. Steroids: match NPH timing to the steroid dose.'],
+ 'ADA Standards of Care 2026; ADA hyperglycemic crises consensus 2024'],
+en3:[['Septic shock with ongoing pressor need: IV corticosteroids suggested, typically hydrocortisone 200 mg/day (50 mg q6h).',
+ 'Severe CAP: hydrocortisone 200 mg/day started early (CAPE COD). ARDS: corticosteroids suggested.',
+ 'Note the day number and stop or taper plan. Watch glucose, delirium, infection, and weakness.',
+ 'Chronic steroid users need stress dosing.'],
+ 'SSC 2026; SCCM corticosteroids 2024'],
+en4:[['DKA/HHS: K >3.5 before insulin; insulin ~0.1 U/kg/h; transition once resolved.',
+ 'Suspected adrenal crisis: hydrocortisone 100 mg IV now; don\'t wait for testing if unstable.',
+ 'Abnormal thyroid tests: don\'t treat sick euthyroid. Myxedema coma and thyroid storm need targeted therapy.',
+ 'Hyponatremia: raise Na no more than 8–10 mEq/L in 24 h (≤8 if high ODS risk).'],
+ 'ADA hyperglycemic crises consensus 2024; Endocrine Society AI 2016; European hyponatremia 2014'],
+
+nu1:[['Start enteral nutrition within 24–48 h once hemodynamically stable. Hold during escalating pressors or rising lactate. Trophic feeds are reasonable on stable, low-dose pressors.',
+ 'Gastric route first; post-pyloric if intolerant or at high aspiration risk.',
+ 'Don\'t hold feeds for gastric residuals <500 mL. Use metoclopramide or erythromycin for intolerance.'],
+ 'ASPEN/SCCM 2016 & 2022; ESPEN ICU 2023'],
+nu2:[['Energy: 12–25 kcal/kg/day in the first 7–10 days; avoid early overfeeding.',
+ 'Protein: 1.2–2.0 g/kg/day. EFFORT Protein: higher doses didn\'t help and may harm with AKI.',
+ 'Count propofol calories (1.1 kcal/mL).',
+ 'Refeeding risk: check phosphorus, K, Mg in the first 72 h; thiamine before feeding at-risk patients.'],
+ 'ASPEN/SCCM 2022; EFFORT Protein 2023; ASPEN refeeding 2020'],
+nu3:[['Hypernatremia: free water flushes sized from the free water deficit; lower Na ~10 mEq/L per day.',
+ 'Hyponatremia: cut free water flushes and hypotonic fluids.',
+ 'Count every source: IV fluids, medication diluents, feeds (~70–85% free water).'],
+ 'Standard practice'],
+nu4:[['Use indirect calorimetry when available to set energy goals, once past the first few days.',
+ 'Nitrogen balance = protein intake (g)/6.25 − (UUN + 4). Not valid with AKI or CRRT.'],
+ 'ESPEN ICU 2023; ASPEN/SCCM 2016'],
+nu5:[['Low nutrition risk and EN not possible: withhold PN for the first 7 days.',
+ 'High risk or malnourished (NUTRIC ≥5 or NRS ≥5): start PN as soon as possible if EN isn\'t feasible.',
+ 'Supplemental PN after 7–10 days if EN still meets <60% of goal.',
+ 'Monitor glucose, triglycerides, line infection, and LFTs. Stop PN once EN reaches >60% of goal.'],
+ 'ASPEN/SCCM 2016 & 2022; EPaNIC']
+};
+
 const ALL_ITEMS=SYSTEMS.flatMap(s=>s.items);
 const TOTAL=ALL_ITEMS.length;
 const NEXT={'':'ok',ok:'flag',flag:'na',na:''};
@@ -239,9 +481,10 @@ function vPatient(p){
   ${fresh&&pd?`<div class="card"><b>Carry over from ${fmt(pd)}?</b><p class="sub" style="margin:4px 0 10px">Brings forward yesterday’s open items and system notes. Everything else starts fresh.</p><button class="btn sm primary" data-act="carry">Carry over</button></div>`:''}
   ${flagged.length?`<div class="card flags"><h3>To act on</h3><ul>${flagged.map(it=>`<li><small>${sysOf(it.id).short}</small>${esc(it.t)}</li>`).join('')}</ul></div>`:''}
   <div class="legend"><span>Tap to cycle:</span><span><span class="mk" style="width:20px;height:20px;background:var(--ok);border-color:var(--ok);color:#fff;font-size:.75rem">✓</span>Reviewed</span><span><span class="mk" style="width:20px;height:20px;background:var(--warn);border-color:var(--warn);color:#fff;font-size:.75rem">!</span>Act on</span><span><span class="mk" style="width:20px;height:20px;background:var(--line);border-color:var(--line);font-size:.75rem">–</span>N/A</span></div>
+  <p class="sub" style="margin:-4px 0 12px">Hover an item, or tap ⓘ, for current guidance. Summaries as of Oct 2026; check local protocols and dosing.</p>
   ${SYSTEMS.map(s=>{const ss=sysStats(x,s);const pn=px&&px.n&&px.n[s.id];
     return`<details class="sys" data-sys="${s.id}" ${open[s.id]?'open':''}><summary><span class="nm">${s.name}</span>${ss.flags?`<span class="fl">${ss.flags} !</span>`:''}<span class="ct ${ss.done===ss.n?'done':''}">${ss.done}/${ss.n}</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
-    <div class="sysbody">${s.items.map(it=>{const m=x.m[it.id]||'';return`<button class="item" data-act="mark" data-item="${it.id}" data-m="${m}"><span class="mk">${GLYPH[m]}</span><span class="it">${esc(it.t)}</span></button>`}).join('')}
+    <div class="sysbody">${s.items.map(it=>{const m=x.m[it.id]||'';const tp=TIPS[it.id];const on=view.tips&&view.tips[it.id];return`<div class="item${on?' tipon':''}" data-m="${m}" data-item="${it.id}"><button class="mkbtn" data-act="mark" data-item="${it.id}"><span class="mk">${GLYPH[m]}</span><span class="it">${esc(it.t)}</span></button>${tp?`<button class="info" data-act="tip" data-item="${it.id}" aria-expanded="${on?'true':'false'}" aria-controls="tip-${it.id}" aria-label="Guidance"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></svg></button><div class="tip" id="tip-${it.id}" role="tooltip"><ul>${tp[0].map(b=>`<li>${esc(b)}</li>`).join('')}</ul><div class="src">${esc(tp[1])}</div></div>`:''}</div>`}).join('')}
     <div class="fld"><span>${s.short} notes</span><textarea data-act="note" data-sys="${s.id}" rows="2" placeholder="Plan, numbers, what to follow">${esc(x.n&&x.n[s.id]||'')}</textarea></div>
     ${pn?`<div class="prev"><b>${fmt(pd)}:</b> ${esc(pn)}</div>`:''}
     <div class="sysfoot"><button class="linkbtn" data-act="sysall" data-sys="${s.id}">Mark rest reviewed</button><button class="linkbtn" data-act="sysna" data-sys="${s.id}">Rest N/A</button><button class="linkbtn" data-act="sysclear" data-sys="${s.id}" style="color:var(--muted)">Clear</button></div>
@@ -283,10 +526,11 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT'||b.tagName==='TEXTAREA')return;
   const a=b.dataset.act;const p=view.id&&P(view.id);
   if(a==='go'){view={name:b.dataset.to};render();scrollTo(0,0)}
-  else if(a==='open'){view={name:'pt',id:b.dataset.id,open:{}};render();scrollTo(0,0)}
+  else if(a==='open'){view={name:'pt',id:b.dataset.id,open:{},tips:{}};render();scrollTo(0,0)}
   else if(a==='add'){const bed=document.getElementById('nbed').value.trim();const one=document.getElementById('none').value.trim();if(!bed){toast('Add a bed number first.');document.getElementById('nbed').focus();return}
     const np={id:uid(),bed,one,days:{}};S.patients.push(np);save();view={name:'pt',id:np.id,open:{}};render();scrollTo(0,0)}
   else if(!p)return;
+  else if(a==='tip'){view.tips=view.tips||{};const id=b.dataset.item;view.tips[id]=!view.tips[id];const row=b.closest('.item');row.classList.toggle('tipon',view.tips[id]);b.setAttribute('aria-expanded',view.tips[id]?'true':'false')}
   else if(a==='mark'){const x=day(p,DATE,true);const id=b.dataset.item;const m=NEXT[x.m[id]||''];if(m)x.m[id]=m;else delete x.m[id];save();view.keepScroll=true;render()}
   else if(a==='sysall'||a==='sysna'){const x=day(p,DATE,true);const s=SYSTEMS.find(s=>s.id===b.dataset.sys);for(const it of s.items)if(!x.m[it.id])x.m[it.id]=a==='sysall'?'ok':'na';save();view.keepScroll=true;render()}
   else if(a==='sysclear'){const x=day(p,DATE);if(!x)return;const s=SYSTEMS.find(s=>s.id===b.dataset.sys);for(const it of s.items)delete x.m[it.id];save();view.keepScroll=true;render()}
@@ -296,6 +540,7 @@ document.addEventListener('click',async e=>{
   else if(a==='cleardayask'){if(Date.now()-pendingClear<3000){delete p.days[DATE];save();pendingClear=0;view.keepScroll=true;render();toast('Cleared '+fmt(DATE)+'.')}else{pendingClear=Date.now();toast('Tap again to clear '+fmt(DATE)+'.')}}
   else if(a==='del'){if(confirm(`Remove bed ${p.bed||''} and all its days?`)){S.patients=S.patients.filter(q=>q.id!==p.id);saveNow();view={name:'list'};render();scrollTo(0,0)}}
 });
+document.addEventListener('mouseover',e=>{const it=e.target.closest&&e.target.closest('.item');if(!it||it.dataset.flip)return;const tip=it.querySelector('.tip');if(!tip)return;const r=it.getBoundingClientRect();const dock=document.querySelector('.dock');const lim=(dock?dock.getBoundingClientRect().top:innerHeight)-12;it.classList.toggle('up',r.bottom+tip.offsetHeight>lim&&r.top-tip.offsetHeight>70)});
 document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.sys')&&view.open){view.open[d.dataset.sys]=d.open;const tb=document.querySelector('[data-act="toggleall"]');if(tb)tb.textContent=Object.values(view.open).some(Boolean)?'Collapse all':'Expand all'}},true);
 document.addEventListener('input',e=>{
   const t=e.target;const a=t.dataset&&t.dataset.act;const p=view.id&&P(view.id);
