@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sweep">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Sweep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Sweep: morning ICU considerations, system by system. Palette and type match ICU Rounder. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--ok:#1D6E49;--ok-soft:#E1F2E9;
+  --na:#8794A3;--paper:#FBFCFD;
+  color-scheme:light only;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 "Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding-left:16px;padding-right:16px}
+main.wrap{padding-top:12px;padding-bottom:120px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:10px;min-height:56px}
+.hd h1{font-size:1.25rem;margin:0;flex:1;letter-spacing:-.01em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{border:0;background:none;color:var(--accent);font-size:2.1rem;line-height:1;padding:0 8px 4px 0;cursor:pointer;font-family:inherit}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover,.homebtn:active{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.datein{font:inherit;font-size:16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 8px;max-width:170px}
+h2{font-size:1.35rem;margin:16px 0 10px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+input,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0}
+textarea{resize:vertical;line-height:1.4;min-height:44px;display:block;max-width:100%}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fld{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.fld>span{font-size:.85rem;color:var(--muted);font-weight:700}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
+.btn.block{display:block;width:100%;margin:14px 0}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.92rem;font-weight:700;padding:6px 2px;cursor:pointer}
+.linkbtn.danger{color:var(--warn)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* patient list */
+.pt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;min-height:72px}
+.pt:hover{border-color:var(--accent)}
+.pt .bed{font-weight:700;font-size:1.1rem}
+.pt .one{color:var(--muted);font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt .txt{flex:1;min-width:0}
+.ring{flex:none;width:46px;height:46px}
+.ring circle{fill:none;stroke-width:5}
+.ring .tr{stroke:var(--line)}.ring .pr{stroke:var(--accent);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.ring text{font:700 12px "Atkinson Hyperlegible",sans-serif;fill:var(--ink)}
+.flagct{display:inline-block;margin-top:3px;font-size:.78rem;font-weight:700;color:var(--warn);background:var(--warn-soft);padding:1px 8px;border-radius:999px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+
+/* legend + progress */
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted);margin:2px 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.bar{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .2s}
+
+/* systems */
+details.sys{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+details.sys>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer;min-height:56px}
+details.sys>summary::-webkit-details-marker{display:none}
+details.sys>summary .nm{flex:1;font-weight:700;font-size:1.05rem}
+details.sys>summary .ct{font-size:.85rem;color:var(--muted);font-weight:700}
+details.sys>summary .ct.done{color:var(--ok)}
+details.sys>summary .fl{font-size:.78rem;font-weight:700;color:var(--warn);background:var(--warn-soft);padding:1px 8px;border-radius:999px}
+details.sys>summary .chev{width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s;flex:none}
+details.sys[open]>summary .chev{transform:rotate(90deg)}
+details.sys[open]>summary{border-bottom:1px solid var(--line)}
+.sysbody{padding:6px 14px 14px}
+.item{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;font:inherit;font-size:.98rem;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--line);padding:11px 0;cursor:pointer;min-height:48px}
+.item:last-of-type{border-bottom:0}
+.mk{flex:none;width:28px;height:28px;border-radius:8px;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:.95rem;background:var(--paper)}
+.item[data-m="ok"] .mk{background:var(--ok);border-color:var(--ok);color:#fff}
+.item[data-m="flag"] .mk{background:var(--warn);border-color:var(--warn);color:#fff}
+.item[data-m="na"] .mk{background:var(--line);border-color:var(--line);color:var(--muted)}
+.item[data-m="na"] .it{color:var(--na);text-decoration:line-through}
+.item[data-m="flag"] .it{font-weight:700}
+.it{padding-top:3px}
+.sysfoot{display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:8px}
+.prev{font-size:.85rem;color:var(--muted);margin:6px 0 0;padding:8px 10px;background:var(--bg);border-radius:8px;white-space:pre-wrap}
+.prev b{color:var(--ink)}
+
+/* flags summary */
+.flags{border-color:var(--warn);background:var(--warn-soft)}
+.flags h3{margin:0 0 6px;font-size:1rem;color:var(--warn)}
+.flags ul{margin:0;padding-left:18px}
+.flags li{margin:3px 0}
+.flags li small{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.7rem;margin-right:6px}
+
+/* bottom bar */
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));z-index:10}
+.dock .wrap{display:flex;gap:8px}
+.dock .btn{flex:1}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.note{font-size:.85rem;color:var(--muted);margin-top:18px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* ---------- checklist ---------- */
+const SYSTEMS=[
+ {id:'hd',name:'Hemodynamics',short:'Hemo',items:[
+  'Vasoactive infusions (pressors, inotropes, antihypertensives)',
+  'Blood pressure goals',
+  'Dysrhythmias: tachy, brady, blocks',
+  'Oxygen delivery and consumption',
+  'RV and LV function',
+  'Myocardial ischemia or infarction']},
+ {id:'rs',name:'Respiratory',short:'Resp',items:[
+  'On the ventilator?',
+  'Why on the ventilator?',
+  'Current settings and major changes in 24 h',
+  'Vent day: what needs adjusting? Ventilated safely?',
+  'Liberation day: what has to happen for extubation?',
+  'Other pulmonary issues needing treatment']},
+ {id:'nr',name:'Neurocritical care',short:'Neuro',items:[
+  'Underlying CNS disease or injury',
+  'GCS (especially motor)',
+  'Sedation and analgesia, and their goals',
+  'Pupillary light reflex and other brainstem reflexes',
+  'BP goals',
+  'Antiepileptic therapy',
+  'ICP and treatment of intracranial HTN']},
+ {id:'rn',name:'Renal',short:'Renal',items:[
+  'UOP (amount or frequency)',
+  'Net ultrafiltration rate (if on CRRT)',
+  'Fluid balance: daily weights, edema, ascites, effusions',
+  'BUN, Cr, GFR',
+  'Fluid deficits to correct',
+  'Intrinsic renal function adequate? Diuretics or RRT?']},
+ {id:'ab',name:'Acid–base',short:'Acid–base',items:[
+  'ABG interpretation',
+  'Anion gap',
+  'Plan based on the ABG']},
+ {id:'id',name:'Infectious disease',short:'ID',items:[
+  'Antibiotics and day of therapy / planned duration',
+  'Cultures and susceptibilities',
+  'Presumed and known sources',
+  'Source control done or still needed',
+  'Drug levels and toxicity monitoring']},
+ {id:'hm',name:'Bleeding and clotting',short:'Heme',items:[
+  'Significant Hgb and Plt',
+  'Transfusions in the last 24 h',
+  'Anticoagulation: indication, regimen, what you’re following',
+  'Active bleeding: what’s stopping it, what you’re following',
+  'DVT prophylaxis (every patient needs something)']},
+ {id:'en',name:'Endocrine',short:'Endo',items:[
+  'Glucose readings',
+  'Insulin requirements',
+  'Glucocorticoids: reason, dose, duration',
+  'Other endocrine conditions needing treatment']},
+ {id:'nu',name:'Nutrition',short:'Nutrition',items:[
+  'Enteral route and status',
+  'Tube feed goal rate',
+  'Free water (adjust to sodium)',
+  'Metabolic cart and nitrogen balance',
+  'TPN: needed? Planned duration']}
+].map(s=>({...s,items:s.items.map((t,i)=>({id:s.id+(i+1),t}))}));
+const ALL_ITEMS=SYSTEMS.flatMap(s=>s.items);
+const TOTAL=ALL_ITEMS.length;
+const NEXT={'':'ok',ok:'flag',flag:'na',na:''};
+const GLYPH={'':'',ok:'✓',flag:'!',na:'–'};
+
+/* ---------- state ---------- */
+const KEY='sweep-v1';
+let S={patients:[]};
+function load(){try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}if(!S||!Array.isArray(S.patients))S={patients:[]}}
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
+function saveNow(){clearTimeout(saveT);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+window.addEventListener('pagehide',saveNow);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveNow()});
+
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+let DATE=today();
+let view={name:'list'};
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=d=>{const [y,m,dd]=d.split('-');return +m+'/'+ +dd};
+const P=id=>S.patients.find(p=>p.id===id);
+function day(p,d=DATE,create){if(!p.days)p.days={};if(!p.days[d]&&create)p.days[d]={m:{},n:{}};return p.days[d]}
+function prevDay(p,d=DATE){const ks=Object.keys(p.days||{}).filter(k=>k<d).sort();for(let i=ks.length-1;i>=0;i--){const x=p.days[ks[i]];if(Object.keys(x.m||{}).length||Object.values(x.n||{}).some(Boolean))return ks[i]}return null}
+function stats(p,d=DATE){const x=day(p,d)||{m:{}};let done=0,flags=0;for(const it of ALL_ITEMS){const v=x.m[it.id];if(v)done++;if(v==='flag')flags++}return{done,flags}}
+function sysStats(x,s){let done=0,flags=0;for(const it of s.items){const v=x&&x.m[it.id];if(v)done++;if(v==='flag')flags++}return{done,flags,n:s.items.length}}
+
+/* ---------- views ---------- */
+const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+function header(title,back){return`<header class="top"><div class="wrap hd">${back?`<button class="back" data-act="go" data-to="${back}" aria-label="Back">‹</button>`:HOME}<h1>${esc(title)}</h1><input type="date" class="datein" data-act="date" value="${DATE}" aria-label="Rounding date"></div></header>`}
+function ring(done){const r=19,c=2*Math.PI*r,f=done/TOTAL;return`<svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle class="tr" cx="23" cy="23" r="${r}"/><circle class="pr" cx="23" cy="23" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-f)}"/><text x="23" y="27" text-anchor="middle">${Math.round(f*100)}%</text></svg>`}
+
+function vList(){
+  const pts=[...S.patients].sort((a,b)=>String(a.bed).localeCompare(String(b.bed),undefined,{numeric:true}));
+  return header('Sweep')+`<main class="wrap">
+  <p class="sub" style="margin:8px 0 14px">Morning considerations, system by system, for ${DATE===today()?'today':fmt(DATE)}.</p>
+  ${pts.length?pts.map(p=>{const st=stats(p);return`<button class="pt" data-act="open" data-id="${p.id}">${ring(st.done)}<span class="txt"><span class="bed">${esc(p.bed||'Bed ?')}</span><span class="one" style="display:block">${esc(p.one||'')}</span>${st.flags?`<span class="flagct">${st.flags} to act on</span>`:''}</span></button>`}).join('')
+   :`<div class="empty">No patients yet.<br>Add one by bed, then sweep each system before rounds.</div>`}
+  <div class="card"><div class="fld"><span>Bed</span><input id="nbed" placeholder="e.g. 12" autocomplete="off"></div>
+  <div class="fld"><span>One-liner <em class="sub" style="font-weight:400">(optional)</em></span><input id="none" placeholder="e.g. septic shock from CAP, intubated" autocomplete="off"></div>
+  <button class="btn primary block" data-act="add">Add patient</button></div>
+  <p class="note">Saved on this device only. Use bed numbers, not names, MRNs, or dates of birth.</p></main>`;
+}
+
+function vPatient(p){
+  const x=day(p)||{m:{},n:{}};const st=stats(p);
+  const pd=prevDay(p);const px=pd&&p.days[pd];
+  const flagged=ALL_ITEMS.filter(it=>x.m[it.id]==='flag');
+  const sysOf=id=>SYSTEMS.find(s=>s.items.some(i=>i.id===id));
+  const fresh=!Object.keys(x.m).length&&!Object.values(x.n||{}).some(Boolean);
+  const open=view.open||{};
+  return header(p.bed?('Bed '+p.bed):'Patient','list')+`<main class="wrap">
+  <div class="card">
+    <div class="fld"><span>Bed</span><input data-act="meta" data-k="bed" value="${esc(p.bed)}" autocomplete="off"></div>
+    <div class="fld"><span>One-liner</span><input data-act="meta" data-k="one" value="${esc(p.one)}" autocomplete="off"></div>
+    <div class="bar"><i style="width:${st.done/TOTAL*100}%"></i></div>
+    <div class="sub">${st.done} of ${TOTAL} considered${st.flags?` · <b style="color:var(--warn)">${st.flags} to act on</b>`:''}</div>
+  </div>
+  ${fresh&&pd?`<div class="card"><b>Carry over from ${fmt(pd)}?</b><p class="sub" style="margin:4px 0 10px">Brings forward yesterday’s open items and system notes. Everything else starts fresh.</p><button class="btn sm primary" data-act="carry">Carry over</button></div>`:''}
+  ${flagged.length?`<div class="card flags"><h3>To act on</h3><ul>${flagged.map(it=>`<li><small>${sysOf(it.id).short}</small>${esc(it.t)}</li>`).join('')}</ul></div>`:''}
+  <div class="legend"><span>Tap to cycle:</span><span><span class="mk" style="width:20px;height:20px;background:var(--ok);border-color:var(--ok);color:#fff;font-size:.75rem">✓</span>Reviewed</span><span><span class="mk" style="width:20px;height:20px;background:var(--warn);border-color:var(--warn);color:#fff;font-size:.75rem">!</span>Act on</span><span><span class="mk" style="width:20px;height:20px;background:var(--line);border-color:var(--line);font-size:.75rem">–</span>N/A</span></div>
+  ${SYSTEMS.map(s=>{const ss=sysStats(x,s);const pn=px&&px.n&&px.n[s.id];
+    return`<details class="sys" data-sys="${s.id}" ${open[s.id]?'open':''}><summary><span class="nm">${s.name}</span>${ss.flags?`<span class="fl">${ss.flags} !</span>`:''}<span class="ct ${ss.done===ss.n?'done':''}">${ss.done}/${ss.n}</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></summary>
+    <div class="sysbody">${s.items.map(it=>{const m=x.m[it.id]||'';return`<button class="item" data-act="mark" data-item="${it.id}" data-m="${m}"><span class="mk">${GLYPH[m]}</span><span class="it">${esc(it.t)}</span></button>`}).join('')}
+    <div class="fld"><span>${s.short} notes</span><textarea data-act="note" data-sys="${s.id}" rows="2" placeholder="Plan, numbers, what to follow">${esc(x.n&&x.n[s.id]||'')}</textarea></div>
+    ${pn?`<div class="prev"><b>${fmt(pd)}:</b> ${esc(pn)}</div>`:''}
+    <div class="sysfoot"><button class="linkbtn" data-act="sysall" data-sys="${s.id}">Mark rest reviewed</button><button class="linkbtn" data-act="sysna" data-sys="${s.id}">Rest N/A</button><button class="linkbtn" data-act="sysclear" data-sys="${s.id}" style="color:var(--muted)">Clear</button></div>
+    </div></details>`}).join('')}
+  <div class="btnrow" style="justify-content:space-between;margin-top:18px"><button class="linkbtn" data-act="cleardayask">Clear ${fmt(DATE)}</button><button class="linkbtn danger" data-act="del">Remove patient</button></div>
+  </main>
+  <div class="dock"><div class="wrap"><button class="btn" data-act="toggleall">${Object.values(open).some(Boolean)?'Collapse all':'Expand all'}</button><button class="btn primary" data-act="copy">Copy summary</button></div></div>`;
+}
+
+function render(){
+  const y=scrollY;
+  const app=document.getElementById('app');
+  if(view.name==='pt'){const p=P(view.id);if(!p){view={name:'list'};return render()}app.innerHTML=vPatient(p)}
+  else app.innerHTML=vList();
+  if(view.keepScroll)scrollTo(0,y);view.keepScroll=false;
+}
+
+/* ---------- summary text ---------- */
+function summary(p){
+  const x=day(p)||{m:{},n:{}};const L=[];
+  L.push(`Bed ${p.bed||'?'}${p.one?' – '+p.one:''}`);
+  L.push(`ICU considerations ${fmt(DATE)}`);
+  const fl=[];for(const s of SYSTEMS)for(const it of s.items)if(x.m[it.id]==='flag')fl.push(`- ${s.short}: ${it.t}`);
+  if(fl.length){L.push('','To act on:',...fl)}
+  const notes=SYSTEMS.filter(s=>x.n&&x.n[s.id]&&x.n[s.id].trim());
+  if(notes.length){L.push('','By system:');for(const s of notes)L.push(`${s.short}: ${x.n[s.id].trim().replace(/\s*\n\s*/g,'; ')}`)}
+  const gaps=SYSTEMS.map(s=>({s,left:s.items.filter(it=>!x.m[it.id]).length})).filter(g=>g.left);
+  if(gaps.length){L.push('','Not yet reviewed: '+gaps.map(g=>`${g.s.short} (${g.left})`).join(', '))}
+  else L.push('','All systems reviewed.');
+  return L.join('\n');
+}
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();return ok}}
+
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2200)}
+
+/* ---------- events ---------- */
+let pendingClear=0;
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT'||b.tagName==='TEXTAREA')return;
+  const a=b.dataset.act;const p=view.id&&P(view.id);
+  if(a==='go'){view={name:b.dataset.to};render();scrollTo(0,0)}
+  else if(a==='open'){view={name:'pt',id:b.dataset.id,open:{}};render();scrollTo(0,0)}
+  else if(a==='add'){const bed=document.getElementById('nbed').value.trim();const one=document.getElementById('none').value.trim();if(!bed){toast('Add a bed number first.');document.getElementById('nbed').focus();return}
+    const np={id:uid(),bed,one,days:{}};S.patients.push(np);save();view={name:'pt',id:np.id,open:{}};render();scrollTo(0,0)}
+  else if(!p)return;
+  else if(a==='mark'){const x=day(p,DATE,true);const id=b.dataset.item;const m=NEXT[x.m[id]||''];if(m)x.m[id]=m;else delete x.m[id];save();view.keepScroll=true;render()}
+  else if(a==='sysall'||a==='sysna'){const x=day(p,DATE,true);const s=SYSTEMS.find(s=>s.id===b.dataset.sys);for(const it of s.items)if(!x.m[it.id])x.m[it.id]=a==='sysall'?'ok':'na';save();view.keepScroll=true;render()}
+  else if(a==='sysclear'){const x=day(p,DATE);if(!x)return;const s=SYSTEMS.find(s=>s.id===b.dataset.sys);for(const it of s.items)delete x.m[it.id];save();view.keepScroll=true;render()}
+  else if(a==='toggleall'){const any=Object.values(view.open||{}).some(Boolean);view.open={};if(!any)SYSTEMS.forEach(s=>view.open[s.id]=true);view.keepScroll=true;render()}
+  else if(a==='carry'){const pd=prevDay(p);if(!pd)return;const px=p.days[pd];const x=day(p,DATE,true);for(const[k,v]of Object.entries(px.m||{}))if(v==='flag')x.m[k]='flag';x.n={...(px.n||{})};save();view.keepScroll=true;render();toast('Carried over from '+fmt(pd)+'.')}
+  else if(a==='copy'){const ok=await copyText(summary(p));toast(ok?'Summary copied.':'Couldn’t copy on this device.')}
+  else if(a==='cleardayask'){if(Date.now()-pendingClear<3000){delete p.days[DATE];save();pendingClear=0;view.keepScroll=true;render();toast('Cleared '+fmt(DATE)+'.')}else{pendingClear=Date.now();toast('Tap again to clear '+fmt(DATE)+'.')}}
+  else if(a==='del'){if(confirm(`Remove bed ${p.bed||''} and all its days?`)){S.patients=S.patients.filter(q=>q.id!==p.id);saveNow();view={name:'list'};render();scrollTo(0,0)}}
+});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.sys')&&view.open){view.open[d.dataset.sys]=d.open;const tb=document.querySelector('[data-act="toggleall"]');if(tb)tb.textContent=Object.values(view.open).some(Boolean)?'Collapse all':'Expand all'}},true);
+document.addEventListener('input',e=>{
+  const t=e.target;const a=t.dataset&&t.dataset.act;const p=view.id&&P(view.id);
+  if(a==='note'&&p){const x=day(p,DATE,true);x.n=x.n||{};if(t.value)x.n[t.dataset.sys]=t.value;else delete x.n[t.dataset.sys];save()}
+  else if(a==='meta'&&p){p[t.dataset.k]=t.value;save();if(t.dataset.k==='bed')document.querySelector('.hd h1').textContent=t.value?'Bed '+t.value:'Patient'}
+});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.act==='date'){DATE=t.value||today();view.keepScroll=true;render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='nbed'||e.target.id==='none')){e.preventDefault();document.querySelector('[data-act="add"]').click()}});
+
+load();render();
+</script>
+</body>
+</html>
