@@ -1,4 +1,10 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted,#6b7280);flex:none;text-decoration:none;-webkit-tap-highlight-color:transparent}.homebtn:hover,.homebtn:active{color:var(--ink,var(--text,#111));background:rgba(127,127,127,.12)}.homebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.syncdot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line);margin-left:8px}
+.syncdot.ok{background:var(--ok)}.syncdot.syncing{background:var(--accent);animation:syncpulse 1s ease-in-out infinite}
+.syncdot.error{background:var(--warn)}
+@keyframes syncpulse{50%{opacity:.35}}
+.steps{padding-left:20px;margin:8px 0}.steps li{margin:4px 0}
+code{font-size:.88em;background:var(--accent-soft);padding:1px 5px;border-radius:5px}
 </style></head><body>
 <!doctype html>
 <html lang="en">
@@ -232,11 +238,94 @@ const KEY='icu-rounds-v1';
 let S={patients:[]};
 function load(){try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r)}catch(e){}if(!S||!Array.isArray(S.patients))S={patients:[]}}
 let saveT;
-function writeNow(){clearTimeout(saveT);saveT=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}}
+function writeNow(){clearTimeout(saveT);saveT=null;stampChanges();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}scheduleSync()}
 function save(){clearTimeout(saveT);saveT=setTimeout(writeNow,200)}
 ['pagehide','beforeunload'].forEach(ev=>window.addEventListener&&window.addEventListener(ev,()=>{if(saveT)writeNow()}));
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)writeNow()});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+
+/* ---------- sync across devices (optional: a private GitHub repo) ----------
+   Each patient carries _mod (last-changed time). Deleted patients leave a dated
+   tombstone in S._deleted. Merging keeps the newer copy of each patient, so a
+   laptop and a desktop can both edit without losing each other's changes. */
+const SYNC_KEY='icu-rounds-sync', SYNC_FILE='icu-rounder.json';
+let SY=null;try{SY=JSON.parse(localStorage.getItem(SYNC_KEY)||'null')}catch(e){}
+let syncInfo={status:SY?'idle':'off',msg:'',at:null};
+let snap={}, syncing=false, syncAgain=false, syncT=null, renderPending=false;
+const strip=p=>{const {_mod,...r}=p;return JSON.stringify(r)};
+function initSnap(){snap={};for(const p of S.patients)snap[p.id]=strip(p)}
+function stampChanges(){const now=Date.now(),seen={};S._deleted=S._deleted||{};
+  for(const p of S.patients){const j=strip(p);if(snap[p.id]===undefined?!p._mod:snap[p.id]!==j)p._mod=now;snap[p.id]=j;seen[p.id]=1}
+  for(const id in snap)if(!seen[id]){S._deleted[id]=now;delete snap[id]}}
+function mergeState(L,R){
+  const del=Object.assign({},R._deleted||{});for(const [k,v] of Object.entries(L._deleted||{}))del[k]=Math.max(del[k]||0,v);
+  const cutoff=Date.now()-30*864e5;for(const k in del)if(del[k]<cutoff)delete del[k];
+  const by=new Map(),order=[];
+  for(const p of R.patients||[]){by.set(p.id,p);order.push(p.id)}
+  for(const p of L.patients){const r=by.get(p.id);if(!r){by.set(p.id,p);order.push(p.id)}else if((p._mod||0)>=(r._mod||0))by.set(p.id,p)}
+  return Object.assign({},L,{patients:order.map(id=>by.get(id)).filter(p=>!(del[p.id]&&del[p.id]>=(p._mod||0))),_deleted:del})}
+const b64enc=str=>{const b=new TextEncoder().encode(str);let s2='';for(const x of b)s2+=String.fromCharCode(x);return btoa(s2)};
+const b64dec=str=>new TextDecoder().decode(Uint8Array.from(atob(str.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+async function gh(path,opts={},auth=SY){
+  const r=await fetch(`https://api.github.com/repos/${auth.owner}/${auth.repo}${path}`,{cache:'no-store',...opts,
+    headers:{Authorization:`Bearer ${auth.token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(opts.headers||{})}});
+  if(!r.ok){const e=new Error('GitHub '+r.status);e.status=r.status;throw e}
+  return (opts.headers&&opts.headers.Accept||'').includes('raw')?r.text():r.json()}
+async function remoteGet(){
+  try{const m=await gh('/contents/'+SYNC_FILE);
+    const txt=m.content?b64dec(m.content):await gh('/contents/'+SYNC_FILE,{headers:{Accept:'application/vnd.github.raw+json'}});
+    let doc=null;try{doc=JSON.parse(txt)}catch(e){}return {doc,sha:m.sha}}
+  catch(e){if(e.status===404||e.status===409)return {doc:null,sha:null};throw e}}   // 409 = repo still empty
+function remotePut(doc,sha){return gh('/contents/'+SYNC_FILE,{method:'PUT',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({message:'ICU Rounder sync',content:b64enc(JSON.stringify(doc)),...(sha?{sha}:{})})})}
+function setSync(status,msg=''){syncInfo={status,msg,at:status==='ok'?new Date():syncInfo.at};
+  const d=document.getElementById('syncdot');if(d){d.className='syncdot '+status;d.title=syncLabel()}
+  const l=document.getElementById('syncline');if(l)l.textContent=syncLabel()}
+function syncLabel(){const i=syncInfo;
+  if(i.status==='off')return 'Not syncing';
+  if(i.status==='syncing')return 'Syncing…';
+  if(i.status==='error')return 'Not synced: '+i.msg+'. Changes are saved on this device and will sync once this is fixed.';
+  return i.at?'Synced '+i.at.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}
+function softRender(){const ae=document.activeElement;
+  if(ae&&ae.closest&&ae.closest('#app')&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){renderPending=true;return}
+  renderPending=false;render()}
+document.addEventListener('focusout',()=>setTimeout(()=>{if(renderPending)softRender()},0));
+function scheduleSync(ms=1500){if(!SY)return;clearTimeout(syncT);syncT=setTimeout(syncNow,ms)}
+async function syncNow(){if(!SY)return;clearTimeout(syncT);syncT=null;if(syncing){syncAgain=true;return}
+  syncing=true;setSync('syncing');
+  try{
+    for(let attempt=0;;attempt++){
+      if(saveT)writeNow();                                  // fold in any pending local edits first
+      const rem=await remoteGet();
+      if(rem.doc&&Array.isArray(rem.doc.patients)){
+        const merged=mergeState(S,rem.doc);
+        if(JSON.stringify(merged.patients)!==JSON.stringify(S.patients)){
+          S=merged;initSnap();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}softRender()}
+        else S._deleted=merged._deleted}
+      const out={app:'icu-rounds',version:1,updated:new Date().toISOString(),patients:S.patients,_deleted:S._deleted||{}};
+      if(rem.doc&&JSON.stringify(rem.doc.patients)===JSON.stringify(out.patients)&&JSON.stringify(rem.doc._deleted||{})===JSON.stringify(out._deleted))break;
+      try{await remotePut(out,rem.sha);break}
+      catch(e){if((e.status===409||e.status===422)&&attempt<2)continue;throw e}}
+    setSync('ok')}
+  catch(e){setSync('error',e.status===401?'GitHub no longer accepts this token':e.status===403||e.status===404?'this device can’t reach '+SY.owner+'/'+SY.repo:navigator.onLine===false?'offline':'couldn’t reach GitHub')}
+  finally{syncing=false;if(syncAgain){syncAgain=false;scheduleSync(300)}}}
+async function connectSync(){
+  const token=((document.getElementById('syncToken')||{}).value||'').trim(),repoFull=((document.getElementById('syncRepo')||{}).value||'').trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/+$/,'');
+  const [owner,repo]=repoFull.split('/');V.syncErr='';
+  if(!token||!owner||!repo){V.syncErr='Add your token and the repo as owner/name.';render();return}
+  const auth={token,owner,repo};
+  try{const info=await gh('',{},auth);
+    if(!info.private){V.syncErr=`${owner}/${repo} is public. Make it private (its Settings → General → Danger Zone) so patient data isn’t visible to anyone.`;render();return}
+    if(info.permissions&&!info.permissions.push){V.syncErr='That token can read the repo but not save to it. Give it “Contents: Read and write”.';render();return}
+    SY={token,owner:info.owner&&info.owner.login||owner,repo:info.name||repo};localStorage.setItem(SYNC_KEY,JSON.stringify(SY));
+    initSnap();render();await syncNow();syncBoot(true);toast(syncInfo.status==='ok'?'Sync is on for this device':'Connected, but the first sync didn\u2019t finish. It will keep trying.')}
+  catch(e){V.syncErr=e.status===401?'GitHub didn’t accept that token.':e.status===404?`This token can’t see ${owner}/${repo}. Check the name and that the token includes that repo.`:'Couldn’t reach GitHub. Check your connection.';render()}}
+let syncBooted=false;
+function syncBoot(skipFirst){if(!SY||syncBooted)return;syncBooted=true;if(!skipFirst)syncNow();
+  document.addEventListener('visibilitychange',()=>{if(!SY)return;if(document.visibilityState==='visible')syncNow();else if(syncT||saveT)syncNow()});
+  window.addEventListener('online',()=>{if(SY)syncNow()});
+  setInterval(()=>{if(SY&&document.visibilityState==='visible'&&!syncing)syncNow()},60000)}
+const ghOwnerGuess=()=>location.hostname.endsWith('.github.io')?location.hostname.split('.')[0]:'';
 
 /* ---------- helpers ---------- */
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -364,9 +453,9 @@ function topbar(title,back,right=''){return `<header class="top"><div class="wra
 function census(){
   const act=S.patients.filter(p=>p.status!=='discharged').sort((a,b)=>String(a.bed).localeCompare(String(b.bed),undefined,{numeric:true}));
   const dis=S.patients.filter(p=>p.status==='discharged');
-  return `${topbar('ICU Rounder','',`<span class="sub">${new Date().toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</span>`)}
+  return `${topbar('ICU Rounder','',`<span class="sub">${new Date().toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</span>${SY?`<span id="syncdot" class="syncdot ${syncInfo.status}" title="${esc(syncLabel())}"></span>`:''}`)}
   <main class="wrap">
-  ${act.length&&(!S.lastBackup||daysBetween(S.lastBackup,today())>=7)?`<div class="carry"><span>${S.lastBackup?'No backup in over a week.':'You haven’t backed up yet.'}</span><button type="button" class="btn sm" data-act="exportBackup">Export backup</button></div>`:''}
+  ${!SY&&act.length&&(!S.lastBackup||daysBetween(S.lastBackup,today())>=7)?`<div class="carry"><span>${S.lastBackup?'No backup in over a week.':'You haven’t backed up yet.'}</span><button type="button" class="btn sm" data-act="exportBackup">Export backup</button></div>`:''}
   ${act.length?`<ul class="census">${act.map(ptCard).join('')}</ul>`:`<div class="empty"><p><strong>No patients on the list.</strong></p><p class="muted">Add a patient to start a profile that follows them until discharge from the service.</p></div>`}
   <button class="btn primary block" data-act="addPt">Add patient</button>
   ${act.length?`<button class="btn block" data-act="go" data-to="handoff">Handoff view</button>`:''}
@@ -379,7 +468,22 @@ function census(){
   <details><summary>Paste a backup instead</summary><textarea id="importText" rows="4" placeholder="Paste backup text here"></textarea><button class="btn sm" data-act="importPaste">Load pasted backup</button></details>
   ${V.pendingImport?`<p class="flag">This replaces all current patients with ${V.pendingImport.patients.length} patient${V.pendingImport.patients.length===1?'':'s'} from the backup${V.pendingImport.exported?' exported '+fmtLong(V.pendingImport.exported.slice(0,10)):''}.</p><div class="row gap"><button class="btn danger" data-act="confirmImport" data-confirm="Tap again to replace">Replace with backup</button><button class="btn" data-act="cancelImport">Cancel</button></div>`:''}
   </div>
-  <p class="privacy">Everything entered here stays in this browser on this device. Identify patients by bed number only: no names, MRNs, or birth dates.</p>
+  <h2>Sync across devices</h2><div class="card">
+  ${SY?`<p class="calc"><span id="syncline">${esc(syncLabel())}</span></p>
+  <p class="calc">Patients sync through your private repo <strong>${esc(SY.owner)}/${esc(SY.repo)}</strong>. Open ICU Rounder on another computer that’s set up the same way and the list follows you.</p>
+  <div class="row gap"><button class="btn" data-act="syncNow">Sync now</button><button class="btn" data-act="syncOff" data-confirm="Tap again to stop">Stop syncing on this device</button></div>`
+  :`<p class="calc">Keep the same patient list on your laptop and desktop. Patients are saved to a <strong>private</strong> GitHub repo using a token you paste once on each device.</p>
+  <div class="row"><label class="fld"><span>GitHub token</span><input type="password" id="syncToken" placeholder="github_pat_…" autocomplete="off"></label>
+  <label class="fld"><span>Private repo</span><input type="text" id="syncRepo" value="${esc((ghOwnerGuess()||'your-username')+'/panacea-data')}" autocapitalize="off" spellcheck="false"></label></div>
+  ${V.syncErr?`<p class="flag">${esc(V.syncErr)}</p>`:''}
+  <div class="row gap"><button class="btn primary" data-act="syncConnect">Turn on sync</button></div>
+  <details><summary>How to set this up</summary><ol class="calc steps">
+  <li>On github.com, create a new <strong>private</strong> repository named <code>panacea-data</code>.</li>
+  <li>Profile picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
+  <li>Repository access: <em>Only select repositories</em> → <code>panacea-data</code>. Permissions → Contents: <em>Read and write</em>.</li>
+  <li>Paste the token here and tap <strong>Turn on sync</strong>. Repeat on each computer.</li></ol></details>`}
+  </div>
+  <p class="privacy">${SY?'Patients are saved in this browser and synced to your private GitHub repo.':'Everything entered here stays in this browser on this device.'} Identify patients by bed number only: no names, MRNs, or birth dates.</p>
   </main>`}
 
 function ptCard(p){const t=today();
@@ -1195,6 +1299,9 @@ document.addEventListener('click',e=>{
   const a=t.dataset.act,p=V.pid?P():null,d=p&&p.draft;
   switch(a){
     case 'go':go(t.dataset.to);break;
+    case 'syncConnect':connectSync();break;
+    case 'syncNow':syncNow();break;
+    case 'syncOff':localStorage.removeItem(SYNC_KEY);SY=null;setSync('off');render();toast('Sync turned off on this device. Patients stay here.');break;
     case 'addPt':V.newPt={bed:'',age:'',sex:'',height:'',hUnit:'in',admit:today(),oneLiner:'',pmh:'',code:'Full code',allergies:'',probs:''};go('edit');break;
     case 'editPt':V.newPt=Object.assign({},{id:p.id,bed:p.bed,age:p.age,sex:p.sex,height:p.height,hUnit:p.hUnit||'in',admit:p.admit,oneLiner:p.oneLiner,pmh:p.pmh,code:p.code,allergies:p.allergies});go('edit');break;
     case 'savePt':{const n=V.newPt;if(!String(n.bed||'').trim()){V.err='Add a bed number to save.';render();return}
@@ -1267,7 +1374,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='newBed'){e.preventDefault();document.querySelector('[data-act="saveBed"]').click();return}if(e.key==='Enter'&&(e.target.id==='newProb'||e.target.id==='newProbR'||e.target.id==='newAction')){e.preventDefault();const btn=e.target.parentElement.querySelector('button');btn&&btn.click()}});
 
-load();render();
+load();initSnap();render();syncBoot();
 </script>
 </body>
 </html>
