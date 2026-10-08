@@ -1076,7 +1076,16 @@ function example(){
   C.chest_pain.sec.forEach((sec,si)=>sec.i.forEach((raw,ii)=>{const t=P(raw).t;if(dt[t]&&s.marks[si+'.'+ii]==='p')s.idet[si+'.'+ii]=dt[t];}));
   s.opmh='GERD';
   render();}
-newPatient();   // open on a blank patient; the example case is still one tap away
+/* ---------- keep the patient in progress for this session ----------
+   Saved in sessionStorage, so it survives a trip to the Panacea home page and back,
+   but is cleared when the app or tab is closed. The example case is never saved. */
+const SAVE_KEY='hx-current';
+function saveState(){try{if(s.example)sessionStorage.removeItem(SAVE_KEY);else sessionStorage.setItem(SAVE_KEY,JSON.stringify(s));}catch(e){}}
+['input','change','click'].forEach(ev=>document.addEventListener(ev,()=>setTimeout(saveState,0)));
+window.addEventListener('pagehide',saveState);
+let saved=null;try{saved=JSON.parse(sessionStorage.getItem(SAVE_KEY)||'null');}catch(e){}
+if(saved&&!saved.example){s=Object.assign(blank(),saved);render();}
+else newPatient();   // open on a blank patient; the example case is still one tap away
 </script>
 
 </body></html>

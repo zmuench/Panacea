@@ -2321,6 +2321,14 @@ $('#example').addEventListener('click',()=>{
   const hasData = !isSample && STEPS.some(st=>st.has(S));
   if(hasData){ confirming='example'; renderNotice(); window.scrollTo(0,0); } else loadExample();
 });
+/* Keep the patient in progress for this session: survives a trip to the Panacea home page
+   and back, cleared when the app or tab is closed. The example case is never saved. */
+const SAVE_KEY='dispo-current';
+function saveState(){ try{ if(isSample) sessionStorage.removeItem(SAVE_KEY); else sessionStorage.setItem(SAVE_KEY, JSON.stringify({S,cur,outTab})); }catch(e){} }
+['input','change','click'].forEach(ev=>document.addEventListener(ev,()=>setTimeout(saveState,0)));
+window.addEventListener('pagehide',saveState);
+try{ const saved=JSON.parse(sessionStorage.getItem(SAVE_KEY)||'null');
+  if(saved&&saved.S){ S=Object.assign(blank(),saved.S); cur=Math.max(0,Math.min(STEPS.length-1,saved.cur|0)); outTab=saved.outTab||'mdm'; } }catch(e){}
 render();
 }
 </script>
