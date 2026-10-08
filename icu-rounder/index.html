@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted,#6b7280);flex:none;text-decoration:none;-webkit-tap-highlight-color:transparent}.homebtn:hover,.homebtn:active{color:var(--ink,var(--text,#111));background:rgba(127,127,127,.12)}.homebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+</style></head><body>
 <!doctype html>
 <html lang="en">
 <head>
@@ -358,7 +359,7 @@ function newDraft(p){
   return d}
 
 /* ---------- screens ---------- */
-function topbar(title,back,right=''){return `<header class="top"><div class="wrap hd">${back?`<button class="back" data-act="go" data-to="${back}" aria-label="Back">‹</button>`:''}<h1>${esc(title)}</h1>${right}</div></header>`}
+function topbar(title,back,right=''){return `<header class="top"><div class="wrap hd">${back?`<button class="back" data-act="go" data-to="${back}" aria-label="Back">‹</button>`:`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`}<h1>${esc(title)}</h1>${right}</div></header>`}
 
 function census(){
   const act=S.patients.filter(p=>p.status!=='discharged').sort((a,b)=>String(a.bed).localeCompare(String(b.bed),undefined,{numeric:true}));
