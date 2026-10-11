@@ -11,7 +11,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: one narrow column of full-width app rows, thumb-sized, in the order they get used.
+/* Layout: two columns of three, filled top to bottom (ED tools left, ICU and residency right).
+   Narrow phones keep two columns but switch to compact stacked cards.
    Palette and type match Hx, Dispo, ICU Rounder, Sweep and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
 :root{
   --bg:#EBEFF2; --surface:#FFFFFF; --ink:#14233A; --muted:#5A6A7E; --line:#D2DAE1;
@@ -22,10 +23,11 @@
 html{background:var(--bg)}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:36px 48px;display:flex;flex-direction:column;gap:22px}
+.wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:36px 48px;display:flex;flex-direction:column;gap:22px}
 header h1{font-weight:700;font-size:1.7rem;letter-spacing:-.01em;margin:0;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:10px}
+li{display:flex}li>a.app{flex:1}
 a.app{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;min-height:76px;transition:border-color .15s,transform .15s}
 a.app:hover{border-color:var(--accent)}
 a.app:active{transform:scale(.99)}
@@ -39,6 +41,12 @@ a.app:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .go{flex:none;width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 a.app:hover .go{stroke:var(--accent)}
 footer{color:var(--muted);font-size:.8rem}
+@media (max-width:599px){
+  a.app{flex-direction:column;align-items:flex-start;gap:10px;padding:12px;min-height:0;position:relative}
+  .desc{display:none}
+  .go{position:absolute;top:14px;right:10px}
+  .name{font-size:1.05rem}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
