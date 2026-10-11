@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Px">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Px</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Px: physical exam builder. Companion to Hx; palette and type match the rest of PANACEA. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --ab:#A8261C;--ab-soft:#FBE7E5;--nl:#1D6E49;--nl-soft:#E1F2E9;--paper:#FBFCFD;
+  color-scheme:light only;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 "Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding-left:16px;padding-right:16px}
+main.wrap{padding-top:12px;padding-bottom:130px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:10px;min-height:56px}
+.hd h1{font-size:1.25rem;margin:0;flex:1;letter-spacing:-.01em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{border:0;background:none;color:var(--accent);font-size:2.1rem;line-height:1;padding:0 8px 4px 0;cursor:pointer;font-family:inherit}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.9rem;font-weight:700;padding:6px 2px;cursor:pointer}
+.linkbtn.danger{color:var(--ab)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+input[type=search],input[type=text]{font:inherit;font-size:16px;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:var(--surface);color:var(--ink)}
+select{font:inherit;font-size:16px;border:1px solid var(--line);border-radius:8px;padding:5px 6px;background:var(--paper);color:var(--ink)}
+
+/* home */
+h2.sec{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:22px 0 8px}
+.tile{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;min-height:58px;text-decoration:none}
+.tile:hover{border-color:var(--accent)}
+.tile .txt{flex:1;min-width:0}.tile .nm{font-weight:700}.tile .ds{display:block;color:var(--muted);font-size:.86rem}
+.tile .dr{flex:none;font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:999px}
+.go{flex:none;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grid2 .tile{margin:0;flex-direction:column;align-items:flex-start;gap:4px;min-height:84px}
+.cl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.cl .tile{margin:0;padding:10px 12px;min-height:48px;font-size:.95rem}
+@media (max-width:420px){.cl{grid-template-columns:1fr}}
+
+/* exam */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0 10px}
+.seg{display:inline-flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{font:inherit;font-size:.88rem;font-weight:700;border:0;background:none;color:var(--muted);border-radius:7px;padding:5px 10px;cursor:pointer;min-height:32px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.prog{font-size:.85rem;color:var(--muted);font-weight:700}
+.prog b{color:var(--ab)}
+.sys{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.sysh{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--paper)}
+.sysh h3{margin:0;flex:1;font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.it{padding:10px 14px;border-bottom:1px solid var(--line)}
+.it:last-child{border-bottom:0}
+.ir{display:flex;gap:10px;align-items:flex-start}
+.ir .lb{flex:1;min-width:0}
+.ir .lb .t{font-weight:700;font-size:.97rem}
+.ir .lb .t i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ab);margin:0 0 1px 6px;vertical-align:middle}
+.ir .lb .pv{font-size:.88rem;color:var(--muted);margin-top:2px}
+.it[data-m="n"] .pv{color:var(--nl)}
+.it[data-m="a"] .pv{color:var(--ab)}
+.na{flex:none;display:flex;gap:4px}
+.na button{font:inherit;font-size:.82rem;font-weight:700;width:46px;height:36px;border-radius:9px;border:1.5px solid var(--line);background:var(--paper);color:var(--muted);cursor:pointer}
+.it[data-m="n"] .na .n{background:var(--nl);border-color:var(--nl);color:#fff}
+.it[data-m="a"] .na .a{background:var(--ab);border-color:var(--ab);color:#fff}
+.abp{display:none;margin-top:8px}
+.it[data-m="a"] .abp{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:.86rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:5px 11px;cursor:pointer;min-height:32px;text-align:left}
+.chip[aria-pressed="true"]{background:var(--ab-soft);border-color:var(--ab);color:var(--ab);font-weight:700}
+.abp .row2{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.abp input[type=text]{flex:1;min-width:160px;padding:8px 10px;background:var(--paper)}
+/* widgets */
+.wg{margin-top:8px}
+.gcs{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:.9rem}
+.gcs select{width:100%}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:center;padding:4px}
+.tbl th:first-child{text-align:left}
+.tbl td{padding:3px 4px;border-top:1px solid var(--line)}
+.tbl td:not(:first-child){text-align:center}
+.tbl select{min-width:58px}
+.tbl select.dev{background:var(--ab-soft);border-color:var(--ab);color:var(--ab);font-weight:700}
+.nih{display:flex;flex-direction:column;gap:10px}
+.nih .q{font-weight:700;font-size:.92rem}
+.nih .q span{color:var(--muted);font-weight:400}
+.nih .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.nih .opts .chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.score{font-size:1.3rem;font-weight:700}
+/* add & output */
+.addp .grp{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px}
+.addp .chips .chip:hover{border-color:var(--accent)}
+pre.out{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.93rem;line-height:1.5;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px;margin:0 0 10px;min-height:44px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(235,239,242,.96);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:12}
+.bar .wrap{display:flex;gap:10px;align-items:center;padding:0}
+.bar .btn.primary{flex:1}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.foot{color:var(--muted);font-size:.8rem;text-align:center;margin-top:20px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap hd" id="hd"></div></header>
+<main class="wrap" id="app"></main>
+<div class="bar" id="bar" hidden><div class="wrap"><span class="prog" id="barprog"></span><button class="btn primary" data-a="copy">Copy exam</button></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* ---------- finding library ----------
+   F(id, system, label, normal sentence, abnormal options "a|b|c", side?)
+   side = 1 lets an abnormal finding be tagged right / left / bilateral. */
+const SYS=[
+ ["gen","General"],["vit","Vitals"],["heent","HEENT"],["neck","Neck"],["cv","Cardiovascular"],["resp","Respiratory"],
+ ["abd","Abdomen"],["back","Back"],["gu","Genitourinary"],["pel","Pelvic"],["rec","Rectal"],["msk","Musculoskeletal"],
+ ["skin","Skin"],["neuro","Neurologic"],["psych","Psychiatric"],["dev","Lines and devices"]];
+const I={};
+function F(id,sys,label,nl,ab,side){I[id]={id,sys,label,nl,ab:ab?ab.split('|'):[],side:!!side}}
+
+/* General & vitals */
+F("gen_app","gen","Appearance","Well-appearing, in no acute distress.","Ill-appearing|Toxic-appearing|In moderate distress|In severe distress|Diaphoretic|Uncomfortable, unable to find a position of comfort|Cachectic|Lethargic");
+F("gen_peds","gen","Appearance (child)","Well-appearing, interactive, and consolable.","Ill-appearing|Lethargic|Irritable and inconsolable|Poor eye contact|Weak cry|Hypotonic");
+F("gen_hyd","gen","Hydration","Moist mucous membranes; capillary refill under 2 seconds.","Dry mucous membranes|Capillary refill 3–4 seconds|Capillary refill over 4 seconds|Decreased skin turgor|Sunken eyes|No tears");
+F("gen_rass","gen","Sedation (RASS)","RASS 0, alert and calm.","RASS +1, restless|RASS +2, agitated|RASS +3, very agitated|RASS +4, combative|RASS −1, drowsy|RASS −2, light sedation|RASS −3, moderate sedation|RASS −4, deep sedation|RASS −5, unarousable");
+F("gen_cam","gen","Delirium (CAM-ICU)","CAM-ICU negative.","CAM-ICU positive|Unable to assess (RASS −4 or −5)");
+F("vit_ortho","vit","Orthostatic vital signs","Orthostatic vital signs negative.","Orthostatic by heart rate (rise ≥ 30)|Orthostatic by blood pressure (SBP drop ≥ 20)|Symptomatic on standing|Unable to stand");
+F("vit_bparms","vit","BP in both arms","Blood pressure symmetric in both arms.","Systolic difference over 20 mmHg between arms");
+F("vit_spo2","vit","Oxygen saturation","SpO₂ normal on room air.","Hypoxemic on room air|On supplemental oxygen|On high-flow oxygen");
+F("vit_temp","vit","Temperature","Afebrile.","Febrile|Hypothermic|Hyperthermic (core)");
+F("vit_hrbp","vit","Heart rate and blood pressure","Heart rate and blood pressure within normal limits.","Tachycardic|Bradycardic|Hypotensive|Hypertensive");
+F("vit_glu","vit","Point-of-care glucose","Point-of-care glucose normal.","Hypoglycemic|Hyperglycemic");
+
+/* HEENT */
+F("head_atr","heent","Head","Normocephalic and atraumatic.","Scalp hematoma|Scalp laceration|Palpable step-off|Scalp tenderness",1);
+F("head_bsf","heent","Basilar skull fracture signs","No Battle sign, raccoon eyes, hemotympanum, or CSF rhinorrhea or otorrhea.","Battle sign|Raccoon eyes|Hemotympanum|CSF rhinorrhea|CSF otorrhea",1);
+F("head_face","heent","Facial bones","Facial bones stable and non-tender; normal occlusion.","Midface instability|Maxillary tenderness|Zygomatic tenderness|Mandibular tenderness|Malocclusion|Orbital rim step-off",1);
+F("head_font","heent","Fontanelle (infant)","Anterior fontanelle open, soft, and flat.","Bulging fontanelle|Sunken fontanelle|Fontanelle closed");
+F("head_ta","heent","Temporal arteries","Temporal arteries non-tender with normal pulses.","Temporal artery tenderness|Diminished temporal pulse|Nodular temporal artery",1);
+F("head_sinus","heent","Sinuses","No sinus tenderness.","Maxillary sinus tenderness|Frontal sinus tenderness",1);
+F("eye_pupils","heent","Pupils","Pupils equal, round, and reactive to light.","Anisocoria|Sluggishly reactive|Nonreactive|Pinpoint|Dilated|Afferent pupillary defect|Teardrop pupil",1);
+F("eye_eom","heent","Extraocular movements","Extraocular movements intact without pain or diplopia.","Restricted upgaze|Restricted lateral gaze|Pain with eye movement|Diplopia|Gaze deviation",1);
+F("eye_va","heent","Visual acuity","Visual acuity at baseline in each eye.","Decreased acuity|Counts fingers only|Hand motion only|Light perception only|No light perception",1);
+F("eye_vf","heent","Visual fields","Visual fields full to confrontation.","Homonymous hemianopia|Quadrantanopia|Monocular field cut",1);
+F("eye_conj","heent","Conjunctiva and sclera","Conjunctivae clear; sclerae anicteric.","Conjunctival injection|Ciliary flush|Purulent discharge|Watery discharge|Subconjunctival hemorrhage|Scleral icterus|Conjunctival pallor",1);
+F("eye_fluor","heent","Fluorescein","No fluorescein uptake.","Corneal abrasion|Dendritic uptake|Linear vertical abrasions|Positive Seidel sign",1);
+F("eye_iop","heent","Intraocular pressure","Intraocular pressure normal bilaterally.","Elevated intraocular pressure|Deferred (possible open globe)",1);
+F("eye_ant","heent","Anterior chamber","Anterior chambers deep and quiet; no hyphema or hypopyon.","Hyphema|Hypopyon|Shallow anterior chamber|Cell and flare",1);
+F("eye_lid","heent","Lids and orbit","No periorbital swelling or erythema; no foreign body on lid eversion.","Periorbital erythema|Periorbital swelling|Proptosis|Foreign body under the lid|Chalazion or hordeolum",1);
+F("eye_fundus","heent","Fundi","No papilledema.","Papilledema|Retinal hemorrhages|Unable to visualize the fundi");
+F("ent_tm","heent","Tympanic membranes","Tympanic membranes clear with normal landmarks.","Erythematous TM|Bulging TM|Middle ear effusion|TM perforation|Hemotympanum",1);
+F("ent_canal","heent","External canals","External canals clear without swelling or discharge; no tragal tenderness.","Canal edema|Otorrhea|Cerumen impaction|Foreign body in the canal|Tragal tenderness",1);
+F("ent_mast","heent","Mastoid","No mastoid tenderness or swelling.","Mastoid tenderness|Mastoid swelling|Protruding auricle",1);
+F("ent_hear","heent","Hearing","Hearing grossly intact.","Decreased hearing",1);
+F("ent_nose","heent","Nose","Nares patent; no septal hematoma or active bleeding.","Anterior bleeding site seen|Active bleeding, source not seen|Septal hematoma|Septal deviation|Mucosal edema|Purulent discharge|Clear rhinorrhea",1);
+F("ent_post","heent","Posterior pharynx (blood)","No blood in the posterior pharynx.","Blood in the posterior pharynx|Active posterior bleeding");
+F("ent_phar","heent","Oropharynx","Oropharynx clear; tonsils symmetric without exudate; uvula midline.","Pharyngeal erythema|Tonsillar exudate|Tonsillar enlargement|Tonsillar asymmetry|Uvular deviation|Soft palate bulging|Oral vesicles or ulcers");
+F("ent_mm","heent","Mucous membranes","Moist mucous membranes.","Dry mucous membranes");
+F("ent_voice","heent","Voice and airway","Normal voice; no stridor; handling secretions.","Muffled (hot potato) voice|Hoarseness|Stridor|Drooling|Tripod or sniffing position");
+F("ent_trismus","heent","Trismus","No trismus.","Trismus|Limited mouth opening");
+F("ent_fom","heent","Floor of mouth","Floor of mouth soft and non-tender.","Floor of mouth elevation|Floor of mouth firmness|Sublingual swelling");
+F("ent_tongue","heent","Lips and tongue","No lip or tongue swelling; no tongue laceration.","Lip swelling|Tongue swelling|Uvular swelling|Lateral tongue laceration");
+F("ent_dent","heent","Dentition","Dentition intact without tenderness or gingival swelling.","Tooth tender to percussion|Loose tooth|Gingival swelling|Gingival fluctuance|Fractured tooth|Dental caries");
+F("ent_face_sw","heent","Facial swelling","No facial swelling or erythema.","Facial swelling|Facial erythema|Facial induration",1);
+
+/* Neck */
+F("neck_supple","neck","Meningismus","Neck supple without meningismus.","Nuchal rigidity|Pain with neck flexion|Positive Kernig sign|Positive Brudzinski sign");
+F("neck_cspine","neck","Cervical spine","No midline cervical spine tenderness or step-off.","Midline tenderness|Step-off|Paraspinal tenderness|Paraspinal spasm");
+F("neck_rom","neck","Neck range of motion","Full active range of motion, rotating 45° each way without pain.","Limited rotation|Pain with range of motion|Not tested (immobilized)");
+F("neck_ln","neck","Lymph nodes","No cervical lymphadenopathy.","Anterior cervical lymphadenopathy|Posterior cervical lymphadenopathy|Tender lymphadenopathy|Supraclavicular node",1);
+F("neck_jvd","neck","JVD","No jugular venous distension.","JVD present|Elevated JVP|Hepatojugular reflux");
+F("neck_trachea","neck","Trachea","Trachea midline.","Tracheal deviation",1);
+F("neck_thyroid","neck","Thyroid","Thyroid non-enlarged and non-tender.","Goiter|Thyroid nodule|Thyroid tenderness");
+F("neck_swell","neck","Neck soft tissue","No neck swelling, crepitus, or tenderness.","Neck swelling|Subcutaneous crepitus|Submandibular swelling|Neck tenderness|Expanding hematoma",1);
+F("neck_bruit","neck","Carotids","No carotid bruits.","Carotid bruit",1);
+
+/* Cardiovascular */
+F("cv_rr","cv","Rate and rhythm","Regular rate and rhythm.","Tachycardic|Bradycardic|Irregularly irregular|Irregular rhythm|Paced rhythm");
+F("cv_hs","cv","Heart sounds","Normal S1 and S2; no murmurs, rubs, or gallops.","Systolic murmur|Diastolic murmur|Harsh crescendo-decrescendo systolic murmur|Friction rub|S3|S4|Muffled heart sounds|Mechanical valve click");
+F("cv_pulses","cv","Pulses","Radial and dorsalis pedis pulses 2+ and symmetric.","Diminished pulse|Absent pulse|Dopplerable pulse only|Radial pulse asymmetry|Femoral pulse asymmetry",1);
+F("cv_cr","cv","Perfusion","Capillary refill under 2 seconds; extremities warm.","Delayed capillary refill|Mottling|Cool extremities",1);
+F("cv_edema","cv","Edema","No peripheral edema.","Trace pitting edema|1+ pitting edema|2+ pitting edema|3+ pitting edema|Non-pitting edema|Edema to the knees|Edema to the thighs",1);
+F("cv_calf","cv","Calves","Calves soft and non-tender without asymmetric swelling or palpable cord.","Calf tenderness|Unilateral calf swelling|Palpable venous cord|Calf circumference difference over 3 cm|Erythema and warmth",1);
+F("cv_aorta","cv","Abdominal aorta","No pulsatile abdominal mass.","Pulsatile abdominal mass|Abdominal bruit");
+F("cv_access","cv","Dialysis access","Access with palpable thrill and audible bruit; site clean.","Absent thrill|Absent bruit|Erythema at the access|Drainage at the access|Bleeding from the access|Aneurysmal dilation",1);
+
+/* Respiratory */
+F("resp_wob","resp","Work of breathing","Breathing comfortably without accessory muscle use.","Tachypneic|Accessory muscle use|Retractions|Nasal flaring|Grunting|Head bobbing|Speaking in short phrases|Unable to speak in full sentences|Kussmaul respirations|Paradoxical breathing");
+F("resp_bs","resp","Breath sounds","Clear to auscultation bilaterally; no wheezes, rales, or rhonchi.","Expiratory wheezes|Diffuse wheezes|Rales at the bases|Diffuse rales|Rhonchi|Decreased breath sounds|Absent breath sounds|Prolonged expiratory phase|Poor air movement|Focal wheeze",1);
+F("resp_cw","resp","Chest wall","Chest wall non-tender and stable without crepitus.","Chest wall tenderness reproducing the pain|Rib point tenderness|Crepitus|Flail segment|Seat belt sign|Chest wall ecchymosis",1);
+F("resp_vent","resp","Ventilator","Synchronous with the ventilator.","Ventilator dyssynchrony|Breath stacking|High peak pressures|Circuit air leak|Copious secretions");
+F("resp_ct","resp","Chest tube","Chest tube in place without air leak; serosanguinous output.","Air leak|Bloody output|No tidaling|Subcutaneous emphysema at the site",1);
+
+/* Abdomen */
+F("abd_soft","abd","Abdomen","Soft and non-distended.","Distended|Tympanitic|Firm|Rigid|Fluid wave (ascites)|Surgical scars");
+F("abd_tender","abd","Tenderness","Non-tender to palpation.","RLQ tenderness|LLQ tenderness|RUQ tenderness|LUQ tenderness|Epigastric tenderness|Suprapubic tenderness|Periumbilical tenderness|Diffuse tenderness|Pain out of proportion to exam");
+F("abd_perit","abd","Peritoneal signs","No guarding, rebound, or rigidity.","Voluntary guarding|Involuntary guarding|Rebound tenderness|Rigidity|Pain with heel tap");
+F("abd_bs","abd","Bowel sounds","Normal bowel sounds.","Hypoactive bowel sounds|Hyperactive bowel sounds|High-pitched bowel sounds|Absent bowel sounds");
+F("abd_murphy","abd","Murphy sign","Negative Murphy sign.","Positive Murphy sign");
+F("abd_mcb","abd","Appendiceal signs","No McBurney point tenderness; negative Rovsing, psoas, and obturator signs.","McBurney point tenderness|Positive Rovsing sign|Positive psoas sign|Positive obturator sign");
+F("abd_hernia","abd","Hernias","No palpable hernias.","Reducible umbilical hernia|Incarcerated hernia|Inguinal hernia|Femoral hernia|Incisional hernia|Tender hernia",1);
+F("abd_cva","abd","CVA tenderness","No CVA tenderness.","CVA tenderness",1);
+F("abd_liver","abd","Stigmata of liver disease","No jaundice, spider angiomata, or caput medusae.","Jaundice|Spider angiomata|Caput medusae|Palmar erythema|Hepatomegaly");
+F("abd_spleen","abd","Spleen","No splenomegaly.","Splenomegaly|Splenic tenderness");
+F("abd_bladder","abd","Bladder","No suprapubic fullness or bladder distension.","Distended, palpable bladder|Suprapubic tenderness");
+F("abd_wound","abd","Surgical wound","Incision clean, dry, and intact without erythema or drainage.","Wound erythema|Purulent drainage|Serous drainage|Dehiscence|Wound hematoma|Induration");
+F("abd_drains","abd","Drains and ostomy","Drains and ostomy functioning with appropriate output.","Dusky ostomy|No ostomy output|Bloody drain output|Bilious drain output|Feculent drain output");
+F("abd_fundus","abd","Uterus (pregnant)","Fundal height consistent with dates; uterus non-tender.","Uterine tenderness|Fundal height inconsistent with dates|Contractions palpable");
+F("abd_pd","abd","Peritoneal dialysis catheter","PD catheter site clean without erythema or drainage; effluent clear.","Exit site erythema|Exit site drainage|Cloudy effluent");
+
+/* Back */
+F("back_spine","back","Thoracolumbar spine","No midline thoracolumbar tenderness or step-off.","Midline tenderness|Step-off|Paraspinal tenderness|Paraspinal spasm");
+F("back_slr","back","Straight leg raise","Negative straight leg raise.","Positive straight leg raise|Positive crossed straight leg raise",1);
+F("back_skin","back","Back skin","No rash, wounds, or erythema over the back.","Dermatomal vesicular rash|Sacral pressure injury|Erythema or abscess");
+
+/* GU / pelvic / rectal */
+F("gu_test","gu","Testes and scrotum","Testes descended with normal lie, non-tender; no scrotal swelling.","High-riding testis|Horizontal lie|Testicular tenderness|Epididymal tenderness|Scrotal swelling|Scrotal erythema|Blue dot sign|Testicular mass|Positive Prehn sign",1);
+F("gu_crem","gu","Cremasteric reflex","Cremasteric reflex present bilaterally.","Absent cremasteric reflex",1);
+F("gu_penis","gu","Penis and meatus","No penile discharge, lesions, or meatal abnormality.","Urethral discharge|Phimosis|Meatal stenosis|Penile lesions|Priapism|Hair tourniquet");
+F("gu_perineum","gu","Perineum","No perineal erythema, crepitus, or tenderness.","Perineal erythema|Perineal crepitus|Skin necrosis|Tenderness out of proportion");
+F("gu_foley","gu","Foley catheter","Foley draining clear yellow urine.","Hematuria|Clots|Cloudy urine|Not draining|Low output");
+F("pel_ext","pel","External genitalia","Normal external genitalia without lesions.","Vesicular lesions|Genital ulcers|Bartholin gland swelling|Vulvar erythema");
+F("pel_spec","pel","Speculum exam","Cervical os closed without bleeding or discharge.","Os open|Tissue at the os|Active bleeding from the os|Clots in the vault|Cervical discharge|Friable cervix|Vaginal discharge");
+F("pel_bim","pel","Bimanual exam","No cervical motion, uterine, or adnexal tenderness; no masses.","Cervical motion tenderness|Uterine tenderness|Adnexal tenderness|Adnexal mass|Enlarged uterus",1);
+F("pel_fht","pel","Fetal heart tones","Fetal heart tones present at a normal rate.","Fetal heart tones absent|Fetal tachycardia|Fetal bradycardia");
+F("rec_ext","rec","Perianal inspection","No external hemorrhoids, fissure, or perianal abscess.","External hemorrhoid|Thrombosed hemorrhoid|Anal fissure|Perianal erythema|Perianal fluctuance|Skin tags");
+F("rec_dre","rec","Digital rectal exam","Normal rectal tone; no masses or tenderness.","Decreased rectal tone|Fecal impaction|Rectal mass|Rectal tenderness|Fluctuance|Enlarged prostate|Tender prostate");
+F("rec_stool","rec","Stool","Brown stool, guaiac negative.","Guaiac positive|Melena|Maroon stool|Bright red blood|Clots");
+
+/* Musculoskeletal */
+F("msk_gen","msk","Extremities","No deformity, swelling, or tenderness; full range of motion.","Deformity|Swelling|Tenderness|Limited range of motion",1);
+F("msk_def","msk","Deformity and skin","No deformity; overlying skin intact.","Angulation|Shortening|External rotation|Open wound over the fracture site|Skin tenting|Obvious dislocation",1);
+F("msk_tender","msk","Bony tenderness","No focal bony tenderness.","Point tenderness|Diffuse tenderness",1);
+F("msk_swell","msk","Swelling","No swelling or ecchymosis.","Soft tissue swelling|Ecchymosis|Joint effusion",1);
+F("msk_rom","msk","Range of motion","Full range of motion without pain.","Limited active range of motion|Limited passive range of motion|Pain with passive range of motion|Unable to bear weight",1);
+F("msk_jab","msk","Joint above and below","Joints above and below non-tender with full range of motion.","Tenderness at the joint above|Tenderness at the joint below",1);
+F("msk_comp","msk","Compartments","Compartments soft and compressible.","Tense compartment|Pain with passive stretch|Paresthesias",1);
+F("msk_snuff","msk","Anatomic snuffbox","No anatomic snuffbox or scaphoid tubercle tenderness.","Snuffbox tenderness|Scaphoid tubercle tenderness",1);
+F("msk_ottawa","msk","Ottawa ankle and foot","No tenderness at the posterior malleoli, navicular, or base of the fifth metatarsal; able to bear weight four steps.","Lateral malleolus tenderness|Medial malleolus tenderness|Navicular tenderness|Fifth metatarsal base tenderness|Unable to bear weight four steps",1);
+F("msk_fib","msk","Proximal fibula","No proximal fibula tenderness.","Proximal fibula tenderness",1);
+F("msk_thompson","msk","Achilles","Achilles tendon intact; negative Thompson test.","Positive Thompson test|Palpable Achilles defect",1);
+F("msk_lig","msk","Ligamentous stability","Ligamentous exam stable.","Positive anterior drawer|Positive Lachman|Varus instability|Valgus instability|Joint laxity",1);
+F("msk_joint","msk","Joint","No effusion, warmth, or erythema; painless passive range of motion.","Joint effusion|Warmth|Erythema|Pain with passive range of motion|Tophi|Multiple joints involved",1);
+F("msk_hip","msk","Hip","No shortening or rotation; painless log roll and axial load.","Shortened and externally rotated|Pain with log roll|Pain with axial load|Groin tenderness",1);
+F("msk_pelvis","msk","Pelvis","Pelvis stable to compression and non-tender.","Pelvic instability|Pelvic tenderness|Perineal ecchymosis");
+F("msk_shoulder","msk","Shoulder","Normal shoulder contour with full range of motion.","Loss of deltoid contour|Arm held in internal rotation|Limited range of motion|Shoulder tenderness",1);
+F("msk_wrist","msk","Wrist","Wrist non-tender with full range of motion.","Distal radius tenderness|Wrist deformity|Limited range of motion",1);
+F("msk_tendon","msk","Tendon function","Flexor and extensor tendon function intact against resistance.","FDP deficit|FDS deficit|Extensor deficit|Pain with resisted motion|Weak against resistance",1);
+F("msk_nerve","msk","Peripheral nerves","Radial, median, and ulnar motor and sensory function intact.","Radial nerve deficit|Median nerve deficit|Ulnar nerve deficit|Axillary nerve deficit|Peroneal nerve deficit|Decreased two-point discrimination",1);
+F("msk_nv","msk","Distal neurovascular","Distally neurovascularly intact: pulses 2+, capillary refill under 2 seconds, sensation and motor intact.","Diminished distal pulse|Absent distal pulse|Delayed capillary refill|Decreased distal sensation|Distal motor deficit",1);
+F("msk_carpal","msk","Tinel and Phalen","Negative Tinel and Phalen signs.","Positive Tinel sign|Positive Phalen sign",1);
+F("msk_tourn","msk","Digits (hair tourniquet)","No hair tourniquets on fingers, toes, or penis.","Hair tourniquet");
+
+/* Skin */
+F("sk_gen","skin","Skin","Warm, dry, and well perfused.","Pale|Cool|Mottled|Diaphoretic|Jaundiced|Cyanotic|Flushed|Hot and dry");
+F("sk_rash","skin","Rash","No rash.","Macular|Papular|Vesicular|Bullous|Petechial|Purpuric|Urticarial|Targetoid|Desquamating|Involves palms and soles|Involves mucous membranes|Positive Nikolsky sign|Blanching|Non-blanching|Dermatomal distribution");
+F("sk_cell","skin","Cellulitis or abscess","No erythema, induration, or fluctuance.","Erythema|Induration|Fluctuance|Warmth|Lymphangitic streaking|Bullae|Crepitus|Skin necrosis|Erythema border marked",1);
+F("sk_wound","skin","Wound","No wound.","Linear laceration|Stellate laceration|Flap laceration|Avulsion|Puncture wound|Contaminated|Visible foreign body|Exposed tendon|Exposed bone|Joint capsule involvement|Crosses the vermilion border|Edges approximated|Dehiscence|Purulent drainage",1);
+F("sk_wchk","skin","Healing wound","Wound well healed, edges approximated, no erythema, drainage, or fluctuance.","Erythema|Drainage|Fluctuance|Dehiscence|Sutures removed|Staples removed");
+F("sk_press","skin","Pressure injuries","No pressure injuries.","Sacral pressure injury|Heel pressure injury|Stage 1|Stage 2|Stage 3 or 4|Unstageable|Deep tissue injury");
+F("sk_burn","skin","Burns","No burns.","Superficial partial-thickness|Deep partial-thickness|Full-thickness|Circumferential|Involves the face|Involves the hands|Involves the perineum|Involves a joint|Singed nasal hair|Soot in the airway");
+F("sk_track","skin","Track marks and bruising","No track marks or unexplained bruising.","Track marks|Bruises in varied stages of healing|Patterned bruising|Bruising in a non-mobile infant|Signs of self-harm");
+F("sk_bite","skin","Bite or sting site","No fang marks or puncture wounds.","Puncture wounds|Fang marks|Local swelling|Ecchymosis|Bullae|Swelling margin marked",1);
+F("sk_cold","skin","Cold injury","Skin warm with normal color and sensation.","Pallor|Clear blisters|Hemorrhagic blisters|Mottled or gray skin|Decreased sensation|Hard, frozen tissue",1);
+F("sk_breast","skin","Breast","No breast erythema, mass, or fluctuance.","Erythema|Warmth|Fluctuance|Discrete mass|Nipple discharge|Nipple cracking|Skin dimpling|Axillary lymphadenopathy",1);
+
+/* Neurologic */
+F("neu_ms","neuro","Mental status","Alert and oriented to person, place, time, and situation.","Confused|Disoriented|Lethargic|Obtunded|Stuporous|Agitated|Inattentive|Somnolent but arousable");
+F("neu_gcs","neuro","Glasgow Coma Scale","","");          // widget
+F("neu_speech","neuro","Speech and language","Fluent speech with intact comprehension; no dysarthria.","Expressive aphasia|Receptive aphasia|Global aphasia|Dysarthria|Word-finding difficulty");
+F("neu_cn","neuro","Cranial nerves","Cranial nerves II–XII intact.","Lower facial droop|Upper and lower facial weakness|Ptosis|Diplopia|Tongue deviation|Decreased facial sensation|Hearing loss|Dysphagia",1);
+F("neu_motor","neuro","Strength","5/5 strength in all extremities.","Upper extremity weakness|Lower extremity weakness|Hemiparesis|Proximal weakness|Distal weakness|Paraparesis|Quadriparesis",1);
+F("neu_drift","neuro","Pronator drift","No pronator drift.","Pronator drift",1);
+F("neu_sens","neuro","Sensation","Sensation intact to light touch throughout.","Decreased sensation|Sensory level|Dermatomal deficit|Stocking-glove deficit|Hemisensory loss",1);
+F("neu_refl","neuro","Reflexes","Reflexes 2+ and symmetric; toes downgoing.","Hyperreflexia|Hyporeflexia|Areflexia|Clonus|Upgoing toe (Babinski)",1);
+F("neu_coord","neuro","Coordination","Finger-to-nose and heel-to-shin intact.","Dysmetria on finger-to-nose|Dysmetria on heel-to-shin|Dysdiadochokinesia|Intention tremor",1);
+F("neu_gait","neuro","Gait","Steady, normal gait.","Ataxic gait|Wide-based gait|Unable to walk|Shuffling gait|Antalgic gait|Positive Romberg|Truncal ataxia");
+F("neu_nyst","neuro","Nystagmus","No nystagmus.","Horizontal unidirectional nystagmus|Direction-changing nystagmus|Vertical nystagmus|Torsional nystagmus");
+F("neu_hints","neuro","HINTS exam","HINTS reassuring for a peripheral cause: abnormal (corrective) head impulse, unidirectional horizontal nystagmus, no skew deviation.","Normal head impulse test|Direction-changing nystagmus|Skew deviation");
+F("neu_dix","neuro","Dix-Hallpike","Dix-Hallpike negative.","Positive Dix-Hallpike with torsional upbeating nystagmus",1);
+F("neu_saddle","neuro","Saddle sensation","Saddle sensation intact.","Decreased saddle sensation");
+F("neu_asterixis","neuro","Asterixis","No asterixis.","Asterixis");
+F("neu_tremor","neuro","Tremor","No tremor.","Resting tremor|Postural tremor|Coarse tremor");
+F("neu_tone","neuro","Tone and clonus","Normal tone; no rigidity or clonus.","Rigidity|Lead-pipe rigidity|Spasticity|Inducible clonus|Spontaneous clonus|Ocular clonus",1);
+F("neu_neglect","neuro","Neglect","No extinction or neglect.","Visual extinction|Tactile extinction|Hemineglect",1);
+F("neu_mae","neuro","Motor response","Moves all extremities spontaneously and follows commands.","Does not follow commands|Localizes to pain|Withdraws to pain|Flexor posturing|Extensor posturing|No movement to pain|Asymmetric movement",1);
+F("neu_bs","neuro","Brainstem reflexes","Corneal, cough, and gag reflexes present.","Absent corneal reflex|Absent cough reflex|Absent gag reflex|Absent oculocephalic reflex",1);
+
+/* Comprehensive neuro parts */
+F("nc_orient","neuro","Orientation","Alert and oriented to person, place, time, and situation.","Disoriented to time|Disoriented to place|Disoriented to person|Disoriented to situation|Lethargic|Obtunded");
+F("nc_attn","neuro","Attention","Attention intact (months of the year backward).","Inattentive|Unable to perform serial tasks");
+F("nc_lang","neuro","Language","Fluent speech; comprehension, naming, and repetition intact.","Non-fluent speech|Impaired comprehension|Impaired naming|Impaired repetition|Paraphasic errors|Mute");
+F("nc_dys","neuro","Articulation","No dysarthria.","Mild dysarthria|Severe dysarthria");
+F("nc_memory","neuro","Memory","Recalls 3 of 3 words at 5 minutes.","Recalls 2 of 3|Recalls 1 of 3|Recalls 0 of 3");
+F("nc_cn2","neuro","CN II","Visual fields full to confrontation; pupils equal and reactive; no APD; fundi without papilledema.","Visual field cut|Afferent pupillary defect|Papilledema|Anisocoria",1);
+F("nc_cn346","neuro","CN III, IV, VI","Extraocular movements full without nystagmus or diplopia; no ptosis.","Ophthalmoplegia|Gaze palsy|Internuclear ophthalmoplegia|Nystagmus|Diplopia|Ptosis",1);
+F("nc_cn5","neuro","CN V","Facial sensation intact in V1–V3; masseter strength normal.","Decreased V1 sensation|Decreased V2 sensation|Decreased V3 sensation|Absent corneal reflex",1);
+F("nc_cn7","neuro","CN VII","Face symmetric at rest and with activation.","Lower facial weakness (central)|Upper and lower facial weakness (peripheral)|Decreased nasolabial fold",1);
+F("nc_cn8","neuro","CN VIII","Hearing intact to finger rub.","Decreased hearing",1);
+F("nc_cn910","neuro","CN IX, X","Palate elevates symmetrically; voice normal.","Asymmetric palate elevation|Hoarse voice|Absent gag");
+F("nc_cn11","neuro","CN XI","Shoulder shrug and head turn 5/5.","Weak shoulder shrug|Weak head turn",1);
+F("nc_cn12","neuro","CN XII","Tongue midline without atrophy or fasciculations.","Tongue deviation|Tongue fasciculations|Tongue atrophy",1);
+F("nc_bulk","neuro","Bulk","Normal muscle bulk without atrophy or fasciculations.","Atrophy|Fasciculations",1);
+F("nc_tone","neuro","Tone","Normal tone in all extremities.","Spasticity|Rigidity|Cogwheeling|Hypotonia",1);
+F("nc_drift","neuro","Pronator drift","No pronator drift.","Pronator drift|Pronation without drift",1);
+F("nc_str","neuro","Strength (by muscle)","","");     // widget
+F("nc_refl","neuro","Reflexes (by tendon)","","");     // widget
+F("nc_lt","neuro","Light touch","Light touch intact throughout.","Decreased light touch|Absent light touch",1);
+F("nc_pp","neuro","Pinprick","Pinprick intact throughout.","Decreased pinprick|Sensory level to pinprick|Stocking distribution loss",1);
+F("nc_vib","neuro","Vibration","Vibration intact at the great toes.","Decreased vibration at the toes|Absent vibration at the toes",1);
+F("nc_prop","neuro","Proprioception","Proprioception intact at the great toes.","Impaired proprioception",1);
+F("nc_fnf","neuro","Finger-to-nose","Finger-to-nose intact without dysmetria.","Dysmetria|Intention tremor",1);
+F("nc_hks","neuro","Heel-to-shin","Heel-to-shin intact.","Dysmetria on heel-to-shin",1);
+F("nc_ram","neuro","Rapid alternating movements","Rapid alternating movements intact.","Dysdiadochokinesia",1);
+F("nc_gait","neuro","Gait","Normal casual gait; able to tandem walk.","Unable to tandem|Wide-based gait|Ataxic gait|Shuffling gait|Circumduction|Steppage gait|Unable to walk");
+F("nc_romberg","neuro","Romberg","Romberg negative.","Romberg positive");
+
+/* Psychiatric */
+F("psy_app","psych","Appearance and behavior","Appropriately groomed; calm and cooperative.","Disheveled|Agitated|Guarded|Psychomotor retardation|Psychomotor agitation|Poor eye contact");
+F("psy_mood","psych","Mood and affect","Euthymic mood with congruent affect.","Depressed mood|Anxious|Irritable|Euphoric|Flat affect|Labile affect");
+F("psy_thought","psych","Thought process","Linear and goal-directed.","Tangential|Circumstantial|Flight of ideas|Disorganized|Thought blocking");
+F("psy_content","psych","Thought content","Denies suicidal and homicidal ideation; no delusions.","Suicidal ideation|Suicidal ideation with plan|Homicidal ideation|Paranoid delusions|Grandiose delusions");
+F("psy_perc","psych","Perception","Not responding to internal stimuli; denies hallucinations.","Auditory hallucinations|Visual hallucinations|Command hallucinations|Responding to internal stimuli");
+F("psy_ij","psych","Insight and judgment","Insight and judgment intact.","Limited insight|Poor insight|Impaired judgment");
+F("tox_feat","neuro","Toxidrome features","Pupils mid-size, skin without diaphoresis, normal bowel sounds; no toxidrome evident.","Mydriasis|Miosis|Diaphoresis|Dry, flushed skin|Absent bowel sounds|Hyperactive bowel sounds|Urinary retention|Sialorrhea|Hyperthermia");
+F("tox_wd","neuro","Withdrawal signs","No tremor, diaphoresis, or hallucinations.","Tremor|Diaphoresis|Tactile hallucinations|Visual hallucinations|Agitation|Anxiety");
+
+/* Lines and devices */
+F("dev_ett","dev","Endotracheal tube","ETT secure at the lip; no cuff leak.","Cuff leak|Tube position changed|Thick secretions|Bloody secretions");
+F("dev_trach","dev","Tracheostomy","Tracheostomy site clean; tube secure.","Stoma erythema|Stoma bleeding|Copious secretions|Tube dislodged");
+F("dev_ogt","dev","OG or NG tube","OG tube in place with appropriate output.","Bilious output|Bloody output|Coffee-ground output|High output");
+F("dev_cvc","dev","Central line","Central line site clean, dry, and intact; dressing current.","Erythema at the site|Purulent drainage|Dressing soiled|Tenderness at the site",1);
+F("dev_art","dev","Arterial line","Arterial line site clean with good waveform and distal perfusion.","Dampened waveform|Hematoma at the site|Poor distal perfusion",1);
+F("dev_piv","dev","Peripheral IVs","Peripheral IV sites without erythema or infiltration.","Infiltration|Phlebitis|Erythema",1);
+
+/* ---------- templates ----------
+   T(key, group, name, "item !item ...") — "!" marks a finding that must not be missed.
+   Complaint keys and names match Hx so the two apps line up. */
+const TPL={};const ORDER=[];
+function T(key,g,name,items,desc){TPL[key]={key,g,name,desc:desc||'',items:items.trim().split(/\s+/).map(x=>({id:x.replace('!',''),flag:x[0]==='!'}))};ORDER.push(key)}
+
+/* Comprehensive */
+T("full","Comprehensive","Head-to-toe exam","gen_app head_atr eye_pupils eye_eom eye_conj ent_tm ent_phar ent_mm neck_supple neck_ln neck_thyroid neck_jvd cv_rr cv_hs cv_pulses cv_edema resp_wob resp_bs abd_soft abd_tender abd_perit abd_bs abd_cva msk_gen sk_gen sk_rash neu_ms neu_speech neu_cn neu_motor neu_sens neu_coord neu_gait psy_app psy_mood","Complete exam for an H&P");
+T("icu","Comprehensive","ICU daily exam","gen_app !gen_rass !gen_cam !neu_gcs !eye_pupils !neu_mae neu_bs dev_ett dev_trach ent_mm neck_jvd !cv_rr cv_hs !cv_pulses !cv_cr cv_edema resp_wob !resp_vent !resp_bs resp_ct abd_soft !abd_tender abd_bs abd_wound abd_drains dev_ogt gu_foley sk_gen !sk_press sk_rash !dev_cvc dev_art dev_piv","Sedation, delirium, devices, and every system for daily rounds");
+T("neuro","Comprehensive","Comprehensive neuro exam","!nc_orient nc_attn !nc_lang nc_dys nc_memory !nc_cn2 !nc_cn346 nc_cn5 !nc_cn7 nc_cn8 nc_cn910 nc_cn11 nc_cn12 nc_bulk nc_tone !nc_drift !nc_str !nc_refl nc_lt nc_pp nc_vib nc_prop !nc_fnf nc_hks nc_ram !nc_gait nc_romberg","Mental status, each cranial nerve, strength and reflexes by muscle and tendon, sensation, coordination, gait");
+T("nihss","Comprehensive","NIH Stroke Scale","nihss","Scored NIHSS with a note-ready line");
+
+/* Cardiopulmonary */
+T("chest_pain","Cardiopulmonary","Chest pain","gen_app !vit_bparms !neck_jvd !cv_rr !cv_hs !cv_pulses !resp_bs resp_cw abd_tender !cv_calf cv_edema neu_motor");
+T("sob","Cardiopulmonary","Shortness of breath","gen_app !vit_spo2 !resp_wob !resp_bs !neck_trachea !neck_jvd cv_rr cv_hs cv_edema !cv_calf neu_ms sk_gen");
+T("palpitations","Cardiopulmonary","Palpitations","gen_app !cv_rr cv_hs !vit_hrbp resp_bs neck_thyroid neu_tremor gen_hyd cv_edema");
+T("cough","Cardiopulmonary","Cough / URI","gen_app !vit_spo2 !resp_wob !resp_bs ent_tm ent_phar ent_nose head_sinus neck_ln cv_hs");
+T("htn","Cardiopulmonary","Elevated blood pressure","gen_app !vit_bparms !neu_ms !neu_motor !neu_cn !eye_fundus !cv_hs !resp_bs neck_jvd cv_edema cv_pulses");
+T("syncope","Cardiopulmonary","Syncope","gen_app !vit_ortho !cv_rr !cv_hs !head_atr !ent_tongue !neu_motor neu_cn cv_aorta abd_tender !rec_stool resp_bs cv_edema");
+T("leg_swelling","Cardiopulmonary","Leg pain / swelling","!cv_calf cv_edema sk_cell !cv_pulses !cv_cr !msk_nv msk_comp sk_wound !resp_wob !resp_bs");
+/* Neuro */
+T("headache","Neuro","Headache","gen_app !neu_ms !neu_cn !eye_pupils !eye_eom !eye_fundus !neu_motor !neu_drift !neu_coord !neu_gait !neck_supple head_ta head_sinus ent_dent !sk_rash vit_hrbp");
+T("head_injury","Neuro","Head injury","!neu_gcs !eye_pupils !head_atr !head_bsf head_face !neck_cspine !neu_cn !neu_motor !neu_sens !neu_gait head_font");
+T("neck_injury","Neuro","Neck pain / injury","!neck_cspine neck_rom neck_supple !neu_motor !neu_sens !neu_refl !rec_dre");
+T("dizzy","Neuro","Dizziness / vertigo","gen_app !neu_nyst !neu_hints !neu_dix !neu_cn !neu_coord !neu_gait !neu_motor ent_tm vit_ortho cv_rr");
+T("stroke","Neuro","Stroke symptoms / focal deficit","!vit_glu !neu_ms !neu_speech !eye_vf !eye_eom !neu_cn !neu_drift !neu_motor !neu_sens !neu_coord !neu_neglect cv_rr neck_bruit nihss");
+T("numbness","Neuro","Numbness / tingling","!neu_motor !neu_sens !neu_refl !neu_cn !neu_gait !neu_saddle !rec_dre msk_carpal !msk_nv sk_rash");
+T("weakness","Neuro","Generalized weakness","gen_app !neu_ms !neu_motor !neu_refl !neu_cn !neu_gait vit_ortho gen_hyd resp_bs abd_tender sk_press !rec_stool");
+T("ams","Neuro","Altered mental status","!neu_gcs !vit_glu !vit_temp !eye_pupils !neu_motor !neck_supple !head_atr neu_asterixis !tox_feat sk_track sk_rash abd_liver resp_bs abd_tender !abd_bladder");
+T("seizure","Neuro","Seizure","!neu_ms !ent_tongue !head_atr !msk_shoulder !neu_motor !neck_supple !eye_pupils !vit_glu sk_track abd_liver");
+/* GI / GU */
+T("abd_pain","GI / GU","Abdominal pain","gen_app abd_soft !abd_tender !abd_perit !abd_murphy !abd_mcb abd_bs !abd_hernia !abd_cva !cv_aorta eye_conj pel_spec pel_bim gu_test gu_crem !rec_dre rec_stool");
+T("vomiting","GI / GU","Nausea / vomiting","gen_app !gen_hyd abd_soft !abd_tender !abd_perit abd_bs !abd_hernia !neu_ms !neck_supple eye_conj !vit_glu");
+T("diarrhea","GI / GU","Diarrhea","gen_app !gen_hyd !vit_ortho abd_soft !abd_tender !abd_perit abd_bs rec_stool rec_ext");
+T("gi_bleed","GI / GU","GI bleeding","gen_app !vit_hrbp !vit_ortho !eye_conj !cv_cr !neu_ms abd_soft !abd_tender !abd_perit !abd_liver !rec_dre !rec_stool rec_ext");
+T("flank","GI / GU","Flank pain / kidney stone","gen_app !abd_cva abd_soft !abd_tender !abd_perit !cv_aorta cv_pulses gu_test !vit_temp");
+T("uti","GI / GU","Urinary symptoms","!vit_temp !abd_cva abd_tender !abd_bladder pel_ext pel_spec gu_penis gu_test");
+T("retention","GI / GU","Urinary retention","!abd_bladder abd_tender rec_dre !neu_motor !neu_sens !neu_refl !neu_saddle gu_penis !abd_cva");
+T("testicular","GI / GU","Testicular pain","gen_app !gu_test !gu_crem !abd_hernia gu_penis !abd_tender gu_perineum");
+T("constipation","GI / GU","Constipation","!abd_soft !abd_tender !abd_perit abd_bs !abd_hernia !rec_dre rec_ext rec_stool neu_motor");
+T("hematuria","GI / GU","Hematuria","!abd_bladder !abd_cva abd_tender gu_penis gu_foley cv_edema vit_hrbp sk_rash");
+T("rectal","GI / GU","Rectal pain / bleeding","!rec_ext !rec_dre rec_stool !gu_perineum !vit_temp abd_tender");
+/* OB/GYN */
+T("vag_bleed","OB / GYN","Vaginal bleeding","gen_app !vit_hrbp !vit_ortho abd_soft !abd_tender !abd_perit pel_ext !pel_spec !pel_bim abd_fundus !pel_fht eye_conj");
+T("pelvic","OB / GYN","Pelvic pain / vaginal discharge","gen_app !vit_temp abd_soft !abd_tender !abd_perit pel_ext pel_spec !pel_bim abd_murphy");
+T("breast","OB / GYN","Breast pain / mastitis","!sk_breast !vit_temp sk_cell neck_ln");
+/* HEENT */
+T("eye","HEENT","Eye complaint","!eye_va !eye_pupils !eye_eom !eye_vf eye_conj !eye_fluor !eye_iop !eye_ant eye_lid eye_fundus");
+T("sore_throat","HEENT","Sore throat","gen_app !ent_voice !ent_trismus ent_phar !resp_wob neck_ln !neck_swell !neck_supple ent_tm abd_spleen sk_rash");
+T("ear","HEENT","Ear pain","ent_tm ent_canal !ent_mast !nc_cn7 ent_hear ent_phar ent_dent neck_ln");
+T("epistaxis","HEENT","Epistaxis","!vit_hrbp !ent_nose !ent_post !eye_conj sk_rash");
+T("dental","HEENT","Dental pain","!ent_dent !ent_trismus !ent_fom !neck_swell ent_face_sw !ent_voice neck_ln");
+T("oral_swelling","HEENT","Oral / facial swelling","!ent_voice !ent_trismus !ent_fom !ent_tongue ent_phar !ent_dent !neck_swell ent_face_sw !resp_wob !vit_spo2 sk_rash");
+T("allergic","HEENT","Allergic reaction","!vit_hrbp !ent_tongue !ent_voice !resp_wob !resp_bs !vit_spo2 sk_rash abd_tender neu_ms");
+/* Trauma / MSK */
+T("back_pain","Trauma / MSK","Back pain","!back_spine !back_slr !neu_motor !neu_sens !neu_refl !neu_saddle !rec_dre !abd_bladder !vit_temp !cv_aorta !cv_pulses abd_cva back_skin sk_track");
+T("ext_injury","Trauma / MSK","Extremity injury","!msk_def msk_tender msk_swell msk_rom !msk_jab !msk_snuff !msk_comp !msk_nv !msk_nerve sk_wound");
+T("ankle","Trauma / MSK","Ankle / foot injury","!msk_ottawa !msk_fib msk_swell !msk_thompson msk_lig !msk_nv msk_comp");
+T("joint","Trauma / MSK","Joint pain / swelling","!msk_joint msk_rom !vit_temp sk_cell sk_rash !msk_nv");
+T("mvc","Trauma / MSK","MVC / multiple trauma","!gen_app !neu_gcs !eye_pupils !head_atr !head_bsf head_face !neck_cspine !neck_trachea !resp_bs !resp_cw !cv_pulses !abd_soft !abd_tender !msk_pelvis !back_spine !msk_def !neu_motor !neu_sens abd_fundus");
+T("fall","Trauma / MSK","Fall in an older adult","!head_atr !neck_cspine !msk_hip !msk_pelvis !back_spine !msk_wrist msk_shoulder !sk_press !neu_ms !neu_motor !neu_gait !vit_ortho cv_rr cv_hs");
+T("burn","Trauma / MSK","Burn","!sk_burn !ent_voice !resp_wob !resp_bs !msk_nv !cv_rr sk_track");
+T("bite","Trauma / MSK","Animal / human bite","!sk_wound !msk_tendon !msk_joint sk_cell !msk_nv");
+/* Skin / wound */
+T("laceration","Skin / wound","Laceration","!sk_wound !msk_tendon !msk_nv !msk_nerve msk_joint");
+T("abscess","Skin / wound","Abscess / cellulitis","!sk_cell !vit_temp !vit_hrbp neck_ln");
+T("rash","Skin / wound","Rash","gen_app !sk_rash !ent_phar eye_conj !vit_temp neck_ln msk_joint");
+T("fb","Skin / wound","Foreign body","sk_wound !resp_wob !resp_bs !ent_voice abd_tender !msk_nv ent_canal ent_nose");
+T("wound_check","Skin / wound","Wound check / suture removal","!sk_wchk msk_nv");
+/* Endocrine */
+T("hyperglycemia","Endocrine / metabolic","Hyperglycemia","!neu_ms !gen_hyd !resp_wob !abd_tender resp_bs sk_cell !vit_glu");
+T("hypoglycemia","Endocrine / metabolic","Hypoglycemia","!neu_ms !vit_glu !neu_motor head_atr sk_gen");
+T("abn_labs","Endocrine / metabolic","Abnormal lab result","!neu_ms !cv_rr gen_hyd eye_conj rec_stool neu_motor neu_refl cv_edema");
+/* Heme / renal */
+T("sickle","Heme / renal","Sickle cell pain crisis","!vit_spo2 !resp_bs !vit_temp !abd_spleen !neu_motor msk_joint gu_penis eye_conj !abd_tender");
+T("dialysis","Heme / renal","Dialysis patient complaint","!neck_jvd !resp_bs cv_edema !cv_access !cv_rr abd_pd !neu_ms !vit_spo2");
+/* Tox / psych */
+T("etoh","Tox / psych","Alcohol intoxication","!neu_gcs !head_atr !eye_pupils !neck_cspine !neu_motor !vit_glu !abd_tender !tox_wd neu_gait");
+T("withdrawal","Tox / psych","Alcohol withdrawal","!tox_wd !neu_ms !vit_hrbp !vit_temp neu_tremor !head_atr abd_liver");
+T("overdose","Tox / psych","Ingestion / overdose","!neu_gcs !vit_hrbp !vit_temp !eye_pupils !tox_feat !neu_tone !sk_track !vit_glu resp_bs");
+T("psych","Tox / psych","Psychiatric evaluation","!psy_app !neu_ms psy_mood !psy_thought !psy_content !psy_perc !psy_ij !sk_track !tox_feat !neu_motor");
+/* Fever */
+T("fever","Fever / infection","Fever (adult)","gen_app !vit_temp !vit_hrbp !neu_ms !neck_supple ent_phar ent_tm !resp_bs !cv_hs !abd_tender !abd_cva !sk_rash !sk_cell !dev_cvc msk_joint sk_press");
+/* Environmental */
+T("heat","Environmental","Heat illness","!vit_temp !neu_ms sk_gen !gen_hyd !neu_coord msk_tender !vit_hrbp");
+T("cold","Environmental","Cold exposure / frostbite","!vit_temp !neu_ms !sk_cold !msk_nv !cv_rr");
+T("envenom","Environmental","Envenomation / sting","!sk_bite !msk_comp !msk_nv !sk_rash !neu_cn !resp_wob !vit_hrbp");
+/* Pediatric */
+T("peds_fever","Pediatric","Pediatric fever","!gen_peds !vit_temp !gen_hyd !head_font !neck_supple ent_tm ent_phar !resp_wob !resp_bs !abd_tender !sk_rash gu_test msk_joint");
+T("peds_resp","Pediatric","Pediatric cough / wheeze / stridor","!vit_spo2 !resp_wob !ent_voice !resp_bs !gen_peds !gen_hyd ent_tm ent_phar");
+T("peds_gi","Pediatric","Pediatric vomiting / diarrhea","!gen_peds !gen_hyd !head_font abd_soft !abd_tender !abd_hernia gu_test rec_ext rec_stool");
+T("crying","Pediatric","Fussy / crying infant","!gen_peds !msk_tourn !head_font !sk_track !eye_fluor ent_tm !abd_tender !abd_hernia gu_test !msk_tender rec_ext !vit_temp");
+T("brue","Pediatric","BRUE","!gen_peds !vit_spo2 !head_font !sk_track !neu_tone !resp_bs cv_hs eye_conj ent_tongue");
+/* General */
+T("postop","General","Post-operative complication","!abd_wound !abd_tender !abd_perit !cv_calf !resp_bs abd_drains !abd_bladder !vit_temp");
+T("refill","General","Medication refill","gen_app vit_hrbp msk_gen");
+T("other","General","Other","gen_app cv_rr resp_bs abd_tender");
+
+F("nihss","neuro","NIH Stroke Scale","","");
+const WIDGET={neu_gcs:1,nc_str:1,nc_refl:1,nihss:1};
+const MALE=new Set(["gu_test","gu_crem","gu_penis"]),FEMALE=new Set(["pel_ext","pel_spec","pel_bim","pel_fht","abd_fundus"]);
+const SYSNAME=Object.fromEntries(SYS);
+const NC_SUB={nc_orient:"Mental status",nc_attn:"Mental status",nc_lang:"Mental status",nc_dys:"Mental status",nc_memory:"Mental status",
+ nc_cn2:"Cranial nerves",nc_cn346:"Cranial nerves",nc_cn5:"Cranial nerves",nc_cn7:"Cranial nerves",nc_cn8:"Cranial nerves",nc_cn910:"Cranial nerves",nc_cn11:"Cranial nerves",nc_cn12:"Cranial nerves",
+ nc_bulk:"Motor",nc_tone:"Motor",nc_drift:"Motor",nc_str:"Motor",nc_refl:"Reflexes",nc_lt:"Sensation",nc_pp:"Sensation",nc_vib:"Sensation",nc_prop:"Sensation",
+ nc_fnf:"Coordination",nc_hks:"Coordination",nc_ram:"Coordination",nc_gait:"Gait",nc_romberg:"Gait",nihss:"NIHSS"};
+const CNPRE={nc_cn2:"II",nc_cn346:"III, IV, VI",nc_cn5:"V",nc_cn7:"VII",nc_cn8:"VIII",nc_cn910:"IX, X",nc_cn11:"XI",nc_cn12:"XII"};
+const MUSC=["Deltoid","Biceps","Triceps","Wrist extensors","Finger flexors","Hand intrinsics","Hip flexors","Knee extensors","Knee flexors","Ankle dorsiflexors","Ankle plantarflexors","Great toe extensor"];
+const MRC=["5","4+","4","4−","3","2","1","0"];
+const REFL=["Biceps","Brachioradialis","Triceps","Patellar","Achilles"];
+const RGR=["2+","3+","4+","1+","0"];
+const GCS={E:[[4,"Spontaneous"],[3,"To voice"],[2,"To pain"],[1,"None"]],V:[[5,"Oriented"],[4,"Confused"],[3,"Inappropriate words"],[2,"Sounds only"],[1,"None"],["T","Intubated"]],M:[[6,"Obeys"],[5,"Localizes"],[4,"Withdraws"],[3,"Flexion"],[2,"Extension"],[1,"None"]]};
+const NIH=[
+ ["1a","Level of consciousness",["Alert","Not alert, arousable to minor stimulation","Requires repeated stimulation","Unresponsive or reflex movements only"]],
+ ["1b","LOC questions (month, age)",["Both correct","One correct","Neither correct"]],
+ ["1c","LOC commands (eyes, grip)",["Both correct","One correct","Neither correct"]],
+ ["2","Best gaze",["Normal","Partial gaze palsy","Forced deviation"]],
+ ["3","Visual fields",["No loss","Partial hemianopia","Complete hemianopia","Bilateral hemianopia"]],
+ ["4","Facial palsy",["Normal","Minor paralysis","Partial paralysis","Complete paralysis"]],
+ ["5a","Left arm motor",["No drift","Drift","Some effort against gravity","No effort against gravity","No movement"],1],
+ ["5b","Right arm motor",["No drift","Drift","Some effort against gravity","No effort against gravity","No movement"],1],
+ ["6a","Left leg motor",["No drift","Drift","Some effort against gravity","No effort against gravity","No movement"],1],
+ ["6b","Right leg motor",["No drift","Drift","Some effort against gravity","No effort against gravity","No movement"],1],
+ ["7","Limb ataxia",["Absent","Present in one limb","Present in two limbs"],1],
+ ["8","Sensory",["Normal","Mild to moderate loss","Severe or total loss"]],
+ ["9","Best language",["No aphasia","Mild to moderate aphasia","Severe aphasia","Mute or global aphasia"]],
+ ["10","Dysarthria",["Normal","Mild to moderate","Severe"],1],
+ ["11","Extinction and inattention",["None","In one modality","Profound or in more than one modality"]]];
+
+/* ---------- state (this device only) ---------- */
+const KEY='panacea.px.v1';
+let S={d:{}};try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.d)S=r}catch(e){}
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
+function D(k){return S.d[k]||(S.d[k]={m:{},ch:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{}},extra:[],sex:''})}
+function started(k){const d=S.d[k];return !!(d&&(Object.keys(d.m).length||Object.keys(d.w.nih||{}).length||Object.keys(d.w.str||{}).length))}
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const EPON=new Set(["Battle","CSF","Murphy","McBurney","Rovsing","Kernig","Brudzinski","Seidel","Tinel","Phalen","Thompson","Lachman","Babinski","Prehn","Nikolsky","Romberg","Dix-Hallpike","Kussmaul"]);
+const low=s=>/^[A-Z0-9]{2,}/.test(s)||EPON.has(s.split(' ')[0])?s:s.charAt(0).toLowerCase()+s.slice(1);
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const SIDE={R:'right',L:'left',B:'bilateral'};
+
+function items(k){const t=TPL[k],d=D(k);const list=[...t.items,...d.extra.map(id=>({id,flag:false,extra:1}))];
+  return list.filter(x=>I[x.id]&&!(d.sex==='F'&&MALE.has(x.id))&&!(d.sex==='M'&&FEMALE.has(x.id)))}
+function hasSexItems(k){return items(k).some(x=>MALE.has(x.id)||FEMALE.has(x.id))||D(k).sex}
+
+/* ---------- sentence building ---------- */
+function abText(k,id){const d=D(k),ch=(d.ch[id]||[]).filter(c=>I[id].ab.includes(c)),tx=(d.tx[id]||'').trim(),sd=d.sd[id];
+  let s=ch.map((c,i)=>i?low(c):c).join(', ');
+  if(sd)s+=(s?' ':'')+`(${SIDE[sd]})`;
+  if(tx)s+=(s?'; ':'')+tx;
+  return s?cap(s).replace(/[.;,]?$/,'.'):''}
+function widgetText(k,id){const w=D(k).w;
+  if(id==='neu_gcs'){const g=w.gcs;if(!g.E||!g.V||!g.M)return'';const tot=(+g.E)+(g.V==='T'?0:+g.V)+(+g.M);return `GCS ${tot}${g.V==='T'?'T':''} (E${g.E} V${g.V} M${g.M}).`}
+  if(id==='nc_str'){const v=w.str,set=Object.entries(v).filter(([,x])=>x);if(!set.length)return'';
+    const def=set.filter(([,x])=>x!=='5').map(([kk,x])=>{const[sd,m]=kk.split(':');return `${sd} ${m.toLowerCase()} ${x}/5`});
+    const all=set.length===MUSC.length*2;
+    if(!def.length)return all?'Strength 5/5 throughout.':'Strength 5/5 in the muscles tested.';
+    return (all?'Strength 5/5 except ':'Strength: ')+def.join(', ')+'.'}
+  if(id==='nc_refl'){const v=w.refl,set=Object.entries(v).filter(([kk,x])=>x&&!kk.startsWith('toe'));
+    const def=set.filter(([,x])=>x!=='2+').map(([kk,x])=>{const[sd,m]=kk.split(':');return `${sd} ${m.toLowerCase()} ${x}`});
+    const all=set.length===REFL.length*2;let s='';
+    if(set.length)s=!def.length?(all?'Reflexes 2+ and symmetric throughout':'Reflexes 2+ where tested'):(all?'Reflexes 2+ except ':'Reflexes: ')+def.join(', ');
+    const tR=v['toe:R'],tL=v['toe:L'];
+    if(tR||tL){const t=tR&&tR===tL?`toes ${tR} bilaterally`:[tR?`right toe ${tR}`:'',tL?`left toe ${tL}`:''].filter(Boolean).join(', ');s+=(s?'; ':'')+t}
+    return s?cap(s)+'.':''}
+  if(id==='nihss'){const n=w.nih,done=NIH.filter(q=>n[q[0]]!==undefined&&n[q[0]]!=='');if(!done.length)return'';
+    const tot=done.reduce((a,q)=>a+(n[q[0]]==='UN'?0:+n[q[0]]),0);
+    const pos=done.filter(q=>n[q[0]]==='UN'||+n[q[0]]>0).map(q=>`${q[0]} ${q[1].toLowerCase()} ${n[q[0]]==='UN'?'UN':n[q[0]]}`);
+    return `NIHSS ${tot}${done.length<NIH.length?` (incomplete: ${done.length} of ${NIH.length} items)`:''}${pos.length?`: ${pos.join(', ')}`:' (all items 0)'}.`}
+  return''}
+function itemText(k,id){if(WIDGET[id])return widgetText(k,id);const m=D(k).m[id];if(m==='n')return I[id].nl;if(m==='a')return abText(k,id)||'';return''}
+function isDone(k,id){if(WIDGET[id])return !!widgetText(k,id);return !!D(k).m[id]}
+function note(k){const its=items(k),lines=[];
+  if(k==='neuro'){const subs={};for(const x of its){let t=itemText(k,x.id);if(!t)continue;if(CNPRE[x.id])t=`CN ${CNPRE[x.id]}: ${t}`;const s=NC_SUB[x.id]||SYSNAME[I[x.id].sys];(subs[s]=subs[s]||[]).push(t)}
+    for(const[s,a]of Object.entries(subs))lines.push(`${s}: ${a.join(' ')}`);return lines.join('\n')}
+  for(const[sid,name]of SYS){const a=its.filter(x=>I[x.id].sys===sid).map(x=>itemText(k,x.id)).filter(Boolean);if(a.length)lines.push(`${name}: ${a.join(' ')}`)}
+  return lines.join('\n')}
+
+/* ---------- rendering ---------- */
+const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const GO=`<svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
+const hd=document.getElementById('hd'),app=document.getElementById('app'),bar=document.getElementById('bar');
+let filter='',addOpen=false,addQ='';
+function route(){const h=location.hash.slice(1);if(h.startsWith('t/')&&TPL[h.slice(2)])return h.slice(2);return null}
+function render(keep){const y=window.scrollY,k=route();if(k)renderExam(k);else renderHome();if(keep)window.scrollTo(0,y);else window.scrollTo(0,0)}
+
+function renderHome(){
+  document.title='Px';bar.hidden=true;hd.innerHTML=`${HOME}<h1>Px</h1>`;
+  const f=filter.toLowerCase();
+  let h=`<p class="sub" style="margin:6px 0 10px">Pick a template, mark what you examined as normal or abnormal, and copy the exam into your note.</p>
+  <input type="search" id="q" placeholder="Search complaints" value="${esc(filter)}" autocomplete="off">`;
+  const comp=ORDER.filter(k=>TPL[k].g==='Comprehensive');
+  if(!f){h+=`<h2 class="sec">Comprehensive</h2><div class="grid2">${comp.map(k=>`<a class="tile" href="#t/${k}"><span class="nm">${esc(TPL[k].name)}</span><span class="ds">${esc(TPL[k].desc)}</span>${started(k)?'<span class="dr">Draft</span>':''}</a>`).join('')}</div>`}
+  let last='',open=false;
+  for(const k of ORDER){const t=TPL[k];if(t.g==='Comprehensive'&&!f)continue;
+    if(f&&!(t.name+' '+t.g).toLowerCase().includes(f))continue;
+    if(t.g!==last){if(open)h+='</div>';h+=`<h2 class="sec">${esc(t.g)}</h2><div class="cl">`;open=true;last=t.g}
+    h+=`<a class="tile" href="#t/${k}"><span class="txt"><span class="nm">${esc(t.name)}</span></span>${started(k)?'<span class="dr">Draft</span>':''}${GO}</a>`}
+  if(open)h+='</div>';else if(f)h+=`<p class="sub" style="text-align:center;padding:24px 0">Nothing matches “${esc(filter)}”.</p>`;
+  h+=`<p class="foot">Saved only on this device. Mark only what you examined.</p>`;
+  app.innerHTML=h}
+
+function itemHTML(k,x){const it=I[x.id],d=D(k),m=d.m[x.id]||'';
+  const t=`<div class="t">${esc(it.label)}${x.flag?'<i title="Key finding"></i>':''}</div>`;
+  if(WIDGET[x.id]){const pv=widgetText(k,x.id);return `<div class="it" data-id="${x.id}" data-m="${pv?'n':''}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv||'Not documented')}</div></div>
+    <div class="na"><button class="linkbtn" data-a="wnl" data-id="${x.id}">${{neu_gcs:'Set 15',nc_str:'All 5/5',nc_refl:'All 2+',nihss:'All 0'}[x.id]}</button></div></div><div class="wg">${widgetHTML(k,x.id)}</div></div>`}
+  const pv=m==='n'?it.nl:m==='a'?(abText(k,x.id)||'Abnormal: choose findings or describe'):it.nl;
+  const ch=d.ch[x.id]||[];
+  return `<div class="it" data-id="${x.id}" data-m="${m}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv)}</div></div>
+   <div class="na"><button class="n" data-a="mark" data-v="n" aria-pressed="${m==='n'}">Nl</button><button class="a" data-a="mark" data-v="a" aria-pressed="${m==='a'}">Abn</button></div></div>
+   <div class="abp">${it.ab.length?`<div class="chips">${it.ab.map(c=>`<button class="chip" data-a="chip" data-c="${esc(c)}" aria-pressed="${ch.includes(c)}">${esc(c)}</button>`).join('')}</div>`:''}
+   <div class="row2">${it.side?`<div class="seg">${Object.entries({R:'Right',L:'Left',B:'Both'}).map(([v,l])=>`<button data-a="side" data-v="${v}" aria-pressed="${d.sd[x.id]===v}">${l}</button>`).join('')}</div>`:''}
+   <input type="text" data-tx="${x.id}" value="${esc(d.tx[x.id]||'')}" placeholder="Details (size, location, value)"></div></div></div>`}
+
+function widgetHTML(k,id){const w=D(k).w;
+  if(id==='neu_gcs'){return `<div class="gcs">${['E','V','M'].map(c=>`<label for="g${c}">${{E:'Eyes',V:'Verbal',M:'Motor'}[c]}</label><select id="g${c}" data-w="gcs" data-c="${c}"><option value="">—</option>${GCS[c].map(([v,l])=>`<option value="${v}"${String(w.gcs[c])===String(v)?' selected':''}>${v} · ${l}</option>`).join('')}</select>`).join('')}</div>`}
+  if(id==='nc_str'){return `<table class="tbl"><tr><th>Muscle</th><th>Right</th><th>Left</th></tr>${MUSC.map(m=>`<tr><td>${m}</td>${['R','L'].map(sd=>{const v=w.str[sd+':'+m]||'';return `<td><select data-w="str" data-c="${sd}:${m}" class="${v&&v!=='5'?'dev':''}"><option value="">—</option>${MRC.map(g=>`<option${v===g?' selected':''}>${g}</option>`).join('')}</select></td>`}).join('')}</tr>`).join('')}</table>`}
+  if(id==='nc_refl'){return `<table class="tbl"><tr><th>Reflex</th><th>Right</th><th>Left</th></tr>${REFL.map(m=>`<tr><td>${m}</td>${['R','L'].map(sd=>{const v=w.refl[sd+':'+m]||'';return `<td><select data-w="refl" data-c="${sd}:${m}" class="${v&&v!=='2+'?'dev':''}"><option value="">—</option>${RGR.map(g=>`<option${v===g?' selected':''}>${g}</option>`).join('')}</select></td>`}).join('')}</tr>`).join('')}
+    <tr><td>Plantar</td>${['R','L'].map(sd=>{const v=w.refl['toe:'+sd]||'';return `<td><select data-w="refl" data-c="toe:${sd}" class="${v&&v!=='downgoing'?'dev':''}"><option value="">—</option>${['downgoing','upgoing','mute'].map(g=>`<option${v===g?' selected':''}>${g}</option>`).join('')}</select></td>`}).join('')}</tr></table>`}
+  if(id==='nihss'){const n=w.nih,tot=NIH.reduce((a,q)=>a+(n[q[0]]!==undefined&&n[q[0]]!==''&&n[q[0]]!=='UN'?+n[q[0]]:0),0);
+    return `<div class="score" id="nihtot">Total ${tot}</div><div class="nih">${NIH.map(([c,l,opts,un])=>`<div><div class="q">${c} <span>${l}</span></div><div class="opts">${opts.map((o,i)=>`<button class="chip" data-a="nih" data-c="${c}" data-v="${i}" aria-pressed="${String(n[c])===String(i)}">${i} · ${o}</button>`).join('')}${un?`<button class="chip" data-a="nih" data-c="${c}" data-v="UN" aria-pressed="${n[c]==='UN'}">UN · Untestable</button>`:''}</div></div>`).join('')}</div>`}
+  return''}
+
+function renderExam(k){const t=TPL[k],d=D(k),its=items(k);
+  document.title=t.name+' · Px';bar.hidden=false;
+  hd.innerHTML=`${HOME}<button class="back" data-a="home" aria-label="All templates">‹</button><h1>${esc(t.name)}</h1>`;
+  let h=`<div class="toolbar">${hasSexItems(k)?`<div class="seg" aria-label="Sex">${['M','F'].map(v=>`<button data-a="sex" data-v="${v}" aria-pressed="${d.sex===v}">${v}</button>`).join('')}</div>`:''}<span class="prog" id="prog"></span></div>`;
+  if(k==='neuro'||k==='nihss'){const subs=[];for(const x of its){const s=k==='neuro'?(NC_SUB[x.id]||SYSNAME[I[x.id].sys]):'NIH Stroke Scale';let g=subs.find(z=>z.s===s);if(!g)subs.push(g={s,a:[]});g.a.push(x)}
+    for(const g of subs)h+=sysHTML(k,g.s,g.a)}
+  else for(const[sid,name]of SYS){const a=its.filter(x=>I[x.id].sys===sid);if(a.length)h+=sysHTML(k,name,a,sid)}
+  h+=`<div class="card addp"><div class="btnrow" style="justify-content:space-between"><b>Add findings</b><button class="linkbtn" data-a="addtog">${addOpen?'Done':'Show'}</button></div>${addOpen?addHTML(k):'<p class="sub">Pull in any other finding from the library.</p>'}</div>`;
+  h+=`<h2 class="sec">Exam text</h2><pre class="out" id="out"></pre>
+   <div class="btnrow"><button class="btn sm" data-a="restall">Mark unmarked as normal</button><button class="linkbtn danger" data-a="clear">Clear this exam</button></div>
+   <p class="foot">Saved only on this device. Mark only what you examined.</p>`;
+  app.innerHTML=h;refresh(k)}
+function sysHTML(k,name,a,sid){return `<section class="sys"><div class="sysh"><h3>${esc(name)}</h3>${a.some(x=>!WIDGET[x.id])?`<button class="linkbtn" data-a="restsys" data-ids="${a.map(x=>x.id).join(',')}">Rest normal</button>`:''}</div>${a.map(x=>itemHTML(k,x)).join('')}</section>`}
+function addHTML(k){const have=new Set(items(k).map(x=>x.id)),q=addQ.toLowerCase();let h=`<input type="search" id="addq" placeholder="Search findings" value="${esc(addQ)}" style="margin-top:8px">`;
+  for(const[sid,name]of SYS){const a=Object.values(I).filter(it=>it.sys===sid&&!have.has(it.id)&&!it.id.startsWith('nc_')&&(!q||it.label.toLowerCase().includes(q)||it.nl.toLowerCase().includes(q)));
+    if(a.length)h+=`<div class="grp">${esc(name)}</div><div class="chips">${a.map(it=>`<button class="chip" data-a="add" data-id="${it.id}">+ ${esc(it.label)}</button>`).join('')}</div>`}
+  return h}
+function refresh(k){const its=items(k),done=its.filter(x=>isDone(k,x.id)).length,keyLeft=its.filter(x=>x.flag&&!isDone(k,x.id)).length;
+  const p=`${done} of ${its.length} documented${keyLeft?` · <b>${keyLeft} key left</b>`:''}`;
+  const pe=document.getElementById('prog');if(pe)pe.innerHTML=p;document.getElementById('barprog').innerHTML=`${done}/${its.length}`;
+  const o=document.getElementById('out');if(o)o.textContent=note(k)||'Nothing documented yet.'}
+function refreshItem(k,id){const el=app.querySelector(`.it[data-id="${id}"]`);if(!el)return;const x=items(k).find(z=>z.id===id);if(!x)return;
+  const tmp=document.createElement('div');tmp.innerHTML=itemHTML(k,x);const nw=tmp.firstElementChild;
+  const ae=document.activeElement,keepTx=ae&&el.contains(ae)&&ae.dataset.tx;
+  if(keepTx||(ae&&el.contains(ae)&&ae.tagName==='SELECT')){el.dataset.m=nw.dataset.m;el.querySelector('.pv').textContent=nw.querySelector('.pv').textContent;
+    if(id==='nihss'){const t=document.getElementById('nihtot');if(t)t.textContent=nw.querySelector('#nihtot').textContent}}
+  else el.replaceWith(nw);refresh(k)}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,k=route();
+  if(a==='home'){location.hash='';return}
+  if(a==='copy'){if(!k)return;const t=note(k);if(!t){toast('Nothing documented yet.');return}copyText(t).then(ok=>toast(ok?'Exam copied.':'Couldn’t copy on this device.'));return}
+  if(!k)return;const d=D(k),el=b.closest('.it'),id=el&&el.dataset.id;
+  if(a==='mark'){const v=b.dataset.v;d.m[id]=d.m[id]===v?undefined:v;if(!d.m[id])delete d.m[id];save();refreshItem(k,id);
+}
+  else if(a==='chip'){const c=b.dataset.c,arr=d.ch[id]||(d.ch[id]=[]);const i=arr.indexOf(c);i<0?arr.push(c):arr.splice(i,1);d.m[id]='a';save();refreshItem(k,id)}
+  else if(a==='side'){d.sd[id]=d.sd[id]===b.dataset.v?undefined:b.dataset.v;if(!d.sd[id])delete d.sd[id];d.m[id]='a';save();refreshItem(k,id)}
+  else if(a==='restsys'){for(const i of b.dataset.ids.split(','))if(!WIDGET[i]&&!d.m[i])d.m[i]='n';save();render(true)}
+  else if(a==='restall'){const n=items(k).filter(x=>!WIDGET[x.id]&&!d.m[x.id]);if(!n.length){toast('Everything is already marked.');return}
+    if(!confirm(`Mark ${n.length} unmarked finding${n.length>1?'s':''} as normal? Only do this for what you actually examined.`))return;for(const x of n)d.m[x.id]='n';save();render(true)}
+  else if(a==='clear'){if(confirm('Clear everything in this exam?')){delete S.d[k];save();render()}}
+  else if(a==='sex'){d.sex=d.sex===b.dataset.v?'':b.dataset.v;save();render(true)}
+  else if(a==='wnl'){if(id==='neu_gcs')d.w.gcs={E:4,V:5,M:6};else if(id==='nc_str'){for(const m of MUSC)for(const sd of['R','L'])d.w.str[sd+':'+m]='5'}
+    else if(id==='nc_refl'){for(const m of REFL)for(const sd of['R','L'])d.w.refl[sd+':'+m]='2+';d.w.refl['toe:R']=d.w.refl['toe:L']='downgoing'}
+    else if(id==='nihss'){for(const q of NIH)d.w.nih[q[0]]=0}save();refreshItem(k,id)}
+  else if(a==='nih'){const c=b.dataset.c,v=b.dataset.v==='UN'?'UN':+b.dataset.v;d.w.nih[c]=String(d.w.nih[c])===String(v)?'':v;save();refreshItem(k,'nihss')}
+  else if(a==='addtog'){addOpen=!addOpen;addQ='';render(true)}
+  else if(a==='add'){d.extra.push(b.dataset.id);save();render(true);toast(I[b.dataset.id].label+' added.')}
+});
+app.addEventListener('input',e=>{const t=e.target,k=route();
+  if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderHome();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(!k)return;const d=D(k);
+  if(t.id==='addq'){addQ=t.value;const p=t.selectionStart;render(true);const q=document.getElementById('addq');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.dataset.tx){const id=t.dataset.tx;d.tx[id]=t.value;if(t.value.trim())d.m[id]='a';save();refreshItem(k,id)}});
+app.addEventListener('change',e=>{const t=e.target,k=route();if(!k||!t.dataset.w)return;const d=D(k),w=t.dataset.w;
+  if(t.value)d.w[w][t.dataset.c]=t.value;else delete d.w[w][t.dataset.c];
+  if(w!=='gcs')t.className=t.value&&!['5','2+','downgoing'].includes(t.value)?'dev':'';
+  save();refreshItem(k,{gcs:'neu_gcs',str:'nc_str',refl:'nc_refl'}[w])});
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();return ok}}
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2200)}
+window.addEventListener('hashchange',()=>{addOpen=false;render()});
+render();
+</script>
+</body>
+</html>

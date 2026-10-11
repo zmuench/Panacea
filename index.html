@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: two columns of three, filled top to bottom (ED tools left, ICU tools right), with Nenya full width below.
+/* Layout: two columns of four, filled top to bottom (ED tools left; ICU tools and Nenya right).
    Narrow phones keep two columns but switch to compact stacked cards.
    Palette and type match Hx, Dispo, ICU Rounder, Sweep and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
 :root{
@@ -26,9 +26,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:36px 48px;display:flex;flex-direction:column;gap:22px}
 header h1{font-weight:700;font-size:1.7rem;letter-spacing:-.01em;margin:0;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
-ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:10px}
+ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,auto);grid-auto-flow:column;gap:10px}
 li{display:flex}li>a.app{flex:1}
-li.wide{grid-column:1 / -1;grid-row:4}
 a.app{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;min-height:76px;transition:border-color .15s,transform .15s}
 a.app:hover{border-color:var(--accent)}
 a.app:active{transform:scale(.99)}
@@ -46,8 +45,6 @@ footer{color:var(--muted);font-size:.8rem}
   a.app{flex-direction:column;align-items:flex-start;gap:10px;padding:12px;min-height:0;position:relative}
   .desc{display:none}
   .go{position:absolute;top:14px;right:10px}
-  li.wide a.app{flex-direction:row;align-items:center;gap:14px}
-  li.wide .go{position:static}
   .name{font-size:1.05rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -66,6 +63,13 @@ footer{color:var(--muted);font-size:.8rem}
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M8 8.5h8M8 12h5"/></svg></span>
       <span class="txt"><span class="name">Hx</span><span class="kind">HPI builder</span>
         <p class="desc">Pick a chief complaint, mark pertinent positives and negatives, get the HPI.</p></span>
+      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a></li>
+
+    <li><a class="app" href="px/">
+      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M10 12v3a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/></svg></span>
+      <span class="txt"><span class="name">Px</span><span class="kind">Exam builder</span>
+        <p class="desc">Focused exams by complaint, plus ICU, full neuro and NIHSS, written for the note.</p></span>
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
 
@@ -104,7 +108,7 @@ footer{color:var(--muted);font-size:.8rem}
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
 
-    <li class="wide"><a class="app" href="nenya/">
+    <li><a class="app" href="nenya/">
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="7" ry="3"/><path d="M7 11.5c1.5 1 3.2 1.5 5 1.5s3.5-.5 5-1.5"/><path d="M12 13v6M9 20h6"/></svg></span>
       <span class="txt"><span class="name">Nenya</span><span class="kind">EM rank list</span>
         <p class="desc">Weight what matters, add programs as you interview, watch the list sort.</p></span>
