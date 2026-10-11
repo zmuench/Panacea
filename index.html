@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: two columns of four, filled top to bottom (ED tools left; ICU tools and Nenya right).
+/* Layout: two columns (five left, four right), filled top to bottom (ED tools left; ICU tools and Nenya right).
    Narrow phones keep two columns but switch to compact stacked cards.
    Palette and type match Hx, Dispo, ICU Rounder, Sweep and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
 :root{
@@ -26,7 +26,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:36px 48px;display:flex;flex-direction:column;gap:22px}
 header h1{font-weight:700;font-size:1.7rem;letter-spacing:-.01em;margin:0;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
-ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,auto);grid-auto-flow:column;gap:10px}
+ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,auto);grid-auto-flow:column;gap:10px}
 li{display:flex}li>a.app{flex:1}
 a.app{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;min-height:76px;transition:border-color .15s,transform .15s}
 a.app:hover{border-color:var(--accent)}
@@ -84,6 +84,13 @@ footer{color:var(--muted);font-size:.8rem}
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/><path d="M15 3.5a6 6 0 0 1 5.5 5.5M15 7a2.5 2.5 0 0 1 2 2"/></svg></span>
       <span class="txt"><span class="name">Consult</span><span class="kind">Consult call prep</span>
         <p class="desc">Pick a service, gather what they’ll ask about, and get a call script and note line.</p></span>
+      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a></li>
+
+    <li><a class="app" href="spectrum/">
+      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10" r="1.6"/><circle cx="14.5" cy="8.5" r="1"/><circle cx="14" cy="14.5" r="2"/><circle cx="9" cy="15" r=".7"/></svg></span>
+      <span class="txt"><span class="name">Spectrum</span><span class="kind">ID consults</span>
+        <p class="desc">ID HPI, cultures and antibiotic days, the daily note, and a bugs and drugs reference.</p></span>
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
 

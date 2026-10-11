@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Spectrum">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Spectrum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Spectrum: ID consult HPI, micro and antimicrobial tracking, ID progress notes, bugs and drugs reference.
+   Palette and type match the rest of PANACEA. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--ok:#1D6E49;--ok-soft:#E1F2E9;--amb:#7A5000;--amb-soft:#FBF0D9;
+  --pos:#A8261C;--pos-soft:#FBE7E5;--neg:#1D6E49;--neg-soft:#E1F2E9;
+  --paper:#FBFCFD;
+  color-scheme:light only;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 "Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding-left:16px;padding-right:16px}
+main.wrap{padding-top:12px;padding-bottom:120px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:10px;min-height:56px}
+.hd h1{font-size:1.25rem;margin:0;flex:1;letter-spacing:-.01em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd h1 small{font-weight:400;color:var(--muted);font-size:.85rem;margin-left:6px}
+.back{border:0;background:none;color:var(--accent);font-size:2.1rem;line-height:1;padding:0 8px 4px 0;cursor:pointer;font-family:inherit}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover,.homebtn:active{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.refbtn{font:inherit;font-size:.88rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:0;border-radius:999px;padding:7px 12px;cursor:pointer;white-space:nowrap;text-decoration:none}
+.tabs{display:flex;gap:4px;padding-bottom:8px}
+.tabs a{flex:1;text-align:center;font-size:.9rem;font-weight:700;color:var(--muted);text-decoration:none;padding:8px 4px;border-radius:10px;border:1px solid transparent}
+.tabs a[aria-current="page"]{background:var(--surface);color:var(--accent);border-color:var(--line)}
+h2{font-size:1.05rem;margin:22px 0 8px;letter-spacing:.01em}
+h2.sec{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:22px 0 8px}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card>h3{margin:0 0 8px;font-size:1rem}
+.card h3 .x{font-weight:400;color:var(--muted);font-size:.85rem}
+input,textarea,select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0}
+select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+input[type=date]{min-height:44px}
+textarea{resize:vertical;line-height:1.4;min-height:44px;display:block;max-width:100%}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fld{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.fld>span{font-size:.85rem;color:var(--muted);font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>.fld{flex:1;min-width:120px}
+.row>.fld.s{flex:.6;min-width:80px}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.92rem;font-weight:700;padding:6px 2px;cursor:pointer;text-decoration:none}
+.linkbtn.danger{color:var(--warn)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.chip{font:inherit;font-size:.92rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 13px;cursor:pointer;min-height:38px;text-align:left}
+.seg button[aria-pressed="true"],.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.chip:hover,.seg button:hover{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip.p{background:var(--pos-soft);border-color:var(--pos);color:var(--pos);font-weight:700}
+.chip.n{background:var(--neg-soft);border-color:var(--neg);color:var(--neg);font-weight:700}
+.chip.p::before{content:"+ "}.chip.n::before{content:"− "}
+.legend{font-size:.8rem;color:var(--muted);margin:2px 0 0}
+.legend b.p{color:var(--pos)}.legend b.n{color:var(--neg)}
+.hint{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.empty{text-align:center;color:var(--muted);padding:24px 10px}
+.foot{color:var(--muted);font-size:.8rem;text-align:center;margin-top:24px}
+pre.out{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.95rem;line-height:1.5;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px;margin:0 0 10px}
+.toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+details.dd{border-top:1px solid var(--line);margin-top:10px}
+details.dd>summary{list-style:none;cursor:pointer;font-weight:700;font-size:.92rem;padding:10px 0 4px;color:var(--accent);display:flex;gap:6px;align-items:center}
+details.dd>summary::-webkit-details-marker{display:none}
+details.dd>summary::before{content:"›";display:inline-block;transition:transform .15s;font-size:1.1rem;line-height:1}
+details.dd[open]>summary::before{transform:rotate(90deg)}
+
+/* lists */
+.pt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;min-height:64px;text-decoration:none}
+.pt:hover{border-color:var(--accent)}
+.pt .ab{flex:none;min-width:46px;height:46px;padding:0 6px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+.pt .txt{flex:1;min-width:0}
+.pt .nm{font-weight:700;font-size:1.02rem;line-height:1.25}
+.pt .ds{display:block;color:var(--muted);font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.go{flex:none;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tag{display:inline-block;font-size:.74rem;font-weight:700;border-radius:999px;padding:2px 8px;margin:2px 4px 0 0;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.amb{background:var(--amb-soft);color:var(--amb)}
+.tag.mut{background:var(--bg);color:var(--muted)}
+
+/* micro + abx */
+.ab-h{display:flex;align-items:flex-start;gap:10px}
+.ab-h .nm{flex:1;min-width:0;font-weight:700;font-size:1.02rem}
+.ab-h .nm a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted)}
+.ab-h .nm small{display:block;font-weight:400;color:var(--muted);font-size:.84rem}
+.day{flex:none;text-align:center;background:var(--accent);color:#fff;border-radius:12px;padding:4px 10px;font-weight:700;line-height:1.1}
+.day small{display:block;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.85}
+.day.off{background:var(--line);color:var(--muted)}
+.cardsub{font-size:.88rem;color:var(--muted);margin:6px 0 0}
+.flag{border-radius:10px;padding:9px 11px;font-size:.92rem;margin:8px 0 0;line-height:1.4}
+.flag.warn{background:var(--warn-soft);color:var(--warn)}
+.flag.ok{background:var(--ok-soft);color:var(--ok)}
+.flag.amb{background:var(--amb-soft);color:var(--amb)}
+.flag b{font-weight:700}
+.bug{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:.92rem}
+.bug .st{font-weight:700;color:var(--accent)}
+.bug dl{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+.bug dt{color:var(--muted);font-weight:700;font-size:.82rem;padding-top:1px}
+.bug dd{margin:0}
+.bug ul{margin:6px 0 0;padding-left:18px}
+.bug li{margin:2px 0}
+.sus{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}
+.sus:last-child{border-bottom:0}
+.sus span{flex:1;font-size:.92rem;min-width:0}
+.sus .seg button{min-height:32px;padding:4px 11px;font-size:.85rem}
+.sus .seg button[data-v="S"][aria-pressed="true"]{background:var(--ok);border-color:var(--ok)}
+.sus .seg button[data-v="I"][aria-pressed="true"]{background:var(--amb);border-color:var(--amb)}
+.sus .seg button[data-v="R"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn)}
+.picklist{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.picklist button{font:inherit;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 11px;cursor:pointer;font-size:.95rem}
+.picklist button small{color:var(--muted);margin-left:6px;font-size:.82rem}
+.picklist button:hover{border-color:var(--accent)}
+.chk{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;font:inherit;font-size:.95rem;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--line);padding:9px 0;cursor:pointer;min-height:44px}
+.chk:last-child{border-bottom:0}
+.bx{flex:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);background:var(--paper);display:grid;place-items:center}
+.bx svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.chk.on .bx{background:var(--ok);border-color:var(--ok)}
+.chk.on .bx svg{opacity:1}
+.trend{font-size:.85rem;color:var(--muted);margin-top:2px}
+
+/* reference */
+.lv{display:grid;grid-template-columns:1fr;gap:6px;margin-top:6px}
+.lvrow{display:flex;gap:10px;align-items:baseline;font-size:.93rem}
+.lvrow .k{flex:none;width:94px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.lvrow .k.y{color:var(--ok)}.lvrow .k.p{color:var(--amb)}.lvrow .k.v{color:var(--amb)}.lvrow .k.n{color:var(--warn)}
+.lvrow .vals{flex:1;min-width:0}
+.lvrow .vals a{color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--muted)}
+.stainhd{display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px}
+.refitem{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px;text-decoration:none}
+.refitem:hover{border-color:var(--accent)}
+.refitem b{display:block;font-size:.98rem}
+.refitem span{display:block;color:var(--muted);font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tips{margin:0;padding-left:18px;font-size:.92rem}.tips li{margin:4px 0}
+.mtx{width:100%;border-collapse:collapse;font-size:.85rem}
+.mtx td{padding:5px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.mtx td:first-child{font-weight:700;width:46%}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><div class="hd" id="hd"></div><div id="tabs"></div></div></header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* ================= BUGS & DRUGS DATA ================= */
+/* Coverage groups: organisms map to one group; drugs list a level for each group they act on.
+   y = reliable coverage, p = active but not preferred, v = variable (check susceptibilities), missing = no. */
+const GROUPS={
+ MSSA:'MSSA',MRSA:'MRSA and CoNS',STREP:'Streptococci',PNEUMO:'S. pneumoniae',EFAE:'E. faecalis',VRE:'VRE and E. faecium',
+ LIST:'Listeria',DIPH:'Corynebacterium',CLOST:'Clostridium',CDIFF:'C. difficile',
+ ENT:'Enterobacterales (wild type)',AMPC:'AmpC Enterobacterales',ESBL:'ESBL Enterobacterales',CRE:'CRE',
+ PSA:'Pseudomonas',ACB:'Acinetobacter',STENO:'Stenotrophomonas',HFLU:'H. influenzae and Moraxella',NMEN:'N. meningitidis',GC:'N. gonorrhoeae',
+ ANA:'Anaerobes (B. fragilis)',ATYP:'Atypicals',CAND:'Candida albicans',CGLAB:'Non-albicans Candida',CRYPT:'Cryptococcus',
+ ASPER:'Aspergillus',MUC:'Mucorales',HSV:'HSV and VZV',CMV:'CMV',TB:'M. tuberculosis'
+};
+const LV={y:'Covers',p:'Active, not preferred',v:'Variable, check susceptibilities',n:'Does not cover'};
+
+/* Gram stain categories, with what to think and what to start while waiting */
+const STAINS=[
+ {id:'gpc_cl',n:'GPC in clusters',think:'S. aureus versus coagulase-negative staph.',start:'Vancomycin until identified. If rapid PCR shows MSSA (mecA negative), switch to cefazolin or nafcillin. CoNS in 1 of 2 sets is usually a contaminant.'},
+ {id:'gpc_ch',n:'GPC in pairs or chains',think:'Streptococci or enterococci. Lancet-shaped pairs suggest pneumococcus.',start:'Vancomycin (covers enterococcus) while speciating; narrow to penicillin or ceftriaxone for strep, ampicillin for E. faecalis.'},
+ {id:'gpr',n:'Gram-positive rods',think:'Small: Corynebacterium or Cutibacterium (often contaminants), Listeria. Large: Bacillus, Clostridium.',start:'Vancomycin; add ampicillin if Listeria is possible (pregnancy, age > 50, immunosuppressed). Clostridium in blood: look for GI malignancy or necrotizing infection.'},
+ {id:'gnr',n:'Gram-negative rods',think:'Enterobacterales, Pseudomonas, anaerobes (B. fragilis).',start:'Cefepime or piperacillin-tazobactam; meropenem if prior ESBL or septic shock with ESBL risk. Rapid PCR (CTX-M, KPC, NDM) guides early changes.'},
+ {id:'gndc',n:'Gram-negative diplococci',think:'N. meningitidis, N. gonorrhoeae, Moraxella.',start:'Ceftriaxone. Droplet precautions if meningococcus is possible.'},
+ {id:'gncb',n:'Gram-negative coccobacilli',think:'H. influenzae, Acinetobacter; rarely Brucella or Francisella (warn the lab).',start:'Ceftriaxone for Haemophilus; Acinetobacter per susceptibilities.'},
+ {id:'yeast',n:'Yeast',think:'Candida, Cryptococcus. Never a contaminant in blood.',start:'Echinocandin for Candida. Remove central lines, dilated eye exam. Cryptococcus: amphotericin plus flucytosine, check CSF.'},
+ {id:'mold',n:'Hyphae (mold)',think:'Septate, acute-angle branching: Aspergillus. Broad, pauci-septate, right-angle: Mucorales.',start:'Voriconazole or isavuconazole for Aspergillus; liposomal amphotericin for Mucorales (voriconazole does not cover). Call ID now.'},
+ {id:'afb',n:'Acid-fast bacilli',think:'M. tuberculosis versus nontuberculous mycobacteria; Nocardia is modified acid-fast.',start:'Airborne isolation. NAAT on the specimen. Avoid empiric single agents (fluoroquinolones mask TB).'},
+ {id:'none',n:'Not seen on Gram stain',think:'Atypicals (Legionella, Mycoplasma, Chlamydia), viruses, spirochetes, partially treated infection.',start:'Targeted testing: Legionella urine antigen, respiratory PCR panels, serologies.'}
+];
+
+/* Organisms. g = coverage group, s = stain category, ov = organism-specific coverage overrides, b = bundle, bo = bundle only for blood */
+const BUGS=[
+ {id:'mssa',n:'Staphylococcus aureus (MSSA)',g:'MSSA',s:'gpc_cl',stain:'Gram-positive cocci in grape-like clusters',lab:'Catalase +, coagulase +, golden colonies, beta-hemolytic',dz:'Bacteremia, endocarditis, SSTI, osteomyelitis, septic arthritis, PJI, pneumonia',first:'Cefazolin or nafcillin/oxacillin',b:'sab',bo:1,
+  p:['Never call S. aureus in blood a contaminant.','Beta-lactams beat vancomycin for MSSA bacteremia; switch once susceptibilities return.','ID consultation lowers mortality in S. aureus bacteremia.']},
+ {id:'mrsa',n:'Staphylococcus aureus (MRSA)',g:'MRSA',s:'gpc_cl',stain:'Gram-positive cocci in grape-like clusters',lab:'Catalase +, coagulase +, mecA/PBP2a +',dz:'Bacteremia, endocarditis, SSTI, osteomyelitis, pneumonia',first:'Vancomycin (AUC-guided) or daptomycin',b:'sab',bo:1,
+  p:['Persistent bacteremia > 5–7 days on vancomycin: think undrained source, then consider switching to daptomycin ± ceftaroline.','Daptomycin is inactivated by surfactant: do not use for pneumonia.','Doxycycline and TMP-SMX are reasonable oral options for MRSA SSTI.']},
+ {id:'cons',n:'Coagulase-negative staphylococci',g:'MRSA',s:'gpc_cl',stain:'Gram-positive cocci in clusters',lab:'Catalase +, coagulase −; most S. epidermidis are methicillin-resistant',dz:'Line infection, prosthetic valve or joint infection, shunt infection',first:'Vancomycin (if real); oxacillin if susceptible',
+  p:['1 of 2 blood culture sets is usually a contaminant; 2 of 2, or growth with a line or prosthetic, is more likely real.','Time to positivity > 24 h favors contamination.']},
+ {id:'slug',n:'Staphylococcus lugdunensis',g:'MSSA',s:'gpc_cl',stain:'Gram-positive cocci in clusters',lab:'Coagulase-negative but behaves like S. aureus; usually oxacillin-susceptible',dz:'Native valve endocarditis, SSTI, bacteremia',first:'Nafcillin/oxacillin or cefazolin',b:'sab',bo:1,
+  p:['Treat a positive blood culture like S. aureus bacteremia, including an echocardiogram.']},
+ {id:'spn',n:'Streptococcus pneumoniae',g:'PNEUMO',s:'gpc_ch',stain:'Lancet-shaped gram-positive diplococci',lab:'Alpha-hemolytic, optochin-sensitive, bile-soluble; urine antigen available',dz:'Pneumonia, meningitis, bacteremia, otitis, sinusitis',first:'Ceftriaxone (non-meningitis); add vancomycin for meningitis until susceptibilities',
+  p:['Meningitis: dexamethasone with or before the first antibiotic dose.','Penicillin breakpoints differ for meningitis and non-meningitis isolates.']},
+ {id:'gas',n:'Streptococcus pyogenes (Group A)',g:'STREP',s:'gpc_ch',stain:'Gram-positive cocci in chains',lab:'Beta-hemolytic, bacitracin-sensitive, PYR +',dz:'Cellulitis, necrotizing fasciitis, pharyngitis, toxic shock, bacteremia',first:'Penicillin; add clindamycin for toxic shock or necrotizing infection',
+  p:['Universally penicillin-susceptible.','Clindamycin is added to shut off toxin production, not for coverage; resistance to clindamycin is rising.','Invasive GAS: droplet precautions for 24 h and consider prophylaxis for household contacts.']},
+ {id:'gbs',n:'Streptococcus agalactiae (Group B)',g:'STREP',s:'gpc_ch',stain:'Gram-positive cocci in chains',lab:'Beta-hemolytic, CAMP +, hippurate +',dz:'Neonatal sepsis, bacteremia in diabetes or elderly, diabetic foot, endocarditis',first:'Penicillin or ampicillin'},
+ {id:'vgs',n:'Viridans group streptococci',g:'STREP',s:'gpc_ch',stain:'Gram-positive cocci in chains',lab:'Alpha-hemolytic, optochin-resistant',dz:'Endocarditis, bacteremia in neutropenia (mucositis), dental abscess',first:'Penicillin or ceftriaxone (check MIC)',
+  p:['1 of several sets may be a contaminant, but multiple positive sets warrant an echocardiogram.','S. anginosus group (milleri) forms abscesses: look for one.']},
+ {id:'sgal',n:'Streptococcus gallolyticus (bovis)',g:'STREP',s:'gpc_ch',stain:'Gram-positive cocci in chains',lab:'Non-hemolytic or alpha, group D antigen',dz:'Endocarditis, bacteremia',first:'Penicillin or ceftriaxone',
+  p:['Associated with colorectal neoplasia: arrange colonoscopy.']},
+ {id:'efae',n:'Enterococcus faecalis',g:'EFAE',s:'gpc_ch',stain:'Gram-positive cocci in pairs and short chains',lab:'Catalase −, PYR +, grows in bile esculin and 6.5% NaCl',dz:'UTI, bacteremia, endocarditis, intra-abdominal infection',first:'Ampicillin; ampicillin + ceftriaxone for endocarditis',b:'efae',bo:1,
+  p:['Cephalosporins are intrinsically inactive.','Ampicillin-susceptible in almost all isolates.','DENOVA or NOVA score helps decide on an echocardiogram.']},
+ {id:'vre',n:'Enterococcus faecium / VRE',g:'VRE',s:'gpc_ch',stain:'Gram-positive cocci in pairs and short chains',lab:'Catalase −, PYR +; vanA/vanB',dz:'Bacteremia, UTI, intra-abdominal infection',first:'Daptomycin (high dose) or linezolid',b:'efae',bo:1,
+  p:['Usually ampicillin-resistant.','Contact precautions.']},
+ {id:'list',n:'Listeria monocytogenes',g:'LIST',s:'gpr',stain:'Short gram-positive rods (can look like diphtheroids)',lab:'Catalase +, tumbling motility, beta-hemolytic, grows at 4 °C',dz:'Meningitis or rhombencephalitis, bacteremia in pregnancy, elderly, immunosuppressed',first:'Ampicillin (± gentamicin); TMP-SMX if penicillin-allergic',
+  p:['Cephalosporins are inactive: add ampicillin to empiric meningitis coverage when age > 50, pregnant, or immunosuppressed.','Associated with deli meats, soft cheeses, unpasteurized dairy.']},
+ {id:'cory',n:'Corynebacterium (diphtheroids)',g:'DIPH',s:'gpr',stain:'Club-shaped gram-positive rods in palisades',lab:'Catalase +',dz:'Usually a contaminant; line and prosthetic infections (C. striatum, C. jeikeium)',first:'Vancomycin',
+  p:['Single set in blood: usually contamination.']},
+ {id:'cuti',n:'Cutibacterium acnes',g:'DIPH',s:'gpr',stain:'Gram-positive rods, anaerobic, slow-growing',lab:'Needs prolonged culture (10–14 days)',dz:'Shoulder PJI, shunt infection, contaminant',first:'Penicillin or ceftriaxone; vancomycin',ov:{pcn:'y',cro:'y',amp:'y'},
+  p:['Ask the lab to hold shoulder and shunt cultures for 14 days.']},
+ {id:'cperf',n:'Clostridium perfringens / septicum',g:'CLOST',s:'gpr',stain:'Large boxcar-shaped gram-positive rods',lab:'Anaerobic; double-zone hemolysis (perfringens)',dz:'Gas gangrene, necrotizing infection, bacteremia',first:'Penicillin + clindamycin; surgical debridement',
+  p:['C. septicum bacteremia: look for colon cancer or neutropenic enterocolitis.','Crepitus and pain out of proportion: surgical emergency.']},
+ {id:'cdiff',n:'Clostridioides difficile',g:'CDIFF',s:'gpr',stain:'Spore-forming gram-positive rods (not cultured routinely)',lab:'GDH/toxin EIA, PCR for toxin genes',dz:'Antibiotic-associated colitis, toxic megacolon',first:'Fidaxomicin or oral vancomycin × 10 days',b:'cdiff',
+  p:['IV vancomycin does not reach the colon.','Test only unformed stools (≥ 3 in 24 h) and not after laxatives.','No test of cure.']},
+ {id:'eco',n:'Escherichia coli',g:'ENT',s:'gnr',stain:'Gram-negative rods',lab:'Lactose fermenter, oxidase −, indole +',dz:'UTI, pyelonephritis, bacteremia, intra-abdominal and biliary infection',first:'Ceftriaxone if susceptible; oral step-down by susceptibilities',b:'gnb',bo:1,
+  p:['Ampicillin resistance is common (~40–50%).','Check for ESBL in patients with prior resistant isolates or recent travel.']},
+ {id:'kpn',n:'Klebsiella pneumoniae',g:'ENT',s:'gnr',stain:'Plump gram-negative rods with a capsule',lab:'Lactose fermenter, mucoid, oxidase −',dz:'Pneumonia (alcohol use), UTI, liver abscess, bacteremia',first:'Ceftriaxone if susceptible',b:'gnb',bo:1,ov:{amp:'n'},
+  p:['Intrinsically ampicillin-resistant.','Hypervirulent strains cause liver abscess with metastatic spread (eye, CNS).']},
+ {id:'prot',n:'Proteus mirabilis',g:'ENT',s:'gnr',stain:'Gram-negative rods',lab:'Non-lactose fermenter, swarming motility, urease +',dz:'UTI, struvite stones, catheter-associated UTI',first:'Ceftriaxone or ampicillin if susceptible',b:'gnb',bo:1,ov:{nit:'n',dox:'n'},
+  p:['Intrinsically resistant to nitrofurantoin and tetracyclines.']},
+ {id:'serr',n:'Serratia marcescens',g:'ENT',s:'gnr',stain:'Gram-negative rods',lab:'Non-lactose fermenter (late), red pigment in some strains',dz:'Hospital-acquired UTI, pneumonia, bacteremia',first:'Ceftriaxone or cefepime per susceptibilities',b:'gnb',bo:1,ov:{amp:'n',sam:'n',amc:'n',cfz:'n',lex:'n',nit:'n'},
+  p:['IDSA 2024 lists Serratia as low risk for clinically significant AmpC derepression.']},
+ {id:'ecl',n:'Enterobacter cloacae complex',g:'AMPC',s:'gnr',stain:'Gram-negative rods',lab:'Lactose fermenter, oxidase −; inducible chromosomal AmpC',dz:'Hospital-acquired pneumonia, UTI, bacteremia',first:'Cefepime',b:'gnb',bo:1,
+  p:['Avoid ceftriaxone for serious infection even if reported susceptible: AmpC can be derepressed on therapy.','Cefepime is preferred; carbapenem if cefepime MIC is high or ESBL coexists.']},
+ {id:'kae',n:'Klebsiella aerogenes',g:'AMPC',s:'gnr',stain:'Gram-negative rods',lab:'Lactose fermenter; inducible chromosomal AmpC',dz:'Hospital-acquired infections',first:'Cefepime',b:'gnb',bo:1,p:['Treat like Enterobacter cloacae.']},
+ {id:'cfr',n:'Citrobacter freundii',g:'AMPC',s:'gnr',stain:'Gram-negative rods',lab:'Lactose fermenter; inducible chromosomal AmpC',dz:'UTI, bacteremia',first:'Cefepime',b:'gnb',bo:1,p:['C. koseri lacks inducible AmpC and can be treated like wild-type Enterobacterales.']},
+ {id:'esbl',n:'ESBL-producing Enterobacterales',g:'ESBL',s:'gnr',stain:'Gram-negative rods',lab:'Resistant to ceftriaxone; CTX-M on rapid PCR',dz:'UTI, bacteremia, intra-abdominal infection',first:'Meropenem or ertapenem for serious infection',b:'gnb',bo:1,
+  p:['Piperacillin-tazobactam was inferior to meropenem for ESBL bacteremia (MERINO).','Cystitis: nitrofurantoin, fosfomycin, or TMP-SMX if susceptible.','Oral step-down with a fluoroquinolone or TMP-SMX if susceptible.']},
+ {id:'cre',n:'Carbapenem-resistant Enterobacterales',g:'CRE',s:'gnr',stain:'Gram-negative rods',lab:'Carbapenemase testing: KPC, OXA-48, NDM, VIM, IMP',dz:'Hospital-acquired infections',first:'Per carbapenemase type with ID: ceftazidime-avibactam or meropenem-vaborbactam (KPC); cefiderocol or ceftazidime-avibactam + aztreonam (metallo-β-lactamase)',b:'gnb',bo:1,
+  p:['Know the mechanism: drug choice depends on it.','Contact precautions; notify infection prevention.']},
+ {id:'psa',n:'Pseudomonas aeruginosa',g:'PSA',s:'gnr',stain:'Gram-negative rods',lab:'Non-lactose fermenter, oxidase +, grape odor, blue-green pigment',dz:'Hospital-acquired pneumonia, CF, UTI with catheters, burns, otitis externa, puncture-wound osteomyelitis',first:'Cefepime, piperacillin-tazobactam, or meropenem per susceptibilities',b:'gnb',bo:1,
+  p:['Oral options are only fluoroquinolones (ciprofloxacin or levofloxacin).','Difficult-to-treat resistance: ceftolozane-tazobactam, ceftazidime-avibactam, cefiderocol.']},
+ {id:'acb',n:'Acinetobacter baumannii',g:'ACB',s:'gncb',stain:'Plump gram-negative coccobacilli',lab:'Non-fermenter, oxidase −',dz:'Ventilator-associated pneumonia, wound infection, bacteremia',first:'Ampicillin-sulbactam (high-dose sulbactam) per susceptibilities; sulbactam-durlobactam for CRAB',b:'gnb',bo:1,
+  p:['Often a colonizer in respiratory cultures; treat clinical infection, not the culture.']},
+ {id:'steno',n:'Stenotrophomonas maltophilia',g:'STENO',s:'gnr',stain:'Gram-negative rods',lab:'Non-fermenter, oxidase −',dz:'Ventilator-associated pneumonia, bacteremia with lines',first:'TMP-SMX; alternatives levofloxacin, minocycline, cefiderocol',b:'gnb',bo:1,
+  p:['Intrinsically carbapenem-resistant (L1 metallo-β-lactamase).','Often a colonizer.']},
+ {id:'hflu',n:'Haemophilus influenzae',g:'HFLU',s:'gncb',stain:'Small pleomorphic gram-negative coccobacilli',lab:'Needs factors X and V (chocolate agar)',dz:'Pneumonia, COPD exacerbation, otitis, epiglottitis, meningitis',first:'Ceftriaxone; amoxicillin-clavulanate orally',
+  p:['About a third produce β-lactamase: plain amoxicillin may fail.']},
+ {id:'mcat',n:'Moraxella catarrhalis',g:'HFLU',s:'gndc',stain:'Gram-negative diplococci',lab:'Oxidase +, hockey-puck colonies',dz:'Otitis, sinusitis, COPD exacerbation',first:'Amoxicillin-clavulanate',p:['Nearly all produce β-lactamase.']},
+ {id:'nmen',n:'Neisseria meningitidis',g:'NMEN',s:'gndc',stain:'Kidney-bean gram-negative diplococci',lab:'Oxidase +, ferments glucose and maltose',dz:'Meningitis, meningococcemia (petechiae, purpura)',first:'Ceftriaxone',b:'nmen',
+  p:['Droplet precautions until 24 h of effective therapy.','Chemoprophylaxis for close contacts (rifampin, ciprofloxacin, or ceftriaxone).','Recurrent disease: check for complement deficiency.']},
+ {id:'ngon',n:'Neisseria gonorrhoeae',g:'GC',s:'gndc',stain:'Gram-negative diplococci (intracellular in PMNs)',lab:'Oxidase +, ferments glucose only; NAAT',dz:'Urethritis, cervicitis, septic arthritis, disseminated gonococcal infection',first:'Ceftriaxone; treat chlamydia unless excluded',
+  p:['Test for HIV, syphilis, and chlamydia.','Expedited partner therapy where allowed.']},
+ {id:'bfrag',n:'Bacteroides fragilis',g:'ANA',s:'gnr',stain:'Pale, pleomorphic gram-negative rods',lab:'Obligate anaerobe, bile-resistant',dz:'Intra-abdominal abscess, diabetic foot, aspiration with abscess',first:'Metronidazole, piperacillin-tazobactam, or a carbapenem',
+  p:['Clindamycin resistance is common: avoid for intra-abdominal infection.']},
+ {id:'leg',n:'Legionella pneumophila',g:'ATYP',s:'none',stain:'Stains poorly on Gram stain',lab:'Urine antigen (serogroup 1), PCR, BCYE culture',dz:'Severe community-acquired pneumonia, hyponatremia, diarrhea',first:'Levofloxacin or azithromycin',
+  p:['β-lactams have no activity.','Ask about water exposures (hot tubs, cooling towers, travel).']},
+ {id:'myco',n:'Mycoplasma pneumoniae',g:'ATYP',s:'none',stain:'No cell wall: not seen on Gram stain',lab:'PCR; cold agglutinins',dz:'Walking pneumonia, bullous myringitis, hemolysis, erythema multiforme',first:'Azithromycin or doxycycline',p:['β-lactams have no activity (no cell wall).']},
+ {id:'calb',n:'Candida albicans',g:'CAND',s:'yeast',stain:'Budding yeast with pseudohyphae',lab:'Germ tube +',dz:'Candidemia, line infection, esophagitis, UTI (usually colonization)',first:'Echinocandin, then fluconazole once stable and susceptible',b:'cand',bo:1,
+  p:['Candida in sputum is almost always colonization.','Candiduria: treat only if symptomatic, neutropenic, or before urologic procedures.']},
+ {id:'cgla',n:'Candida glabrata / krusei',g:'CGLAB',s:'yeast',stain:'Small budding yeast without pseudohyphae (glabrata)',lab:'Germ tube −',dz:'Candidemia, line infection',first:'Echinocandin',b:'cand',bo:1,ov:{flu:'v'},
+  p:['C. krusei is intrinsically fluconazole-resistant; C. glabrata is often dose-dependent or resistant.']},
+ {id:'caur',n:'Candida auris',g:'CGLAB',s:'yeast',stain:'Budding yeast',lab:'Often misidentified by older methods; frequently multidrug-resistant',dz:'Candidemia, colonization in long-term care',first:'Echinocandin',b:'cand',bo:1,
+  p:['Contact precautions and notify infection prevention and public health.']},
+ {id:'crypt',n:'Cryptococcus neoformans',g:'CRYPT',s:'yeast',stain:'Encapsulated budding yeast (India ink)',lab:'Serum and CSF cryptococcal antigen',dz:'Meningitis in HIV (CD4 < 100) or transplant, pneumonia',first:'Liposomal amphotericin B + flucytosine induction, then fluconazole',
+  p:['Check opening pressure; serial LPs for elevated pressure.','In HIV, delay ART 4–6 weeks after starting treatment for cryptococcal meningitis.']},
+ {id:'asp',n:'Aspergillus fumigatus',g:'ASPER',s:'mold',stain:'Septate hyphae with acute-angle (45°) branching',lab:'Serum or BAL galactomannan, β-D-glucan',dz:'Invasive pulmonary aspergillosis in neutropenia or transplant, aspergilloma, ABPA',first:'Voriconazole or isavuconazole',
+  p:['Voriconazole: check a trough after ~5 days.','CT halo sign early, air-crescent sign with neutrophil recovery.']},
+ {id:'muc',n:'Mucorales (Rhizopus, Mucor)',g:'MUC',s:'mold',stain:'Broad, ribbon-like, pauci-septate hyphae with right-angle branching',lab:'Tissue diagnosis; galactomannan negative',dz:'Rhino-orbital-cerebral infection in DKA, pulmonary infection in neutropenia',first:'Liposomal amphotericin B plus urgent surgical debridement',
+  p:['Voriconazole has no activity and breakthrough on voriconazole is a classic presentation.']},
+ {id:'hsv',n:'HSV-1 / HSV-2 / VZV',g:'HSV',s:'none',stain:'Virus: not seen on Gram stain',lab:'PCR (CSF, lesion swab, blood)',dz:'Encephalitis, meningitis, disseminated zoster, mucocutaneous disease',first:'IV acyclovir for CNS or disseminated disease',
+  p:['Start empiric acyclovir for encephalitis while waiting for CSF PCR.','Disseminated zoster: airborne and contact precautions.']},
+ {id:'cmv',n:'Cytomegalovirus',g:'CMV',s:'none',stain:'Virus: not seen on Gram stain',lab:'Quantitative PCR; tissue for end-organ disease',dz:'Transplant (colitis, pneumonitis), retinitis in HIV',first:'Ganciclovir IV or valganciclovir PO',p:['Know donor/recipient serostatus in transplant patients.']},
+ {id:'mtb',n:'Mycobacterium tuberculosis',g:'TB',s:'afb',stain:'Acid-fast bacilli (beaded rods)',lab:'AFB smear, NAAT (Xpert, also detects rifampin resistance), culture 2–6 weeks',dz:'Pulmonary TB, lymphadenitis, vertebral (Pott), meningitis, miliary disease',first:'RIPE (rifampin, isoniazid, pyrazinamide, ethambutol) with ID and public health',b:'tb',
+  p:['Airborne isolation until three negative sputum smears or alternate diagnosis.','Test for HIV.','Pyridoxine with isoniazid.']}
+];
+
+/* Antimicrobials. cov = "GROUP:level ..." ; mon = monitoring prompts ; p = pearls */
+const DRUGS=[
+ {id:'pcn',n:'Penicillin G',c:'Penicillin',r:'IV',cov:'STREP:y PNEUMO:v EFAE:v LIST:y NMEN:v CLOST:y',p:['Drug of choice for GAS, susceptible viridans strep, syphilis.']},
+ {id:'amp',n:'Ampicillin',c:'Penicillin',r:'IV',cov:'STREP:y PNEUMO:y EFAE:y LIST:y HFLU:v NMEN:v ENT:v CLOST:y',p:['Drug of choice for E. faecalis and Listeria.','Amoxicillin is the oral equivalent.']},
+ {id:'naf',n:'Nafcillin / oxacillin',c:'Anti-staphylococcal penicillin',r:'IV',cov:'MSSA:y STREP:y',mon:['Weekly CBC (neutropenia) and LFTs','Potassium (hypokalemia)'],p:['No renal adjustment; consider cefazolin instead in kidney disease or for OPAT.']},
+ {id:'amc',n:'Amoxicillin-clavulanate',c:'Penicillin + β-lactamase inhibitor',r:'PO',cov:'MSSA:y STREP:y PNEUMO:y EFAE:y HFLU:y ENT:v ANA:y CLOST:y',p:['Bites, sinusitis, aspiration, oral step-down for polymicrobial infection.','Diarrhea is common.']},
+ {id:'sam',n:'Ampicillin-sulbactam',c:'Penicillin + β-lactamase inhibitor',r:'IV',cov:'MSSA:y STREP:y PNEUMO:y EFAE:y HFLU:y ENT:v ANA:y ACB:v CLOST:y',p:['Sulbactam itself is active against Acinetobacter (high doses).','E. coli resistance is common.']},
+ {id:'tzp',n:'Piperacillin-tazobactam',c:'Penicillin + β-lactamase inhibitor',r:'IV',cov:'MSSA:y STREP:y PNEUMO:y EFAE:y LIST:v HFLU:y ENT:y AMPC:p ESBL:p PSA:y ANA:y ACB:v CLOST:y',mon:['Creatinine (more AKI when combined with vancomycin)'],p:['Not preferred for serious ESBL (MERINO) or AmpC infections even when reported susceptible.','Extended-infusion dosing is common.']},
+ {id:'cfz',n:'Cefazolin',c:'1st-generation cephalosporin',r:'IV',cov:'MSSA:y STREP:y ENT:v',mon:['Creatinine (renal dosing)'],p:['First choice for MSSA bacteremia; easy for OPAT and dialysis (dosed after HD).','Poor CNS penetration: not for meningitis or brain abscess.']},
+ {id:'lex',n:'Cephalexin',c:'1st-generation cephalosporin',r:'PO',cov:'MSSA:y STREP:y ENT:v',p:['Oral step-down for SSTI and cystitis.']},
+ {id:'cro',n:'Ceftriaxone',c:'3rd-generation cephalosporin',r:'IV',cov:'MSSA:p STREP:y PNEUMO:y HFLU:y NMEN:y GC:y ENT:y AMPC:p CLOST:v',mon:['LFTs with prolonged use (biliary sludge)'],p:['No coverage of Pseudomonas, enterococcus, Listeria, or anaerobes.','Once daily; no renal adjustment. Good for OPAT.']},
+ {id:'fep',n:'Cefepime',c:'4th-generation cephalosporin',r:'IV',cov:'MSSA:p STREP:y PNEUMO:y HFLU:y NMEN:y ENT:y AMPC:y PSA:y',mon:['Creatinine (renal dosing)','Mental status: neurotoxicity in kidney disease'],p:['Drug of choice for AmpC organisms (Enterobacter, K. aerogenes, C. freundii).','No anaerobic coverage: add metronidazole for intra-abdominal infection.']},
+ {id:'caz',n:'Ceftazidime',c:'3rd-generation cephalosporin',r:'IV',cov:'STREP:v HFLU:y ENT:y PSA:y',p:['Weak gram-positive activity.']},
+ {id:'cpt',n:'Ceftaroline',c:'5th-generation cephalosporin',r:'IV',cov:'MSSA:y MRSA:y STREP:y PNEUMO:y HFLU:y ENT:y',mon:['CBC with prolonged use (neutropenia)'],p:['The only β-lactam with MRSA activity; used with daptomycin for persistent MRSA bacteremia.']},
+ {id:'czt',n:'Ceftolozane-tazobactam',c:'Cephalosporin + β-lactamase inhibitor',r:'IV',cov:'STREP:v HFLU:y ENT:y AMPC:v ESBL:v PSA:y',p:['Reserved for difficult-to-treat Pseudomonas.']},
+ {id:'cza',n:'Ceftazidime-avibactam',c:'Cephalosporin + β-lactamase inhibitor',r:'IV',cov:'HFLU:y ENT:y AMPC:y ESBL:y CRE:v PSA:y',p:['Active against KPC and OXA-48 carbapenemases, not metallo-β-lactamases (NDM): pair with aztreonam for those.']},
+ {id:'fdc',n:'Cefiderocol',c:'Siderophore cephalosporin',r:'IV',cov:'ENT:y AMPC:y ESBL:y CRE:v PSA:y ACB:v STENO:v',p:['Reserved for carbapenem-resistant gram-negatives, including metallo-β-lactamase producers.']},
+ {id:'mem',n:'Meropenem',c:'Carbapenem',r:'IV',cov:'MSSA:y STREP:y PNEUMO:y HFLU:y NMEN:y LIST:v ENT:y AMPC:y ESBL:y PSA:y ACB:v ANA:y CLOST:y',mon:['Valproate levels (carbapenems drop them sharply)','Creatinine (renal dosing)'],p:['Drug of choice for serious ESBL infections.','Misses MRSA, VRE, Stenotrophomonas, atypicals.']},
+ {id:'mev',n:'Meropenem-vaborbactam',c:'Carbapenem + β-lactamase inhibitor',r:'IV',cov:'MSSA:y STREP:y PNEUMO:y HFLU:y ENT:y AMPC:y ESBL:y CRE:v PSA:v ANA:y',p:['KPC-producing CRE; vaborbactam adds nothing against Pseudomonas or metallo-β-lactamases.']},
+ {id:'etp',n:'Ertapenem',c:'Carbapenem',r:'IV',cov:'MSSA:y STREP:y PNEUMO:y HFLU:y ENT:y AMPC:y ESBL:y ANA:y CLOST:y',mon:['Valproate levels'],p:['No Pseudomonas or Acinetobacter coverage.','Once daily: the usual OPAT carbapenem for ESBL.']},
+ {id:'atm',n:'Aztreonam',c:'Monobactam',r:'IV',cov:'HFLU:y NMEN:v ENT:y AMPC:v PSA:y',p:['Safe in nearly all penicillin allergy (cross-reacts only with ceftazidime side chain).','No gram-positive or anaerobic activity.']},
+ {id:'van',n:'Vancomycin (IV)',c:'Glycopeptide',r:'IV',cov:'MSSA:p MRSA:y STREP:y PNEUMO:y EFAE:y LIST:p DIPH:y CLOST:v',mon:['AUC-guided dosing (goal AUC 400–600) or troughs per pharmacy','Creatinine'],p:['Inferior to β-lactams for MSSA.','IV vancomycin does not treat C. difficile.']},
+ {id:'vanpo',n:'Vancomycin (PO)',c:'Glycopeptide',r:'PO',cov:'CDIFF:y',p:['Not absorbed: only for C. difficile.']},
+ {id:'dap',n:'Daptomycin',c:'Lipopeptide',r:'IV',cov:'MSSA:y MRSA:y STREP:y PNEUMO:v EFAE:y VRE:y DIPH:v',mon:['Weekly CK','Hold statins or monitor closely','Eosinophilic pneumonia (rare)'],p:['Inactivated by surfactant: never for pneumonia.','Higher doses for VRE and endocarditis.']},
+ {id:'lzd',n:'Linezolid',c:'Oxazolidinone',r:'IV/PO',cov:'MSSA:y MRSA:y STREP:y PNEUMO:y EFAE:y VRE:y LIST:v DIPH:y',mon:['Weekly CBC (thrombocytopenia after ~2 weeks)','Serotonergic drugs (serotonin syndrome)','Lactate, vision, neuropathy with long courses'],p:['100% oral bioavailability.','Bacteriostatic; not first line for bacteremia.']},
+ {id:'cli',n:'Clindamycin',c:'Lincosamide',r:'IV/PO',cov:'MSSA:v MRSA:v STREP:v PNEUMO:v ANA:v CLOST:v',p:['Toxin suppression for GAS toxic shock and necrotizing infections.','Check D-test (inducible resistance) for staph.','Highest C. difficile risk of common antibiotics.']},
+ {id:'sxt',n:'Trimethoprim-sulfamethoxazole',c:'Folate antagonist',r:'IV/PO',cov:'MSSA:y MRSA:y STREP:v ENT:v AMPC:v ESBL:v HFLU:v LIST:y STENO:y',mon:['Potassium and creatinine (raises both)','CBC with long courses'],p:['Also treats PJP, Nocardia, Stenotrophomonas.','Interacts with warfarin.']},
+ {id:'dox',n:'Doxycycline',c:'Tetracycline',r:'IV/PO',cov:'MSSA:v MRSA:v STREP:v PNEUMO:v HFLU:v ATYP:y',p:['Covers atypicals and tick-borne infections (Rickettsia, Ehrlichia, Lyme).','Separate from calcium, iron, antacids.']},
+ {id:'mtz',n:'Metronidazole',c:'Nitroimidazole',r:'IV/PO',cov:'ANA:y CLOST:y CDIFF:v',mon:['Neuropathy with prolonged courses'],p:['Anaerobes below the diaphragm; also Trichomonas, Giardia, amoeba.','Only for fulminant C. difficile (IV, added to oral vancomycin).']},
+ {id:'lvx',n:'Levofloxacin',c:'Fluoroquinolone',r:'IV/PO',cov:'MSSA:v STREP:y PNEUMO:y HFLU:y NMEN:v ENT:v AMPC:v ESBL:v PSA:v STENO:v ATYP:y',mon:['QTc','Glucose (dysglycemia)','Tendon pain, delirium in elderly'],p:['Near-complete oral bioavailability.','Separate from calcium, iron, antacids.','Avoid empiric use when TB is possible.']},
+ {id:'cip',n:'Ciprofloxacin',c:'Fluoroquinolone',r:'IV/PO',cov:'HFLU:y NMEN:v ENT:v AMPC:v ESBL:v PSA:v',mon:['QTc','Tendon pain'],p:['Weak gram-positive activity.','Oral option for Pseudomonas.']},
+ {id:'azm',n:'Azithromycin',c:'Macrolide',r:'IV/PO',cov:'STREP:v PNEUMO:v HFLU:v ATYP:y',mon:['QTc'],p:['Atypical coverage in CAP.','Pneumococcal macrolide resistance is high in the US.']},
+ {id:'gen',n:'Gentamicin / tobramycin',c:'Aminoglycoside',r:'IV',cov:'MSSA:p STREP:p EFAE:p ENT:v AMPC:v ESBL:v PSA:v',mon:['Drug levels','Creatinine (nephrotoxic)','Hearing and vestibular symptoms'],p:['Gram-positive use is synergy only.','Poor activity in abscesses and low pH.']},
+ {id:'nit',n:'Nitrofurantoin',c:'Nitrofuran',r:'PO',cov:'EFAE:y VRE:v ENT:v ESBL:v',p:['Cystitis only: no tissue or blood levels.','Avoid if CrCl < 30.']},
+ {id:'fos',n:'Fosfomycin (PO)',c:'Phosphonic acid',r:'PO',cov:'EFAE:v VRE:v ENT:v ESBL:v',p:['Single-dose cystitis treatment; multi-dose for resistant organisms.']},
+ {id:'rif',n:'Rifampin',c:'Rifamycin',r:'IV/PO',cov:'MSSA:p MRSA:p',mon:['Drug interactions (strong CYP inducer)','LFTs'],p:['Never monotherapy for staph: resistance emerges fast.','Added for staph with retained hardware (PJI with DAIR, prosthetic valve).','Turns secretions orange.']},
+ {id:'fdx',n:'Fidaxomicin',c:'Macrocyclic',r:'PO',cov:'CDIFF:y',p:['Lower recurrence than oral vancomycin.']},
+ {id:'flu',n:'Fluconazole',c:'Azole antifungal',r:'IV/PO',cov:'CAND:y CRYPT:y',mon:['LFTs','QTc','Drug interactions (CYP inhibitor)'],p:['No mold coverage.','Step-down for candidemia once cleared and susceptible.']},
+ {id:'mfg',n:'Micafungin (echinocandin)',c:'Echinocandin',r:'IV',cov:'CAND:y CGLAB:y ASPER:p',p:['First line for candidemia.','Poor urine and CNS penetration.']},
+ {id:'vor',n:'Voriconazole',c:'Azole antifungal',r:'IV/PO',cov:'CAND:y CGLAB:v ASPER:y CRYPT:v',mon:['Trough after ~5 days','LFTs, QTc, visual changes, hallucinations','Drug interactions'],p:['First line for invasive aspergillosis.','No Mucorales activity.']},
+ {id:'isa',n:'Isavuconazole',c:'Azole antifungal',r:'IV/PO',cov:'CAND:y CGLAB:v ASPER:y MUC:y',mon:['LFTs','Drug interactions'],p:['Shortens the QTc (unlike other azoles).']},
+ {id:'lamb',n:'Liposomal amphotericin B',c:'Polyene',r:'IV',cov:'CAND:y CGLAB:y CRYPT:y ASPER:y MUC:y',mon:['Creatinine','Potassium and magnesium (wasting)','Infusion reactions'],p:['Mucorales and cryptococcal meningitis induction.']},
+ {id:'acv',n:'Acyclovir',c:'Antiviral',r:'IV/PO',cov:'HSV:y',mon:['Creatinine (crystal nephropathy): hydrate','Neurotoxicity in kidney disease'],p:['Use ideal body weight for dosing in obesity.']},
+ {id:'gcv',n:'Ganciclovir / valganciclovir',c:'Antiviral',r:'IV/PO',cov:'HSV:y CMV:y',mon:['CBC (myelosuppression)','Creatinine'],p:['Valganciclovir is the oral prodrug.']}
+];
+
+/* Bundles triggered by an organism. */
+const BUNDLES={
+ sab:{n:'S. aureus bacteremia',i:['Repeat blood cultures every 24–48 h until negative','Echocardiogram (TTE; TEE if high risk or TTE nondiagnostic)','Source identified and controlled (lines out, abscess drained, hardware assessed)','Narrowed to cefazolin or nafcillin/oxacillin if MSSA','Evaluated for metastatic foci (spine, joints, lungs)','Duration set from first negative culture (≥ 14 days uncomplicated; 4–6 weeks complicated)']},
+ efae:{n:'Enterococcal bacteremia',i:['Repeat blood cultures until negative','Echocardiogram considered (DENOVA/NOVA score)','Source evaluated (urine, biliary, abdomen, lines)','Narrowed to ampicillin if susceptible']},
+ gnb:{n:'Gram-negative bacteremia',i:['Source identified and controlled','Narrowed to susceptibilities','Oral step-down considered once afebrile and stable','Duration set (7 days often enough when uncomplicated with source control)']},
+ cand:{n:'Candidemia',i:['Central venous catheters removed when feasible','Repeat blood cultures daily or every other day until negative','Dilated ophthalmologic exam','Step-down to fluconazole once stable, cleared, and susceptible','Duration set: 14 days after first negative blood culture (uncomplicated)','Echocardiogram if candidemia persists']},
+ cdiff:{n:'C. difficile',i:['Unnecessary antibiotics and PPIs stopped','Contact precautions; soap-and-water hand hygiene','Severity assessed (WBC ≥ 15k or Cr > 1.5 = severe)','Fidaxomicin or oral vancomycin × 10 days','Fulminant: IV metronidazole added, surgery consulted']},
+ nmen:{n:'Meningococcal infection',i:['Droplet precautions until 24 h of effective therapy','Chemoprophylaxis arranged for close contacts','Public health notified']},
+ tb:{n:'Tuberculosis',i:['Airborne isolation','Three sputum AFB smears and NAAT','HIV test','Public health notified','Baseline LFTs and visual acuity before RIPE']}
+};
+
+/* Common susceptibility panel shown when entering results, by stain category */
+const PANEL={
+ gpc_cl:['pcn','naf','cfz','van','dap','lzd','cli','sxt','dox','rif','lvx'],
+ gpc_ch:['pcn','amp','cro','van','dap','lzd','cli','lvx','nit'],
+ gpr:['pcn','amp','van','cli','sxt'],
+ gnr:['amp','sam','cfz','cro','fep','tzp','mem','etp','cip','lvx','sxt','gen','nit','czt','cza'],
+ gndc:['cro','pcn','cip','azm','dox'],
+ gncb:['amp','amc','sam','cro','fep','mem','lvx','sxt'],
+ yeast:['flu','mfg','vor','lamb'],
+ mold:['vor','isa','lamb'],
+ afb:[],none:[]
+};
+
+/* ================= HPI: CONSULT REASONS ================= */
+/* sx = symptoms (reports/denies), rf = history and risk factors (notable for / no history of) */
+const REASONS=[
+ {id:'sab',n:'S. aureus bacteremia',pf:'Staphylococcus aureus bacteremia',q:'antibiotic selection, workup, and duration for S. aureus bacteremia',
+  sx:['fevers','chills','rigors','back pain','joint pain or swelling','chest pain','dyspnea','headache','new focal weakness'],
+  rf:['injection drug use','a prosthetic heart valve','a pacemaker or ICD','prior endocarditis','hemodialysis','a central venous catheter','recent surgery','orthopedic hardware','a recent skin or soft tissue infection']},
+ {id:'gnb',n:'Gram-negative bacteremia',pf:'gram-negative bacteremia',q:'antibiotic selection and duration for gram-negative bacteremia',
+  sx:['fevers','chills','dysuria','flank pain','abdominal pain','right upper quadrant pain','diarrhea','cough'],
+  rf:['an indwelling urinary catheter','a recent urologic procedure','kidney stones','biliary disease','neutropenia','a central venous catheter','a recent hospitalization']},
+ {id:'ie',n:'Endocarditis',pf:'possible infective endocarditis',q:'management of possible infective endocarditis',
+  sx:['fevers','night sweats','weight loss','fatigue','dyspnea','chest pain','vision changes','focal weakness or numbness','painful lesions on the fingers or toes'],
+  rf:['injection drug use','a prosthetic heart valve','prior endocarditis','congenital heart disease','rheumatic heart disease','recent dental work','a pacemaker or ICD','hemodialysis']},
+ {id:'clabsi',n:'Line infection (CLABSI)',pf:'possible central line–associated bloodstream infection',q:'line management and antibiotics for a possible line infection',
+  sx:['fevers','chills or rigors with line use','pain at the line site','redness or drainage at the line site','arm swelling'],
+  rf:['total parenteral nutrition','a hemodialysis catheter','a tunneled catheter or port','prior line infections','a recent line exchange']},
+ {id:'dfo',n:'Osteomyelitis / diabetic foot',pf:'possible osteomyelitis',q:'whether this is osteomyelitis, the need for bone biopsy, and antibiotic choice',
+  sx:['a foot wound','drainage from the wound','pain at the wound','swelling','spreading redness','fevers','malodor'],
+  rf:['diabetes','peripheral arterial disease','peripheral neuropathy','a prior amputation','prior osteomyelitis','prior foot surgery']},
+ {id:'pji',n:'Prosthetic joint infection',pf:'possible prosthetic joint infection',q:'evaluation and management of possible prosthetic joint infection',
+  sx:['joint pain','joint swelling','drainage or a sinus tract','fevers','decreased range of motion','wound breakdown'],
+  rf:['a revision arthroplasty','prior joint infection','a recent bacteremia','postoperative wound complications','a recent dental or invasive procedure']},
+ {id:'vo',n:'Vertebral osteo / epidural abscess',pf:'possible vertebral osteomyelitis or spinal epidural abscess',q:'antibiotic choice and duration for vertebral osteomyelitis / epidural abscess',
+  sx:['back pain','fevers','leg weakness','numbness','bowel or bladder dysfunction','pain worse at night'],
+  rf:['injection drug use','a recent bacteremia','a recent spinal procedure or injection','diabetes','hemodialysis']},
+ {id:'ssti',n:'Cellulitis / SSTI',pf:'skin and soft tissue infection',q:'antibiotic choice for skin and soft tissue infection',
+  sx:['redness','swelling','pain','pain out of proportion to exam','purulent drainage','blistering','rapid spread','crepitus','fevers'],
+  rf:['prior cellulitis','lymphedema','venous insufficiency','tinea pedis','diabetes','injection drug use','a recent animal bite','freshwater or saltwater exposure']},
+ {id:'pna',n:'Pneumonia',pf:'pneumonia',q:'antibiotic choice and duration for pneumonia',
+  sx:['cough','sputum production','dyspnea','pleuritic chest pain','fevers','hemoptysis','night sweats'],
+  rf:['COPD or structural lung disease','aspiration risk','a hospitalization in the last 90 days','IV antibiotics in the last 90 days','prior MRSA or Pseudomonas in respiratory cultures','tobacco use','mechanical ventilation']},
+ {id:'uti',n:'UTI / pyelonephritis',pf:'complicated urinary tract infection',q:'antibiotic choice and duration for urinary tract infection',
+  sx:['dysuria','urinary frequency','urgency','flank pain','hematuria','suprapubic pain','fevers','nausea or vomiting'],
+  rf:['an indwelling urinary catheter','kidney stones','a recent urologic procedure','prior resistant UTIs','urinary retention','a kidney transplant','pregnancy']},
+ {id:'iai',n:'Intra-abdominal infection',pf:'intra-abdominal infection',q:'antibiotic choice and duration for intra-abdominal infection',
+  sx:['abdominal pain','nausea or vomiting','diarrhea','fevers','jaundice','abdominal distension'],
+  rf:['recent abdominal surgery','a bowel perforation','cirrhosis with ascites','biliary disease','inflammatory bowel disease','a percutaneous drain']},
+ {id:'cdi',n:'C. difficile infection',pf:'Clostridioides difficile infection',q:'management of C. difficile infection',
+  sx:['watery diarrhea (3 or more stools in 24 hours)','abdominal pain','abdominal distension','fevers','bloody stools'],
+  rf:['recent antibiotic use','proton pump inhibitor use','prior C. difficile infection','a recent hospitalization','inflammatory bowel disease','immunosuppression']},
+ {id:'cns',n:'Meningitis / encephalitis',pf:'possible meningitis or encephalitis',q:'empiric therapy and workup for possible CNS infection',
+  sx:['headache','neck stiffness','photophobia','confusion','seizure','rash','fevers','focal weakness'],
+  rf:['recent neurosurgery or a shunt','head trauma or a CSF leak','immunosuppression','splenectomy','a recent ear or sinus infection','sick contacts']},
+ {id:'fn',n:'Febrile neutropenia',pf:'febrile neutropenia',q:'antimicrobial management of febrile neutropenia',
+  sx:['fevers','chills','mouth sores','cough','diarrhea','abdominal pain','line site pain','perianal pain','rash'],
+  rf:['expected neutropenia longer than 7 days','a central line or port','prior bacteremia or fungal infection','levofloxacin prophylaxis','antifungal prophylaxis','antiviral prophylaxis']},
+ {id:'fuo',n:'Fever of unknown origin',pf:'prolonged fevers without a source',q:'workup of fever of unknown origin',
+  sx:['fevers','night sweats','weight loss','rash','joint pain','enlarged lymph nodes','headache or jaw claudication','cough'],
+  rf:['a history of malignancy','new medications','autoimmune disease','a recent procedure','HIV risk factors']},
+ {id:'hiv',n:'New HIV / opportunistic infection',pf:'HIV and possible opportunistic infection',q:'management of HIV and evaluation for opportunistic infections',
+  sx:['fevers','weight loss','thrush or odynophagia','dyspnea','headache','vision changes','diarrhea','rash'],
+  rf:['prior antiretroviral therapy','prior opportunistic infections','prior STIs','hepatitis B','hepatitis C','prior TB testing']},
+ {id:'tx',n:'Transplant / immunocompromised host',pf:'infection in an immunocompromised host',q:'evaluation and management of infection in an immunocompromised host',
+  sx:['fevers','cough','dyspnea','diarrhea','rash','headache','graft site pain'],
+  rf:['a solid organ transplant','a stem cell transplant','recent treatment for rejection','high-dose steroids','biologic therapy','PJP prophylaxis','CMV prophylaxis']},
+ {id:'fung',n:'Candidemia / fungal infection',pf:'a fungal infection',q:'antifungal selection and workup',
+  sx:['fevers','vision changes','rash','line site pain','cough','hemoptysis'],
+  rf:['a central venous catheter','total parenteral nutrition','prolonged broad-spectrum antibiotics','recent abdominal surgery','neutropenia','a prolonged ICU stay']}
+];
+
+/* Shared ID history: exposures (tri-state) */
+const EXPOSURES=['recent travel','animal exposure','tick or insect bites','sick contacts','injection drug use','incarceration','unstable housing','freshwater or saltwater exposure','raw or undercooked food','TB exposure','occupational exposures','new sexual partners'];
+const IMMUNE=['diabetes','HIV','solid organ transplant','stem cell transplant','active chemotherapy','chronic steroids','biologic therapy','asplenia','cirrhosis','ESRD'];
+const PRIOR_ORGS=['MRSA','VRE','ESBL','CRE','MDR Pseudomonas','C. difficile','Candida auris'];
+const SITES=['Blood','Urine','Wound','Bone','Joint fluid','Tissue','Sputum','BAL','CSF','Abscess','Stool','Line tip','Other'];
+
+/* ================= LOOKUPS ================= */
+DRUGS.forEach(d=>{d.cm=Object.fromEntries(d.cov.split(' ').filter(Boolean).map(x=>x.split(':')))});
+const DR=Object.fromEntries(DRUGS.map(d=>[d.id,d]));
+const BG=Object.fromEntries(BUGS.map(b=>[b.id,b]));
+const ST=Object.fromEntries(STAINS.map(s=>[s.id,s]));
+const RS=Object.fromEntries(REASONS.map(r=>[r.id,r]));
+const RANK={y:3,p:2,v:1,n:0};
+const KEYMISS=['MRSA','EFAE','PSA','ESBL','ANA','ATYP'];
+const COMMON=['van','cfz','cro','fep','tzp','mem','mtz','dap','naf','amp'];
+
+/* ================= HELPERS ================= */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>iso(new Date());
+const pd=s=>{if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return iso(d)};
+const diff=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+const md=s=>s?`${+s.slice(5,7)}/${+s.slice(8,10)}`:'';
+const andL=a=>a.length<2?(a[0]||''):a.length===2?a.join(' and '):a.slice(0,-1).join(', ')+', and '+a[a.length-1];
+const orL=a=>a.length<2?(a[0]||''):a.length===2?a.join(' or '):a.slice(0,-1).join(', ')+', or '+a[a.length-1];
+const noArt=s=>s.replace(/^(a|an|the) /,'');
+const sent=s=>{s=String(s||'').trim();if(!s)return'';s=s[0].toUpperCase()+s.slice(1);return/[.!?]$/.test(s)?s:s+'.'};
+const lc1=s=>s?s[0].toLowerCase()+s.slice(1):s;
+const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const CHECK=`<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const GO=`<svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
+
+/* ================= STORAGE (this device only) ================= */
+const KEY='panacea.spectrum.v1';
+let S={pts:[]};
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&Array.isArray(r.pts))S=r}catch(e){}
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
+function newPt(){return{id:uid(),bed:'',age:'',sex:'',team:'',pmh:'',created:today(),off:false,
+  reason:'',q:'',story:'',pert:{},exp:{},expD:'',imm:[],prior:[],recent:'',allergy:'',devices:'',vacc:'',concern:'',inclMicro:true,
+  abx:[],cx:[],clear:'',sc:'',scTxt:'',bnd:{},days:{},oneliner:'',opat:{on:false,line:'',labs:'',fu:'',stop:''}}}
+const P=id=>S.pts.find(p=>p.id===id);
+
+/* ================= CLINICAL LOGIC ================= */
+function lvl(did,bug,susc){
+  const s=susc&&susc[did];if(s==='S')return'y';if(s==='R')return'n';if(s==='I')return'v';
+  if(!bug||!DR[did])return'n';
+  if(bug.ov&&bug.ov[did])return bug.ov[did];
+  return DR[did].cm[bug.g]||'n';
+}
+const active=pt=>pt.abx.filter(a=>!a.end);
+function anchorDate(pt,a){return a.anch==='clear'?pt.clear:a.anch==='sc'?pt.sc:a.start}
+const ANCH={start:'start of therapy',clear:'first negative blood culture',sc:'source control'};
+function abxInfo(pt,a,ref){
+  ref=ref||today();
+  const last=a.end&&a.end<ref?a.end:ref;
+  const day=a.start?diff(a.start,last)+1:null;
+  const an=anchorDate(pt,a);const dur=+a.dur||0;
+  const endD=an&&dur?addDays(an,dur-1):'';
+  const dOf=an&&dur?diff(an,ref)+1:null;
+  return{day,endD,dOf,dur,an};
+}
+function coverage(pt,c){
+  const bug=BG[c.org];if(!bug)return null;
+  const act=active(pt);const by={y:[],p:[],v:[],n:[]};
+  act.forEach(a=>by[lvl(a.d,bug,c.susc)].push(DR[a.d].n));
+  const best=act.length?['y','p','v','n'].find(k=>by[k].length):null;
+  return{bug,by,best};
+}
+function posCultures(pt){return pt.cx.filter(c=>c.st==='pos')}
+function bundles(pt){
+  const out=[];const seen={};
+  posCultures(pt).forEach(c=>{const b=BG[c.org];if(!b||!b.b)return;if(b.bo&&c.site!=='Blood')return;if(seen[b.b])return;seen[b.b]=1;out.push(b.b)});
+  return out;
+}
+function clearSuggest(pt){
+  const bl=pt.cx.filter(c=>c.site==='Blood'&&c.date).sort((a,b)=>a.date<b.date?-1:1);
+  const pos=bl.filter(c=>c.st==='pos');if(!pos.length)return'';
+  const lastPos=pos[pos.length-1].date;
+  const neg=bl.find(c=>(c.st==='neg'||c.st==='ngtd')&&c.date>lastPos);
+  return neg?neg.date:'';
+}
+const stainText=id=>ST[id]?ST[id].n.replace(/^GPC/,'gram-positive cocci').replace(/^Gram/,'gram'):'';
+function orgLabel(c){if(c.org&&BG[c.org])return BG[c.org].n;return(c.orgTxt||'').trim()}
+function cxLine(c){
+  const head=`${c.site||'Culture'}${c.date?' ('+md(c.date)+')':''}${c.sets?' ['+c.sets+']':''}`;
+  let body='';
+  if(c.st==='pend')body=c.stain?`${stainText(c.stain)} on Gram stain; identification pending`:'pending';
+  else if(c.st==='ngtd')body='no growth to date';
+  else if(c.st==='neg')body='no growth (final)';
+  else if(c.st==='con')body=(orgLabel(c)||'growth')+', likely contaminant';
+  else if(c.st==='pos'){
+    const o=orgLabel(c)||(c.stain?stainText(c.stain)+' on Gram stain, identification pending':'positive');
+    const s=c.susc||{};const grp={S:[],I:[],R:[]};
+    Object.entries(s).forEach(([k,v])=>{if(DR[k]&&grp[v])grp[v].push(lc1(DR[k].n))});
+    const parts=[];if(grp.S.length)parts.push('S: '+grp.S.join(', '));if(grp.I.length)parts.push('I: '+grp.I.join(', '));if(grp.R.length)parts.push('R: '+grp.R.join(', '));
+    body=o+(parts.length?' ('+parts.join('; ')+')':'');
+  }
+  else body='pending';
+  return head+': '+body;
+}
+function abxLine(pt,a,ref){
+  const d=DR[a.d];const i=abxInfo(pt,a,ref);
+  if(a.end)return `${d.n}${a.dose?' '+a.dose:''}: ${md(a.start)}–${md(a.end)} (${i.day} day${i.day===1?'':'s'})`;
+  let t=`${d.n}${a.dose?' '+a.dose:''}: day ${i.day??'?'}${a.start?' (started '+md(a.start)+')':''}`;
+  if(i.dur){t+=a.anch&&a.anch!=='start'&&i.an?`; ${i.dur} days from ${ANCH[a.anch]} on ${md(i.an)}, through ${md(i.endD)}`:i.an?`; planned ${i.dur} days, through ${md(i.endD)}`:`; planned ${i.dur} days from ${ANCH[a.anch]} (date not set)`;}
+  return t;
+}
+function monitoring(pt){
+  const L=[];active(pt).forEach(a=>{const d=DR[a.d];(d.mon||[]).forEach(m=>L.push(`${d.n}: ${lc1(m)}`))});return L;
+}
+function opatLabs(pt){
+  const s=new Set(['CBC with differential and BMP weekly']);
+  active(pt).forEach(a=>{const id=a.d;
+    if(id==='van')s.add('Vancomycin level weekly');if(id==='dap')s.add('CK weekly');if(id==='naf')s.add('LFTs weekly');
+    if(id==='gen')s.add('Aminoglycoside levels weekly');if(id==='vor')s.add('Voriconazole trough and LFTs');
+    if(['cro','fep','cfz','etp','mem','tzp','dap','van'].includes(id))s.add('ESR and CRP weekly (bone/joint or endovascular infection)');});
+  return[...s].join('; ');
+}
+
+/* ================= TEXT OUTPUTS ================= */
+function pron(pt){return pt.sex==='male'?['He','his']:pt.sex==='female'?['She','her']:['The patient','their']}
+function hpiText(pt){
+  const[He]=pron(pt);const r=RS[pt.reason];const out=[];
+  const age=String(pt.age||'').trim();const art=/^(8|11|18)/.test(age)?'an':'a';
+  const pmh=[...pt.imm,...String(pt.pmh||'').split(',').map(s=>s.trim()).filter(Boolean)];
+  const rfPos=r?r.rf.filter(x=>(pt.pert[r.id]||{})[x]==='p'):[];
+  const pmhAll=[...new Set(pmh)];
+  out.push(`The patient is ${age?art+' '+age:'a ***'} y/o ${pt.sex||'***'} with a PMHx of ${pmhAll.length?andL(pmhAll):'***'} presenting today for evaluation of ${r?r.pf:'***'}.`);
+  out.push(`Infectious Diseases is consulted by the ${pt.team.trim()||'***'} team regarding ${(pt.q.trim()||(r?r.q:'***')).replace(/\.$/,'')}.`);
+  if(pt.story.trim())out.push(sent(pt.story));
+  if(r){
+    const m=pt.pert[r.id]||{};
+    const sp=r.sx.filter(x=>m[x]==='p'),sn=r.sx.filter(x=>m[x]==='n');
+    if(sp.length)out.push(`${He} reports ${andL(sp)}.`);
+    if(sn.length)out.push(`${He} denies ${orL(sn)}.`);
+    const rn=r.rf.filter(x=>m[x]==='n');
+    if(rfPos.length)out.push(`History is notable for ${andL(rfPos)}.`);
+    if(rn.length)out.push(`${He} has no history of ${orL(rn.map(noArt))}.`);
+  }
+  const ep=EXPOSURES.filter(x=>pt.exp[x]==='p'),en=EXPOSURES.filter(x=>pt.exp[x]==='n');
+  if(ep.length)out.push(`Exposure history is notable for ${andL(ep)}.`);
+  if(en.length)out.push(`${He} denies ${orL(en)}.`);
+  if(pt.expD.trim())out.push(sent(pt.expD));
+  if(pt.prior.length)out.push(`Prior cultures have grown ${andL(pt.prior)}.`);
+  if(pt.recent.trim())out.push(sent(`Antibiotics in the last 90 days: ${pt.recent.trim()}`));
+  if(pt.allergy.trim())out.push(/^(none|nkda|no known)/i.test(pt.allergy.trim())?`${He} has no known antimicrobial allergies.`:sent(`Antimicrobial allergies: ${pt.allergy.trim()}`));
+  if(pt.devices.trim())out.push(sent(`Indwelling devices and hardware: ${pt.devices.trim()}`));
+  if(pt.vacc.trim())out.push(sent(`Vaccinations: ${pt.vacc.trim()}`));
+  if(pt.inclMicro){
+    const cx=pt.cx.filter(c=>c.st&&c.st!=='');
+    if(cx.length)out.push(sent('Microbiology to date: '+cx.map(c=>lc1(cxLine(c))).join('; ')));
+    if(pt.abx.length)out.push(sent('Antimicrobials to date: '+pt.abx.map(a=>{const d=DR[a.d];return a.end?`${lc1(d.n)} ${md(a.start)}–${md(a.end)}`:`${lc1(d.n)} since ${md(a.start)||'***'}`}).join('; ')));
+  }
+  out.push(`The patient's chief concern is ${(pt.concern||'').trim().replace(/\.$/,'')||'***'}.`);
+  out.push(`${He} denies any further complaints today.`);
+  return out.join(' ');
+}
+function trend(pt,k,ref){
+  const ds=Object.keys(pt.days).filter(d=>d<=ref&&String(pt.days[d][k]||'').trim()).sort().slice(-3);
+  return ds.map(d=>pt.days[d][k].trim()).join(' → ');
+}
+function noteText(pt,ref){
+  const d=pt.days[ref]||{};const L=[];const r=RS[pt.reason];
+  L.push(`ID PROGRESS NOTE (${md(ref)})`);
+  const act=active(pt);
+  if(act.length)L.push('Antimicrobial day: '+act.map(a=>`${DR[a.d].n} D${abxInfo(pt,a,ref).day??'?'}`).join(', '));
+  L.push('');
+  L.push('Subjective: '+(String(d.s||'').trim()||'***'));
+  L.push('');L.push('Objective:');
+  const obs=[['tmax','Tmax'],['wbc','WBC'],['cr','Cr'],['crp','CRP'],['esr','ESR']].map(([k,n])=>{const t=trend(pt,k,ref);return t?`${n} ${t}`:''}).filter(Boolean);
+  L.push(obs.length?obs.join(' | '):'Vitals and labs: ***');
+  if(String(d.exam||'').trim())L.push('Exam: '+d.exam.trim());
+  if(pt.devices.trim())L.push('Lines/devices: '+pt.devices.trim());
+  L.push('');L.push('Microbiology:');
+  if(pt.cx.length)pt.cx.slice().sort((a,b)=>(a.date||'')<(b.date||'')?-1:1).forEach(c=>L.push('• '+cxLine(c)));else L.push('• None sent');
+  if(pt.clear)L.push(`First negative blood culture: ${md(pt.clear)} (day ${diff(pt.clear,ref)+1} of clearance).`);
+  L.push('');L.push('Antimicrobials:');
+  if(pt.abx.length)pt.abx.forEach(a=>L.push('• '+abxLine(pt,a,ref)));else L.push('• None');
+  L.push('');L.push('Assessment and plan:');
+  L.push(pt.oneliner.trim()?sent(pt.oneliner):`${pt.age||'***'} y/o ${pt.sex||'***'} with ${r?r.pf:'***'}.`);
+  act.forEach(a=>{const i=abxInfo(pt,a,ref);L.push(`• Continue ${lc1(DR[a.d].n)}${i.dur&&i.an?` (day ${i.dOf} of ${i.dur}${a.anch&&a.anch!=='start'?' from '+ANCH[a.anch]:''}; projected last dose ${md(i.endD)})`:''}.`)});
+  posCultures(pt).forEach(c=>{const v=coverage(pt,c);if(!v||!act.length)return;
+    if(v.best==='n')L.push(`• ${v.bug.n} is not covered by the current regimen. First line: ${v.bug.first}.`);
+    else if(v.best==='v')L.push(`• ${v.bug.n}: coverage depends on susceptibilities (${v.by.v.join(', ')}).`);});
+  bundles(pt).forEach(k=>{const b=BUNDLES[k];const done=b.i.filter((x,i)=>pt.bnd[k+'|'+i]),open=b.i.filter((x,i)=>!pt.bnd[k+'|'+i]);
+    L.push(`• ${b.n} checklist. `+[done.length?'Done: '+done.map(lc1).join('; ')+'.':'',open.length?'Pending: '+open.map(lc1).join('; ')+'.':''].filter(Boolean).join(' '));});
+  if(pt.sc||pt.scTxt.trim())L.push(`• Source control: ${pt.scTxt.trim()||'achieved'}${pt.sc?' ('+md(pt.sc)+')':''}.`);
+  const mon=monitoring(pt);if(mon.length)L.push('• Monitoring: '+mon.join('; ')+'.');
+  if(pt.opat.on){const o=pt.opat;L.push(`• OPAT: ${[o.line?'access: '+o.line:'',o.labs?'labs: '+o.labs:'',o.stop?'stop date '+md(o.stop):'',o.fu?'follow-up: '+o.fu:''].filter(Boolean).join('; ')||'planning in progress'}.`)}
+  if(String(d.plan||'').trim())String(d.plan).trim().split('\n').filter(x=>x.trim()).forEach(x=>L.push('• '+x.trim().replace(/^[•\-]\s*/,'')));
+  L.push('');L.push('ID will continue to follow. Please call with questions.');
+  return L.join('\n');
+}
+
+/* ================= VIEW STATE ================= */
+const hd=document.getElementById('hd'),tabsEl=document.getElementById('tabs'),app=document.getElementById('app');
+let refTab='bugs',refQ='',abxQ={},noteDate={},showOff=false;
+
+function parseHash(){const h=location.hash.slice(1).split('/');return h}
+function render(keep){
+  const h=parseHash();const y=window.scrollY;
+  if(h[0]==='p'&&P(h[1])){renderPt(P(h[1]),h[2]||'hpi')}
+  else if(h[0]==='ref'){renderRef(h[1],h[2])}
+  else renderHome();
+  window.scrollTo(0,keep?y:0);
+}
+
+/* ---------- home ---------- */
+function ptSummary(pt){
+  const r=RS[pt.reason];const act=active(pt);
+  const tags=act.map(a=>`<span class="tag">${esc(DR[a.d].n.split(/[ (/]/)[0])} D${abxInfo(pt,a).day??'?'}</span>`).join('');
+  const gaps=posCultures(pt).map(c=>coverage(pt,c)).filter(v=>v&&act.length&&v.best==='n').length;
+  return{r,tags:tags+(gaps?`<span class="tag warn">${gaps} not covered</span>`:'')};
+}
+function renderHome(){
+  document.title='Spectrum';
+  hd.innerHTML=`${HOME}<h1>Spectrum</h1><a class="refbtn" href="#ref">Bugs &amp; drugs</a>`;tabsEl.innerHTML='';
+  const list=S.pts.filter(p=>!p.off),off=S.pts.filter(p=>p.off);
+  let h=`<p class="sub" style="margin-top:6px">ID consults: the HPI, cultures and antimicrobials, and the daily note.</p>
+  <div class="btnrow" style="margin:12px 0"><button class="btn primary" data-a="new">New consult</button></div>`;
+  if(!list.length)h+=`<div class="empty">No active patients. Start a new consult, or open the bugs and drugs reference.</div>`;
+  list.forEach(pt=>{const s=ptSummary(pt);h+=`<a class="pt" href="#p/${pt.id}/hpi"><span class="ab">${esc(pt.bed||'—')}</span><span class="txt"><span class="nm">${esc(s.r?s.r.n:'New consult')}</span><span class="ds">${esc([pt.age?pt.age+' y/o':'',pt.sex,pt.team?pt.team+' team':''].filter(Boolean).join(' · ')||'Details not entered')}</span><span>${s.tags}</span></span>${GO}</a>`});
+  if(off.length){h+=`<details class="dd" ${showOff?'open':''} id="offd"><summary>Signed off (${off.length})</summary>`;
+    off.forEach(pt=>{const s=ptSummary(pt);h+=`<a class="pt" href="#p/${pt.id}/note"><span class="ab" style="background:var(--bg);color:var(--muted)">${esc(pt.bed||'—')}</span><span class="txt"><span class="nm">${esc(s.r?s.r.n:'Consult')}</span><span class="ds">${esc([pt.age?pt.age+' y/o':'',pt.sex].filter(Boolean).join(' · '))}</span></span>${GO}</a>`});h+='</details>'}
+  h+=`<div class="card" style="margin-top:18px"><h3>Quick reference</h3><div class="btnrow">
+    <a class="btn sm" href="#ref" data-a="reftab" data-v="bugs" style="text-decoration:none">Bugs</a>
+    <a class="btn sm" href="#ref" data-a="reftab" data-v="drugs" style="text-decoration:none">Drugs</a>
+    <a class="btn sm" href="#ref" data-a="reftab" data-v="stain" style="text-decoration:none">Gram stain</a></div></div>
+  <p class="foot">Saved only on this device. Use bed numbers only: no names, MRNs, or dates of birth.<br>Reference content is a study aid; confirm against susceptibilities, your local antibiogram, and pharmacy.</p>`;
+  app.innerHTML=h;
+}
+
+/* ---------- patient ---------- */
+function renderPt(pt,tab){
+  const r=RS[pt.reason];
+  document.title=(pt.bed?'Bed '+pt.bed:'Consult')+' · Spectrum';
+  hd.innerHTML=`${HOME}<button class="back" data-a="home" aria-label="All patients">‹</button><h1>${esc(pt.bed?'Bed '+pt.bed:'New consult')}<small>${esc(r?r.n:'')}</small></h1><a class="refbtn" href="#ref">Bugs &amp; drugs</a>`;
+  tabsEl.innerHTML=`<nav class="tabs">${[['hpi','Consult HPI'],['micro','Micro + abx'],['note','Progress note']].map(([k,n])=>`<a href="#p/${pt.id}/${k}" ${tab===k?'aria-current="page"':''}>${n}</a>`).join('')}</nav>`;
+  app.innerHTML=tab==='micro'?vMicro(pt):tab==='note'?vNote(pt):vHpi(pt);
+}
+const tri=(set,key,v,label)=>`<button type="button" class="chip${v?' '+v:''}" data-a="tri" data-s="${set}" data-k="${esc(key)}">${esc(label||key)}</button>`;
+const multi=(path,arr,list)=>`<div class="chips">${list.map(x=>`<button type="button" class="chip${arr.includes(x)?' on':''}" data-a="multi" data-p="${path}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
+const fld=(label,path,val,attrs='')=>`<label class="fld"><span>${label}</span><input data-p="${path}" value="${esc(val)}" ${attrs}></label>`;
+const area=(label,path,val,rows=2,ph='')=>`<label class="fld"><span>${label}</span><textarea data-p="${path}" rows="${rows}" placeholder="${esc(ph)}">${esc(val)}</textarea></label>`;
+const LEG=`<p class="legend">Tap once for <b class="p">present</b>, twice for <b class="n">denied</b>, three times to clear.</p>`;
+
+function vHpi(pt){
+  const r=RS[pt.reason];const m=r?(pt.pert[r.id]||{}):{};
+  let h=`<div class="card"><h3>Patient</h3>
+    <div class="row">${fld('Bed','bed',pt.bed,'placeholder="4B-12"')}${fld('Age','age',pt.age,'inputmode="numeric" placeholder="54"')}</div>
+    <div class="fld"><span>Sex</span><div class="seg" data-seg="sex">${['male','female'].map(v=>`<button type="button" data-v="${v}" aria-pressed="${pt.sex===v}">${v==='male'?'Male':'Female'}</button>`).join('')}</div></div>
+    ${fld('Consulting team','team',pt.team,'placeholder="hospital medicine"')}
+    ${fld('PMHx, separated by commas','pmh',pt.pmh,'placeholder="DM2, CKD 3, HFrEF"')}
+  </div>
+  <div class="card"><h3>Reason for consult</h3><div class="chips">${REASONS.map(x=>`<button type="button" class="chip${pt.reason===x.id?' on':''}" data-a="reason" data-v="${x.id}">${esc(x.n)}</button>`).join('')}</div>
+    ${fld('Consult question','q',pt.q,`placeholder="${esc(r?r.q:'What does the team want from ID?')}"`)}
+    ${area('Story so far (hospital course, how this came up)','story',pt.story,3,'Admitted 10/8 with fevers and back pain; blood cultures 2/2 grew GPC in clusters...')}
+  </div>`;
+  if(r){
+    h+=`<div class="card"><h3>Symptoms</h3>${LEG}<div class="chips">${r.sx.map(x=>tri(r.id,x,m[x])).join('')}</div></div>
+    <div class="card"><h3>History and risk factors</h3><div class="chips">${r.rf.map(x=>tri(r.id,x,m[x],noArt(x))).join('')}</div></div>`;
+  }else h+=`<div class="empty" style="padding:10px">Pick a reason to see the pertinent positives and negatives.</div>`;
+  h+=`<div class="card"><h3>ID history</h3>
+    <div class="fld"><span>Immune status (added to PMHx)</span>${multi('imm',pt.imm,IMMUNE)}</div>
+    ${fld('Antimicrobial allergies and reaction','allergy',pt.allergy,'placeholder="penicillin (hives as a child), or none"')}
+    <div class="chips" style="margin-top:-2px">${['None known','Penicillin','Cephalosporin','Sulfa','Vancomycin (infusion reaction)','Fluoroquinolone'].map(x=>`<button type="button" class="chip" data-a="allergy" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+    <div class="fld" style="margin-top:12px"><span>Prior resistant organisms</span>${multi('prior',pt.prior,PRIOR_ORGS)}</div>
+    ${fld('Antibiotics in the last 90 days','recent',pt.recent,'placeholder="cephalexin for cellulitis in August"')}
+    ${fld('Lines, devices, hardware','devices',pt.devices,'placeholder="R IJ CVC (10/8), L TKA 2019"')}
+    <div class="fld" style="margin-top:12px"><span>Exposures</span><div class="chips">${EXPOSURES.map(x=>tri('exp',x,pt.exp[x])).join('')}</div></div>
+    ${area('Exposure details','expD',pt.expD,2,'Traveled to Arizona in September; has two cats')}
+    ${fld('Vaccinations','vacc',pt.vacc,'placeholder="pneumococcal up to date, no recent tetanus"')}
+  </div>
+  <div class="card">${fld('Chief concern','concern',pt.concern,'placeholder="back pain"')}
+    <button type="button" class="chk${pt.inclMicro?' on':''}" data-a="incl" style="border:0"><span class="bx">${CHECK}</span><span>Include cultures and antimicrobials from the Micro + abx tab</span></button></div>
+  <h2>HPI</h2><pre class="out" id="out">${esc(hpiText(pt))}</pre>
+  <div class="btnrow"><button class="btn primary" data-a="copy" data-v="hpi">Copy HPI</button><a class="btn" style="text-decoration:none" href="#p/${pt.id}/micro">Cultures and antibiotics ›</a></div>
+  ${ptFooter(pt)}`;
+  return h;
+}
+function ptFooter(pt){return`<div class="btnrow" style="justify-content:center;margin-top:22px;gap:18px"><button class="linkbtn" data-a="signoff">${pt.off?'Move back to active':'Sign off'}</button><button class="linkbtn danger" data-a="delpt">Delete patient</button></div>
+  <p class="foot">Saved only on this device. Bed numbers only: no names, MRNs, or dates of birth.</p>`}
+
+function covTags(d){
+  const y=Object.entries(d.cm).filter(([g,l])=>l==='y').map(([g])=>GROUPS[g]);
+  const miss=KEYMISS.filter(g=>!d.cm[g]||d.cm[g]==='n').map(g=>GROUPS[g]);
+  return `<div class="cardsub"><b style="color:var(--ok)">Covers:</b> ${esc(y.join(', ')||'see reference')}${miss.length?`<br><b style="color:var(--warn)">Misses:</b> ${esc(miss.join(', '))}`:''}</div>`;
+}
+function vMicro(pt){
+  const T=today();let h='';
+  // antimicrobials
+  h+=`<h2>Antimicrobials</h2>`;
+  if(!pt.abx.length)h+=`<p class="sub">None yet. Add what the patient is on below.</p>`;
+  pt.abx.forEach((a,i)=>{const d=DR[a.d];const inf=abxInfo(pt,a,T);
+    h+=`<div class="card"><div class="ab-h"><div class="nm"><a href="#ref/drug/${d.id}">${esc(d.n)}</a><small>${esc(d.c)} · ${d.r}${a.end?' · stopped '+md(a.end):''}</small></div>
+      <div class="day${a.end?' off':''}"><small>Day</small>${inf.day??'–'}</div></div>
+      ${a.end?'':covTags(d)}
+      <div class="row">${fld('Started (first effective dose)',`abx.${i}.start`,a.start,'type="date" data-rr="1"')}${fld('Dose / frequency',`abx.${i}.dose`,a.dose,'placeholder="2 g q8h"')}</div>
+      ${a.end?'':`<div class="row"><label class="fld s"><span>Planned days</span><input data-p="abx.${i}.dur" data-rr="1" inputmode="numeric" value="${esc(a.dur||'')}" placeholder="14"></label>
+        <label class="fld"><span>Counted from</span><select data-p="abx.${i}.anch" data-rr="1">${Object.entries(ANCH).map(([k,v])=>`<option value="${k}" ${(a.anch||'start')===k?'selected':''}>${v[0].toUpperCase()+v.slice(1)}</option>`).join('')}</select></label></div>
+        ${inf.dur?(inf.an?`<p class="flag ok">Day ${inf.dOf} of ${inf.dur}${a.anch&&a.anch!=='start'?' counted from '+ANCH[a.anch]+' ('+md(inf.an)+')':''}. Projected last dose <b>${md(inf.endD)}</b>.</p>`:`<p class="flag amb">Set the ${ANCH[a.anch]} date below to project the stop date.</p>`):''}
+        ${(d.mon||[]).length?`<div class="cardsub"><b>Monitor:</b> ${esc(d.mon.join('; '))}</div>`:''}`}
+      <div class="btnrow" style="margin-top:8px">${a.end?`<button class="linkbtn" data-a="resume" data-i="${i}">Resume</button>`:`<button class="linkbtn" data-a="stop" data-i="${i}">Stop today</button>`}<button class="linkbtn danger" data-a="rmabx" data-i="${i}">Remove</button></div></div>`});
+  const q=(abxQ[pt.id]||'').toLowerCase();
+  const matches=q?DRUGS.filter(d=>(d.n+' '+d.c).toLowerCase().includes(q)).slice(0,8):[];
+  h+=`<div class="card"><h3>Add an antimicrobial</h3><div class="chips">${COMMON.map(id=>`<button type="button" class="chip" data-a="addabx" data-v="${id}">${esc(DR[id].n)}</button>`).join('')}</div>
+    <input id="abxq" type="search" placeholder="Search all ${DRUGS.length} drugs" value="${esc(abxQ[pt.id]||'')}" style="margin-top:10px" autocomplete="off">
+    <div class="picklist">${matches.map(d=>`<button type="button" data-a="addabx" data-v="${d.id}">${esc(d.n)}<small>${esc(d.c)}</small></button>`).join('')}</div></div>`;
+  // cultures
+  h+=`<h2>Cultures</h2>`;
+  if(!pt.cx.length)h+=`<p class="sub">No cultures yet.</p>`;
+  pt.cx.forEach((c,i)=>{h+=cxCard(pt,c,i)});
+  h+=`<div class="btnrow"><button class="btn" data-a="addcx">Add culture</button></div>`;
+  // key dates
+  const sug=clearSuggest(pt);
+  h+=`<h2>Key dates</h2><div class="card">
+    <div class="row">${fld('First negative blood culture','clear',pt.clear,'type="date" data-rr="1"')}${fld('Source control date','sc',pt.sc,'type="date" data-rr="1"')}</div>
+    ${sug&&sug!==pt.clear?`<button class="linkbtn" data-a="useclear" data-v="${sug}">Use ${md(sug)} (first negative blood culture after the last positive)</button>`:''}
+    ${pt.clear?`<p class="cardsub">Day ${diff(pt.clear,T)+1} since first negative blood culture.</p>`:''}
+    ${fld('Source control (what was done)','scTxt',pt.scTxt,'placeholder="R IJ line removed; L5 abscess drained by IR"')}</div>`;
+  // bundles
+  const bs=bundles(pt);
+  if(bs.length){h+=`<h2>Checklists</h2>`;bs.forEach(k=>{const b=BUNDLES[k];const n=b.i.filter((x,i)=>pt.bnd[k+'|'+i]).length;
+    h+=`<div class="card"><h3>${esc(b.n)} <span class="x">${n} of ${b.i.length}</span></h3>${b.i.map((x,i)=>`<button type="button" class="chk${pt.bnd[k+'|'+i]?' on':''}" data-a="bnd" data-v="${k}|${i}"><span class="bx">${CHECK}</span><span>${esc(x)}</span></button>`).join('')}</div>`})}
+  h+=ptFooter(pt);
+  return h;
+}
+function cxCard(pt,c,i){
+  const bug=BG[c.org];const stain=c.stain||(bug?bug.s:'');
+  const orgs=BUGS.filter(b=>!c.stain||b.s===c.stain);
+  let h=`<div class="card">
+    <div class="row"><label class="fld"><span>Site</span><select data-p="cx.${i}.site" data-rr="1">${SITES.map(s=>`<option ${c.site===s?'selected':''}>${s}</option>`).join('')}</select></label>
+    ${fld('Collected',`cx.${i}.date`,c.date,'type="date" data-rr="1"')}<label class="fld s"><span>Sets</span><input data-p="cx.${i}.sets" value="${esc(c.sets||'')}" placeholder="2/2"></label></div>
+    <div class="fld"><span>Status</span><div class="seg" data-seg="cx.${i}.st">${[['pend','Pending'],['ngtd','NGTD'],['pos','Positive'],['neg','No growth'],['con','Contaminant']].map(([k,n])=>`<button type="button" data-v="${k}" aria-pressed="${c.st===k}">${n}</button>`).join('')}</div></div>`;
+  if(c.st==='pos'||c.st==='con'||c.st==='pend'){
+    h+=`<div class="fld"><span>Gram stain</span><div class="seg" data-seg="cx.${i}.stain">${STAINS.map(s=>`<button type="button" data-v="${s.id}" aria-pressed="${c.stain===s.id}">${esc(s.n)}</button>`).join('')}</div></div>`;
+    if(c.st!=='pend')h+=`<label class="fld"><span>Organism</span><select data-p="cx.${i}.org" data-rr="1"><option value="">${c.stain?'Not yet identified':'Pick an organism'}</option>${STAINS.filter(s=>orgs.some(b=>b.s===s.id)).map(s=>`<optgroup label="${esc(s.n)}">${orgs.filter(b=>b.s===s.id).map(b=>`<option value="${b.id}" ${c.org===b.id?'selected':''}>${esc(b.n)}</option>`).join('')}</optgroup>`).join('')}<option value="other" ${c.org==='other'?'selected':''}>Other (type it)</option></select></label>`;
+    if(c.org==='other')h+=fld('Organism name',`cx.${i}.orgTxt`,c.orgTxt||'','placeholder="Pasteurella multocida"');
+  }
+  // stain card when no organism yet
+  if(c.stain&&!bug&&(c.st==='pos'||c.st==='pend')){const s=ST[c.stain];
+    h+=`<div class="bug"><span class="st">${esc(s.n)}</span><dl><dt>Think</dt><dd>${esc(s.think)}</dd><dt>While waiting</dt><dd>${esc(s.start)}</dd></dl></div>`}
+  if(bug){
+    h+=`<div class="bug"><span class="stainhd">${esc(ST[bug.s].n)}</span>
+      <dl><dt>Gram stain</dt><dd>${esc(bug.stain)}</dd><dt>Lab</dt><dd>${esc(bug.lab)}</dd><dt>First line</dt><dd><b>${esc(bug.first)}</b></dd></dl>
+      ${bug.p&&bug.p.length?`<ul>${bug.p.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+      <a class="linkbtn" href="#ref/bug/${bug.id}">Full bug card ›</a></div>`;
+    if(c.st==='pos'){const v=coverage(pt,c);
+      if(!pt.abx.some(a=>!a.end))h+=`<p class="flag amb">No active antimicrobials. First line: ${esc(bug.first)}.</p>`;
+      else if(v.best==='y')h+=`<p class="flag ok"><b>Covered</b> by ${esc(v.by.y.join(', '))}.${v.by.p.length?' '+esc(v.by.p.join(', '))+' active but not preferred.':''}</p>`;
+      else if(v.best==='p')h+=`<p class="flag amb"><b>Active but not preferred:</b> ${esc(v.by.p.join(', '))}. Preferred: ${esc(bug.first)}.</p>`;
+      else if(v.best==='v')h+=`<p class="flag amb"><b>Depends on susceptibilities:</b> ${esc(v.by.v.join(', '))}. Enter results below.</p>`;
+      else h+=`<p class="flag warn"><b>Not covered</b> by the current regimen. First line: ${esc(bug.first)}.</p>`;}
+    const panel=[...new Set([...(PANEL[bug.s]||[]),...active(pt).map(a=>a.d),...Object.keys(c.susc||{})])].filter(id=>DR[id]);
+    if(panel.length&&c.st==='pos'){const nS=Object.keys(c.susc||{}).length;
+      h+=`<details class="dd" ${nS?'open':''}><summary>Susceptibilities${nS?' ('+nS+')':''}</summary>${panel.map(id=>{const v=(c.susc||{})[id]||'';
+        return`<div class="sus"><span>${esc(DR[id].n)}</span><div class="seg" data-seg="sus.${i}.${id}">${['S','I','R'].map(x=>`<button type="button" data-v="${x}" aria-pressed="${v===x}">${x}</button>`).join('')}</div></div>`}).join('')}</details>`;}
+  }
+  h+=`<div class="btnrow" style="margin-top:8px;justify-content:flex-end"><button class="linkbtn danger" data-a="rmcx" data-i="${i}">Remove culture</button></div></div>`;
+  return h;
+}
+function vNote(pt){
+  const ref=noteDate[pt.id]||today();const d=pt.days[ref]||{};
+  const dp=k=>`days.${ref}.${k}`;
+  let h=`<div class="card"><div class="btnrow" style="justify-content:space-between"><button class="btn sm" data-a="nday" data-v="-1" aria-label="Previous day">‹</button>
+    <input type="date" id="ndate" value="${ref}" style="flex:1;max-width:200px;text-align:center"><button class="btn sm" data-a="nday" data-v="1" aria-label="Next day">›</button></div>
+    ${ref!==today()?`<p class="hint" style="text-align:center"><button class="linkbtn" data-a="ntoday">Back to today</button></p>`:''}</div>
+  <div class="card"><h3>Today</h3>${area('Subjective / overnight','x',d.s||'',2,'Afebrile overnight, back pain improving').replace('data-p="x"',`data-p="${dp('s')}"`)}
+    <div class="row">${[['tmax','Tmax','38.1'],['wbc','WBC','11.2'],['cr','Cr','1.0']].map(([k,n,ph])=>`<label class="fld s"><span>${n}</span><input data-p="${dp(k)}" value="${esc(d[k]||'')}" inputmode="decimal" placeholder="${ph}"></label>`).join('')}</div>
+    <div class="row">${[['crp','CRP','42'],['esr','ESR','65']].map(([k,n,ph])=>`<label class="fld s"><span>${n}</span><input data-p="${dp(k)}" value="${esc(d[k]||'')}" inputmode="decimal" placeholder="${ph}"></label>`).join('')}</div>
+    ${[['tmax','Tmax'],['wbc','WBC'],['cr','Cr'],['crp','CRP']].map(([k,n])=>{const t=trend(pt,k,ref);return t&&t.includes('→')?`<div class="trend">${n}: ${esc(t)}</div>`:''}).join('')}
+    <label class="fld"><span>Focused exam</span><textarea data-p="${dp('exam')}" rows="2" placeholder="No new murmur. Spine nontender. R IJ site clean.">${esc(d.exam||'')}</textarea></label>
+    ${fld('Lines and devices','devices',pt.devices,'placeholder="R IJ CVC removed 10/9; R arm PICC planned"')}
+  </div>
+  <div class="card"><h3>Assessment</h3>${area('One-liner','oneliner',pt.oneliner,2,`${pt.age||'54'} y/o ${pt.sex||'male'} with MSSA bacteremia complicated by L4-5 vertebral osteomyelitis, source likely R IJ line`)}
+    <label class="fld"><span>Additional plan items (one per line)</span><textarea data-p="${dp('plan')}" rows="3" placeholder="Follow up TEE&#10;Repeat blood cultures pending">${esc(d.plan||'')}</textarea></label></div>
+  <div class="card"><button type="button" class="chk${pt.opat.on?' on':''}" data-a="opat" style="border:0;padding-top:0"><span class="bx">${CHECK}</span><span><b>Discharge on IV antibiotics (OPAT)</b></span></button>
+    ${pt.opat.on?`${fld('Access','opat.line',pt.opat.line,'placeholder="single-lumen PICC, R arm"')}
+      ${fld('Weekly labs','opat.labs',pt.opat.labs,'placeholder="CBC with differential and BMP weekly"')}<button class="linkbtn" data-a="opatlabs">Fill from current drugs</button>
+      ${fld('Stop date','opat.stop',pt.opat.stop,'type="date"')}${(()=>{const e=active(pt).map(a=>abxInfo(pt,a).endD).filter(Boolean).sort().pop();return e&&e!==pt.opat.stop?`<button class="linkbtn" data-a="opatstop" data-v="${e}">Use projected end ${md(e)}</button>`:''})()}
+      ${fld('ID clinic follow-up','opat.fu',pt.opat.fu,'placeholder="ID clinic in 2 weeks"')}`:''}</div>`;
+  const mon=monitoring(pt);
+  const gaps=posCultures(pt).map(c=>coverage(pt,c)).filter(v=>v&&active(pt).length&&v.best==='n');
+  if(gaps.length)h+=gaps.map(v=>`<p class="flag warn"><b>${esc(v.bug.n)}</b> is not covered by the current regimen.</p>`).join('');
+  if(mon.length)h+=`<div class="card"><h3>Monitoring for current drugs</h3><ul class="tips" style="margin:0;padding-left:18px;font-size:.92rem">${mon.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`;
+  h+=`<h2>Progress note</h2><pre class="out" id="out">${esc(noteText(pt,ref))}</pre>
+  <div class="btnrow"><button class="btn primary" data-a="copy" data-v="note">Copy note</button></div>${ptFooter(pt)}`;
+  return h;
+}
+
+/* ---------- reference ---------- */
+function lvRows(map,linkFn){
+  return `<div class="lv">${['y','p','v'].filter(k=>map[k]&&map[k].length).map(k=>`<div class="lvrow"><span class="k ${k}">${{y:'Covers',p:'Not preferred',v:'Variable'}[k]}</span><span class="vals">${map[k].map(linkFn).join(', ')}</span></div>`).join('')}</div>`;
+}
+function renderRef(kind,id){
+  hd.innerHTML=`${HOME}<button class="back" data-a="refback" aria-label="Back">‹</button><h1>Bugs &amp; drugs</h1>`;
+  if(kind==='bug'&&BG[id]){tabsEl.innerHTML='';const b=BG[id];document.title=b.n+' · Spectrum';
+    const map={y:[],p:[],v:[]};DRUGS.forEach(d=>{const l=lvl(d.id,b);if(map[l])map[l].push(d)});
+    app.innerHTML=`<div class="card"><span class="stainhd">${esc(ST[b.s].n)}</span><h2 style="margin:8px 0 4px;font-size:1.2rem">${esc(b.n)}</h2>
+      <div class="bug" style="border:0;padding:0;background:none"><dl><dt>Gram stain</dt><dd>${esc(b.stain)}</dd><dt>Lab</dt><dd>${esc(b.lab)}</dd><dt>Causes</dt><dd>${esc(b.dz)}</dd><dt>First line</dt><dd><b>${esc(b.first)}</b></dd></dl></div>
+      ${b.p&&b.p.length?`<ul class="tips" style="padding-left:18px;margin:10px 0 0">${b.p.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>
+      <div class="card"><h3>Drugs with activity <span class="x">(${esc(GROUPS[b.g])})</span></h3>${map.y.length+map.p.length+map.v.length?lvRows(map,d=>`<a href="#ref/drug/${d.id}">${esc(d.n)}</a>`):'<p class="sub">None of the listed drugs: see first-line therapy above.</p>'}
+      <p class="hint">Variable means it depends on the isolate: go by susceptibilities.</p></div>
+      ${b.b?`<div class="card"><h3>${esc(BUNDLES[b.b].n)} checklist${b.bo?' <span class="x">(blood isolates)</span>':''}</h3><ul class="tips" style="padding-left:18px;margin:0">${BUNDLES[b.b].i.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
+      <p class="foot">Study aid. Confirm against susceptibilities, your local antibiogram, and pharmacy.</p>`;return}
+  if(kind==='drug'&&DR[id]){tabsEl.innerHTML='';const d=DR[id];document.title=d.n+' · Spectrum';
+    const map={y:[],p:[],v:[]};Object.entries(d.cm).forEach(([g,l])=>{if(map[l])map[l].push(g)});
+    const miss=Object.keys(GROUPS).filter(g=>!d.cm[g]&&KEYMISS.includes(g));
+    const bugs=BUGS.filter(b=>lvl(d.id,b)==='y');
+    app.innerHTML=`<div class="card"><span class="stainhd">${esc(d.c)}</span><h2 style="margin:8px 0 4px;font-size:1.2rem">${esc(d.n)}</h2><p class="sub">Route: ${d.r}</p>
+      ${lvRows(map,g=>esc(GROUPS[g]))}${miss.length?`<div class="lvrow" style="margin-top:6px"><span class="k n">Misses</span><span class="vals">${esc(miss.map(g=>GROUPS[g]).join(', '))}</span></div>`:''}</div>
+      ${d.mon&&d.mon.length?`<div class="card"><h3>Monitor</h3><ul class="tips" style="padding-left:18px;margin:0">${d.mon.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
+      ${d.p&&d.p.length?`<div class="card"><h3>Pearls</h3><ul class="tips" style="padding-left:18px;margin:0">${d.p.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
+      ${bugs.length?`<div class="card"><h3>Reliable for</h3>${bugs.map(b=>`<a class="refitem" href="#ref/bug/${b.id}"><b>${esc(b.n)}</b><span>${esc(ST[b.s].n)}</span></a>`).join('')}</div>`:''}
+      <p class="foot">No doses here on purpose: dose with pharmacy for weight, renal function, and site of infection.</p>`;return}
+  document.title='Bugs & drugs · Spectrum';
+  tabsEl.innerHTML=`<nav class="tabs">${[['bugs','Bugs'],['drugs','Drugs'],['stain','Gram stain'],['grid','Coverage grid']].map(([k,n])=>`<a href="#ref" data-a="reftab" data-v="${k}" ${refTab===k?'aria-current="page"':''}>${n}</a>`).join('')}</nav>`;
+  const q=refQ.toLowerCase();let h='';
+  if(refTab!=='stain'&&refTab!=='grid')h+=`<input id="refq" type="search" placeholder="Search ${refTab==='bugs'?'organisms':'drugs or classes'}" value="${esc(refQ)}" autocomplete="off" style="margin:4px 0 8px">`;
+  if(refTab==='bugs'){
+    STAINS.forEach(s=>{const L=BUGS.filter(b=>b.s===s.id&&(!q||(b.n+' '+b.dz+' '+GROUPS[b.g]).toLowerCase().includes(q)));if(!L.length)return;
+      h+=`<h2 class="sec">${esc(s.n)}</h2>`+L.map(b=>`<a class="refitem" href="#ref/bug/${b.id}"><b>${esc(b.n)}</b><span>${esc(b.first)}</span></a>`).join('')});
+  }else if(refTab==='drugs'){
+    const cls=[...new Set(DRUGS.map(d=>d.c))];
+    cls.forEach(c=>{const L=DRUGS.filter(d=>d.c===c&&(!q||(d.n+' '+d.c).toLowerCase().includes(q)));if(!L.length)return;
+      h+=`<h2 class="sec">${esc(c)}</h2>`+L.map(d=>`<a class="refitem" href="#ref/drug/${d.id}"><b>${esc(d.n)}</b><span>${esc(Object.entries(d.cm).filter(([g,l])=>l==='y').map(([g])=>GROUPS[g]).join(', '))}</span></a>`).join('')});
+  }else if(refTab==='stain'){
+    h+=`<p class="sub" style="margin:6px 0 10px">What a Gram stain or early culture report usually means, and what to start while you wait.</p>`;
+    STAINS.forEach(s=>{const L=BUGS.filter(b=>b.s===s.id);h+=`<div class="card"><h3>${esc(s.n)}</h3><div class="bug" style="margin-top:0"><dl><dt>Think</dt><dd>${esc(s.think)}</dd><dt>Start</dt><dd>${esc(s.start)}</dd></dl></div>
+      <div class="chips">${L.map(b=>`<a class="chip" style="text-decoration:none" href="#ref/bug/${b.id}">${esc(b.n)}</a>`).join('')}</div></div>`});
+  }else{
+    const gsel=refQ&&GROUPS[refQ]?refQ:'MRSA';
+    h+=`<p class="sub" style="margin:6px 0 10px">Pick a target to see what covers it.</p><div class="chips">${Object.entries(GROUPS).map(([g,n])=>`<button type="button" class="chip${g===gsel?' on':''}" data-a="grid" data-v="${g}">${esc(n)}</button>`).join('')}</div>`;
+    const rows=DRUGS.map(d=>[d,d.cm[gsel]||'n']).filter(([d,l])=>l!=='n').sort((a,b)=>RANK[b[1]]-RANK[a[1]]);
+    h+=`<div class="card" style="margin-top:12px"><h3>${esc(GROUPS[gsel])}</h3>${rows.length?`<table class="mtx">${rows.map(([d,l])=>`<tr><td><a href="#ref/drug/${d.id}" style="color:inherit">${esc(d.n)}</a></td><td><span class="tag ${l==='y'?'ok':'amb'}">${LV[l]}</span></td></tr>`).join('')}</table>`:'<p class="sub">No listed drug covers this: see the organism card for first-line therapy.</p>'}</div>`;
+  }
+  if(!h.includes('refitem')&&refTab!=='stain'&&refTab!=='grid')h+=`<div class="empty">Nothing matches “${esc(refQ)}”.</div>`;
+  h+=`<p class="foot">Study aid. Confirm against susceptibilities, your local antibiogram, and pharmacy.</p>`;
+  app.innerHTML=h;
+}
+
+/* ================= EVENTS ================= */
+function curPt(){const h=parseHash();return h[0]==='p'?P(h[1]):null}
+function setPath(o,path,v){const k=path.split('.');let x=o;for(let i=0;i<k.length-1;i++){if(x[k[i]]==null)x[k[i]]={};x=x[k[i]]}x[k[k.length-1]]=v}
+function getPath(o,path){return path.split('.').reduce((x,k)=>x==null?x:x[k],o)}
+function refreshOut(){const pt=curPt();if(!pt)return;const o=document.getElementById('out');if(!o)return;const tab=parseHash()[2]||'hpi';o.textContent=tab==='note'?noteText(pt,noteDate[pt.id]||today()):hpiText(pt)}
+
+app.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='refq'){refQ=t.value;const pos=t.selectionStart;render(true);const q=document.getElementById('refq');q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}return}
+  const pt=curPt();if(!pt)return;
+  if(t.id==='abxq'){abxQ[pt.id]=t.value;const pos=t.selectionStart;render(true);const q=document.getElementById('abxq');q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}return}
+  if(t.id==='ndate'){if(t.value){noteDate[pt.id]=t.value;render(true)}return}
+  if(t.dataset.p){
+    if(t.dataset.p.startsWith('days.')){const ref=t.dataset.p.split('.')[1];if(!pt.days[ref])pt.days[ref]={}}
+    setPath(pt,t.dataset.p,t.value);save();
+    if(t.dataset.rr){if(e.type==='input'&&(t.tagName==='INPUT'&&t.type!=='date'))return refreshOut();render(true);return}
+    if(['bed'].includes(t.dataset.p)){const h1=hd.querySelector('h1');if(h1)h1.firstChild.textContent=t.value?'Bed '+t.value:'New consult'}
+    refreshOut();
+  }
+});
+app.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.rr&&curPt())render(true)});
+
+app.addEventListener('click',async e=>{
+  const pt=curPt();
+  const segb=e.target.closest('.seg button');
+  if(segb&&pt){const k=segb.parentElement.dataset.seg,v=segb.dataset.v;
+    if(k.startsWith('sus.')){const[,i,id]=k.split('.');const c=pt.cx[+i];c.susc=c.susc||{};if(c.susc[id]===v)delete c.susc[id];else c.susc[id]=v}
+    else{const cur=getPath(pt,k);setPath(pt,k,cur===v?'':v);
+      if(/^cx\.\d+\.stain$/.test(k)){const c=pt.cx[+k.split('.')[1]];if(c.org&&BG[c.org]&&BG[c.org].s!==c.stain)c.org=''}}
+    save();render(true);return}
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
+  if(a==='new'){const p=newPt();S.pts.unshift(p);save();location.hash='p/'+p.id+'/hpi';return}
+  if(a==='reftab'){e.preventDefault();refTab=v;refQ='';if(location.hash!=='#ref')location.hash='ref';else render();return}
+  if(a==='grid'){refQ=v;render(true);return}
+  if(!pt)return;
+  if(a==='tri'){const set=b.dataset.s,k=b.dataset.k;const m=set==='exp'?pt.exp:(pt.pert[set]=pt.pert[set]||{});m[k]=m[k]==='p'?'n':m[k]==='n'?undefined:'p';if(!m[k])delete m[k];b.className='chip'+(m[k]?' '+m[k]:'');save();refreshOut();return}
+  if(a==='multi'){const arr=getPath(pt,b.dataset.p);const i=arr.indexOf(v);if(i>=0)arr.splice(i,1);else arr.push(v);b.classList.toggle('on');save();refreshOut();return}
+  if(a==='reason'){pt.reason=pt.reason===v?'':v;save();render(true);return}
+  if(a==='allergy'){const cur=pt.allergy.trim();pt.allergy=v==='None known'?'none known':cur&&!/^none/i.test(cur)?cur+', '+v.toLowerCase()+' ()':v.toLowerCase()+' ()';save();render(true);const inp=app.querySelector('[data-p="allergy"]');if(inp&&v!=='None known'){inp.focus();const p=inp.value.length-1;inp.setSelectionRange(p,p)}return}
+  if(a==='incl'){pt.inclMicro=!pt.inclMicro;b.classList.toggle('on',pt.inclMicro);save();refreshOut();return}
+  if(a==='addabx'){pt.abx.push({id:uid(),d:v,start:today(),end:'',dur:'',anch:'start',dose:''});abxQ[pt.id]='';save();render(true);toast(DR[v].n+' added.');return}
+  if(a==='stop'){pt.abx[+b.dataset.i].end=today();save();render(true);return}
+  if(a==='resume'){pt.abx[+b.dataset.i].end='';save();render(true);return}
+  if(a==='rmabx'){if(confirm('Remove '+DR[pt.abx[+b.dataset.i].d].n+'? (Use “Stop today” to keep it in the history.)')){pt.abx.splice(+b.dataset.i,1);save();render(true)}return}
+  if(a==='addcx'){pt.cx.push({id:uid(),site:'Blood',date:today(),sets:'',st:'pend',stain:'',org:'',orgTxt:'',susc:{}});save();render(true);return}
+  if(a==='rmcx'){if(confirm('Remove this culture?')){pt.cx.splice(+b.dataset.i,1);save();render(true)}return}
+  if(a==='useclear'){pt.clear=v;save();render(true);return}
+  if(a==='bnd'){pt.bnd[v]=!pt.bnd[v];if(!pt.bnd[v])delete pt.bnd[v];save();render(true);return}
+  if(a==='nday'){noteDate[pt.id]=addDays(noteDate[pt.id]||today(),+v);render(true);return}
+  if(a==='ntoday'){delete noteDate[pt.id];render(true);return}
+  if(a==='opat'){pt.opat.on=!pt.opat.on;save();render(true);return}
+  if(a==='opatlabs'){pt.opat.labs=opatLabs(pt);save();render(true);return}
+  if(a==='opatstop'){pt.opat.stop=v;save();render(true);return}
+  if(a==='copy'){const t=v==='note'?noteText(pt,noteDate[pt.id]||today()):hpiText(pt);const ok=await copyText(t);toast(ok?(v==='note'?'Note copied.':'HPI copied.'):'Couldn’t copy on this device.');return}
+  if(a==='signoff'){pt.off=!pt.off;save();toast(pt.off?'Signed off.':'Moved back to active.');location.hash='';return}
+  if(a==='delpt'){if(confirm('Delete this patient and everything entered for them?')){S.pts=S.pts.filter(p=>p.id!==pt.id);save();location.hash=''}return}
+});
+hd.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;
+  if(b.dataset.a==='home'){location.hash=''}
+  if(b.dataset.a==='refback'){let nav=false;try{nav=!!sessionStorage.getItem('sp.nav')}catch(_){}if(nav)history.back();else location.hash=''}});
+tabsEl.addEventListener('click',e=>{const b=e.target.closest('[data-a="reftab"]');if(!b)return;e.preventDefault();refTab=b.dataset.v;refQ='';render()});
+app.addEventListener('toggle',e=>{if(e.target.id==='offd')showOff=e.target.open},true);
+app.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='search')e.target.blur()});
+
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();return ok}}
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2200)}
+window.addEventListener('hashchange',()=>{try{sessionStorage.setItem('sp.nav','1')}catch(_){}render()});
+render();
+</script>
+</body>
+</html>
