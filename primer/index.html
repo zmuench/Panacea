@@ -126,6 +126,17 @@ details.unit[open]>summary{border-bottom:1px solid var(--line)}
 .foot ul{padding-left:18px;margin:6px 0}
 .toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
 .toast.on{opacity:1}
+.rdh{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.reads li{align-items:center}
+.reads button.rck{all:unset;flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);display:grid;place-items:center;cursor:pointer;box-sizing:border-box}
+.reads button.rck:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.reads button.rck svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.reads li.rd button.rck{background:var(--ok);border-color:var(--ok)}
+.reads li.rd button.rck svg{opacity:1}
+.reads li.rd .ch,.reads li.rd .bk{opacity:.55}
+.reads .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.reads .tx .bk{min-width:0;font-size:.78rem;letter-spacing:.02em}
+.reads li.rd .ch{text-decoration:line-through}
 .reads button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:baseline;width:100%;cursor:pointer}
 .reads li.lk{border-color:var(--accent)}
 .reads li.lk:hover{background:var(--accent-soft)}
@@ -1009,15 +1020,18 @@ const PAGES={"O":{"pages":4672,"ch":{"1":[103,123],"2":[124,145],"3":[146,171],"
 
 /* ---------- state: completions and notes, per device, optionally synced ---------- */
 const KEY='panacea.primer.v1';
-let S={done:{},notes:{}};   // done[id]={on:bool,day:'YYYY-MM-DD',ts}; notes[id]={t,ts}
-try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.done=r.done||{};S.notes=r.notes||{}}}catch(e){}
-let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}scheduleSync()},250)}
+let S={done:{},notes:{},read:{}};   // done[id]={on:bool,day:'YYYY-MM-DD',ts}; notes[id]={t,ts}
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.done=r.done||{};S.notes=r.notes||{};S.read=r.read||{}}}catch(e){}
+let saveT=null;function writeNow(){clearTimeout(saveT);saveT=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}scheduleSync()}
+function save(){clearTimeout(saveT);saveT=setTimeout(writeNow,250)}
+window.addEventListener('pagehide',()=>{if(saveT)writeNow()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)writeNow()});
 
 const pad=n=>String(n).padStart(2,'0');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
 const fmtDay=s=>new Date(s+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isDone=id=>!!(S.done[id]&&S.done[id].on);
+const isRead=(l,c)=>!!(S.read[l+':'+c]&&S.read[l+':'+c].on);
 const IDX=Object.fromEntries(L.map((l,i)=>[l.id,i]));
 const unitOf=u=>UNITS.find(x=>x.n===u);
 
@@ -1052,11 +1066,11 @@ function scheduleSync(ms=1200){if(!SY)return;clearTimeout(syncT);syncT=setTimeou
 async function syncNow(){if(!SY)return;clearTimeout(syncT);if(syncing){syncAgain=true;return}syncing=true;setSync('syncing');
   try{for(let attempt=0;;attempt++){
       const rem=await remoteGet();
-      if(rem.doc){const nd=mergeMap(S.done,rem.doc.done),nn=mergeMap(S.notes,rem.doc.notes);
-        const changed=JSON.stringify(nd)!==JSON.stringify(S.done)||JSON.stringify(nn)!==JSON.stringify(S.notes);
-        S.done=nd;S.notes=nn;if(changed){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}softRender()}}
-      const out={app:'primer',version:1,updated:new Date().toISOString(),done:S.done,notes:S.notes};
-      if(rem.doc&&JSON.stringify(rem.doc.done)===JSON.stringify(out.done)&&JSON.stringify(rem.doc.notes||{})===JSON.stringify(out.notes))break;
+      if(rem.doc){const nd=mergeMap(S.done,rem.doc.done),nn=mergeMap(S.notes,rem.doc.notes),nr=mergeMap(S.read,rem.doc.read);
+        const changed=JSON.stringify(nd)!==JSON.stringify(S.done)||JSON.stringify(nn)!==JSON.stringify(S.notes)||JSON.stringify(nr)!==JSON.stringify(S.read);
+        S.done=nd;S.notes=nn;S.read=nr;if(changed){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}softRender()}}
+      const out={app:'primer',version:1,updated:new Date().toISOString(),done:S.done,notes:S.notes,read:S.read};
+      if(rem.doc&&JSON.stringify(rem.doc.done)===JSON.stringify(out.done)&&JSON.stringify(rem.doc.notes||{})===JSON.stringify(out.notes)&&JSON.stringify(rem.doc.read||{})===JSON.stringify(out.read))break;
       try{await gh('/contents/'+SYNC_FILE,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Primer sync',content:b64enc(JSON.stringify(out)),...(rem.sha?{sha:rem.sha}:{})})});break}
       catch(e){if((e.status===409||e.status===422)&&attempt<2)continue;throw e}}
     setSync('ok')}
@@ -1111,7 +1125,8 @@ function lessonBody(l,isToday){
   const list=a=>`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
   return `<div class="eyebrow">${isToday?'Today · ':''}Day ${i+1} · Unit ${u.n}: ${esc(u.t)}</div>
   <h2 class="lt">${esc(l.t)}</h2>
-  <ul class="reads">${l.r.map(c=>{const x=readLabel(c),lk=!!BM[c[0]];return `<li class="${lk?'lk':'nl'}"><button data-read="${c}" data-from="${l.id}"><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span><span class="op">${lk?'Open':'Link PDF'}</span></button></li>`}).join('')}</ul>
+  <div class="rdh"><span>Today’s reading</span><span id="rdct">${l.r.filter(c=>isRead(l.id,c)).length} of ${l.r.length} read</span></div>
+  <ul class="reads">${l.r.map(c=>{const x=readLabel(c),lk=!!BM[c[0]],rd=isRead(l.id,c);return `<li class="${lk?'lk':'nl'}${rd?' rd':''}"><button class="rck" data-a="rtick" data-l="${l.id}" data-c="${c}" role="checkbox" aria-checked="${rd}" aria-label="Mark ${esc(x.bk)} ${esc(x.ch)} as read"><span>${CK}</span></button><button data-read="${c}" data-from="${l.id}"><span class="tx"><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span></span><span class="op">${lk?'Open':'Link PDF'}</span></button></li>`}).join('')}</ul>
   <div class="bl"><b>Bottom line</b>${esc(l.bl)}</div>
   <section class="sec"><h3>${IC.ord}What to order</h3>${list(l.ord)}</section>
   <section class="sec"><h3>${IC.act}At the bedside</h3>${list(l.act)}</section>
@@ -1226,6 +1241,10 @@ document.addEventListener('click',e=>{
     if(BM[c[0]])location.hash='read/'+c;else{sessionStorage.setItem('primer.booksBack','l/'+rd.dataset.from);location.hash='books'}return}
   const b=e.target.closest('[data-a]');if(!b)return;
   if(b.dataset.a==='unlink'){unlinkBook(b.dataset.b);return}
+  if(b.dataset.a==='rtick'){const key=b.dataset.l+':'+b.dataset.c,on=!isRead(b.dataset.l,b.dataset.c);S.read[key]={on,ts:Date.now()};save();
+    const li=b.closest('li');li.classList.toggle('rd',on);b.setAttribute('aria-checked',on);
+    const l=L[IDX[b.dataset.l]],n=l.r.filter(c=>isRead(l.id,c)).length,ct=document.getElementById('rdct');if(ct)ct.textContent=`${n} of ${l.r.length} read`;
+    if(on&&n===l.r.length&&!isDone(l.id))toast('All readings done. Complete the lesson when you’re ready.');return}
   if(b.dataset.a==='reveal'){const q=document.getElementById('qz');q.classList.toggle('open');b.textContent=q.classList.contains('open')?'Hide answer':'Show answer'}
   else if(b.dataset.a==='done'){const id=b.dataset.id;const wasToday=route().v==='today';S.done[id]={on:true,day:today(),ts:Date.now()};save();
     toast('Lesson complete.');if(wasToday){location.hash='';render()}else render(true)}
