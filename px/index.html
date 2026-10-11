@@ -136,7 +136,7 @@ const I={};
 function F(id,sys,label,nl,ab,side){I[id]={id,sys,label,nl,ab:ab?ab.split('|'):[],side:!!side}}
 
 /* General & vitals */
-F("gen_app","gen","Appearance","Well-appearing, in no acute distress.","Ill-appearing|Toxic-appearing|In moderate distress|In severe distress|Diaphoretic|Uncomfortable, unable to find a position of comfort|Cachectic|Lethargic");
+F("gen_app","gen","Appearance","Well-appearing, in no acute distress.","Ill-appearing|Toxic-appearing|In moderate distress|In severe distress|Diaphoretic|Uncomfortable, unable to find a position of comfort|Cachectic|Lethargic|Levine sign (clenched fist over the chest)");
 F("gen_peds","gen","Appearance (child)","Well-appearing, interactive, and consolable.","Ill-appearing|Lethargic|Irritable and inconsolable|Poor eye contact|Weak cry|Hypotonic");
 F("gen_hyd","gen","Hydration","Moist mucous membranes; capillary refill under 2 seconds.","Dry mucous membranes|Capillary refill 3–4 seconds|Capillary refill over 4 seconds|Decreased skin turgor|Sunken eyes|No tears");
 F("gen_rass","gen","Sedation (RASS)","RASS 0, alert and calm.","RASS +1, restless|RASS +2, agitated|RASS +3, very agitated|RASS +4, combative|RASS −1, drowsy|RASS −2, light sedation|RASS −3, moderate sedation|RASS −4, deep sedation|RASS −5, unarousable");
@@ -145,7 +145,7 @@ F("vit_ortho","vit","Orthostatic vital signs","Orthostatic vital signs negative.
 F("vit_bparms","vit","BP in both arms","Blood pressure symmetric in both arms.","Systolic difference over 20 mmHg between arms");
 F("vit_spo2","vit","Oxygen saturation","SpO₂ normal on room air.","Hypoxemic on room air|On supplemental oxygen|On high-flow oxygen");
 F("vit_temp","vit","Temperature","Afebrile.","Febrile|Hypothermic|Hyperthermic (core)");
-F("vit_hrbp","vit","Heart rate and blood pressure","Heart rate and blood pressure within normal limits.","Tachycardic|Bradycardic|Hypotensive|Hypertensive");
+F("vit_hrbp","vit","Heart rate and blood pressure","Heart rate and blood pressure within normal limits.","Tachycardic|Bradycardic|Hypotensive|Hypertensive|Cushing triad (hypertension, bradycardia, irregular respirations)|Shock index over 1");
 F("vit_glu","vit","Point-of-care glucose","Point-of-care glucose normal.","Hypoglycemic|Hyperglycemic");
 
 /* HEENT */
@@ -155,7 +155,7 @@ F("head_face","heent","Facial bones","Facial bones stable and non-tender; normal
 F("head_font","heent","Fontanelle (infant)","Anterior fontanelle open, soft, and flat.","Bulging fontanelle|Sunken fontanelle|Fontanelle closed");
 F("head_ta","heent","Temporal arteries","Temporal arteries non-tender with normal pulses.","Temporal artery tenderness|Diminished temporal pulse|Nodular temporal artery",1);
 F("head_sinus","heent","Sinuses","No sinus tenderness.","Maxillary sinus tenderness|Frontal sinus tenderness",1);
-F("eye_pupils","heent","Pupils","Pupils equal, round, and reactive to light.","Anisocoria|Sluggishly reactive|Nonreactive|Pinpoint|Dilated|Afferent pupillary defect|Teardrop pupil",1);
+F("eye_pupils","heent","Pupils","Pupils equal, round, and reactive to light.","Anisocoria|Sluggishly reactive|Nonreactive|Pinpoint|Dilated|Afferent pupillary defect (Marcus Gunn pupil)|Horner syndrome (ptosis, miosis, anhidrosis)|Teardrop pupil",1);
 F("eye_eom","heent","Extraocular movements","Extraocular movements intact without pain or diplopia.","Restricted upgaze|Restricted lateral gaze|Pain with eye movement|Diplopia|Gaze deviation",1);
 F("eye_va","heent","Visual acuity","Visual acuity at baseline in each eye.","Decreased acuity|Counts fingers only|Hand motion only|Light perception only|No light perception",1);
 F("eye_vf","heent","Visual fields","Visual fields full to confrontation.","Homonymous hemianopia|Quadrantanopia|Monocular field cut",1);
@@ -163,15 +163,15 @@ F("eye_conj","heent","Conjunctiva and sclera","Conjunctivae clear; sclerae anict
 F("eye_fluor","heent","Fluorescein","No fluorescein uptake.","Corneal abrasion|Dendritic uptake|Linear vertical abrasions|Positive Seidel sign",1);
 F("eye_iop","heent","Intraocular pressure","Intraocular pressure normal bilaterally.","Elevated intraocular pressure|Deferred (possible open globe)",1);
 F("eye_ant","heent","Anterior chamber","Anterior chambers deep and quiet; no hyphema or hypopyon.","Hyphema|Hypopyon|Shallow anterior chamber|Cell and flare",1);
-F("eye_lid","heent","Lids and orbit","No periorbital swelling or erythema; no foreign body on lid eversion.","Periorbital erythema|Periorbital swelling|Proptosis|Foreign body under the lid|Chalazion or hordeolum",1);
+F("eye_lid","heent","Lids and orbit","No periorbital swelling or erythema; no foreign body on lid eversion.","Periorbital erythema|Periorbital swelling|Proptosis|Foreign body under the lid|Chalazion or hordeolum|Lid lag|Lid retraction",1);
 F("eye_fundus","heent","Fundi","No papilledema.","Papilledema|Retinal hemorrhages|Unable to visualize the fundi");
 F("ent_tm","heent","Tympanic membranes","Tympanic membranes clear with normal landmarks.","Erythematous TM|Bulging TM|Middle ear effusion|TM perforation|Hemotympanum",1);
 F("ent_canal","heent","External canals","External canals clear without swelling or discharge; no tragal tenderness.","Canal edema|Otorrhea|Cerumen impaction|Foreign body in the canal|Tragal tenderness",1);
 F("ent_mast","heent","Mastoid","No mastoid tenderness or swelling.","Mastoid tenderness|Mastoid swelling|Protruding auricle",1);
 F("ent_hear","heent","Hearing","Hearing grossly intact.","Decreased hearing",1);
-F("ent_nose","heent","Nose","Nares patent; no septal hematoma or active bleeding.","Anterior bleeding site seen|Active bleeding, source not seen|Septal hematoma|Septal deviation|Mucosal edema|Purulent discharge|Clear rhinorrhea",1);
+F("ent_nose","heent","Nose","Nares patent; no septal hematoma or active bleeding.","Anterior bleeding site seen|Active bleeding, source not seen|Septal hematoma|Septal deviation|Mucosal edema|Purulent discharge|Clear rhinorrhea|Vesicles on the nasal tip (Hutchinson sign)",1);
 F("ent_post","heent","Posterior pharynx (blood)","No blood in the posterior pharynx.","Blood in the posterior pharynx|Active posterior bleeding");
-F("ent_phar","heent","Oropharynx","Oropharynx clear; tonsils symmetric without exudate; uvula midline.","Pharyngeal erythema|Tonsillar exudate|Tonsillar enlargement|Tonsillar asymmetry|Uvular deviation|Soft palate bulging|Oral vesicles or ulcers");
+F("ent_phar","heent","Oropharynx","Oropharynx clear; tonsils symmetric without exudate; uvula midline.","Pharyngeal erythema|Tonsillar exudate|Tonsillar enlargement|Tonsillar asymmetry|Uvular deviation|Soft palate bulging|Oral vesicles or ulcers|Palatal petechiae|Koplik spots|Strawberry tongue");
 F("ent_mm","heent","Mucous membranes","Moist mucous membranes.","Dry mucous membranes");
 F("ent_voice","heent","Voice and airway","Normal voice; no stridor; handling secretions.","Muffled (hot potato) voice|Hoarseness|Stridor|Drooling|Tripod or sniffing position");
 F("ent_trismus","heent","Trismus","No trismus.","Trismus|Limited mouth opening");
@@ -181,40 +181,40 @@ F("ent_dent","heent","Dentition","Dentition intact without tenderness or gingiva
 F("ent_face_sw","heent","Facial swelling","No facial swelling or erythema.","Facial swelling|Facial erythema|Facial induration",1);
 
 /* Neck */
-F("neck_supple","neck","Meningismus","Neck supple without meningismus.","Nuchal rigidity|Pain with neck flexion|Positive Kernig sign|Positive Brudzinski sign");
+F("neck_supple","neck","Meningismus","Neck supple without meningismus.","Nuchal rigidity|Pain with neck flexion|Positive Kernig sign|Positive Brudzinski sign|Jolt accentuation of headache");
 F("neck_cspine","neck","Cervical spine","No midline cervical spine tenderness or step-off.","Midline tenderness|Step-off|Paraspinal tenderness|Paraspinal spasm");
-F("neck_rom","neck","Neck range of motion","Full active range of motion, rotating 45° each way without pain.","Limited rotation|Pain with range of motion|Not tested (immobilized)");
-F("neck_ln","neck","Lymph nodes","No cervical lymphadenopathy.","Anterior cervical lymphadenopathy|Posterior cervical lymphadenopathy|Tender lymphadenopathy|Supraclavicular node",1);
-F("neck_jvd","neck","JVD","No jugular venous distension.","JVD present|Elevated JVP|Hepatojugular reflux");
+F("neck_rom","neck","Neck range of motion","Full active range of motion, rotating 45° each way without pain.","Limited rotation|Pain with range of motion|Not tested (immobilized)|Positive Lhermitte sign");
+F("neck_ln","neck","Lymph nodes","No cervical lymphadenopathy.","Anterior cervical lymphadenopathy|Posterior cervical lymphadenopathy|Tender lymphadenopathy|Left supraclavicular node (Virchow node)|Right supraclavicular node",1);
+F("neck_jvd","neck","JVD","No jugular venous distension.","JVD present|Elevated JVP|Hepatojugular reflux|Kussmaul sign (JVP rises with inspiration)");
 F("neck_trachea","neck","Trachea","Trachea midline.","Tracheal deviation",1);
 F("neck_thyroid","neck","Thyroid","Thyroid non-enlarged and non-tender.","Goiter|Thyroid nodule|Thyroid tenderness");
-F("neck_swell","neck","Neck soft tissue","No neck swelling, crepitus, or tenderness.","Neck swelling|Subcutaneous crepitus|Submandibular swelling|Neck tenderness|Expanding hematoma",1);
+F("neck_swell","neck","Neck soft tissue","No neck swelling, crepitus, or tenderness.","Neck swelling|Subcutaneous crepitus|Submandibular swelling|Neck tenderness|Expanding hematoma|Positive Pemberton sign",1);
 F("neck_bruit","neck","Carotids","No carotid bruits.","Carotid bruit",1);
 
 /* Cardiovascular */
 F("cv_rr","cv","Rate and rhythm","Regular rate and rhythm.","Irregularly irregular rhythm|Regularly irregular rhythm|Irregular rhythm|Occasional ectopic beats|Tachycardic|Bradycardic|Rate controlled|Rapid ventricular rate|Paced rhythm");
-F("cv_hs","cv","Heart sounds","Normal S1 and S2; no murmurs, rubs, or gallops.","Systolic murmur|Diastolic murmur|Harsh crescendo-decrescendo systolic murmur|Friction rub|S3|S4|Muffled heart sounds|Mechanical valve click");
-F("cv_pulses","cv","Pulses","Radial and dorsalis pedis pulses 2+ and symmetric.","Diminished pulse|Absent pulse|Dopplerable pulse only|Radial pulse asymmetry|Femoral pulse asymmetry",1);
+F("cv_hs","cv","Heart sounds","Normal S1 and S2; no murmurs, rubs, or gallops.","Systolic murmur|Diastolic murmur|Harsh crescendo-decrescendo systolic murmur|Friction rub|S3|S4|Muffled heart sounds|Mechanical valve click|Hamman crunch|Pericardial knock");
+F("cv_pulses","cv","Pulses","Radial and dorsalis pedis pulses 2+ and symmetric.","Diminished pulse|Absent pulse|Dopplerable pulse only|Radial pulse asymmetry|Femoral pulse asymmetry|Pulse deficit|Water-hammer (Corrigan) pulse|Pulsus parvus et tardus|Pulsus alternans",1);
 F("cv_cr","cv","Perfusion","Capillary refill under 2 seconds; extremities warm.","Delayed capillary refill|Mottling|Cool extremities",1);
 F("cv_edema","cv","Edema","No peripheral edema.","Trace pitting edema|1+ pitting edema|2+ pitting edema|3+ pitting edema|Non-pitting edema|Edema to the knees|Edema to the thighs",1);
-F("cv_calf","cv","Calves","Calves soft and non-tender without asymmetric swelling or palpable cord.","Calf tenderness|Unilateral calf swelling|Palpable venous cord|Calf circumference difference over 3 cm|Erythema and warmth",1);
+F("cv_calf","cv","Calves","Calves soft and non-tender without asymmetric swelling or palpable cord.","Calf tenderness|Unilateral calf swelling|Palpable venous cord|Calf circumference difference over 3 cm|Erythema and warmth|Positive Homans sign (low specificity)",1);
 F("cv_aorta","cv","Abdominal aorta","No pulsatile abdominal mass.","Pulsatile abdominal mass|Abdominal bruit");
 F("cv_access","cv","Dialysis access","Access with palpable thrill and audible bruit; site clean.","Absent thrill|Absent bruit|Erythema at the access|Drainage at the access|Bleeding from the access|Aneurysmal dilation",1);
 
 /* Respiratory */
 F("resp_o2","resp","Oxygen support","On room air.","Nasal cannula|Simple face mask|Venturi mask|Non-rebreather mask|High-flow nasal cannula|CPAP|BiPAP|Mechanical ventilation|Trach collar");
 I.resp_o2.pre="On ";I.resp_o2.ph="Settings: 4 L, 50 L/min FiO₂ 0.6, 14/6, AC 450 × 18 PEEP 8 FiO₂ 0.5";
-F("resp_wob","resp","Work of breathing","Breathing comfortably without accessory muscle use.","Tachypneic|Accessory muscle use|Retractions|Nasal flaring|Grunting|Head bobbing|Speaking in short phrases|Unable to speak in full sentences|Kussmaul respirations|Paradoxical breathing");
+F("resp_wob","resp","Work of breathing","Breathing comfortably without accessory muscle use.","Tachypneic|Accessory muscle use|Retractions|Nasal flaring|Grunting|Head bobbing|Speaking in short phrases|Unable to speak in full sentences|Kussmaul respirations|Paradoxical breathing|Hoover sign (inward lower rib motion on inspiration)|Tracheal tug");
 F("resp_bs","resp","Breath sounds","Clear to auscultation bilaterally; no wheezes, rales, or rhonchi.","Expiratory wheezes|Diffuse wheezes|Rales at the bases|Diffuse rales|Rhonchi|Decreased breath sounds|Absent breath sounds|Prolonged expiratory phase|Poor air movement|Focal wheeze",1);
 F("resp_cw","resp","Chest wall","Chest wall non-tender and stable without crepitus.","Chest wall tenderness reproducing the pain|Rib point tenderness|Crepitus|Flail segment|Seat belt sign|Chest wall ecchymosis",1);
 F("resp_vent","resp","Ventilator","Synchronous with the ventilator.","Ventilator dyssynchrony|Breath stacking|High peak pressures|Circuit air leak|Copious secretions");
 
 /* Abdomen */
-F("abd_soft","abd","Abdomen","Soft and non-distended.","Distended|Tympanitic|Firm|Rigid|Fluid wave (ascites)|Surgical scars");
+F("abd_soft","abd","Abdomen","Soft and non-distended.","Distended|Tympanitic|Firm|Rigid|Fluid wave (ascites)|Surgical scars|Visible peristalsis");
 F("abd_tender","abd","Tenderness","Non-tender to palpation.","RLQ tenderness|LLQ tenderness|RUQ tenderness|LUQ tenderness|Epigastric tenderness|Suprapubic tenderness|Periumbilical tenderness|Diffuse tenderness|Pain out of proportion to exam");
-F("abd_perit","abd","Peritoneal signs","No guarding, rebound, or rigidity.","Voluntary guarding|Involuntary guarding|Rebound tenderness|Rigidity|Pain with heel tap");
+F("abd_perit","abd","Peritoneal signs","No guarding, rebound, or rigidity.","Voluntary guarding|Involuntary guarding|Rebound tenderness (Blumberg sign)|Rigidity|Pain with heel tap (Markle sign)");
 F("abd_bs","abd","Bowel sounds","Normal bowel sounds.","Hypoactive bowel sounds|Hyperactive bowel sounds|High-pitched bowel sounds|Absent bowel sounds");
-F("abd_murphy","abd","Murphy sign","Negative Murphy sign.","Positive Murphy sign");
+F("abd_murphy","abd","Murphy sign","Negative Murphy sign.","Positive Murphy sign|Positive sonographic Murphy sign");
 F("abd_mcb","abd","Appendiceal signs","No McBurney point tenderness; negative Rovsing, psoas, and obturator signs.","McBurney point tenderness|Positive Rovsing sign|Positive psoas sign|Positive obturator sign");
 F("abd_hernia","abd","Hernias","No palpable hernias.","Reducible umbilical hernia|Incarcerated hernia|Inguinal hernia|Femoral hernia|Incisional hernia|Tender hernia",1);
 F("abd_cva","abd","CVA tenderness","No CVA tenderness.","CVA tenderness",1);
@@ -232,14 +232,14 @@ F("back_slr","back","Straight leg raise","Negative straight leg raise.","Positiv
 F("back_skin","back","Back skin","No rash, wounds, or erythema over the back.","Dermatomal vesicular rash|Sacral pressure injury|Erythema or abscess");
 
 /* GU / pelvic / rectal */
-F("gu_test","gu","Testes and scrotum","Testes descended with normal lie, non-tender; no scrotal swelling.","High-riding testis|Horizontal lie|Testicular tenderness|Epididymal tenderness|Scrotal swelling|Scrotal erythema|Blue dot sign|Testicular mass|Positive Prehn sign",1);
+F("gu_test","gu","Testes and scrotum","Testes descended with normal lie, non-tender; no scrotal swelling.","High-riding testis|Horizontal lie|Testicular tenderness|Epididymal tenderness|Scrotal swelling|Scrotal erythema|Blue dot sign|Testicular mass|Positive Prehn sign (pain relieved by elevation)|Negative Prehn sign (no relief with elevation)|Bag of worms (varicocele)|Transilluminates (hydrocele)",1);
 F("gu_crem","gu","Cremasteric reflex","Cremasteric reflex present bilaterally.","Absent cremasteric reflex",1);
 F("gu_penis","gu","Penis and meatus","No penile discharge, lesions, or meatal abnormality.","Urethral discharge|Phimosis|Meatal stenosis|Penile lesions|Priapism|Hair tourniquet");
 F("gu_perineum","gu","Perineum","No perineal erythema, crepitus, or tenderness.","Perineal erythema|Perineal crepitus|Skin necrosis|Tenderness out of proportion");
 F("gu_foley","gu","Foley catheter","Foley draining clear yellow urine.","Hematuria|Clots|Cloudy urine|Not draining|Low output");
 F("pel_ext","pel","External genitalia","Normal external genitalia without lesions.","Vesicular lesions|Genital ulcers|Bartholin gland swelling|Vulvar erythema");
 F("pel_spec","pel","Speculum exam","Cervical os closed without bleeding or discharge.","Os open|Tissue at the os|Active bleeding from the os|Clots in the vault|Cervical discharge|Friable cervix|Vaginal discharge");
-F("pel_bim","pel","Bimanual exam","No cervical motion, uterine, or adnexal tenderness; no masses.","Cervical motion tenderness|Uterine tenderness|Adnexal tenderness|Adnexal mass|Enlarged uterus",1);
+F("pel_bim","pel","Bimanual exam","No cervical motion, uterine, or adnexal tenderness; no masses.","Cervical motion tenderness (chandelier sign)|Uterine tenderness|Adnexal tenderness|Adnexal mass|Enlarged uterus",1);
 F("pel_fht","pel","Fetal heart tones","Fetal heart tones present at a normal rate.","Fetal heart tones absent|Fetal tachycardia|Fetal bradycardia");
 F("rec_ext","rec","Perianal inspection","No external hemorrhoids, fissure, or perianal abscess.","External hemorrhoid|Thrombosed hemorrhoid|Anal fissure|Perianal erythema|Perianal fluctuance|Skin tags");
 F("rec_dre","rec","Digital rectal exam","Normal rectal tone; no masses or tenderness.","Decreased rectal tone|Fecal impaction|Rectal mass|Rectal tenderness|Fluctuance|Enlarged prostate|Tender prostate");
@@ -257,7 +257,7 @@ F("msk_snuff","msk","Anatomic snuffbox","No anatomic snuffbox or scaphoid tuberc
 F("msk_ottawa","msk","Ottawa ankle and foot","No tenderness at the posterior malleoli, navicular, or base of the fifth metatarsal; able to bear weight four steps.","Lateral malleolus tenderness|Medial malleolus tenderness|Navicular tenderness|Fifth metatarsal base tenderness|Unable to bear weight four steps",1);
 F("msk_fib","msk","Proximal fibula","No proximal fibula tenderness.","Proximal fibula tenderness",1);
 F("msk_thompson","msk","Achilles","Achilles tendon intact; negative Thompson test.","Positive Thompson test|Palpable Achilles defect",1);
-F("msk_lig","msk","Ligamentous stability","Ligamentous exam stable.","Positive anterior drawer|Positive Lachman|Varus instability|Valgus instability|Joint laxity",1);
+F("msk_lig","msk","Ligamentous stability","Ligamentous exam stable.","Positive anterior drawer|Positive Lachman|Varus instability|Valgus instability|Joint laxity|Positive posterior drawer|Positive pivot shift",1);
 F("msk_joint","msk","Joint","No effusion, warmth, or erythema; painless passive range of motion.","Joint effusion|Warmth|Erythema|Pain with passive range of motion|Tophi|Multiple joints involved",1);
 F("msk_hip","msk","Hip","No shortening or rotation; painless log roll and axial load.","Shortened and externally rotated|Pain with log roll|Pain with axial load|Groin tenderness",1);
 F("msk_pelvis","msk","Pelvis","Pelvis stable to compression and non-tender.","Pelvic instability|Pelvic tenderness|Perineal ecchymosis");
@@ -271,7 +271,7 @@ F("msk_tourn","msk","Digits (hair tourniquet)","No hair tourniquets on fingers, 
 
 /* Skin */
 F("sk_gen","skin","Skin","Warm, dry, and well perfused.","Pale|Cool|Mottled|Diaphoretic|Jaundiced|Cyanotic|Flushed|Hot and dry");
-F("sk_rash","skin","Rash","No rash.","Macular|Papular|Vesicular|Bullous|Petechial|Purpuric|Urticarial|Targetoid|Desquamating|Involves palms and soles|Involves mucous membranes|Positive Nikolsky sign|Blanching|Non-blanching|Dermatomal distribution");
+F("sk_rash","skin","Rash","No rash.","Macular|Papular|Vesicular|Bullous|Petechial|Purpuric|Urticarial|Targetoid|Desquamating|Involves palms and soles|Involves mucous membranes|Positive Nikolsky sign|Blanching|Non-blanching|Dermatomal distribution|Palpable purpura|Pastia lines|Sandpaper texture|Koebner phenomenon|Darier sign|Asboe-Hansen sign|Heliotrope rash|Gottron papules");
 F("sk_cell","skin","Cellulitis or abscess","No erythema, induration, or fluctuance.","Erythema|Induration|Fluctuance|Warmth|Lymphangitic streaking|Bullae|Crepitus|Skin necrosis|Erythema border marked",1);
 F("sk_wound","skin","Wound","No wound.","Linear laceration|Stellate laceration|Flap laceration|Avulsion|Puncture wound|Contaminated|Visible foreign body|Exposed tendon|Exposed bone|Joint capsule involvement|Crosses the vermilion border|Edges approximated|Dehiscence|Purulent drainage",1);
 F("sk_wchk","skin","Healing wound","Wound well healed, edges approximated, no erythema, drainage, or fluctuance.","Erythema|Drainage|Fluctuance|Dehiscence|Sutures removed|Staples removed");
@@ -302,7 +302,7 @@ F("neu_tremor","neuro","Tremor","No tremor.","Resting tremor|Postural tremor|Coa
 F("neu_tone","neuro","Tone and clonus","Normal tone; no rigidity or clonus.","Rigidity|Lead-pipe rigidity|Spasticity|Inducible clonus|Spontaneous clonus|Ocular clonus",1);
 F("neu_neglect","neuro","Neglect","No extinction or neglect.","Visual extinction|Tactile extinction|Hemineglect",1);
 F("neu_mae","neuro","Motor response","Moves all extremities spontaneously and follows commands.","Does not follow commands|Localizes to pain|Withdraws to pain|Flexor posturing|Extensor posturing|No movement to pain|Asymmetric movement",1);
-F("neu_bs","neuro","Brainstem reflexes","Corneal, cough, and gag reflexes present.","Absent corneal reflex|Absent cough reflex|Absent gag reflex|Absent oculocephalic reflex",1);
+F("neu_bs","neuro","Brainstem reflexes","Corneal, cough, and gag reflexes present.","Absent corneal reflex|Absent cough reflex|Absent gag reflex|Absent oculocephalic reflex (doll’s eyes)",1);
 
 /* Comprehensive neuro parts */
 F("nc_orient","neuro","Orientation","Alert and oriented to person, place, time, and situation.","Disoriented to time|Disoriented to place|Disoriented to person|Disoriented to situation|Lethargic|Obtunded");
@@ -343,6 +343,39 @@ F("psy_ij","psych","Insight and judgment","Insight and judgment intact.","Limite
 F("tox_feat","neuro","Toxidrome features","Pupils mid-size, skin without diaphoresis, normal bowel sounds; no toxidrome evident.","Mydriasis|Miosis|Diaphoresis|Dry, flushed skin|Absent bowel sounds|Hyperactive bowel sounds|Urinary retention|Sialorrhea|Hyperthermia");
 F("tox_wd","neuro","Withdrawal signs","No tremor, diaphoresis, or hallucinations.","Tremor|Diaphoresis|Tactile hallucinations|Visual hallucinations|Agitation|Anxiety");
 
+
+/* ---------- named signs and special tests ---------- */
+F("abd_ecchy","abd","Flank and periumbilical ecchymosis","No flank or periumbilical ecchymosis (Grey Turner and Cullen signs negative).","Flank ecchymosis (Grey Turner sign)|Periumbilical ecchymosis (Cullen sign)|Abdominal wall ecchymosis|Seat belt sign|Scrotal or labial ecchymosis",1);
+F("abd_carnett","abd","Carnett sign","Carnett sign negative: tenderness decreases when the abdominal wall is tensed.","Positive Carnett sign: tenderness persists or worsens with the abdominal wall tensed (abdominal wall source)");
+F("abd_dunphy","abd","Dunphy sign","No increase in abdominal pain with coughing (Dunphy sign negative).","Positive Dunphy sign");
+F("abd_kehr","abd","Kehr sign","No referred left shoulder pain with LUQ palpation or Trendelenburg (Kehr sign negative).","Positive Kehr sign");
+F("abd_gb","abd","Gallbladder","No palpable gallbladder.","Palpable, non-tender gallbladder (Courvoisier sign)|Tender palpable gallbladder");
+F("abd_wall","abd","Abdominal wall","No abdominal wall mass, umbilical nodule, or rectus sheath hematoma.","Umbilical nodule (Sister Mary Joseph nodule)|Rectus sheath mass that persists with tensing (Fothergill sign)|Abdominal wall mass");
+F("abd_ascites","abd","Ascites","No shifting dullness or fluid wave.","Shifting dullness|Fluid wave|Tense ascites|Puddle sign");
+F("abd_infant","abd","Infant abdomen","No palpable mass, olive, or visible peristalsis.","Palpable pyloric olive|Visible peristaltic waves|Sausage-shaped mass|Empty RLQ (Dance sign)|Currant jelly stool");
+F("cv_tamp","cv","Tamponade signs","No pulsus paradoxus; Beck triad absent.","Pulsus paradoxus over 10 mmHg|Beck triad (hypotension, JVD, muffled heart sounds)|Kussmaul sign|Electrical alternans on the monitor");
+F("cv_ie","cv","Endocarditis stigmata","No splinter hemorrhages, Janeway lesions, Osler nodes, or Roth spots.","Splinter hemorrhages|Janeway lesions|Osler nodes|Roth spots|Conjunctival petechiae|New regurgitant murmur",1);
+F("cv_allen","cv","Allen test","Normal Allen test (palmar color returns within 6 seconds).","Abnormal Allen test (delayed or absent palmar refill)",1);
+F("sk_nails","skin","Nails","No clubbing, cyanosis, or splinter hemorrhages.","Clubbing|Nail bed cyanosis|Splinter hemorrhages|Koilonychia|Nail pitting|Beau lines");
+F("resp_perc","resp","Percussion and fremitus","Resonant to percussion with symmetric tactile fremitus; no egophony.","Dullness to percussion|Hyperresonance|Increased tactile fremitus|Decreased tactile fremitus|Egophony|Bronchial breath sounds|Whispered pectoriloquy",1);
+F("neu_hoff","neuro","Hoffmann sign","Hoffmann sign negative.","Positive Hoffmann sign",1);
+F("neu_cvt","neuro","Chvostek and Trousseau signs","Chvostek and Trousseau signs negative.","Positive Chvostek sign|Positive Trousseau sign");
+F("neu_func","neuro","Functional signs","Hoover sign negative; no give-way weakness; arm drop test normal.","Positive Hoover sign|Give-way weakness|Arm drop avoids the face|Non-anatomic sensory loss|Midline splitting of vibration|Waddell signs",1);
+F("neu_gowers","neuro","Gowers sign","Rises from the floor without using the hands (Gowers sign negative).","Positive Gowers sign");
+F("neck_spurling","neck","Spurling test","Spurling test negative.","Positive Spurling test (radicular arm pain)",1);
+F("msk_kanavel","msk","Kanavel signs","No Kanavel signs: digit not held flexed, no fusiform swelling, no pain with passive extension or along the flexor sheath.","Digit held in slight flexion|Fusiform swelling|Pain with passive extension|Tenderness along the flexor sheath",1);
+F("msk_finkel","msk","Finkelstein test","Finkelstein test negative.","Positive Finkelstein test",1);
+F("msk_menisc","msk","Meniscal tests","McMurray and Thessaly tests negative; no joint line tenderness.","Positive McMurray test|Positive Thessaly test|Medial joint line tenderness|Lateral joint line tenderness|Locked knee",1);
+F("msk_knee_ottawa","msk","Ottawa knee rule","Ottawa knee rule negative: no patellar or fibular head tenderness, flexes to 90°, bears weight four steps.","Isolated patellar tenderness|Fibular head tenderness|Unable to flex to 90°|Unable to bear weight four steps",1);
+F("msk_shtest","msk","Shoulder special tests","Negative Neer, Hawkins, empty can, drop arm, and apprehension tests.","Positive Neer test|Positive Hawkins test|Positive empty can test|Positive drop arm test|Positive apprehension test|Positive Speed test|Positive cross-body adduction",1);
+F("msk_faber","msk","FABER (Patrick) test","FABER test negative.","Positive FABER with groin pain (hip)|Positive FABER with buttock pain (SI joint)",1);
+F("msk_squeeze","msk","Squeeze test (syndesmosis)","Squeeze test negative.","Positive squeeze test",1);
+F("msk_hook","msk","Distal biceps","Intact hook test; no Popeye deformity.","Absent hook test|Popeye deformity|Retracted biceps",1);
+F("msk_ucl","msk","Thumb ulnar collateral ligament","Thumb UCL stable to valgus stress.","UCL laxity|Palpable Stener lesion",1);
+F("msk_trend","msk","Trendelenburg sign","Trendelenburg sign negative.","Positive Trendelenburg sign",1);
+F("msk_nbhip","msk","Newborn hips","Negative Ortolani and Barlow; symmetric thigh folds.","Positive Ortolani|Positive Barlow|Asymmetric thigh folds|Positive Galeazzi sign",1);
+F("msk_elson","msk","Central slip (Elson test)","Elson test normal; central slip intact.","Positive Elson test",1);
+
 /* Lines, tubes, and drains: picked per patient; each has a site/size field (loc) */
 function DV(id,label,nl,ab,ph){F(id,"dev",label,nl,ab);I[id].loc=ph||"Site, size, day"}
 DV("dev_ett","Endotracheal tube","Secure; no cuff leak.","Cuff leak|Tube position changed|Thick secretions|Bloody secretions","Size, cm at the lip");
@@ -374,35 +407,35 @@ const TPL={};const ORDER=[];
 function T(key,g,name,items,desc){TPL[key]={key,g,name,desc:desc||'',items:items.trim().split(/\s+/).map(x=>({id:x.replace('!',''),flag:x[0]==='!'}))};ORDER.push(key)}
 
 /* Comprehensive */
-T("full","Comprehensive","Head-to-toe exam","gen_app resp_o2 head_atr eye_pupils eye_eom eye_conj ent_tm ent_phar ent_mm neck_supple neck_ln neck_thyroid neck_jvd cv_rr cv_hs cv_pulses cv_edema resp_wob resp_bs abd_soft abd_tender abd_perit abd_bs abd_cva msk_gen sk_gen sk_rash neu_ms neu_speech neu_cn neu_motor neu_sens neu_coord neu_gait psy_app psy_mood","Complete exam for an H&P");TPL.full.devpick=1;
+T("full","Comprehensive","Head-to-toe exam","gen_app resp_o2 head_atr eye_pupils eye_eom eye_conj ent_tm ent_phar ent_mm neck_supple neck_ln neck_thyroid neck_jvd cv_rr cv_hs cv_pulses cv_edema resp_wob resp_bs abd_soft abd_tender abd_perit abd_bs abd_cva msk_gen sk_gen sk_rash neu_ms neu_speech neu_cn neu_motor neu_sens neu_coord neu_gait psy_app psy_mood resp_perc sk_nails abd_ascites","Complete exam for an H&P");TPL.full.devpick=1;
 T("icu","Comprehensive","ICU daily exam","gen_app !gen_rass !gen_cam !neu_gcs !eye_pupils !neu_mae neu_bs ent_mm neck_jvd !cv_rr cv_hs !cv_pulses !cv_cr cv_edema !resp_o2 resp_wob !resp_vent !resp_bs abd_soft !abd_tender abd_bs abd_wound sk_gen !sk_press sk_rash","Oxygen support, sedation, delirium, every system, plus the patient's lines, tubes, and drains");TPL.icu.devpick=1;
-T("neuro","Comprehensive","Comprehensive neuro exam","!nc_orient nc_attn !nc_lang nc_dys nc_memory !nc_cn2 !nc_cn346 nc_cn5 !nc_cn7 nc_cn8 nc_cn910 nc_cn11 nc_cn12 nc_bulk nc_tone !nc_drift !nc_str !nc_refl nc_lt nc_pp nc_vib nc_prop !nc_fnf nc_hks nc_ram !nc_gait nc_romberg","Mental status, each cranial nerve, strength and reflexes by muscle and tendon, sensation, coordination, gait");
+T("neuro","Comprehensive","Comprehensive neuro exam","!nc_orient nc_attn !nc_lang nc_dys nc_memory !nc_cn2 !nc_cn346 nc_cn5 !nc_cn7 nc_cn8 nc_cn910 nc_cn11 nc_cn12 nc_bulk nc_tone !nc_drift !nc_str !nc_refl nc_lt nc_pp nc_vib nc_prop !nc_fnf nc_hks nc_ram !nc_gait nc_romberg neu_hoff","Mental status, each cranial nerve, strength and reflexes by muscle and tendon, sensation, coordination, gait");
 T("nihss","Comprehensive","NIH Stroke Scale","nihss","Scored NIHSS with a note-ready line");
 
 /* Cardiopulmonary */
-T("chest_pain","Cardiopulmonary","Chest pain","gen_app !vit_bparms !neck_jvd !cv_rr !cv_hs !cv_pulses !resp_bs resp_cw abd_tender !cv_calf cv_edema neu_motor");
-T("sob","Cardiopulmonary","Shortness of breath","gen_app !vit_spo2 !resp_wob !resp_bs !neck_trachea !neck_jvd cv_rr cv_hs cv_edema !cv_calf neu_ms sk_gen !resp_o2");
+T("chest_pain","Cardiopulmonary","Chest pain","gen_app !vit_bparms !neck_jvd !cv_rr !cv_hs !cv_pulses !resp_bs resp_cw abd_tender !cv_calf cv_edema neu_motor cv_tamp");
+T("sob","Cardiopulmonary","Shortness of breath","gen_app !vit_spo2 !resp_wob !resp_bs !neck_trachea !neck_jvd cv_rr cv_hs cv_edema !cv_calf neu_ms sk_gen !resp_o2 cv_tamp resp_perc");
 T("palpitations","Cardiopulmonary","Palpitations","gen_app !cv_rr cv_hs !vit_hrbp resp_bs neck_thyroid neu_tremor gen_hyd cv_edema");
 T("cough","Cardiopulmonary","Cough / URI","gen_app !vit_spo2 !resp_wob !resp_bs ent_tm ent_phar ent_nose head_sinus neck_ln cv_hs !resp_o2");
 T("htn","Cardiopulmonary","Elevated blood pressure","gen_app !vit_bparms !neu_ms !neu_motor !neu_cn !eye_fundus !cv_hs !resp_bs neck_jvd cv_edema cv_pulses");
-T("syncope","Cardiopulmonary","Syncope","gen_app !vit_ortho !cv_rr !cv_hs !head_atr !ent_tongue !neu_motor neu_cn cv_aorta abd_tender !rec_stool resp_bs cv_edema");
+T("syncope","Cardiopulmonary","Syncope","gen_app !vit_ortho !cv_rr !cv_hs !head_atr !ent_tongue !neu_motor neu_cn cv_aorta abd_tender !rec_stool resp_bs cv_edema cv_tamp");
 T("leg_swelling","Cardiopulmonary","Leg pain / swelling","!cv_calf cv_edema sk_cell !cv_pulses !cv_cr !msk_nv msk_comp sk_wound !resp_wob !resp_bs");
 /* Neuro */
 T("headache","Neuro","Headache","gen_app !neu_ms !neu_cn !eye_pupils !eye_eom !eye_fundus !neu_motor !neu_drift !neu_coord !neu_gait !neck_supple head_ta head_sinus ent_dent !sk_rash vit_hrbp");
 T("head_injury","Neuro","Head injury","!neu_gcs !eye_pupils !head_atr !head_bsf head_face !neck_cspine !neu_cn !neu_motor !neu_sens !neu_gait head_font");
-T("neck_injury","Neuro","Neck pain / injury","!neck_cspine neck_rom neck_supple !neu_motor !neu_sens !neu_refl !rec_dre");
+T("neck_injury","Neuro","Neck pain / injury","!neck_cspine neck_rom neck_supple !neu_motor !neu_sens !neu_refl !rec_dre !neu_hoff neck_spurling");
 T("dizzy","Neuro","Dizziness / vertigo","gen_app !neu_nyst !neu_hints !neu_dix !neu_cn !neu_coord !neu_gait !neu_motor ent_tm vit_ortho cv_rr");
 T("stroke","Neuro","Stroke symptoms / focal deficit","!vit_glu !neu_ms !neu_speech !eye_vf !eye_eom !neu_cn !neu_drift !neu_motor !neu_sens !neu_coord !neu_neglect cv_rr neck_bruit nihss");
-T("numbness","Neuro","Numbness / tingling","!neu_motor !neu_sens !neu_refl !neu_cn !neu_gait !neu_saddle !rec_dre msk_carpal !msk_nv sk_rash");
-T("weakness","Neuro","Generalized weakness","gen_app !neu_ms !neu_motor !neu_refl !neu_cn !neu_gait vit_ortho gen_hyd resp_bs abd_tender sk_press !rec_stool");
+T("numbness","Neuro","Numbness / tingling","!neu_motor !neu_sens !neu_refl !neu_cn !neu_gait !neu_saddle !rec_dre msk_carpal !msk_nv sk_rash neu_hoff neck_spurling neu_func");
+T("weakness","Neuro","Generalized weakness","gen_app !neu_ms !neu_motor !neu_refl !neu_cn !neu_gait vit_ortho gen_hyd resp_bs abd_tender sk_press !rec_stool neu_hoff neu_func");
 T("ams","Neuro","Altered mental status","!neu_gcs !vit_glu !vit_temp !eye_pupils !neu_motor !neck_supple !head_atr neu_asterixis !tox_feat sk_track sk_rash abd_liver resp_bs abd_tender !abd_bladder !resp_o2");
 T("seizure","Neuro","Seizure","!neu_ms !ent_tongue !head_atr !msk_shoulder !neu_motor !neck_supple !eye_pupils !vit_glu sk_track abd_liver");
 /* GI / GU */
-T("abd_pain","GI / GU","Abdominal pain","gen_app abd_soft !abd_tender !abd_perit !abd_murphy !abd_mcb abd_bs !abd_hernia !abd_cva !cv_aorta eye_conj pel_spec pel_bim gu_test gu_crem !rec_dre rec_stool");
+T("abd_pain","GI / GU","Abdominal pain","gen_app abd_soft !abd_tender !abd_perit !abd_murphy !abd_mcb abd_bs !abd_hernia !abd_cva !cv_aorta eye_conj pel_spec pel_bim gu_test gu_crem !rec_dre rec_stool !abd_ecchy abd_carnett abd_dunphy abd_gb abd_wall");
 T("vomiting","GI / GU","Nausea / vomiting","gen_app !gen_hyd abd_soft !abd_tender !abd_perit abd_bs !abd_hernia !neu_ms !neck_supple eye_conj !vit_glu");
 T("diarrhea","GI / GU","Diarrhea","gen_app !gen_hyd !vit_ortho abd_soft !abd_tender !abd_perit abd_bs rec_stool rec_ext");
-T("gi_bleed","GI / GU","GI bleeding","gen_app !vit_hrbp !vit_ortho !eye_conj !cv_cr !neu_ms abd_soft !abd_tender !abd_perit !abd_liver !rec_dre !rec_stool rec_ext");
-T("flank","GI / GU","Flank pain / kidney stone","gen_app !abd_cva abd_soft !abd_tender !abd_perit !cv_aorta cv_pulses gu_test !vit_temp");
+T("gi_bleed","GI / GU","GI bleeding","gen_app !vit_hrbp !vit_ortho !eye_conj !cv_cr !neu_ms abd_soft !abd_tender !abd_perit !abd_liver !rec_dre !rec_stool rec_ext abd_ascites");
+T("flank","GI / GU","Flank pain / kidney stone","gen_app !abd_cva abd_soft !abd_tender !abd_perit !cv_aorta cv_pulses gu_test !vit_temp abd_ecchy");
 T("uti","GI / GU","Urinary symptoms","!vit_temp !abd_cva abd_tender !abd_bladder pel_ext pel_spec gu_penis gu_test");
 T("retention","GI / GU","Urinary retention","!abd_bladder abd_tender rec_dre !neu_motor !neu_sens !neu_refl !neu_saddle gu_penis !abd_cva");
 T("testicular","GI / GU","Testicular pain","gen_app !gu_test !gu_crem !abd_hernia gu_penis !abd_tender gu_perineum");
@@ -422,24 +455,24 @@ T("dental","HEENT","Dental pain","!ent_dent !ent_trismus !ent_fom !neck_swell en
 T("oral_swelling","HEENT","Oral / facial swelling","!ent_voice !ent_trismus !ent_fom !ent_tongue ent_phar !ent_dent !neck_swell ent_face_sw !resp_wob !vit_spo2 sk_rash");
 T("allergic","HEENT","Allergic reaction","!vit_hrbp !ent_tongue !ent_voice !resp_wob !resp_bs !vit_spo2 sk_rash abd_tender neu_ms");
 /* Trauma / MSK */
-T("back_pain","Trauma / MSK","Back pain","!back_spine !back_slr !neu_motor !neu_sens !neu_refl !neu_saddle !rec_dre !abd_bladder !vit_temp !cv_aorta !cv_pulses abd_cva back_skin sk_track");
-T("ext_injury","Trauma / MSK","Extremity injury","!msk_def msk_tender msk_swell msk_rom !msk_jab !msk_snuff !msk_comp !msk_nv !msk_nerve sk_wound");
-T("ankle","Trauma / MSK","Ankle / foot injury","!msk_ottawa !msk_fib msk_swell !msk_thompson msk_lig !msk_nv msk_comp");
-T("joint","Trauma / MSK","Joint pain / swelling","!msk_joint msk_rom !vit_temp sk_cell sk_rash !msk_nv");
-T("mvc","Trauma / MSK","MVC / multiple trauma","!gen_app !neu_gcs !eye_pupils !head_atr !head_bsf head_face !neck_cspine !neck_trachea !resp_bs !resp_cw !cv_pulses !abd_soft !abd_tender !msk_pelvis !back_spine !msk_def !neu_motor !neu_sens abd_fundus");
+T("back_pain","Trauma / MSK","Back pain","!back_spine !back_slr !neu_motor !neu_sens !neu_refl !neu_saddle !rec_dre !abd_bladder !vit_temp !cv_aorta !cv_pulses abd_cva back_skin sk_track msk_faber neu_func");
+T("ext_injury","Trauma / MSK","Extremity injury","!msk_def msk_tender msk_swell msk_rom !msk_jab !msk_snuff !msk_comp !msk_nv !msk_nerve sk_wound msk_hook msk_ucl msk_shtest");
+T("ankle","Trauma / MSK","Ankle / foot injury","!msk_ottawa !msk_fib msk_swell !msk_thompson msk_lig !msk_nv msk_comp msk_squeeze");
+T("joint","Trauma / MSK","Joint pain / swelling","!msk_joint msk_rom !vit_temp sk_cell sk_rash !msk_nv msk_menisc msk_knee_ottawa");
+T("mvc","Trauma / MSK","MVC / multiple trauma","!gen_app !neu_gcs !eye_pupils !head_atr !head_bsf head_face !neck_cspine !neck_trachea !resp_bs !resp_cw !cv_pulses !abd_soft !abd_tender !msk_pelvis !back_spine !msk_def !neu_motor !neu_sens abd_fundus !abd_ecchy !abd_kehr");
 T("fall","Trauma / MSK","Fall in an older adult","!head_atr !neck_cspine !msk_hip !msk_pelvis !back_spine !msk_wrist msk_shoulder !sk_press !neu_ms !neu_motor !neu_gait !vit_ortho cv_rr cv_hs");
 T("burn","Trauma / MSK","Burn","!sk_burn !ent_voice !resp_wob !resp_bs !msk_nv !cv_rr sk_track");
-T("bite","Trauma / MSK","Animal / human bite","!sk_wound !msk_tendon !msk_joint sk_cell !msk_nv");
+T("bite","Trauma / MSK","Animal / human bite","!sk_wound !msk_tendon !msk_joint sk_cell !msk_nv !msk_kanavel");
 /* Skin / wound */
-T("laceration","Skin / wound","Laceration","!sk_wound !msk_tendon !msk_nv !msk_nerve msk_joint");
-T("abscess","Skin / wound","Abscess / cellulitis","!sk_cell !vit_temp !vit_hrbp neck_ln");
+T("laceration","Skin / wound","Laceration","!sk_wound !msk_tendon !msk_nv !msk_nerve msk_joint msk_kanavel msk_elson");
+T("abscess","Skin / wound","Abscess / cellulitis","!sk_cell !vit_temp !vit_hrbp neck_ln msk_kanavel");
 T("rash","Skin / wound","Rash","gen_app !sk_rash !ent_phar eye_conj !vit_temp neck_ln msk_joint");
 T("fb","Skin / wound","Foreign body","sk_wound !resp_wob !resp_bs !ent_voice abd_tender !msk_nv ent_canal ent_nose");
 T("wound_check","Skin / wound","Wound check / suture removal","!sk_wchk msk_nv");
 /* Endocrine */
 T("hyperglycemia","Endocrine / metabolic","Hyperglycemia","!neu_ms !gen_hyd !resp_wob !abd_tender resp_bs sk_cell !vit_glu");
 T("hypoglycemia","Endocrine / metabolic","Hypoglycemia","!neu_ms !vit_glu !neu_motor head_atr sk_gen");
-T("abn_labs","Endocrine / metabolic","Abnormal lab result","!neu_ms !cv_rr gen_hyd eye_conj rec_stool neu_motor neu_refl cv_edema");
+T("abn_labs","Endocrine / metabolic","Abnormal lab result","!neu_ms !cv_rr gen_hyd eye_conj rec_stool neu_motor neu_refl cv_edema neu_cvt");
 /* Heme / renal */
 T("sickle","Heme / renal","Sickle cell pain crisis","!vit_spo2 !resp_bs !vit_temp !abd_spleen !neu_motor msk_joint gu_penis eye_conj !abd_tender !resp_o2");
 T("dialysis","Heme / renal","Dialysis patient complaint","!neck_jvd !resp_bs cv_edema !cv_access !cv_rr abd_pd !neu_ms !vit_spo2");
@@ -449,7 +482,7 @@ T("withdrawal","Tox / psych","Alcohol withdrawal","!tox_wd !neu_ms !vit_hrbp !vi
 T("overdose","Tox / psych","Ingestion / overdose","!neu_gcs !vit_hrbp !vit_temp !eye_pupils !tox_feat !neu_tone !sk_track !vit_glu resp_bs !resp_o2");
 T("psych","Tox / psych","Psychiatric evaluation","!psy_app !neu_ms psy_mood !psy_thought !psy_content !psy_perc !psy_ij !sk_track !tox_feat !neu_motor");
 /* Fever */
-T("fever","Fever / infection","Fever (adult)","gen_app !vit_temp !vit_hrbp !neu_ms !neck_supple ent_phar ent_tm !resp_bs !cv_hs !abd_tender !abd_cva !sk_rash !sk_cell !dev_cvc msk_joint sk_press");
+T("fever","Fever / infection","Fever (adult)","gen_app !vit_temp !vit_hrbp !neu_ms !neck_supple ent_phar ent_tm !resp_bs !cv_hs !abd_tender !abd_cva !sk_rash !sk_cell !dev_cvc msk_joint sk_press cv_ie");
 /* Environmental */
 T("heat","Environmental","Heat illness","!vit_temp !neu_ms sk_gen !gen_hyd !neu_coord msk_tender !vit_hrbp");
 T("cold","Environmental","Cold exposure / frostbite","!vit_temp !neu_ms !sk_cold !msk_nv !cv_rr");
@@ -457,8 +490,8 @@ T("envenom","Environmental","Envenomation / sting","!sk_bite !msk_comp !msk_nv !
 /* Pediatric */
 T("peds_fever","Pediatric","Pediatric fever","!gen_peds !vit_temp !gen_hyd !head_font !neck_supple ent_tm ent_phar !resp_wob !resp_bs !abd_tender !sk_rash gu_test msk_joint !resp_o2");
 T("peds_resp","Pediatric","Pediatric cough / wheeze / stridor","!vit_spo2 !resp_wob !ent_voice !resp_bs !gen_peds !gen_hyd ent_tm ent_phar !resp_o2");
-T("peds_gi","Pediatric","Pediatric vomiting / diarrhea","!gen_peds !gen_hyd !head_font abd_soft !abd_tender !abd_hernia gu_test rec_ext rec_stool");
-T("crying","Pediatric","Fussy / crying infant","!gen_peds !msk_tourn !head_font !sk_track !eye_fluor ent_tm !abd_tender !abd_hernia gu_test !msk_tender rec_ext !vit_temp");
+T("peds_gi","Pediatric","Pediatric vomiting / diarrhea","!gen_peds !gen_hyd !head_font abd_soft !abd_tender !abd_hernia gu_test rec_ext rec_stool !abd_infant");
+T("crying","Pediatric","Fussy / crying infant","!gen_peds !msk_tourn !head_font !sk_track !eye_fluor ent_tm !abd_tender !abd_hernia gu_test !msk_tender rec_ext !vit_temp abd_infant msk_nbhip");
 T("brue","Pediatric","BRUE","!gen_peds !vit_spo2 !head_font !sk_track !neu_tone !resp_bs cv_hs eye_conj ent_tongue");
 /* General */
 T("postop","General","Post-operative complication","!abd_wound !abd_tender !abd_perit !cv_calf !resp_bs abd_drains !abd_bladder !vit_temp");
@@ -471,7 +504,7 @@ const MALE=new Set(["gu_test","gu_crem","gu_penis"]),FEMALE=new Set(["pel_ext","
 const SYSNAME=Object.fromEntries(SYS);
 const NC_SUB={nc_orient:"Mental status",nc_attn:"Mental status",nc_lang:"Mental status",nc_dys:"Mental status",nc_memory:"Mental status",
  nc_cn2:"Cranial nerves",nc_cn346:"Cranial nerves",nc_cn5:"Cranial nerves",nc_cn7:"Cranial nerves",nc_cn8:"Cranial nerves",nc_cn910:"Cranial nerves",nc_cn11:"Cranial nerves",nc_cn12:"Cranial nerves",
- nc_bulk:"Motor",nc_tone:"Motor",nc_drift:"Motor",nc_str:"Motor",nc_refl:"Reflexes",nc_lt:"Sensation",nc_pp:"Sensation",nc_vib:"Sensation",nc_prop:"Sensation",
+ nc_bulk:"Motor",nc_tone:"Motor",nc_drift:"Motor",nc_str:"Motor",nc_refl:"Reflexes",neu_hoff:"Reflexes",nc_lt:"Sensation",nc_pp:"Sensation",nc_vib:"Sensation",nc_prop:"Sensation",
  nc_fnf:"Coordination",nc_hks:"Coordination",nc_ram:"Coordination",nc_gait:"Gait",nc_romberg:"Gait",nihss:"NIHSS"};
 const CNPRE={nc_cn2:"II",nc_cn346:"III, IV, VI",nc_cn5:"V",nc_cn7:"VII",nc_cn8:"VIII",nc_cn910:"IX, X",nc_cn11:"XI",nc_cn12:"XII"};
 const MUSC=["Deltoid","Biceps","Triceps","Wrist extensors","Finger flexors","Hand intrinsics","Hip flexors","Knee extensors","Knee flexors","Ankle dorsiflexors","Ankle plantarflexors","Great toe extensor"];
@@ -615,7 +648,7 @@ function devHTML(k,name,a){const d=D(k);
    <div class="chips">${DEVICES.map(id=>`<button class="chip dv" data-a="devpick" data-id="${id}" aria-pressed="${d.dev.includes(id)}">${esc(DEVSHORT[id])}</button>`).join('')}</div></div>${a.map(x=>itemHTML(k,x)).join('')}</section>`}
 function sysHTML(k,name,a,sid){return `<section class="sys"><div class="sysh"><h3>${esc(name)}</h3>${a.some(x=>!WIDGET[x.id])?`<button class="linkbtn" data-a="restsys" data-ids="${a.map(x=>x.id).join(',')}">Rest normal</button>`:''}</div>${a.map(x=>itemHTML(k,x)).join('')}</section>`}
 function addHTML(k){const have=new Set(items(k).map(x=>x.id)),q=addQ.toLowerCase();let h=`<input type="search" id="addq" placeholder="Search findings" value="${esc(addQ)}" style="margin-top:8px">`;
-  for(const[sid,name]of SYS){if(sid==='dev'&&TPL[k].devpick)continue;const a=Object.values(I).filter(it=>it.sys===sid&&!have.has(it.id)&&!it.id.startsWith('nc_')&&(!q||it.label.toLowerCase().includes(q)||it.nl.toLowerCase().includes(q)));
+  for(const[sid,name]of SYS){if(sid==='dev'&&TPL[k].devpick)continue;const a=Object.values(I).filter(it=>it.sys===sid&&!have.has(it.id)&&!it.id.startsWith('nc_')&&(!q||(it.label+' '+it.nl+' '+it.ab.join(' ')).toLowerCase().includes(q)));
     if(a.length)h+=`<div class="grp">${esc(name)}</div><div class="chips">${a.map(it=>`<button class="chip" data-a="add" data-id="${it.id}">+ ${esc(it.label)}</button>`).join('')}</div>`}
   return h}
 function refresh(k){const its=items(k),done=its.filter(x=>isDone(k,x.id)).length,keyLeft=its.filter(x=>x.flag&&!isDone(k,x.id)).length;
