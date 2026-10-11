@@ -126,6 +126,26 @@ details.unit[open]>summary{border-bottom:1px solid var(--line)}
 .foot ul{padding-left:18px;margin:6px 0}
 .toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
 .toast.on{opacity:1}
+.reads button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:baseline;width:100%;cursor:pointer}
+.reads li.lk{border-color:var(--accent)}
+.reads li.lk:hover{background:var(--accent-soft)}
+.reads .op{flex:none;margin-left:auto;font-size:.78rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.reads li.nl .op{color:var(--muted)}
+.bkrow{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.bkrow:last-child{border-bottom:0}
+.bkrow .tx{flex:1;min-width:0}
+.bkrow .nm{font-weight:700}
+.bkrow .st{font-size:.85rem;color:var(--muted)}
+.bkrow .st.ok{color:var(--ok)}.bkrow .st.bad{color:var(--warn)}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.note{font-size:.88rem;color:var(--muted);margin:10px 0 0}
+.reader{display:flex;flex-direction:column;gap:10px;align-items:center}
+.pg{width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;position:relative;display:block}
+.pg canvas{width:100%;height:100%;display:block;border-radius:6px}
+.pg .pn{position:absolute;right:8px;bottom:6px;font-size:.72rem;color:var(--muted);background:rgba(255,255,255,.85);padding:1px 6px;border-radius:6px}
+.pgchip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);font-size:.85rem;font-weight:700;padding:6px 12px;border-radius:999px;z-index:15}
+.loading{color:var(--muted);text-align:center;padding:40px 0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -985,6 +1005,7 @@ L.push(
 );
 
 
+const PAGES={"O":{"pages":4672,"ch":{"1":[103,123],"2":[124,145],"3":[146,171],"4":[172,189],"5":[190,223],"6":[224,241],"7":[242,272],"8":[273,290],"9":[292,309],"10":[310,357],"11":[358,387],"12":[388,399],"13":[400,420],"14":[421,437],"15":[439,463],"16":[464,498],"17":[499,519],"18":[520,543],"19":[544,575],"20":[576,602],"21":[603,647],"22":[648,669],"23":[671,696],"24":[697,755],"25":[756,789],"26":[790,819],"27":[820,855],"28":[856,887],"29":[888,984],"30":[985,1019],"31":[1020,1222],"32":[1223,1257],"33":[1258,1328],"34":[1329,1372],"35":[1373,1421],"36":[1423,1450],"37":[1451,1497],"38":[1498,1569],"39":[1570,1609],"40":[1610,1661],"41":[1662,1720],"42":[1721,1776],"43":[1777,1801],"44":[1802,1843],"45":[1844,1877],"46":[1878,1930],"47":[1931,1967],"48":[1968,2015],"49":[2016,2059],"50":[2060,2077],"51":[2079,2103],"52":[2104,2147],"53":[2148,2169],"54":[2170,2243],"55":[2245,2265],"56":[2266,2287],"57":[2288,2325],"58":[2326,2380],"59":[2382,2417],"60":[2418,2440],"61":[2441,2473],"62":[2474,2507],"63":[2508,2540],"64":[2541,2578],"65":[2579,2601],"66":[2602,2652],"67":[2653,2689],"68":[2691,2725],"69":[2726,2772],"70":[2773,2799],"71":[2800,2818],"72":[2820,2839],"73":[2840,2870],"74":[2871,2892],"75":[2893,2913],"76":[2914,2937],"77":[2939,2966],"78":[2967,2990],"79":[2991,3015],"80":[3016,3057],"81":[3058,3098],"82":[3099,3126],"83":[3128,3160],"84":[3161,3189],"85":[3190,3207],"86":[3208,3228],"87":[3229,3255],"88":[3256,3285],"89":[3286,3321],"90":[3323,3341],"91":[3342,3366],"92":[3367,3399],"93":[3400,3429],"94":[3430,3465],"95":[3466,3503],"96":[3504,3551],"97":[3552,3570],"98":[3571,3589],"99":[3590,3614],"100":[3615,3634],"101":[3636,3674],"102":[3675,3687],"103":[3688,3713],"104":[3714,3763],"105":[3764,3798],"106":[3799,3829],"107":[3830,3874],"108":[3875,3900],"109":[3902,3932],"110":[3933,3965],"111":[3966,3995],"112":[3997,4039],"113":[4040,4098],"114":[4099,4136],"115":[4138,4172],"116":[4173,4223],"117":[4224,4250],"118":[4251,4282],"119":[4284,4308],"120":[4309,4341]}},"M":{"pages":1753,"ch":{"1":[17,38],"2":[39,70],"3":[71,103],"4":[105,120],"5":[121,147],"6":[148,183],"7":[185,201],"8":[202,226],"9":[227,253],"10":[254,284],"11":[286,319],"12":[320,353],"13":[354,384],"14":[385,409],"15":[411,442],"16":[443,481],"17":[482,517],"18":[519,550],"19":[551,579],"20":[581,611],"21":[612,635],"22":[636,667],"23":[668,697],"24":[698,728],"25":[730,759],"26":[760,797],"27":[798,817],"28":[818,845],"29":[846,878],"30":[879,904],"31":[906,925],"32":[926,961],"33":[962,985],"34":[987,1021],"35":[1022,1057],"36":[1058,1082],"37":[1083,1105],"38":[1106,1134],"39":[1136,1166],"40":[1167,1193],"41":[1194,1207],"42":[1209,1237],"43":[1238,1277],"44":[1279,1310],"45":[1311,1334],"46":[1335,1361],"47":[1363,1385],"48":[1386,1414],"49":[1415,1442],"50":[1443,1467],"51":[1469,1511],"52":[1512,1559],"53":[1560,1590],"54":[1592,1625],"55":[1626,1646]}},"V":{"pages":280,"ch":{"0":[10,12],"1":[13,20],"2":[21,28],"3":[29,34],"4":[35,45],"5":[46,57],"6":[58,62],"7":[63,72],"8":[73,89],"9":[90,99],"10":[100,103],"11":[104,108],"12":[109,126],"13":[127,134],"14":[135,148],"15":[149,162],"16":[163,171],"17":[172,179],"18":[180,189],"19":[190,195],"20":[196,204],"21":[205,211],"22":[212,216],"23":[217,225],"24":[226,239],"25":[240,246],"26":[247,264]}},"P":{"pages":125,"ch":{"1":[11,17],"2":[18,25],"3":[26,30],"4":[31,37],"5":[38,48],"6":[49,52],"7":[53,54],"8":[55,58],"9":[59,63],"10":[64,69],"11":[70,72],"12":[73,76],"13":[77,80],"14":[81,83],"15":[84,86],"16":[87,92],"17":[93,96],"18":[97,98],"19":[99,103]}}};
 
 /* ---------- state: completions and notes, per device, optionally synced ---------- */
 const KEY='panacea.primer.v1';
@@ -1057,9 +1078,11 @@ const IC={
 const hd=document.getElementById('hd'),app=document.getElementById('app');
 let filter='';
 
-function route(){const h=location.hash.slice(1);if(h==='all')return{v:'all'};if(h.startsWith('l/')&&IDX[h.slice(2)]!==undefined)return{v:'lesson',id:h.slice(2)};return{v:'today'}}
+function route(){const h=location.hash.slice(1);if(h==='all')return{v:'all'};if(h==='books')return{v:'books'};
+  const rm=h.match(/^read\/([OMVP])(\d+)$/);if(rm&&PAGES[rm[1]]&&PAGES[rm[1]].ch[rm[2]])return{v:'read',b:rm[1],c:rm[2]};if(h.startsWith('l/')&&IDX[h.slice(2)]!==undefined)return{v:'lesson',id:h.slice(2)};return{v:'today'}}
 function render(keep){const r=route();const y=window.scrollY;
-  if(r.v==='all')renderAll();else if(r.v==='lesson')renderLesson(L[IDX[r.id]],false);else renderToday();
+  if(r.v!=='read')closeReader();
+  if(r.v==='books')renderBooks();else if(r.v==='read')renderReader(r.b,r.c);else if(r.v==='all')renderAll();else if(r.v==='lesson')renderLesson(L[IDX[r.id]],false);else renderToday();
   window.scrollTo(0,keep?y:0)}
 function header(title,back){hd.innerHTML=`${HOME}${back?`<button class="back" data-go="${back}" aria-label="Back">‹</button>`:''}<h1>${esc(title)}</h1><span class="syncdot ${syncState}" id="syncdot" title="${esc(syncTitle())}"></span>${back?'':`<button class="hdlink" data-go="#all">All lessons</button>`}`}
 
@@ -1088,7 +1111,7 @@ function lessonBody(l,isToday){
   const list=a=>`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
   return `<div class="eyebrow">${isToday?'Today · ':''}Day ${i+1} · Unit ${u.n}: ${esc(u.t)}</div>
   <h2 class="lt">${esc(l.t)}</h2>
-  <ul class="reads">${l.r.map(c=>{const x=readLabel(c);return `<li><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span></li>`}).join('')}</ul>
+  <ul class="reads">${l.r.map(c=>{const x=readLabel(c),lk=!!BM[c[0]];return `<li class="${lk?'lk':'nl'}"><button data-read="${c}" data-from="${l.id}"><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span><span class="op">${lk?'Open':'Link PDF'}</span></button></li>`}).join('')}</ul>
   <div class="bl"><b>Bottom line</b>${esc(l.bl)}</div>
   <section class="sec"><h3>${IC.ord}What to order</h3>${list(l.ord)}</section>
   <section class="sec"><h3>${IC.act}At the bedside</h3>${list(l.act)}</section>
@@ -1115,8 +1138,77 @@ function renderAll(){
     for(const l of ls){const d=isDone(l.id);
       h+=`<button class="lrow${d?' d':''}${cur===l?' today':''}" data-go="#l/${l.id}"><span class="dn">Day ${IDX[l.id]+1}</span><span class="lt2">${esc(l.t)}${d?`<small>Done ${fmtDay(S.done[l.id].day)}</small>`:cur===l?'<small>Up next</small>':''}</span><span class="bx">${CK}</span></button>`}
     h+=`</details>`}
+  const nl=Object.keys(BOOKS).filter(k=>BM[k]).length;
+  h+=`<button class="btn block" data-go="#books" style="margin-top:6px">Your PDFs · ${nl} of ${Object.keys(BOOKS).length} linked on this device</button>`;
   h+=`<div class="foot">Readings point to chapters in:<ul>${Object.values(BOOKS).map(b=>`<li>${esc(b.full)}</li>`).join('')}</ul>Lessons are summaries for learning, not orders for a specific patient; check doses against your institution’s references.${SY?'':' Progress is saved on this device; if ICU Rounder sync is turned on here, Primer syncs through the same private repo.'}</div>`;
   app.innerHTML=h;
+}
+
+/* ---------- your PDFs: kept only in this browser (IndexedDB), never uploaded ---------- */
+const BMKEY='panacea.primer.books';
+let BM={};try{BM=JSON.parse(localStorage.getItem(BMKEY)||'{}')||{}}catch(e){}
+const saveBM=()=>{try{localStorage.setItem(BMKEY,JSON.stringify(BM))}catch(e){}};
+let dbP=null;
+function db(){return dbP||(dbP=new Promise((res,rej)=>{const r=indexedDB.open('primer-books',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function idb(mode,fn){const d=await db();return new Promise((res,rej)=>{const tx=d.transaction('files',mode);const st=tx.objectStore('files');const rq=fn(st);tx.oncomplete=()=>res(rq&&rq.result);tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)})}
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+let pdfjsP=null;
+function loadPdfjs(){return pdfjsP||(pdfjsP=new Promise((res,rej)=>{if(window.pdfjsLib){res();return}const sc=document.createElement('script');sc.src=PDFJS;
+  sc.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace('pdf.min.js','pdf.worker.min.js');res()};sc.onerror=()=>{pdfjsP=null;rej(new Error('Couldn’t load the PDF reader. Check your connection.'))};document.head.appendChild(sc)}))}
+const DOCS={};
+async function getDoc(code){if(DOCS[code])return DOCS[code];
+  const blob=await idb('readonly',st=>st.get(code));if(!blob)throw new Error('That PDF isn’t on this device anymore. Link it again.');
+  await loadPdfjs();const data=new Uint8Array(await blob.arrayBuffer());
+  DOCS[code]=await pdfjsLib.getDocument({data}).promise;return DOCS[code]}
+let linking='';
+async function linkBook(code,file){linking=code;render(true);
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+    await idb('readwrite',st=>st.put(file,code));delete DOCS[code];
+    let pages=null;try{pages=(await getDoc(code)).numPages}catch(e){}
+    BM[code]={name:file.name,size:file.size,pages,at:Date.now()};saveBM();
+    const exp=PAGES[code].pages;
+    toast(pages===exp?BOOKS[code].short+' linked.':pages?'Linked, but this file has '+pages+' pages (expected '+exp+'). Chapter pages may be off.':'Linked, but the file couldn’t be read as a PDF.')}
+  catch(e){toast(e&&e.name==='QuotaExceededError'?'Not enough storage on this device for that file.':'Couldn’t save that file on this device.')}
+  linking='';render(true)}
+async function unlinkBook(code){try{await idb('readwrite',st=>st.delete(code))}catch(e){}delete BM[code];delete DOCS[code];saveBM();render(true)}
+const mb=n=>(n/1048576).toFixed(n>10485760?0:1)+' MB';
+function renderBooks(){
+  document.title='Your PDFs · Primer';header('Your PDFs','#bback');
+  let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of each book once on this device. Readings in every lesson then open straight to the chapter.</p>
+   <p class="note" style="margin-top:6px">Files stay in this browser only. They aren’t uploaded, synced, or added to PANACEA, so link them again on each phone or computer.</p></div><div class="card">`;
+  for(const[k,b]of Object.entries(BOOKS)){const m=BM[k],exp=PAGES[k].pages;
+    const st=linking===k?'<span class="st">Saving…</span>':m?(m.pages&&m.pages!==exp?`<span class="st bad">Linked · ${m.pages} pages, expected ${exp}; pages may be off</span>`:`<span class="st ok">Linked · ${esc(m.name)} · ${mb(m.size)}</span>`):'<span class="st">Not linked</span>';
+    h+=`<div class="bkrow"><div class="tx"><div class="nm">${esc(b.short)}</div><div class="st" style="margin-bottom:2px">${esc(b.full)}</div>${st}</div>
+      <div class="btnrow" style="flex:none;flex-direction:column;align-items:stretch">
+      <label class="btn sm filebtn">${m?'Replace':'Choose PDF'}<input type="file" accept="application/pdf,.pdf" data-file="${k}"></label>
+      ${m?`<button class="linkbtn" data-a="unlink" data-b="${k}">Remove</button>`:''}</div></div>`}
+  h+=`</div>`;app.innerHTML=h}
+
+let RD=null;
+function closeReader(){if(RD){RD.obs&&RD.obs.disconnect();RD.vis&&RD.vis.disconnect();RD.dead=true;RD=null}const c=document.getElementById('pgchip');if(c)c.remove()}
+async function renderReader(code,ch){
+  closeReader();const b=BOOKS[code],[s0,e0]=PAGES[code].ch[ch];
+  document.title=b.short+' Ch. '+ch+' · Primer';header(b.short+(+ch?' · Ch. '+ch:''),'#rback');
+  app.innerHTML=`<div class="eyebrow" style="margin-top:6px">${esc(b.short)}${+ch?' · Chapter '+ch:''}</div><h2 class="lt" style="font-size:1.3rem">${esc(b.ch[ch]||'')}</h2><div class="reader" id="rdr"><div class="loading">Opening…</div></div>`;
+  const me=RD={dead:false};
+  let doc;try{doc=await getDoc(code)}catch(e){if(!me.dead)document.getElementById('rdr').innerHTML=`<div class="card" style="width:100%"><p style="margin:0 0 10px">${esc(e.message)}</p><button class="btn sm" data-go="#books">Your PDFs</button></div>`;return}
+  if(me.dead)return;
+  const s=Math.min(s0,doc.numPages),e=Math.min(e0,doc.numPages);
+  const first=await doc.getPage(s);const vp1=first.getViewport({scale:1});const ratio=vp1.height/vp1.width;
+  const box=document.getElementById('rdr');box.innerHTML='';
+  for(let p=s;p<=e;p++){const d=document.createElement('div');d.className='pg';d.dataset.p=p;d.style.aspectRatio=(1/ratio).toFixed(4);d.innerHTML=`<span class="pn">${p-s+1} / ${e-s+1}</span>`;box.appendChild(d)}
+  const end=document.createElement('div');end.className='btnrow';end.style.margin='14px 0';end.innerHTML=`<button class="btn" data-go="#rback">Back to the lesson</button>`;box.appendChild(end);
+  const chip=document.createElement('div');chip.className='pgchip';chip.id='pgchip';chip.textContent=`Page 1 of ${e-s+1}`;document.body.appendChild(chip);
+  const rendered=new Map();
+  async function draw(el){const p=+el.dataset.p;if(rendered.has(p)||me.dead)return;rendered.set(p,'busy');
+    try{const pg=await doc.getPage(p);if(me.dead)return;const w=el.clientWidth,dpr=Math.min(window.devicePixelRatio||1,2);
+      const vp=pg.getViewport({scale:w/pg.getViewport({scale:1}).width*dpr});const cv=document.createElement('canvas');cv.width=Math.floor(vp.width);cv.height=Math.floor(vp.height);
+      await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;if(me.dead||!rendered.has(p))return;el.prepend(cv);rendered.set(p,cv)}
+    catch(err){rendered.delete(p)}}
+  function drop(el){const p=+el.dataset.p,cv=rendered.get(p);if(cv&&cv!=='busy'){cv.width=cv.height=0;cv.remove()}rendered.delete(p)}
+  me.obs=new IntersectionObserver(es=>{for(const x of es){if(x.isIntersecting)draw(x.target);else drop(x.target)}},{rootMargin:'1200px 0px'});
+  me.vis=new IntersectionObserver(es=>{for(const x of es)if(x.isIntersecting){chip.textContent=`Page ${+x.target.dataset.p-s+1} of ${e-s+1}`}},{rootMargin:'-45% 0px -45% 0px'});
+  box.querySelectorAll('.pg').forEach(el=>{me.obs.observe(el);me.vis.observe(el)});
 }
 
 /* ---------- events ---------- */
@@ -1124,15 +1216,22 @@ document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');
   if(g){const to=g.dataset.go;if(to==='#l/')return;
     if(to==='#today'){location.hash='';return}
+    if(to==='#rback'){location.hash=sessionStorage.getItem('primer.readBack')||'';return}
+    if(to==='#bback'){location.hash=sessionStorage.getItem('primer.booksBack')||'all';sessionStorage.removeItem('primer.booksBack');return}
     if(to==='#'){location.hash=sessionStorage.getItem('primer.back')||'';return}
     const v=route().v;if(to.startsWith('#l/')&&v!=='lesson')sessionStorage.setItem('primer.back',v==='all'?'all':'');
     location.hash=to.slice(1);return}
+  const rd=e.target.closest('[data-read]');
+  if(rd){const c=rd.dataset.read;sessionStorage.setItem('primer.readBack','l/'+rd.dataset.from);
+    if(BM[c[0]])location.hash='read/'+c;else{sessionStorage.setItem('primer.booksBack','l/'+rd.dataset.from);location.hash='books'}return}
   const b=e.target.closest('[data-a]');if(!b)return;
+  if(b.dataset.a==='unlink'){unlinkBook(b.dataset.b);return}
   if(b.dataset.a==='reveal'){const q=document.getElementById('qz');q.classList.toggle('open');b.textContent=q.classList.contains('open')?'Hide answer':'Show answer'}
   else if(b.dataset.a==='done'){const id=b.dataset.id;const wasToday=route().v==='today';S.done[id]={on:true,day:today(),ts:Date.now()};save();
     toast('Lesson complete.');if(wasToday){location.hash='';render()}else render(true)}
   else if(b.dataset.a==='undo'){S.done[b.dataset.id]={on:false,day:'',ts:Date.now()};save();render(true)}
 });
+app.addEventListener('change',e=>{const t=e.target;if(t.dataset.file&&t.files&&t.files[0])linkBook(t.dataset.file,t.files[0])});
 app.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderAll();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
