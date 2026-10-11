@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Consult">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Consult</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Consult: prep a consult call by service. Palette and type match the rest of PANACEA. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--ok:#1D6E49;--ok-soft:#E1F2E9;
+  --paper:#FBFCFD;
+  color-scheme:light only;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 "Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding-left:16px;padding-right:16px}
+main.wrap{padding-top:12px;padding-bottom:120px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:10px;min-height:56px}
+.hd h1{font-size:1.25rem;margin:0;flex:1;letter-spacing:-.01em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{border:0;background:none;color:var(--accent);font-size:2.1rem;line-height:1;padding:0 8px 4px 0;cursor:pointer;font-family:inherit}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover,.homebtn:active{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+h2{font-size:1.05rem;margin:22px 0 8px;letter-spacing:.01em}
+h2.sec{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:22px 0 8px}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card>h3{margin:0 0 8px;font-size:1rem}
+input,textarea,select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0}
+textarea{resize:vertical;line-height:1.4;min-height:44px;display:block;max-width:100%}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fld{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.fld>span{font-size:.85rem;color:var(--muted);font-weight:700}
+.row{display:flex;gap:8px}.row>.fld{flex:1;min-width:0}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.92rem;font-weight:700;padding:6px 2px;cursor:pointer}
+.linkbtn.danger{color:var(--warn)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.chip{font:inherit;font-size:.92rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 13px;cursor:pointer;min-height:38px;text-align:left}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.chip:hover,.seg button:hover{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
+/* home */
+.search{margin:4px 0 4px}
+.svc{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;min-height:64px;text-decoration:none}
+.svc:hover{border-color:var(--accent)}
+.svc .ab{flex:none;width:46px;height:46px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:.82rem;letter-spacing:.01em}
+.svc .txt{flex:1;min-width:0}
+.svc .nm{font-weight:700;font-size:1.05rem;line-height:1.2}
+.svc .ds{color:var(--muted);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svc .dr{flex:none;font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:999px}
+.go{flex:none;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+details.me{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:20px 0 12px}
+details.me>summary{list-style:none;padding:14px;cursor:pointer;font-weight:700;display:flex;align-items:center;gap:10px}
+details.me>summary::-webkit-details-marker{display:none}
+details.me>summary .sm{flex:1;color:var(--muted);font-weight:400;font-size:.9rem;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.me .inner{padding:0 14px 14px}
+.tips{margin:0;padding-left:18px;font-size:.92rem}
+.tips li{margin:5px 0}
+.empty{text-align:center;color:var(--muted);padding:24px 10px}
+
+/* service view */
+.flags{border-color:var(--warn);background:var(--warn-soft)}
+.flags h3{color:var(--warn)}
+.flags ul{margin:0;padding-left:18px;font-size:.95rem}
+.flags li{margin:3px 0}
+.grp{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:14px 0 2px}
+.grp:first-of-type{margin-top:4px}
+.item{border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.ib{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;font:inherit;font-size:.98rem;color:var(--ink);background:none;border:0;padding:10px 0;cursor:pointer;min-height:46px}
+.bx{flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);display:grid;place-items:center;margin-top:-1px}
+.bx svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.item.on .bx{background:var(--ok);border-color:var(--ok)}
+.item.on .bx svg{opacity:1}
+.ib .lb{flex:1;min-width:0}
+.ib .lb small{display:block;color:var(--muted);font-size:.82rem;margin-top:1px}
+.ib .vv{flex:none;max-width:42%;color:var(--ok);font-weight:700;font-size:.9rem;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:2px}
+.iv{display:none;padding:0 0 10px 38px}
+.item.open .iv{display:block}
+.iv input{padding:8px 10px;background:var(--paper)}
+.count{font-size:.85rem;color:var(--muted);font-weight:700}
+.bar{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:999px;transition:width .2s}
+pre.out{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.95rem;line-height:1.5;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px;margin:0 0 10px}
+.hint{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.foot{color:var(--muted);font-size:.8rem;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap hd" id="hd"></div></header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* Each item: "group|what they ask about|example value". Groups: H history, X exam, L labs/data, I imaging, T done in ED. */
+const SERVICES=[
+{id:'hosp',sec:'Admitting',ab:'Med',name:'Hospital Medicine',ds:'Admission to medicine',
+ qs:['Admit to medicine (inpatient)','Observation admission','Telemetry admission'],
+ flags:['Needs pressors, BiPAP, or frequent neuro checks → this is an ICU call, not a floor call.'],
+ items:['H|Working diagnosis and why they can’t go home|failed PO trial, new O2 need','H|Code status|full code','H|PMHx, home meds, allergies (brief)|','H|Baseline function and home situation|lives alone, ambulates w/ walker','X|Vitals trend and O2 requirement|HR 96, 2 L NC','L|Key labs and how they compare to baseline|','I|Imaging results|','T|ED treatments and response|','T|Pending results|','H|Other services already consulted|','H|Isolation needs (COVID, flu, MRSA, C. diff)|','H|Level of care you think fits (floor, tele, step-down)|tele']},
+{id:'icu',sec:'Admitting',ab:'ICU',name:'Critical Care',ds:'MICU admission',
+ qs:['Admit to the ICU','Bedside evaluation for possible ICU admission'],
+ flags:['Peri-arrest, rising pressor needs, or a failing airway: say so in the first sentence.'],
+ items:['H|Why the ICU (pressors, airway, ongoing resuscitation)|','X|MAP and pressor agent/dose|MAP 62 on norepi 0.1','T|Fluids given|2 L LR','X|Airway and O2: NC, HFNC, BiPAP, or intubated (vent settings)|','L|ABG or VBG|7.21/58','L|Lactate (and repeat)|4.1 → 2.8','X|Mental status / GCS|','H|Suspected source; cultures drawn|','T|Antibiotics and time given|','T|Access: IVs, central line, arterial line|','L|CBC, BMP, coags|','H|Code status and goals-of-care discussion|']},
+{id:'peds',sec:'Admitting',ab:'Peds',name:'Pediatrics',ds:'Pediatric admission',
+ qs:['Admit to pediatrics','PICU evaluation'],
+ flags:['Ill-appearing febrile neonate, rising work of breathing, or altered mental status → make the urgency clear.'],
+ items:['H|Age and weight (kg)|4 y, 17 kg','H|Immunization status|UTD','H|Birth history (infants)|term, no NICU','H|PO intake and urine output|2 wet diapers/24 h','X|Hydration exam (mucous membranes, cap refill)|','X|Work of breathing and O2 requirement|','H|Fever source, cultures drawn|','T|Treatments given and response|','H|Caregiver concerns or social needs|']},
+{id:'cards',sec:'Medical',ab:'Cards',name:'Cardiology',ds:'ACS, arrhythmia, heart failure',
+ qs:['STEMI activation','Ongoing chest pain with elevated troponin','New arrhythmia: rate vs rhythm control','Decompensated heart failure','Pericardial effusion / possible tamponade','Device interrogation'],
+ flags:['STEMI or equivalent: activate the cath lab per your protocol rather than waiting on a consult.','Unstable brady- or tachyarrhythmia, or tamponade physiology.'],
+ items:['L|ECG findings, compared with prior|1 mm STE II/III/aVF','L|Troponin (values and delta)|hs-TnI 48 → 210','H|Symptom onset; is pain ongoing?|','X|HR and BP|','X|Volume exam: JVD, crackles, edema|','I|POCUS / echo: effusion, LV and RV function|','H|Cardiac history: stents, CABG, last EF, last cath|','H|Anticoagulant/antiplatelet use|','T|Meds given: aspirin, heparin, nitro, rate control|','L|Creatinine (contrast)|','L|K and Mg|','L|BNP|','I|Chest X-ray|','H|Device type (pacer/ICD) and manufacturer|']},
+{id:'neuro',sec:'Medical',ab:'Neuro',name:'Neurology',ds:'Stroke, seizure, weakness',
+ qs:['Stroke alert: thrombolysis candidate?','Possible LVO: thrombectomy evaluation','Seizure: workup and AED plan','TIA workup'],
+ flags:['Within the thrombolysis or thrombectomy window: page as a stroke alert.','Status epilepticus.'],
+ items:['H|Last known well (exact time)|07:40','X|NIHSS|8','L|Fingerstick glucose|','X|BP|','I|CT head|','I|CTA head/neck (LVO?)|','H|Anticoagulant use and last dose|','H|Thrombolysis contraindications|','H|Baseline function (mRS)|','H|Weight (lytic dosing)|','H|Seizure at onset? Seizure history, AEDs and levels|','T|Benzos/AEDs given; time back to baseline|']},
+{id:'gi',sec:'Medical',ab:'GI',name:'Gastroenterology',ds:'GI bleed, foreign body',
+ qs:['Upper GI bleed: endoscopy timing','Lower GI bleed','Food impaction / foreign body'],
+ flags:['Unstable GI bleed.','Food impaction with inability to handle secretions, or a swallowed button battery.'],
+ items:['H|Hematemesis, melena, or hematochezia; how much|','X|HR and BP|','L|Hgb (and trend)|','L|BUN|','L|Platelets and INR|','H|Liver disease, cirrhosis, known varices|','H|Anticoagulants, antiplatelets, NSAIDs|','L|Glasgow-Blatchford score|','T|Transfusion given|','T|PPI; octreotide and ceftriaxone if cirrhosis|','H|Prior EGD/colonoscopy|','H|Foreign body: what, when, handling secretions?|']},
+{id:'neph',sec:'Medical',ab:'Neph',name:'Nephrology',ds:'AKI, hyperkalemia, dialysis',
+ qs:['Emergent dialysis','Hyperkalemia management','AKI workup','Missed dialysis'],
+ flags:['Hyperkalemia with ECG changes despite treatment.','Volume overload with hypoxia, uremic pericarditis or encephalopathy, or a dialyzable ingestion.'],
+ items:['L|Creatinine (and baseline)|2.4 (baseline 1.1)','L|K (ECG changes?)|6.4, peaked T','L|Bicarb / pH|','L|BUN|','X|Volume exam: JVD, crackles, edema, O2 need|','H|Urine output|','H|On dialysis? Schedule, last session, missed sessions|','X|Access: fistula/graft/catheter; thrill and bruit|','T|Treatments: calcium, insulin/dextrose, albuterol, bicarb, diuretic trial|','H|Nephrotoxins (NSAIDs, contrast, ACEi/ARB)|','I|Renal ultrasound (obstruction)|','L|UA|']},
+{id:'onc',sec:'Medical',ab:'Onc',name:'Hematology/Oncology',ds:'Neutropenic fever, oncologic emergencies',
+ qs:['Neutropenic fever','Possible tumor lysis syndrome','Possible cord compression','Hypercalcemia of malignancy'],
+ flags:['Neutropenic fever: antibiotics within an hour; don’t wait on the call.','Cord compression, leukostasis/hyperviscosity, SVC syndrome, TLS.'],
+ items:['H|Cancer type, stage, current treatment|','H|Last chemo date and primary oncologist|','L|ANC|','L|Hgb and platelets|','X|Temp; cultures drawn|','T|Antibiotics and time given|','H|Port or central line|','L|Calcium|','L|Uric acid, K, phos, LDH|','I|Imaging|','H|Code status|']},
+{id:'psych',sec:'Medical',ab:'Psych',name:'Psychiatry',ds:'Safety evaluation, hold',
+ qs:['Psychiatric evaluation for safety','Inpatient psychiatric admission','Agitation management'],
+ flags:['Agitation requiring restraint, or new altered mental status (think medical cause first).'],
+ items:['H|Reason for presentation|','H|SI/HI: plan, intent, means|','H|Prior attempts|','H|Firearm access|','H|Substances; intoxication level|BAL 0.08','L|Medical clearance labs per local policy|','H|Legal status: voluntary or hold|','H|Collateral obtained|','H|Psych meds and adherence|','T|Agitation and meds given|','H|Outpatient providers|']},
+{id:'tox',sec:'Medical',ab:'Tox',name:'Poison Control / Toxicology',ds:'Ingestion, overdose',
+ qs:['Ingestion: management and observation time','Antidote guidance'],
+ flags:['Wide QRS, seizures, or refractory hypotension. US Poison Control: 1-800-222-1222.'],
+ items:['H|Substances, amount, formulation (ER?)|','H|Time of ingestion|','H|Intent|','H|Weight|','X|Vitals|','X|Mental status|','X|Toxidrome features: pupils, skin, bowel sounds|','L|ECG: QRS, QTc|','L|APAP and salicylate levels with time drawn|','L|BMP, anion gap, osmolar gap|','L|VBG|','T|Treatments: charcoal, NAC, bicarb|']},
+{id:'gs',sec:'Surgical',ab:'Surg',name:'General Surgery',ds:'Acute abdomen, hernia, abscess',
+ qs:['Appendicitis','Cholecystitis','Small bowel obstruction','Perforated viscus','Incarcerated hernia','Abscess needing drainage'],
+ flags:['Free air, peritonitis, septic shock, or concern for strangulation/ischemia.'],
+ items:['H|Onset, location, migration of pain|','H|Last PO intake (time)|','X|Peritoneal signs: rebound, guarding, rigidity|','X|Hernia: reducible?|','X|Temp, HR, BP|','L|WBC|','L|Lipase, LFTs, bilirubin|','L|Lactate|','I|CT / ultrasound findings|','H|Prior abdominal surgeries|','H|Anticoagulants/antiplatelets|','L|Pregnancy test, coags, type and screen|','T|NPO, IVF, analgesia, antibiotics; NG tube|']},
+{id:'trauma',sec:'Surgical',ab:'Trau',name:'Trauma Surgery',ds:'Injured patient, non-activation',
+ qs:['Trauma consult','Upgrade to trauma activation','Rib fractures: admission'],
+ flags:['Hypotension, positive FAST, or penetrating torso injury → activation, not a consult.'],
+ items:['H|Mechanism and time|','X|Primary survey; GCS|','X|HR and BP|','I|FAST / eFAST|','I|CT findings|','H|Anticoagulants/antiplatelets; reversal given|','L|Hgb, lactate|','L|Coags, type and screen|','X|Rib fractures: count, pulmonary function, pain control|','H|Age and frailty|']},
+{id:'ortho',sec:'Surgical',ab:'Ortho',name:'Orthopedics',ds:'Fracture, dislocation, septic joint',
+ qs:['Fracture: operative vs splint and follow-up','Open fracture','Dislocation: unable to reduce','Possible compartment syndrome','Possible septic joint'],
+ flags:['Open fracture, neurovascular compromise, compartment syndrome, irreducible dislocation, septic joint.'],
+ items:['H|Mechanism and time of injury|','H|Hand dominance (upper extremity)|R-handed','X|Distal pulses and cap refill|2+ radial, CR < 2 s','X|Distal neuro exam (motor and sensory by nerve)|','X|Skin: open vs closed, tenting|','X|Compartments: soft? pain with passive stretch?|','I|X-rays: 2+ views, joint above and below|','T|Reduction attempted; post-reduction NV exam and films|','T|Splint type|','T|Tetanus and antibiotics (if open)|','H|Other injuries|','H|Anticoagulants|','H|Last PO|','H|Baseline function and ambulation|']},
+{id:'hand',sec:'Surgical',ab:'Hand',name:'Hand Surgery',ds:'Hand and finger injuries',
+ qs:['Tendon laceration','Amputation: replantation candidate?','Flexor tenosynovitis','High-pressure injection injury'],
+ flags:['High-pressure injection, amputation (wrap in moist gauze, bag on ice), flexor tenosynovitis, compartment syndrome.'],
+ items:['H|Hand dominance and occupation|','H|Mechanism: bite, saw, glass, injection|','X|Two-point discrimination by digit|','X|FDS and FDP tested by finger|','X|Extensor function|','X|Cap refill by digit|','X|Nail bed injury|','I|X-ray (fracture, foreign body)|','T|Tetanus|','T|Antibiotics|']},
+{id:'nsgy',sec:'Surgical',ab:'NSGY',name:'Neurosurgery',ds:'Intracranial bleed, spine',
+ qs:['Intracranial hemorrhage','Spine fracture','Possible cauda equina','Spinal epidural abscess','Shunt malfunction'],
+ flags:['Herniation signs (blown pupil, Cushing response), cauda equina, epidural abscess, expanding hematoma.'],
+ items:['X|GCS with components|E3 V4 M6','X|Pupils|','X|Focal deficits|','H|Mechanism|','I|CT head/spine: size, location, shift|','H|Anticoagulant/antiplatelet use; reversal given|','L|Platelets, INR|','X|BP and goal|','X|Spine: motor by level, sensory level|','X|Rectal tone, saddle anesthesia, post-void residual|','T|C-collar placed|','H|Seizure|','H|Last PO|']},
+{id:'vasc',sec:'Surgical',ab:'Vasc',name:'Vascular Surgery',ds:'Limb ischemia, AAA',
+ qs:['Acute limb ischemia','Symptomatic AAA','Bleeding from AV access','Post-procedure groin hematoma/pseudoaneurysm'],
+ flags:['Acute limb ischemia with sensory or motor loss, ruptured AAA, uncontrolled access bleeding.'],
+ items:['X|Pulses: palpation and Doppler, both sides|DP absent, Doppler monophasic','L|ABI|','X|Motor and sensory (viable vs threatened)|','H|Time of onset|','H|Prior bypass, stents, vascular surgery|','T|Heparin started|','I|CTA findings|','L|Creatinine|','L|Hgb|','X|AAA: hemodynamics, size on CT/US|']},
+{id:'uro',sec:'Surgical',ab:'Uro',name:'Urology',ds:'Stone, retention, torsion',
+ qs:['Obstructing stone with infection','Testicular torsion','Urinary retention: unable to place Foley','Gross hematuria with clots','Fournier’s gangrene','Priapism'],
+ flags:['Infected obstructing stone, torsion, Fournier’s, priapism, failed Foley.'],
+ items:['I|Stone size and location (CT)|6 mm R UVJ','I|Hydronephrosis|','X|Fever or signs of infection|','L|UA: nitrite, LE, WBC|','L|Creatinine (vs baseline)|','H|Solitary kidney or transplant|','T|Pain controlled?|','L|Bladder scan / retention volume|','T|Foley attempts: size, coudé|','X|Testicular exam: lie, cremasteric reflex|','I|Scrotal US with Doppler|','H|Time of onset (torsion)|','X|Hematuria with clots; CBI needed?|']},
+{id:'obgyn',sec:'Surgical',ab:'OB',name:'OB/GYN',ds:'Early pregnancy, bleeding, torsion',
+ qs:['Possible ectopic pregnancy','Heavy vaginal bleeding','Possible ovarian torsion','Pregnant patient > 20 weeks','Preeclampsia'],
+ flags:['Ruptured ectopic, hemorrhage, torsion, preeclampsia with severe features, trauma in pregnancy > 20 weeks.'],
+ items:['H|G/P, LMP, gestational age|G2P1, 7w by LMP','L|Quantitative hCG|','I|Pelvic US: IUP? adnexa, free fluid|','H|Bleeding amount (pads/hour)|','X|HR and BP|','L|Hgb|','L|Rh status|','X|Pelvic exam: os, CMT, adnexal tenderness|','X|Fetal heart tones (> 20 weeks)|','X|BP (preeclampsia)|','I|Ovarian Doppler flow|']},
+{id:'ent',sec:'Surgical',ab:'ENT',name:'ENT',ds:'Airway, epistaxis, neck infection',
+ qs:['Airway concern','Refractory epistaxis','Post-tonsillectomy hemorrhage','Peritonsillar abscess','Deep neck infection'],
+ flags:['Stridor or airway compromise, active post-tonsillectomy bleeding, Ludwig’s angina, expanding neck hematoma.'],
+ items:['X|Airway: stridor, voice change, drooling, trismus, secretions|','H|Epistaxis: side, duration|','T|Interventions: pressure, TXA, packing type|','L|Hgb and coags|','H|Anticoagulants|','H|Post-tonsillectomy: post-op day, active bleeding?|POD 7, clot in fossa','T|Peritonsillar: aspiration done? Result?|','I|CT neck|','H|Foreign body: location, time|']},
+{id:'eye',sec:'Surgical',ab:'Eye',name:'Ophthalmology',ds:'Vision loss, eye trauma',
+ qs:['Possible open globe','Chemical injury','Acute angle closure','Sudden vision loss','Retinal detachment'],
+ flags:['Open globe (shield, no pressure), chemical burn (irrigate first), angle closure, retrobulbar hemorrhage (lateral canthotomy), CRAO.'],
+ items:['X|Visual acuity each eye (with correction)|OD 20/40, OS 20/20','X|IOP each eye|','X|Pupils / APD|','X|Slit lamp and fluorescein findings|','H|Mechanism: chemical, penetrating, blunt|','L|pH after irrigation|','H|Contact lens use|','X|Extraocular movements|','I|Fundoscopy or ocular US (RD, vitreous hemorrhage)|','T|Shield placed|']},
+{id:'ir',sec:'Surgical',ab:'IR',name:'Interventional Radiology',ds:'Drains, embolization, access',
+ qs:['Percutaneous drain','Embolization for bleeding','Nephrostomy tube','Line placement'],
+ flags:['Active hemorrhage on CTA.'],
+ items:['H|Procedure requested and why|','I|Imaging showing the target|','L|INR|','L|Platelets|','H|Anticoagulants/antiplatelets and last dose|','L|Creatinine (contrast)|','H|Contrast allergy|','H|Last PO (sedation)|','X|Hemodynamics|','H|Can the patient consent?|']}
+];
+const G={H:'History',X:'Exam',L:'Labs & data',I:'Imaging',T:'Done in ED'};
+const GO=['H','X','L','I','T'];
+const URG={emer:['Emergent','This is emergent; I need someone to see the patient now.'],urg:['Urgent','I’d like recommendations within the hour.'],rout:['Routine','This is not urgent.']};
+const OUT={see:'will see the patient in the ED',recs:'gave recommendations by phone',adm:'accepts the patient for admission',cb:'will call back'};
+const SVC=Object.fromEntries(SERVICES.map(s=>[s.id,s]));
+
+/* storage: per-device only */
+const KEY='panacea.consult.v1';
+let S={me:{name:'',role:'',cb:''},d:{}};
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.me={...S.me,...(r.me||{})};S.d=r.d||{}}}catch(e){}
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
+function draft(id){return S.d[id]||(S.d[id]={age:'',sex:'',bed:'',urg:'',q:'',one:'',chk:{},val:{},done:'',pend:'',who:'',recs:'',out:'',t:''})}
+function started(id){const d=S.d[id];if(!d)return false;return !!(d.q||d.one||d.age||Object.values(d.chk||{}).some(Boolean)||Object.values(d.val||{}).some(v=>v&&v.trim()))}
+function parse(s){return s.items.map((x,i)=>{const[g,t,ph]=x.split('|');return{i,g,t,ph:ph||''}})}
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const CHECK=`<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const hd=document.getElementById('hd'),app=document.getElementById('app');
+let filter='';
+
+function render(){
+  const id=location.hash.slice(1);
+  if(SVC[id])renderSvc(SVC[id]);else renderHome();
+}
+
+function renderHome(){
+  document.title='Consult';
+  hd.innerHTML=`${HOME}<h1>Consult</h1>`;
+  const f=filter.toLowerCase();
+  const list=SERVICES.filter(s=>!f||(s.name+' '+s.ds+' '+s.ab+' '+s.qs.join(' ')).toLowerCase().includes(f));
+  let html=`<p class="sub" style="margin-top:6px">Pick the service. Have what they’ll ask for before you dial, and lead with your question.</p>
+  <input class="search" id="q" type="search" placeholder="Search services or problems" value="${esc(filter)}" autocomplete="off">`;
+  let last='';
+  for(const s of list){
+    if(s.sec!==last){html+=`<h2 class="sec">${s.sec}</h2>`;last=s.sec}
+    html+=`<a class="svc" href="#${s.id}"><span class="ab">${s.ab}</span><span class="txt"><span class="nm">${s.name}</span><span class="ds" style="display:block">${s.ds}</span></span>${started(s.id)?'<span class="dr">Draft</span>':''}<svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>`;
+  }
+  if(!list.length)html+=`<div class="empty">No service matches “${esc(filter)}”.</div>`;
+  const me=S.me;
+  html+=`<details class="me"${me.name?'':' open'}><summary>You<span class="sm">${esc([me.name,me.role].filter(Boolean).join(', ')||'Used in the script opener')}</span></summary><div class="inner">
+    <div class="row"><label class="fld"><span>Name</span><input data-me="name" value="${esc(me.name)}" placeholder="Zach"></label>
+    <label class="fld"><span>Role</span><input data-me="role" value="${esc(me.role)}" placeholder="medical student in the ED"></label></div>
+    <label class="fld"><span>Callback number</span><input data-me="cb" value="${esc(me.cb)}" inputmode="tel" placeholder="x4-1234"></label>
+  </div></details>
+  <div class="card"><h3>On every call</h3><ul class="tips">
+    <li>Say who you are and the specific question in the first two sentences.</li>
+    <li>Know your ask: a bedside eval, phone recs, admission, or a procedure.</li>
+    <li>Say how urgent it is, and why.</li>
+    <li>Have the chart open; numbers beat adjectives.</li>
+    <li>Before hanging up, read back the recommendations and confirm who is seeing the patient and when.</li>
+  </ul></div>
+  <p class="foot">Saved only on this device. Don’t enter names, MRNs, or dates of birth.</p>`;
+  app.innerHTML=html;
+}
+
+function script(s,d){
+  const me=S.me,L=[];
+  const who=[me.name?`this is ${me.name}`:'this is',me.role].filter(Boolean).join(', ');
+  L.push(`Hi, ${who}${me.name||me.role?'':' ___'}.${me.cb?` Callback ${me.cb}.`:''}`);
+  const pt=[d.age?`${d.age}-year-old`:'',d.sex].filter(Boolean).join(' ')||'patient';
+  L.push(`I’m calling ${s.name} about a ${pt}${d.bed?` in ${d.bed}`:''}.`);
+  L.push(`My question: ${d.q||'___'}`.replace(/\.?$/,'.'));
+  if(d.urg)L.push(URG[d.urg][1]);
+  if(d.one)L.push('',d.one.trim());
+  const items=parse(s).filter(it=>(d.val[it.i]||'').trim());
+  for(const g of GO){
+    const gi=items.filter(it=>it.g===g);
+    if(!gi.length)continue;
+    L.push('',G[g]+':');
+    for(const it of gi)L.push(`• ${short(it.t)}: ${d.val[it.i].trim()}`);
+  }
+  if(d.done.trim())L.push('','In the ED so far: '+d.done.trim());
+  if(d.pend.trim())L.push('Pending: '+d.pend.trim());
+  return L.join('\n');
+}
+function short(t){return t.split(/[;(:?]/)[0].trim()}
+function docline(s,d){
+  const t=d.t||'';const who=d.who.trim();
+  let x=`Case discussed with ${who?who+' of ':''}${s.name}${t?' at '+t:''}`;
+  x+=d.out?`, who ${OUT[d.out]}.`:'.';
+  if(d.recs.trim())x+=` Recommendations: ${d.recs.trim().replace(/\.?$/,'.')}`;
+  return x;
+}
+function nowHM(){const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')}
+
+function renderSvc(s,keep){
+  const d=draft(s.id);const its=parse(s);
+  document.title=s.name+' · Consult';
+  hd.innerHTML=`${HOME}<button class="back" data-a="home" aria-label="All services">‹</button><h1>${s.name}</h1>`;
+  const nChk=its.filter(it=>d.chk[it.i]).length;
+  let h='';
+  if(s.flags&&s.flags.length)h+=`<div class="card flags"><h3>Call now</h3><ul>${s.flags.map(f=>`<li>${esc(f)}</li>`).join('')}</ul></div>`;
+  h+=`<div class="card"><h3>The ask</h3>
+    <div class="row"><label class="fld" style="flex:.7"><span>Age</span><input data-f="age" inputmode="numeric" value="${esc(d.age)}" placeholder="54"></label>
+    <div class="fld" style="flex:1.3"><span>Sex</span><div class="seg" data-seg="sex">${['M','F'].map(v=>`<button type="button" data-v="${v==='M'?'male':'female'}" aria-pressed="${d.sex===(v==='M'?'male':'female')}">${v}</button>`).join('')}</div></div>
+    <label class="fld" style="flex:1"><span>Room</span><input data-f="bed" value="${esc(d.bed)}" placeholder="ED 12"></label></div>
+    <label class="fld"><span>Your question</span><input data-f="q" value="${esc(d.q)}" placeholder="What do you want from them?"></label>
+    <div class="chips">${s.qs.map(q=>`<button type="button" class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <div class="fld" style="margin-top:12px"><span>Urgency</span><div class="seg" data-seg="urg">${Object.entries(URG).map(([k,v])=>`<button type="button" data-v="${k}" aria-pressed="${d.urg===k}">${v[0]}</button>`).join('')}</div></div>
+    <label class="fld"><span>One-liner</span><textarea data-f="one" rows="2" placeholder="PMHx of ___ presenting with ___, found to have ___.">${esc(d.one)}</textarea></label>
+  </div>`;
+  h+=`<div class="card"><div class="btnrow" style="justify-content:space-between"><h3 style="margin:0">What they’ll ask</h3><span class="count" id="cnt">${nChk} of ${its.length}</span></div>
+    <div class="bar"><i id="bar" style="width:${its.length?nChk/its.length*100:0}%"></i></div>
+    <p class="hint" style="margin:0 0 6px">Tap to check off; add the value and it goes in the script.</p>`;
+  for(const g of GO){
+    const gi=its.filter(it=>it.g===g);if(!gi.length)continue;
+    h+=`<div class="grp">${G[g]}</div><div>`;
+    for(const it of gi){
+      const v=d.val[it.i]||'';
+      h+=`<div class="item${d.chk[it.i]?' on':''}${d.chk[it.i]&&!v?' open':''}" data-i="${it.i}">
+        <button type="button" class="ib" data-a="tog"><span class="bx">${CHECK}</span><span class="lb">${esc(it.t)}</span><span class="vv">${esc(v)}</span></button>
+        <div class="iv"><input data-v="${it.i}" value="${esc(v)}" placeholder="${esc(it.ph?'e.g. '+it.ph:'Value or finding (optional)')}"></div></div>`;
+    }
+    h+='</div>';
+  }
+  h+=`</div>`;
+  h+=`<div class="card"><label class="fld" style="margin-top:0"><span>Done in the ED (not listed above)</span><textarea data-f="done" rows="2">${esc(d.done)}</textarea></label>
+    <label class="fld"><span>Pending</span><textarea data-f="pend" rows="1">${esc(d.pend)}</textarea></label></div>`;
+  h+=`<h2>Script</h2><pre class="out" id="scr">${esc(script(s,d))}</pre>
+    <div class="btnrow"><button class="btn primary" data-a="copy">Copy script</button></div>`;
+  h+=`<h2>After the call</h2><div class="card">
+    <div class="row"><label class="fld" style="margin-top:0"><span>Who you spoke with</span><input data-f="who" value="${esc(d.who)}" placeholder="Dr. ___"></label>
+    <label class="fld" style="margin-top:0;flex:.6"><span>Time</span><input data-f="t" type="time" value="${esc(d.t)}"></label></div>
+    <div class="fld"><span>Outcome</span><div class="seg" data-seg="out">${Object.entries({see:'Seeing patient',recs:'Phone recs',adm:'Accepts admission',cb:'Will call back'}).map(([k,v])=>`<button type="button" data-v="${k}" aria-pressed="${d.out===k}">${v}</button>`).join('')}</div></div>
+    <label class="fld"><span>Recommendations (read these back)</span><textarea data-f="recs" rows="3">${esc(d.recs)}</textarea></label>
+    <pre class="out" id="doc" style="margin-top:10px">${esc(docline(s,d))}</pre>
+    <div class="btnrow"><button class="btn sm" data-a="copydoc">Copy for the note</button></div>
+  </div>
+  <div class="btnrow" style="justify-content:center;margin-top:18px"><button class="linkbtn danger" data-a="clear">Clear this consult</button></div>
+  <p class="foot">Saved only on this device. Don’t enter names, MRNs, or dates of birth.</p>`;
+  const y=window.scrollY;app.innerHTML=h;if(keep)window.scrollTo(0,y);else window.scrollTo(0,0);
+}
+
+function refreshOut(){
+  const s=SVC[location.hash.slice(1)];if(!s)return;const d=draft(s.id);
+  const a=document.getElementById('scr');if(a)a.textContent=script(s,d);
+  const b=document.getElementById('doc');if(b)b.textContent=docline(s,d);
+  const its=s.items.length,n=Object.values(d.chk).filter(Boolean).length;
+  const c=document.getElementById('cnt');if(c)c.textContent=`${n} of ${its}`;
+  const br=document.getElementById('bar');if(br)br.style.width=(n/its*100)+'%';
+}
+
+app.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='q'){filter=t.value;const pos=t.selectionStart;renderHome();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}return}
+  if(t.dataset.me){S.me[t.dataset.me]=t.value;save();return}
+  const s=SVC[location.hash.slice(1)];if(!s)return;const d=draft(s.id);
+  if(t.dataset.f){d[t.dataset.f]=t.value}
+  else if(t.dataset.v!==undefined){const i=t.dataset.v;d.val[i]=t.value;if(t.value.trim())d.chk[i]=true;const it=t.closest('.item');it.classList.toggle('on',!!d.chk[i]);it.querySelector('.vv').textContent=t.value}
+  save();refreshOut();
+});
+
+app.addEventListener('click',async e=>{
+  const s=SVC[location.hash.slice(1)];
+  const segb=e.target.closest('.seg button');
+  if(segb&&s){const d=draft(s.id),k=segb.parentElement.dataset.seg,v=segb.dataset.v;d[k]=d[k]===v?'':v;if(k==='out'&&d[k]&&!d.t)d.t=nowHM();save();renderSvc(s,true);return}
+  const chip=e.target.closest('.chip');
+  if(chip&&s){const d=draft(s.id);d.q=chip.dataset.q;save();const q=app.querySelector('[data-f="q"]');q.value=d.q;refreshOut();return}
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+  if(a==='tog'&&s){
+    const d=draft(s.id),it=b.closest('.item'),i=it.dataset.i;
+    if(!d.chk[i]){d.chk[i]=true;it.classList.add('on','open');const inp=it.querySelector('input');if(!(d.val[i]||'').trim())inp.focus({preventScroll:true})}
+    else if(!it.classList.contains('open')){it.classList.add('open');it.querySelector('input').focus({preventScroll:true})}
+    else{d.chk[i]=false;d.val[i]='';it.classList.remove('on','open');it.querySelector('input').value='';it.querySelector('.vv').textContent=''}
+    save();refreshOut();
+  }
+  else if(a==='copy'&&s){const ok=await copyText(script(s,draft(s.id)));toast(ok?'Script copied.':'Couldn’t copy on this device.')}
+  else if(a==='copydoc'&&s){const ok=await copyText(docline(s,draft(s.id)));toast(ok?'Copied for the note.':'Couldn’t copy on this device.')}
+  else if(a==='clear'&&s){if(confirm('Clear everything entered for '+s.name+'?')){delete S.d[s.id];save();renderSvc(s);toast('Cleared.')}}
+});
+hd.addEventListener('click',e=>{if(e.target.closest('[data-a="home"]')){location.hash=''}});
+/* collapse a checked item's value field when focus leaves it */
+app.addEventListener('focusout',e=>{const it=e.target.closest&&e.target.closest('.item');if(it&&e.target.matches('.iv input')){setTimeout(()=>{if(!it.contains(document.activeElement))it.classList.remove('open')},120)}});
+app.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('.iv input')){e.preventDefault();e.target.blur()}});
+
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();return ok}}
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2200)}
+window.addEventListener('hashchange',()=>{render()});
+render();
+</script>
+</body>
+</html>
