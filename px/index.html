@@ -107,6 +107,14 @@ input.loc{margin-top:8px;padding:7px 10px;font-size:.92rem;background:var(--pape
 .nih .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .nih .opts .chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .score{font-size:1.3rem;font-weight:700}
+.dl{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;background:var(--paper)}
+.dlh{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.dg{margin:10px 0 0}
+.dgt{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.dgt span{text-transform:none;letter-spacing:0;font-weight:400}
+.dl input[type=text]{padding:8px 10px;font-size:.95rem;margin-top:8px;background:var(--surface)}
+.dl .chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700}
+.dl .chip.ng[aria-pressed="true"]{background:var(--nl-soft);border-color:var(--nl);color:var(--nl)}
 /* add & output */
 .addp .grp{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px}
 .addp .chips .chip:hover{border-color:var(--accent)}
@@ -466,7 +474,7 @@ T("bite","Trauma / MSK","Animal / human bite","!sk_wound !msk_tendon !msk_joint 
 /* Skin / wound */
 T("laceration","Skin / wound","Laceration","!sk_wound !msk_tendon !msk_nv !msk_nerve msk_joint msk_kanavel msk_elson");
 T("abscess","Skin / wound","Abscess / cellulitis","!sk_cell !vit_temp !vit_hrbp neck_ln msk_kanavel");
-T("rash","Skin / wound","Rash","gen_app !sk_rash !ent_phar eye_conj !vit_temp neck_ln msk_joint");
+T("rash","Skin / wound","Rash","gen_app !vit_temp vit_hrbp !derm !ent_phar eye_conj ent_tongue neck_ln abd_spleen msk_joint sk_nails !neck_supple");
 T("fb","Skin / wound","Foreign body","sk_wound !resp_wob !resp_bs !ent_voice abd_tender !msk_nv ent_canal ent_nose");
 T("wound_check","Skin / wound","Wound check / suture removal","!sk_wchk msk_nv");
 /* Endocrine */
@@ -499,7 +507,45 @@ T("refill","General","Medication refill","gen_app vit_hrbp msk_gen");
 T("other","General","Other","gen_app cv_rr resp_bs abd_tender");
 
 F("nihss","neuro","NIH Stroke Scale","","");
-const WIDGET={neu_gcs:1,nc_str:1,nc_refl:1,nihss:1};
+F("derm","skin","Rash description","","");
+const WIDGET={neu_gcs:1,nc_str:1,nc_refl:1,nihss:1,derm:1};
+/* rash describer: chip groups; one = single choice */
+const DG=[
+ {k:"loc",t:"Location",o:["Scalp","Face","Periorbital","Ears","Lips","Neck","Chest","Abdomen","Upper back","Lower back","Buttocks","Axillae","Groin","Genitals","Perianal","Upper arms","Forearms","Hands","Palms","Fingers","Thighs","Lower legs","Feet","Soles","Toes","Flexural surfaces","Extensor surfaces","Intertriginous areas"]},
+ {k:"dist",t:"Distribution",o:["Localized","Regional","Generalized","Symmetric","Unilateral","Dermatomal","Acral","Trunk-predominant","Extremity-predominant","Sun-exposed","Pressure-area","Linear","Spares the palms and soles"]},
+ {k:"morph",t:"Morphology",o:["Macules","Patches","Papules","Plaques","Nodules","Wheals","Vesicles","Bullae","Pustules","Petechiae","Purpura","Ecchymoses","Target lesions","Atypical target lesions","Burrows","Comedones","Cysts","Erosions","Ulcers","Telangiectasias"]},
+ {k:"color",t:"Color",o:["Erythematous","Pink","Salmon-colored","Violaceous","Dusky","Purpuric","Hyperpigmented","Hypopigmented","Skin-colored","Yellow","Gray","Black"]},
+ {k:"sizec",t:"Size",o:["Pinpoint","Under 5 mm","5–10 mm","1–2 cm","2–5 cm","Over 5 cm","Varying sizes"],one:1},
+ {k:"shape",t:"Shape and border",o:["Round","Oval","Annular","Arcuate","Polycyclic","Targetoid","Serpiginous","Reticular (net-like)","Nummular","Grouped (herpetiform)","Linear","Satellite lesions","Well-demarcated","Ill-defined borders","Central clearing","Raised border"]},
+ {k:"conf",t:"Confluence",o:["Discrete","Scattered","Clustered","Coalescing","Confluent"],one:1},
+ {k:"blanch",t:"Blanching",o:["Blanching","Non-blanching","Partially blanching"],one:1},
+ {k:"ves",t:"Vesicles and bullae",o:["Tense bullae","Flaccid bullae","Hemorrhagic bullae","Umbilicated vesicles","Vesicles on an erythematous base","Positive Nikolsky sign","Positive Asboe-Hansen sign","Skin sloughing"]},
+ {k:"sec",t:"Secondary changes",o:["Fine scale","Thick silvery scale","Greasy scale","Crusting","Honey-colored crusting","Hemorrhagic crusting","Excoriations","Lichenification","Fissures","Weeping","Serous drainage","Purulent drainage","Desquamation","Atrophy","Necrosis","Eschar","Satellite pustules"]},
+ {k:"palp",t:"Palpation",o:["Non-tender without warmth, induration, fluctuance, or crepitus","Tender","Warm","Indurated","Fluctuant","Crepitus","Palpable","Pain out of proportion to the exam","Woody induration"]},
+ {k:"muc",t:"Mucosa",o:["No mucosal involvement","Oral erosions","Hemorrhagic crusting of the lips","Conjunctival injection","Conjunctival erosions","Genital erosions","Nasal mucosal erosions"]},
+ {k:"neg",t:"Pertinent negatives",o:["No vesicles or bullae","No pustules","No crusting","No petechiae or purpura","No target lesions","No skin sloughing","Nikolsky sign negative","No palm or sole involvement","No dermatomal pattern","No warmth or fluctuance","No crepitus"]},
+ {k:"sym",t:"Symptoms",o:["Pruritic","Painful","Burning","Tender to touch","Asymptomatic"]}];
+const DGK=Object.fromEntries(DG.map(g=>[g.k,g]));
+function joinAnd(a){return a.length<2?a.join(''):a.length===2?a.join(' and '):a.slice(0,-1).join(', ')+', and '+a[a.length-1]}
+function dermOne(L){const g=k=>(L[k]||[]).filter(v=>DGK[k].o.includes(v)),lc=a=>a.map(x=>low(x));
+  const adj=[...lc(g('color')),...lc(g('blanch'))],morph=lc(g('morph'));
+  let s=[adj.join(', '),morph.length?joinAnd(morph):(adj.length?'rash':'')].filter(Boolean).join(' ');
+  const size=L.size&&L.size.trim()?[L.size.trim()]:lc(g('sizec'));if(size.length)s+=(s?', ':'')+size.join(', ');
+  const shp=lc(g('shape'));if(shp.length)s+=(s?', ':'')+joinAnd(shp);
+  const cf=lc(g('conf'));if(cf.length)s+=(s?', ':'')+cf[0];
+  const loc=g('loc').map(x=>x.toLowerCase());const mod=size.length||shp.length||cf.length;if(loc.length)s+=(s?(mod?', ':' '):'')+'on the '+joinAnd(loc);
+  const dist=lc(g('dist')).filter(x=>!x.startsWith('spares')),spare=g('dist').includes('Spares the palms and soles');
+  if(dist.length)s+=(s?', ':'')+'in a '+joinAnd(dist)+' distribution';
+  if(spare)s+=(s?', ':'')+'sparing the palms and soles';
+  if(L.bsa&&String(L.bsa).trim())s+=` (about ${String(L.bsa).trim().replace(/%$/,'')}% BSA)`;
+  const out=[];if(s)out.push(cap(s)+'.');
+  for(const k of['ves','sec','palp','muc']){const a=g(k);if(a.length)out.push(cap(a.map((x,i)=>i?low(x):x).join(', '))+'.')}
+  const neg=g('neg');if(neg.length)out.push(cap(neg.map((x,i)=>i?low(x):x).join('; '))+'.');
+  const sym=g('sym');if(sym.length){const m={Pruritic:'pruritus',Painful:'pain',Burning:'burning','Tender to touch':'tenderness'};
+    out.push(sym.includes('Asymptomatic')?'Patient reports the rash is asymptomatic.':`Patient reports ${joinAnd(sym.map(x=>m[x]||low(x)))}.`)}
+  if(L.note&&L.note.trim())out.push(cap(L.note.trim()).replace(/[.]?$/,'.'));
+  return out.join(' ')}
+
 const MALE=new Set(["gu_test","gu_crem","gu_penis"]),FEMALE=new Set(["pel_ext","pel_spec","pel_bim","pel_fht","abd_fundus"]);
 const SYSNAME=Object.fromEntries(SYS);
 const NC_SUB={nc_orient:"Mental status",nc_attn:"Mental status",nc_lang:"Mental status",nc_dys:"Mental status",nc_memory:"Mental status",
@@ -533,8 +579,8 @@ const NIH=[
 const KEY='panacea.px.v1';
 let S={d:{}};try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.d)S=r}catch(e){}
 let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
-function D(k){return S.d[k]||(S.d[k]={m:{},ch:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{}},extra:[],dev:[],sex:''});if(!S.d[k].dev)S.d[k].dev=[];return S.d[k]}
-function started(k){const d=S.d[k];return !!(d&&(Object.keys(d.m).length||Object.keys(d.w.nih||{}).length||Object.keys(d.w.str||{}).length))}
+function D(k){return S.d[k]||(S.d[k]={m:{},ch:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{},derm:[]},extra:[],dev:[],sex:''});if(!S.d[k].dev)S.d[k].dev=[];return S.d[k]}
+function started(k){const d=S.d[k];return !!(d&&(((d.w&&d.w.derm)||[]).some(L=>Object.keys(L).length)||Object.keys(d.m).length||Object.keys(d.w.nih||{}).length||Object.keys(d.w.str||{}).length))}
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const EPON=new Set(["Battle","CSF","Murphy","McBurney","Rovsing","Kernig","Brudzinski","Seidel","Tinel","Phalen","Thompson","Lachman","Babinski","Prehn","Nikolsky","Romberg","Dix-Hallpike","Kussmaul"]);
@@ -567,6 +613,7 @@ function widgetText(k,id){const w=D(k).w;
     const tR=v['toe:R'],tL=v['toe:L'];
     if(tR||tL){const t=tR&&tR===tL?`toes ${tR} bilaterally`:[tR?`right toe ${tR}`:'',tL?`left toe ${tL}`:''].filter(Boolean).join(', ');s+=(s?'; ':'')+t}
     return s?cap(s)+'.':''}
+  if(id==='derm'){const ls=(w.derm||[]).map(dermOne).filter(Boolean);if(!ls.length)return'';return ls.length===1?ls[0]:ls.map((t,i)=>`Lesion ${i+1}: ${t}`).join(' ')}
   if(id==='nihss'){const n=w.nih,done=NIH.filter(q=>n[q[0]]!==undefined&&n[q[0]]!=='');if(!done.length)return'';
     const tot=done.reduce((a,q)=>a+(n[q[0]]==='UN'?0:+n[q[0]]),0);
     const pos=done.filter(q=>n[q[0]]==='UN'||+n[q[0]]>0).map(q=>`${q[0]} ${q[1].toLowerCase()} ${n[q[0]]==='UN'?'UN':n[q[0]]}`);
@@ -611,7 +658,7 @@ function renderHome(){
 function itemHTML(k,x){const it=I[x.id],d=D(k),m=d.m[x.id]||'';
   const t=`<div class="t">${esc(it.label)}${x.flag?'<i title="Key finding"></i>':''}</div>`;
   if(WIDGET[x.id]){const pv=widgetText(k,x.id);return `<div class="it" data-id="${x.id}" data-m="${pv?'n':''}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv||'Not documented')}</div></div>
-    <div class="na"><button class="linkbtn" data-a="wnl" data-id="${x.id}">${{neu_gcs:'Set 15',nc_str:'All 5/5',nc_refl:'All 2+',nihss:'All 0'}[x.id]}</button></div></div><div class="wg">${widgetHTML(k,x.id)}</div></div>`}
+    <div class="na"><button class="linkbtn" data-a="wnl" data-id="${x.id}">${{neu_gcs:'Set 15',nc_str:'All 5/5',nc_refl:'All 2+',nihss:'All 0',derm:'Clear'}[x.id]}</button></div></div><div class="wg">${widgetHTML(k,x.id)}</div></div>`}
   const pv=m==='n'?it.nl:m==='a'?(abText(k,x.id)||'Abnormal: choose findings or describe'):it.nl;
   const ch=d.ch[x.id]||[];
   return `<div class="it" data-id="${x.id}" data-m="${m}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv)}</div></div>
@@ -626,6 +673,13 @@ function widgetHTML(k,id){const w=D(k).w;
   if(id==='nc_str'){return `<table class="tbl"><tr><th>Muscle</th><th>Right</th><th>Left</th></tr>${MUSC.map(m=>`<tr><td>${m}</td>${['R','L'].map(sd=>{const v=w.str[sd+':'+m]||'';return `<td><select data-w="str" data-c="${sd}:${m}" class="${v&&v!=='5'?'dev':''}"><option value="">—</option>${MRC.map(g=>`<option${v===g?' selected':''}>${g}</option>`).join('')}</select></td>`}).join('')}</tr>`).join('')}</table>`}
   if(id==='nc_refl'){return `<table class="tbl"><tr><th>Reflex</th><th>Right</th><th>Left</th></tr>${REFL.map(m=>`<tr><td>${m}</td>${['R','L'].map(sd=>{const v=w.refl[sd+':'+m]||'';return `<td><select data-w="refl" data-c="${sd}:${m}" class="${v&&v!=='2+'?'dev':''}"><option value="">—</option>${RGR.map(g=>`<option${v===g?' selected':''}>${g}</option>`).join('')}</select></td>`}).join('')}</tr>`).join('')}
     <tr><td>Plantar</td>${['R','L'].map(sd=>{const v=w.refl['toe:'+sd]||'';return `<td><select data-w="refl" data-c="toe:${sd}" class="${v&&v!=='downgoing'?'dev':''}"><option value="">—</option>${['downgoing','upgoing','mute'].map(g=>`<option${v===g?' selected':''}>${g}</option>`).join('')}</select></td>`}).join('')}</tr></table>`}
+  if(id==='derm'){const ls=w.derm&&w.derm.length?w.derm:[{}];
+    return ls.map((L,li)=>`<div class="dl">${ls.length>1?`<div class="dlh"><b>Lesion ${li+1}</b><button class="linkbtn danger" data-a="drm" data-l="${li}">Remove</button></div>`:''}
+      ${DG.map(gp=>`<div class="dg"><div class="dgt">${gp.t}${gp.one?' <span>(choose one)</span>':''}</div><div class="chips">${gp.o.map(o=>`<button class="chip${gp.k==='neg'||o.startsWith('No ')||o.startsWith('Non-tender')?' ng':''}" data-a="dchip" data-l="${li}" data-g="${gp.k}" data-v="${esc(o)}" aria-pressed="${(L[gp.k]||[]).includes(o)}">${esc(o)}</button>`).join('')}</div>
+        ${gp.k==='sizec'?`<input type="text" data-dt="size" data-l="${li}" value="${esc(L.size||'')}" placeholder="Exact size, e.g. 2–4 mm; largest 3 × 5 cm">`:''}
+        ${gp.k==='dist'?`<input type="text" data-dt="bsa" data-l="${li}" value="${esc(L.bsa||'')}" inputmode="decimal" placeholder="Body surface area involved (%)">`:''}</div>`).join('')}
+      <input type="text" data-dt="note" data-l="${li}" value="${esc(L.note||'')}" placeholder="Anything else (e.g., spreading past the marked border)"></div>`).join('')+
+      `<button class="btn sm" data-a="dadd" style="margin-top:10px">+ Add another lesion type</button>`}
   if(id==='nihss'){const n=w.nih,tot=NIH.reduce((a,q)=>a+(n[q[0]]!==undefined&&n[q[0]]!==''&&n[q[0]]!=='UN'?+n[q[0]]:0),0);
     return `<div class="score" id="nihtot">Total ${tot}</div><div class="nih">${NIH.map(([c,l,opts,un])=>`<div><div class="q">${c} <span>${l}</span></div><div class="opts">${opts.map((o,i)=>`<button class="chip" data-a="nih" data-c="${c}" data-v="${i}" aria-pressed="${String(n[c])===String(i)}">${i} · ${o}</button>`).join('')}${un?`<button class="chip" data-a="nih" data-c="${c}" data-v="UN" aria-pressed="${n[c]==='UN'}">UN · Untestable</button>`:''}</div></div>`).join('')}</div>`}
   return''}
@@ -678,10 +732,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   else if(a==='sex'){d.sex=d.sex===b.dataset.v?'':b.dataset.v;save();render(true)}
   else if(a==='wnl'){if(id==='neu_gcs')d.w.gcs={E:4,V:5,M:6};else if(id==='nc_str'){for(const m of MUSC)for(const sd of['R','L'])d.w.str[sd+':'+m]='5'}
     else if(id==='nc_refl'){for(const m of REFL)for(const sd of['R','L'])d.w.refl[sd+':'+m]='2+';d.w.refl['toe:R']=d.w.refl['toe:L']='downgoing'}
-    else if(id==='nihss'){for(const q of NIH)d.w.nih[q[0]]=0}save();refreshItem(k,id)}
+    else if(id==='nihss'){for(const q of NIH)d.w.nih[q[0]]=0}else if(id==='derm'){if(!confirm('Clear the rash description?'))return;d.w.derm=[]}save();refreshItem(k,id)}
   else if(a==='nih'){const c=b.dataset.c,v=b.dataset.v==='UN'?'UN':+b.dataset.v;d.w.nih[c]=String(d.w.nih[c])===String(v)?'':v;save();refreshItem(k,'nihss')}
   else if(a==='devpick'){const id=b.dataset.id,i=d.dev.indexOf(id);if(i<0)d.dev.push(id);else{d.dev.splice(i,1);delete d.m[id];if(d.loc)delete d.loc[id]}
     d.dev.sort((x,y)=>DEVICES.indexOf(x)-DEVICES.indexOf(y));save();render(true)}
+  else if(a==='dchip'){const ls=d.w.derm||(d.w.derm=[]);const li=+b.dataset.l;while(ls.length<=li)ls.push({});const L=ls[li],gk=b.dataset.g,v=b.dataset.v,arr=L[gk]||(L[gk]=[]);
+    const i=arr.indexOf(v);if(i>=0)arr.splice(i,1);else{if(DGK[gk].one)arr.length=0;arr.push(v)}save();refreshItem(k,'derm')}
+  else if(a==='dadd'){const ls=d.w.derm||(d.w.derm=[]);if(!ls.length)ls.push({});ls.push({});save();refreshItem(k,'derm')}
+  else if(a==='drm'){d.w.derm.splice(+b.dataset.l,1);save();refreshItem(k,'derm')}
   else if(a==='addtog'){addOpen=!addOpen;addQ='';render(true)}
   else if(a==='add'){d.extra.push(b.dataset.id);save();render(true);toast(I[b.dataset.id].label+' added.')}
 });
@@ -689,6 +747,8 @@ app.addEventListener('input',e=>{const t=e.target,k=route();
   if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderHome();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
   if(!k)return;const d=D(k);
   if(t.id==='addq'){addQ=t.value;const p=t.selectionStart;render(true);const q=document.getElementById('addq');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.dataset.dt){const ls=d.w.derm||(d.w.derm=[]);const li=+t.dataset.l;while(ls.length<=li)ls.push({});ls[li][t.dataset.dt]=t.value;save();
+    const el=app.querySelector('.it[data-id="derm"] .pv');if(el)el.textContent=widgetText(k,'derm')||'Not documented';refresh(k);return}
   if(t.dataset.loc){(d.loc=d.loc||{})[t.dataset.loc]=t.value;save();refresh(k);return}
   if(t.dataset.tx){const id=t.dataset.tx;d.tx[id]=t.value;if(t.value.trim())d.m[id]='a';save();refreshItem(k,id)}});
 app.addEventListener('change',e=>{const t=e.target,k=route();if(!k||!t.dataset.w)return;const d=D(k),w=t.dataset.w;
