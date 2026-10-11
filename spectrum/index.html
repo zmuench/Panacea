@@ -186,8 +186,8 @@ code{font-size:.85em;background:var(--bg);padding:1px 5px;border-radius:5px}
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   ul.ck{list-style:none;margin:0;padding:0;font-size:9.5pt}ul.ck li{margin:2px 0;padding-left:1.2em;text-indent:-1.2em}
   dl.bg{margin:0;font-size:9.5pt;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}dl.bg dt{font-weight:700}dl.bg dd{margin:0}
-  .lines div{border-bottom:1px solid #999;height:22px}
-  .ft{margin-top:8px;font-size:7.5pt;color:#555;text-align:center}
+  .notes{min-height:1.6in}
+  .ft{float:right;margin-top:10px;font-size:7.5pt;color:#555}
   #print section,#print table,#print tr,.al,.cols>div{break-inside:avoid}
   #print .sheet{break-inside:auto}
 }
@@ -1041,8 +1041,7 @@ function sheet(pt,T){
   const plan=String((pt.days[T]||{}).plan||'').trim();
   if(plan)R+=`<h4>Plan items</h4><ul class="ck">${plan.split('\n').filter(x=>x.trim()).map(x=>`<li>☐ ${e(x.replace(/^[•\-]\s*/,''))}</li>`).join('')}</ul>`;
   if(L||R)h+=`<div class="cols"><div>${L}</div><div>${R}</div></div>`;
-  h+=`<h4>Rounds notes</h4><div class="lines">${'<div></div>'.repeat(6)}</div>
-    <div class="ft">Spectrum · PANACEA · Contains patient information: shred after use.</div></section>`;
+  h+=`<div class="ft">Spectrum · Contains patient information: shred after use.</div><h4>Rounds notes</h4><div class="notes"></div></section>`;
   return h;
 }
 function printPts(list){
