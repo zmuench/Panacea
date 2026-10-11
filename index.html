@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: two columns of three, filled top to bottom (ED tools left, ICU and residency right).
+/* Layout: two columns of three, filled top to bottom (ED tools left, ICU tools right), with Nenya full width below.
    Narrow phones keep two columns but switch to compact stacked cards.
    Palette and type match Hx, Dispo, ICU Rounder, Sweep and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
 :root{
@@ -28,6 +28,7 @@ header h1{font-weight:700;font-size:1.7rem;letter-spacing:-.01em;margin:0;text-w
 header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
 ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:10px}
 li{display:flex}li>a.app{flex:1}
+li.wide{grid-column:1 / -1;grid-row:4}
 a.app{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;min-height:76px;transition:border-color .15s,transform .15s}
 a.app:hover{border-color:var(--accent)}
 a.app:active{transform:scale(.99)}
@@ -45,6 +46,8 @@ footer{color:var(--muted);font-size:.8rem}
   a.app{flex-direction:column;align-items:flex-start;gap:10px;padding:12px;min-height:0;position:relative}
   .desc{display:none}
   .go{position:absolute;top:14px;right:10px}
+  li.wide a.app{flex-direction:row;align-items:center;gap:14px}
+  li.wide .go{position:static}
   .name{font-size:1.05rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -94,7 +97,14 @@ footer{color:var(--muted);font-size:.8rem}
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
 
-    <li><a class="app" href="nenya/">
+    <li><a class="app" href="primer/">
+      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/></svg></span>
+      <span class="txt"><span class="name">Primer</span><span class="kind">ICU curriculum</span>
+        <p class="desc">One lesson a day: readings, what to order, the evidence, and a self-check.</p></span>
+      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a></li>
+
+    <li class="wide"><a class="app" href="nenya/">
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="7" ry="3"/><path d="M7 11.5c1.5 1 3.2 1.5 5 1.5s3.5-.5 5-1.5"/><path d="M12 13v6M9 20h6"/></svg></span>
       <span class="txt"><span class="name">Nenya</span><span class="kind">EM rank list</span>
         <p class="desc">Weight what matters, add programs as you interview, watch the list sort.</p></span>
