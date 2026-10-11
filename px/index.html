@@ -86,6 +86,8 @@ h2.sec{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font:inherit;font-size:.86rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:5px 11px;cursor:pointer;min-height:32px;text-align:left}
 .chip[aria-pressed="true"]{background:var(--ab-soft);border-color:var(--ab);color:var(--ab);font-weight:700}
+.chip.dv[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+input.loc{margin-top:8px;padding:7px 10px;font-size:.92rem;background:var(--paper)}
 .abp .row2{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .abp input[type=text]{flex:1;min-width:160px;padding:8px 10px;background:var(--paper)}
 /* widgets */
@@ -129,7 +131,7 @@ pre.out{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.93rem;
 const SYS=[
  ["gen","General"],["vit","Vitals"],["heent","HEENT"],["neck","Neck"],["cv","Cardiovascular"],["resp","Respiratory"],
  ["abd","Abdomen"],["back","Back"],["gu","Genitourinary"],["pel","Pelvic"],["rec","Rectal"],["msk","Musculoskeletal"],
- ["skin","Skin"],["neuro","Neurologic"],["psych","Psychiatric"],["dev","Lines and devices"]];
+ ["skin","Skin"],["neuro","Neurologic"],["psych","Psychiatric"],["dev","Lines, tubes, and drains"]];
 const I={};
 function F(id,sys,label,nl,ab,side){I[id]={id,sys,label,nl,ab:ab?ab.split('|'):[],side:!!side}}
 
@@ -200,11 +202,12 @@ F("cv_aorta","cv","Abdominal aorta","No pulsatile abdominal mass.","Pulsatile ab
 F("cv_access","cv","Dialysis access","Access with palpable thrill and audible bruit; site clean.","Absent thrill|Absent bruit|Erythema at the access|Drainage at the access|Bleeding from the access|Aneurysmal dilation",1);
 
 /* Respiratory */
+F("resp_o2","resp","Oxygen support","On room air.","Nasal cannula|Simple face mask|Venturi mask|Non-rebreather mask|High-flow nasal cannula|CPAP|BiPAP|Mechanical ventilation|Trach collar");
+I.resp_o2.pre="On ";I.resp_o2.ph="Settings: 4 L, 50 L/min FiO₂ 0.6, 14/6, AC 450 × 18 PEEP 8 FiO₂ 0.5";
 F("resp_wob","resp","Work of breathing","Breathing comfortably without accessory muscle use.","Tachypneic|Accessory muscle use|Retractions|Nasal flaring|Grunting|Head bobbing|Speaking in short phrases|Unable to speak in full sentences|Kussmaul respirations|Paradoxical breathing");
 F("resp_bs","resp","Breath sounds","Clear to auscultation bilaterally; no wheezes, rales, or rhonchi.","Expiratory wheezes|Diffuse wheezes|Rales at the bases|Diffuse rales|Rhonchi|Decreased breath sounds|Absent breath sounds|Prolonged expiratory phase|Poor air movement|Focal wheeze",1);
 F("resp_cw","resp","Chest wall","Chest wall non-tender and stable without crepitus.","Chest wall tenderness reproducing the pain|Rib point tenderness|Crepitus|Flail segment|Seat belt sign|Chest wall ecchymosis",1);
 F("resp_vent","resp","Ventilator","Synchronous with the ventilator.","Ventilator dyssynchrony|Breath stacking|High peak pressures|Circuit air leak|Copious secretions");
-F("resp_ct","resp","Chest tube","Chest tube in place without air leak; serosanguinous output.","Air leak|Bloody output|No tidaling|Subcutaneous emphysema at the site",1);
 
 /* Abdomen */
 F("abd_soft","abd","Abdomen","Soft and non-distended.","Distended|Tympanitic|Firm|Rigid|Fluid wave (ascites)|Surgical scars");
@@ -340,13 +343,29 @@ F("psy_ij","psych","Insight and judgment","Insight and judgment intact.","Limite
 F("tox_feat","neuro","Toxidrome features","Pupils mid-size, skin without diaphoresis, normal bowel sounds; no toxidrome evident.","Mydriasis|Miosis|Diaphoresis|Dry, flushed skin|Absent bowel sounds|Hyperactive bowel sounds|Urinary retention|Sialorrhea|Hyperthermia");
 F("tox_wd","neuro","Withdrawal signs","No tremor, diaphoresis, or hallucinations.","Tremor|Diaphoresis|Tactile hallucinations|Visual hallucinations|Agitation|Anxiety");
 
-/* Lines and devices */
-F("dev_ett","dev","Endotracheal tube","ETT secure at the lip; no cuff leak.","Cuff leak|Tube position changed|Thick secretions|Bloody secretions");
-F("dev_trach","dev","Tracheostomy","Tracheostomy site clean; tube secure.","Stoma erythema|Stoma bleeding|Copious secretions|Tube dislodged");
-F("dev_ogt","dev","OG or NG tube","OG tube in place with appropriate output.","Bilious output|Bloody output|Coffee-ground output|High output");
-F("dev_cvc","dev","Central line","Central line site clean, dry, and intact; dressing current.","Erythema at the site|Purulent drainage|Dressing soiled|Tenderness at the site",1);
-F("dev_art","dev","Arterial line","Arterial line site clean with good waveform and distal perfusion.","Dampened waveform|Hematoma at the site|Poor distal perfusion",1);
-F("dev_piv","dev","Peripheral IVs","Peripheral IV sites without erythema or infiltration.","Infiltration|Phlebitis|Erythema",1);
+/* Lines, tubes, and drains: picked per patient; each has a site/size field (loc) */
+function DV(id,label,nl,ab,ph){F(id,"dev",label,nl,ab);I[id].loc=ph||"Site, size, day"}
+DV("dev_ett","Endotracheal tube","Secure; no cuff leak.","Cuff leak|Tube position changed|Thick secretions|Bloody secretions","Size, cm at the lip");
+DV("dev_trach","Tracheostomy","Stoma clean; tube secure; cuff inflated.","Stoma erythema|Stoma bleeding|Copious secretions|Cuff leak|Tube dislodged","Type and size");
+DV("dev_ogt","OG or NG tube","In place with appropriate output.","Bilious output|Bloody output|Coffee-ground output|High output|Clogged|Displaced","OG or NG, cm at the lip or nare");
+DV("dev_gtube","G-tube or PEG","Site clean without erythema, leakage, or tenderness; tube secure.","Site erythema|Leakage around the tube|Granulation tissue|Purulent drainage|Tenderness at the site|Clogged|Tube dislodged","Type, size, placed when");
+DV("dev_jtube","J-tube or GJ-tube","Site clean without erythema or leakage; tube secure.","Site erythema|Leakage around the tube|Purulent drainage|Clogged|Tube dislodged","Type, size");
+DV("dev_cvc","Central line","Site clean, dry, and intact; dressing current.","Erythema at the site|Purulent drainage|Dressing soiled|Tenderness at the site|Not drawing back","Site, lumens, line day");
+DV("dev_picc","PICC","Site clean, dry, and intact; no arm swelling.","Erythema at the site|Drainage|Arm swelling|Dressing soiled|Not drawing back","Arm, lumens, line day");
+DV("dev_port","Implanted port","Site clean without erythema or swelling; accessed without difficulty.","Erythema over the port|Swelling|Tenderness|Not drawing back","Site, accessed or not");
+DV("dev_hd","Dialysis catheter","Site clean, dry, and intact; dressing current.","Erythema at the site|Purulent drainage|Bleeding at the site|Poor flows","Site, tunneled or not, line day");
+DV("dev_art","Arterial line","Site clean; good waveform; distal perfusion intact.","Dampened waveform|Hematoma at the site|Poor distal perfusion","Site, line day");
+DV("dev_piv","Peripheral IVs","Sites without erythema or infiltration.","Infiltration|Phlebitis|Erythema","Number, sites, gauge");
+DV("dev_ct","Chest tube","Dressing intact; no air leak; tidaling present; serosanguinous output.","Air leak|Bloody output|Purulent output|High output|No tidaling|Subcutaneous emphysema at the site","Side, size, suction or water seal");
+DV("dev_foley","Foley catheter","Draining clear yellow urine.","Hematuria|Clots|Cloudy urine|Not draining|Low output|Leaking around the catheter","Size, catheter day");
+DV("dev_spc","Suprapubic catheter","Site clean; draining clear yellow urine.","Site erythema|Leakage|Hematuria|Not draining|Dislodged","Size");
+DV("dev_neph","Nephrostomy tube","Site clean; draining clear urine.","Site erythema|Leakage|Hematuria|Not draining|Dislodged","Side");
+DV("dev_rectal","Rectal tube or fecal management system","In place without leakage.","Leakage around the tube|Bloody output|High output","Type");
+DV("dev_drain","Surgical drain","Site clean; serosanguinous output; bulb holding suction.","Bloody output|Purulent output|Bilious output|High output|Not holding suction|Site erythema","Type and location");
+DV("dev_ostomy","Ostomy","Stoma pink and moist; appliance intact; output appropriate.","Dusky stoma|Retracted stoma|Prolapse|Peristomal skin breakdown|No output|High output|Leaking appliance","Type and location");
+DV("dev_evd","External ventricular drain","Site clean; open at the prescribed level; CSF clear with waveform present.","Bloody CSF|Cloudy CSF|No waveform|Not draining|Leakage at the site","Level, clamped or open");
+const DEVICES=["dev_ett","dev_trach","dev_cvc","dev_picc","dev_port","dev_hd","dev_art","dev_piv","dev_ogt","dev_gtube","dev_jtube","dev_ct","dev_foley","dev_spc","dev_neph","dev_rectal","dev_drain","dev_ostomy","dev_evd"];
+const DEVSHORT={dev_ett:"ETT",dev_trach:"Trach",dev_ogt:"OG/NG",dev_gtube:"G-tube/PEG",dev_jtube:"J-tube",dev_cvc:"Central line",dev_picc:"PICC",dev_port:"Port",dev_hd:"HD catheter",dev_art:"Art line",dev_piv:"PIVs",dev_ct:"Chest tube",dev_foley:"Foley",dev_spc:"Suprapubic",dev_neph:"Nephrostomy",dev_rectal:"Rectal tube",dev_drain:"Surgical drain",dev_ostomy:"Ostomy",dev_evd:"EVD"};
 
 /* ---------- templates ----------
    T(key, group, name, "item !item ...") — "!" marks a finding that must not be missed.
@@ -355,16 +374,16 @@ const TPL={};const ORDER=[];
 function T(key,g,name,items,desc){TPL[key]={key,g,name,desc:desc||'',items:items.trim().split(/\s+/).map(x=>({id:x.replace('!',''),flag:x[0]==='!'}))};ORDER.push(key)}
 
 /* Comprehensive */
-T("full","Comprehensive","Head-to-toe exam","gen_app head_atr eye_pupils eye_eom eye_conj ent_tm ent_phar ent_mm neck_supple neck_ln neck_thyroid neck_jvd cv_rr cv_hs cv_pulses cv_edema resp_wob resp_bs abd_soft abd_tender abd_perit abd_bs abd_cva msk_gen sk_gen sk_rash neu_ms neu_speech neu_cn neu_motor neu_sens neu_coord neu_gait psy_app psy_mood","Complete exam for an H&P");
-T("icu","Comprehensive","ICU daily exam","gen_app !gen_rass !gen_cam !neu_gcs !eye_pupils !neu_mae neu_bs dev_ett dev_trach ent_mm neck_jvd !cv_rr cv_hs !cv_pulses !cv_cr cv_edema resp_wob !resp_vent !resp_bs resp_ct abd_soft !abd_tender abd_bs abd_wound abd_drains dev_ogt gu_foley sk_gen !sk_press sk_rash !dev_cvc dev_art dev_piv","Sedation, delirium, devices, and every system for daily rounds");
+T("full","Comprehensive","Head-to-toe exam","gen_app resp_o2 head_atr eye_pupils eye_eom eye_conj ent_tm ent_phar ent_mm neck_supple neck_ln neck_thyroid neck_jvd cv_rr cv_hs cv_pulses cv_edema resp_wob resp_bs abd_soft abd_tender abd_perit abd_bs abd_cva msk_gen sk_gen sk_rash neu_ms neu_speech neu_cn neu_motor neu_sens neu_coord neu_gait psy_app psy_mood","Complete exam for an H&P");TPL.full.devpick=1;
+T("icu","Comprehensive","ICU daily exam","gen_app !gen_rass !gen_cam !neu_gcs !eye_pupils !neu_mae neu_bs ent_mm neck_jvd !cv_rr cv_hs !cv_pulses !cv_cr cv_edema !resp_o2 resp_wob !resp_vent !resp_bs abd_soft !abd_tender abd_bs abd_wound sk_gen !sk_press sk_rash","Oxygen support, sedation, delirium, every system, plus the patient's lines, tubes, and drains");TPL.icu.devpick=1;
 T("neuro","Comprehensive","Comprehensive neuro exam","!nc_orient nc_attn !nc_lang nc_dys nc_memory !nc_cn2 !nc_cn346 nc_cn5 !nc_cn7 nc_cn8 nc_cn910 nc_cn11 nc_cn12 nc_bulk nc_tone !nc_drift !nc_str !nc_refl nc_lt nc_pp nc_vib nc_prop !nc_fnf nc_hks nc_ram !nc_gait nc_romberg","Mental status, each cranial nerve, strength and reflexes by muscle and tendon, sensation, coordination, gait");
 T("nihss","Comprehensive","NIH Stroke Scale","nihss","Scored NIHSS with a note-ready line");
 
 /* Cardiopulmonary */
 T("chest_pain","Cardiopulmonary","Chest pain","gen_app !vit_bparms !neck_jvd !cv_rr !cv_hs !cv_pulses !resp_bs resp_cw abd_tender !cv_calf cv_edema neu_motor");
-T("sob","Cardiopulmonary","Shortness of breath","gen_app !vit_spo2 !resp_wob !resp_bs !neck_trachea !neck_jvd cv_rr cv_hs cv_edema !cv_calf neu_ms sk_gen");
+T("sob","Cardiopulmonary","Shortness of breath","gen_app !vit_spo2 !resp_wob !resp_bs !neck_trachea !neck_jvd cv_rr cv_hs cv_edema !cv_calf neu_ms sk_gen !resp_o2");
 T("palpitations","Cardiopulmonary","Palpitations","gen_app !cv_rr cv_hs !vit_hrbp resp_bs neck_thyroid neu_tremor gen_hyd cv_edema");
-T("cough","Cardiopulmonary","Cough / URI","gen_app !vit_spo2 !resp_wob !resp_bs ent_tm ent_phar ent_nose head_sinus neck_ln cv_hs");
+T("cough","Cardiopulmonary","Cough / URI","gen_app !vit_spo2 !resp_wob !resp_bs ent_tm ent_phar ent_nose head_sinus neck_ln cv_hs !resp_o2");
 T("htn","Cardiopulmonary","Elevated blood pressure","gen_app !vit_bparms !neu_ms !neu_motor !neu_cn !eye_fundus !cv_hs !resp_bs neck_jvd cv_edema cv_pulses");
 T("syncope","Cardiopulmonary","Syncope","gen_app !vit_ortho !cv_rr !cv_hs !head_atr !ent_tongue !neu_motor neu_cn cv_aorta abd_tender !rec_stool resp_bs cv_edema");
 T("leg_swelling","Cardiopulmonary","Leg pain / swelling","!cv_calf cv_edema sk_cell !cv_pulses !cv_cr !msk_nv msk_comp sk_wound !resp_wob !resp_bs");
@@ -376,7 +395,7 @@ T("dizzy","Neuro","Dizziness / vertigo","gen_app !neu_nyst !neu_hints !neu_dix !
 T("stroke","Neuro","Stroke symptoms / focal deficit","!vit_glu !neu_ms !neu_speech !eye_vf !eye_eom !neu_cn !neu_drift !neu_motor !neu_sens !neu_coord !neu_neglect cv_rr neck_bruit nihss");
 T("numbness","Neuro","Numbness / tingling","!neu_motor !neu_sens !neu_refl !neu_cn !neu_gait !neu_saddle !rec_dre msk_carpal !msk_nv sk_rash");
 T("weakness","Neuro","Generalized weakness","gen_app !neu_ms !neu_motor !neu_refl !neu_cn !neu_gait vit_ortho gen_hyd resp_bs abd_tender sk_press !rec_stool");
-T("ams","Neuro","Altered mental status","!neu_gcs !vit_glu !vit_temp !eye_pupils !neu_motor !neck_supple !head_atr neu_asterixis !tox_feat sk_track sk_rash abd_liver resp_bs abd_tender !abd_bladder");
+T("ams","Neuro","Altered mental status","!neu_gcs !vit_glu !vit_temp !eye_pupils !neu_motor !neck_supple !head_atr neu_asterixis !tox_feat sk_track sk_rash abd_liver resp_bs abd_tender !abd_bladder !resp_o2");
 T("seizure","Neuro","Seizure","!neu_ms !ent_tongue !head_atr !msk_shoulder !neu_motor !neck_supple !eye_pupils !vit_glu sk_track abd_liver");
 /* GI / GU */
 T("abd_pain","GI / GU","Abdominal pain","gen_app abd_soft !abd_tender !abd_perit !abd_murphy !abd_mcb abd_bs !abd_hernia !abd_cva !cv_aorta eye_conj pel_spec pel_bim gu_test gu_crem !rec_dre rec_stool");
@@ -422,12 +441,12 @@ T("hyperglycemia","Endocrine / metabolic","Hyperglycemia","!neu_ms !gen_hyd !res
 T("hypoglycemia","Endocrine / metabolic","Hypoglycemia","!neu_ms !vit_glu !neu_motor head_atr sk_gen");
 T("abn_labs","Endocrine / metabolic","Abnormal lab result","!neu_ms !cv_rr gen_hyd eye_conj rec_stool neu_motor neu_refl cv_edema");
 /* Heme / renal */
-T("sickle","Heme / renal","Sickle cell pain crisis","!vit_spo2 !resp_bs !vit_temp !abd_spleen !neu_motor msk_joint gu_penis eye_conj !abd_tender");
+T("sickle","Heme / renal","Sickle cell pain crisis","!vit_spo2 !resp_bs !vit_temp !abd_spleen !neu_motor msk_joint gu_penis eye_conj !abd_tender !resp_o2");
 T("dialysis","Heme / renal","Dialysis patient complaint","!neck_jvd !resp_bs cv_edema !cv_access !cv_rr abd_pd !neu_ms !vit_spo2");
 /* Tox / psych */
 T("etoh","Tox / psych","Alcohol intoxication","!neu_gcs !head_atr !eye_pupils !neck_cspine !neu_motor !vit_glu !abd_tender !tox_wd neu_gait");
 T("withdrawal","Tox / psych","Alcohol withdrawal","!tox_wd !neu_ms !vit_hrbp !vit_temp neu_tremor !head_atr abd_liver");
-T("overdose","Tox / psych","Ingestion / overdose","!neu_gcs !vit_hrbp !vit_temp !eye_pupils !tox_feat !neu_tone !sk_track !vit_glu resp_bs");
+T("overdose","Tox / psych","Ingestion / overdose","!neu_gcs !vit_hrbp !vit_temp !eye_pupils !tox_feat !neu_tone !sk_track !vit_glu resp_bs !resp_o2");
 T("psych","Tox / psych","Psychiatric evaluation","!psy_app !neu_ms psy_mood !psy_thought !psy_content !psy_perc !psy_ij !sk_track !tox_feat !neu_motor");
 /* Fever */
 T("fever","Fever / infection","Fever (adult)","gen_app !vit_temp !vit_hrbp !neu_ms !neck_supple ent_phar ent_tm !resp_bs !cv_hs !abd_tender !abd_cva !sk_rash !sk_cell !dev_cvc msk_joint sk_press");
@@ -436,8 +455,8 @@ T("heat","Environmental","Heat illness","!vit_temp !neu_ms sk_gen !gen_hyd !neu_
 T("cold","Environmental","Cold exposure / frostbite","!vit_temp !neu_ms !sk_cold !msk_nv !cv_rr");
 T("envenom","Environmental","Envenomation / sting","!sk_bite !msk_comp !msk_nv !sk_rash !neu_cn !resp_wob !vit_hrbp");
 /* Pediatric */
-T("peds_fever","Pediatric","Pediatric fever","!gen_peds !vit_temp !gen_hyd !head_font !neck_supple ent_tm ent_phar !resp_wob !resp_bs !abd_tender !sk_rash gu_test msk_joint");
-T("peds_resp","Pediatric","Pediatric cough / wheeze / stridor","!vit_spo2 !resp_wob !ent_voice !resp_bs !gen_peds !gen_hyd ent_tm ent_phar");
+T("peds_fever","Pediatric","Pediatric fever","!gen_peds !vit_temp !gen_hyd !head_font !neck_supple ent_tm ent_phar !resp_wob !resp_bs !abd_tender !sk_rash gu_test msk_joint !resp_o2");
+T("peds_resp","Pediatric","Pediatric cough / wheeze / stridor","!vit_spo2 !resp_wob !ent_voice !resp_bs !gen_peds !gen_hyd ent_tm ent_phar !resp_o2");
 T("peds_gi","Pediatric","Pediatric vomiting / diarrhea","!gen_peds !gen_hyd !head_font abd_soft !abd_tender !abd_hernia gu_test rec_ext rec_stool");
 T("crying","Pediatric","Fussy / crying infant","!gen_peds !msk_tourn !head_font !sk_track !eye_fluor ent_tm !abd_tender !abd_hernia gu_test !msk_tender rec_ext !vit_temp");
 T("brue","Pediatric","BRUE","!gen_peds !vit_spo2 !head_font !sk_track !neu_tone !resp_bs cv_hs eye_conj ent_tongue");
@@ -481,7 +500,7 @@ const NIH=[
 const KEY='panacea.px.v1';
 let S={d:{}};try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.d)S=r}catch(e){}
 let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
-function D(k){return S.d[k]||(S.d[k]={m:{},ch:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{}},extra:[],sex:''})}
+function D(k){return S.d[k]||(S.d[k]={m:{},ch:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{}},extra:[],dev:[],sex:''});if(!S.d[k].dev)S.d[k].dev=[];return S.d[k]}
 function started(k){const d=S.d[k];return !!(d&&(Object.keys(d.m).length||Object.keys(d.w.nih||{}).length||Object.keys(d.w.str||{}).length))}
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -490,13 +509,14 @@ const low=s=>/^[A-Z0-9]{2,}/.test(s)||EPON.has(s.split(' ')[0])?s:s.charAt(0).to
 const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 const SIDE={R:'right',L:'left',B:'bilateral'};
 
-function items(k){const t=TPL[k],d=D(k);const list=[...t.items,...d.extra.map(id=>({id,flag:false,extra:1}))];
+function items(k){const t=TPL[k],d=D(k);const list=[...t.items,...d.extra.map(id=>({id,flag:false,extra:1})),...d.dev.map(id=>({id,flag:false,dev:1}))];
   return list.filter(x=>I[x.id]&&!(d.sex==='F'&&MALE.has(x.id))&&!(d.sex==='M'&&FEMALE.has(x.id)))}
 function hasSexItems(k){return items(k).some(x=>MALE.has(x.id)||FEMALE.has(x.id))||D(k).sex}
 
 /* ---------- sentence building ---------- */
 function abText(k,id){const d=D(k),ch=(d.ch[id]||[]).filter(c=>I[id].ab.includes(c)),tx=(d.tx[id]||'').trim(),sd=d.sd[id];
-  let s=ch.map((c,i)=>i?low(c):c).join(', ');
+  const pre=I[id].pre||'';
+  let s=ch.map((c,i)=>i||pre?low(c):c).join(', ');if(pre&&s)s=pre+s;
   if(sd)s+=(s?' ':'')+`(${SIDE[sd]})`;
   if(tx)s+=(s?'; ':'')+tx;
   return s?cap(s).replace(/[.;,]?$/,'.'):''}
@@ -519,12 +539,16 @@ function widgetText(k,id){const w=D(k).w;
     const pos=done.filter(q=>n[q[0]]==='UN'||+n[q[0]]>0).map(q=>`${q[0]} ${q[1].toLowerCase()} ${n[q[0]]==='UN'?'UN':n[q[0]]}`);
     return `NIHSS ${tot}${done.length<NIH.length?` (incomplete: ${done.length} of ${NIH.length} items)`:''}${pos.length?`: ${pos.join(', ')}`:' (all items 0)'}.`}
   return''}
-function itemText(k,id){if(WIDGET[id])return widgetText(k,id);const m=D(k).m[id];if(m==='n')return I[id].nl;if(m==='a')return abText(k,id)||'';return''}
+function itemText(k,id){if(WIDGET[id])return widgetText(k,id);const d=D(k),m=d.m[id];let t=m==='n'?I[id].nl:m==='a'?abText(k,id)||'':'';
+  if(I[id].loc){const where=(d.loc&&d.loc[id]||'').trim();if(!t&&!where)return'';return `${I[id].label}${where?` (${where})`:''}${t?': '+t:'.'}`}
+  return t}
+function isDoneLoc(k,id){return I[id].loc&&(D(k).loc||{})[id]}
 function isDone(k,id){if(WIDGET[id])return !!widgetText(k,id);return !!D(k).m[id]}
 function note(k){const its=items(k),lines=[];
   if(k==='neuro'){const subs={};for(const x of its){let t=itemText(k,x.id);if(!t)continue;if(CNPRE[x.id])t=`CN ${CNPRE[x.id]}: ${t}`;const s=NC_SUB[x.id]||SYSNAME[I[x.id].sys];(subs[s]=subs[s]||[]).push(t)}
     for(const[s,a]of Object.entries(subs))lines.push(`${s}: ${a.join(' ')}`);return lines.join('\n')}
-  for(const[sid,name]of SYS){const a=its.filter(x=>I[x.id].sys===sid).map(x=>itemText(k,x.id)).filter(Boolean);if(a.length)lines.push(`${name}: ${a.join(' ')}`)}
+  for(const[sid,name]of SYS){const a=its.filter(x=>I[x.id].sys===sid).map(x=>itemText(k,x.id)).filter(Boolean);if(!a.length)continue;
+    if(sid==='dev')lines.push(`${name}:\n${a.map(x=>'• '+x).join('\n')}`);else lines.push(`${name}: ${a.join(' ')}`)}
   return lines.join('\n')}
 
 /* ---------- rendering ---------- */
@@ -559,9 +583,10 @@ function itemHTML(k,x){const it=I[x.id],d=D(k),m=d.m[x.id]||'';
   const ch=d.ch[x.id]||[];
   return `<div class="it" data-id="${x.id}" data-m="${m}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv)}</div></div>
    <div class="na"><button class="n" data-a="mark" data-v="n" aria-pressed="${m==='n'}">Nl</button><button class="a" data-a="mark" data-v="a" aria-pressed="${m==='a'}">Abn</button></div></div>
+   ${it.loc?`<input type="text" class="loc" data-loc="${x.id}" value="${esc((d.loc||{})[x.id]||'')}" placeholder="${esc(it.loc)}">`:''}
    <div class="abp">${it.ab.length?`<div class="chips">${it.ab.map(c=>`<button class="chip" data-a="chip" data-c="${esc(c)}" aria-pressed="${ch.includes(c)}">${esc(c)}</button>`).join('')}</div>`:''}
    <div class="row2">${it.side?`<div class="seg">${Object.entries({R:'Right',L:'Left',B:'Both'}).map(([v,l])=>`<button data-a="side" data-v="${v}" aria-pressed="${d.sd[x.id]===v}">${l}</button>`).join('')}</div>`:''}
-   <input type="text" data-tx="${x.id}" value="${esc(d.tx[x.id]||'')}" placeholder="Details (size, location, value)"></div></div></div>`}
+   <input type="text" data-tx="${x.id}" value="${esc(d.tx[x.id]||'')}" placeholder="${esc(it.ph||'Details (size, location, value)')}"></div></div></div>`}
 
 function widgetHTML(k,id){const w=D(k).w;
   if(id==='neu_gcs'){return `<div class="gcs">${['E','V','M'].map(c=>`<label for="g${c}">${{E:'Eyes',V:'Verbal',M:'Motor'}[c]}</label><select id="g${c}" data-w="gcs" data-c="${c}"><option value="">—</option>${GCS[c].map(([v,l])=>`<option value="${v}"${String(w.gcs[c])===String(v)?' selected':''}>${v} · ${l}</option>`).join('')}</select>`).join('')}</div>`}
@@ -578,15 +603,19 @@ function renderExam(k){const t=TPL[k],d=D(k),its=items(k);
   let h=`<div class="toolbar">${hasSexItems(k)?`<div class="seg" aria-label="Sex">${['M','F'].map(v=>`<button data-a="sex" data-v="${v}" aria-pressed="${d.sex===v}">${v}</button>`).join('')}</div>`:''}<span class="prog" id="prog"></span></div>`;
   if(k==='neuro'||k==='nihss'){const subs=[];for(const x of its){const s=k==='neuro'?(NC_SUB[x.id]||SYSNAME[I[x.id].sys]):'NIH Stroke Scale';let g=subs.find(z=>z.s===s);if(!g)subs.push(g={s,a:[]});g.a.push(x)}
     for(const g of subs)h+=sysHTML(k,g.s,g.a)}
-  else for(const[sid,name]of SYS){const a=its.filter(x=>I[x.id].sys===sid);if(a.length)h+=sysHTML(k,name,a,sid)}
+  else for(const[sid,name]of SYS){const a=its.filter(x=>I[x.id].sys===sid);if(sid==='dev'&&t.devpick)h+=devHTML(k,name,a);else if(a.length)h+=sysHTML(k,name,a,sid)}
   h+=`<div class="card addp"><div class="btnrow" style="justify-content:space-between"><b>Add findings</b><button class="linkbtn" data-a="addtog">${addOpen?'Done':'Show'}</button></div>${addOpen?addHTML(k):'<p class="sub">Pull in any other finding from the library.</p>'}</div>`;
   h+=`<h2 class="sec">Exam text</h2><pre class="out" id="out"></pre>
    <div class="btnrow"><button class="btn sm" data-a="restall">Mark unmarked as normal</button><button class="linkbtn danger" data-a="clear">Clear this exam</button></div>
    <p class="foot">Saved only on this device. Mark only what you examined.</p>`;
   app.innerHTML=h;refresh(k)}
+function devHTML(k,name,a){const d=D(k);
+  return `<section class="sys"><div class="sysh"><h3>${esc(name)}</h3>${a.length?`<button class="linkbtn" data-a="restsys" data-ids="${a.map(x=>x.id).join(',')}">Rest normal</button>`:''}</div>
+   <div class="it"><div class="t" style="font-weight:700;font-size:.97rem">Present</div><div class="pv" style="font-size:.88rem;color:var(--muted);margin:2px 0 8px">Tap each line, tube, or drain the patient has.</div>
+   <div class="chips">${DEVICES.map(id=>`<button class="chip dv" data-a="devpick" data-id="${id}" aria-pressed="${d.dev.includes(id)}">${esc(DEVSHORT[id])}</button>`).join('')}</div></div>${a.map(x=>itemHTML(k,x)).join('')}</section>`}
 function sysHTML(k,name,a,sid){return `<section class="sys"><div class="sysh"><h3>${esc(name)}</h3>${a.some(x=>!WIDGET[x.id])?`<button class="linkbtn" data-a="restsys" data-ids="${a.map(x=>x.id).join(',')}">Rest normal</button>`:''}</div>${a.map(x=>itemHTML(k,x)).join('')}</section>`}
 function addHTML(k){const have=new Set(items(k).map(x=>x.id)),q=addQ.toLowerCase();let h=`<input type="search" id="addq" placeholder="Search findings" value="${esc(addQ)}" style="margin-top:8px">`;
-  for(const[sid,name]of SYS){const a=Object.values(I).filter(it=>it.sys===sid&&!have.has(it.id)&&!it.id.startsWith('nc_')&&(!q||it.label.toLowerCase().includes(q)||it.nl.toLowerCase().includes(q)));
+  for(const[sid,name]of SYS){if(sid==='dev'&&TPL[k].devpick)continue;const a=Object.values(I).filter(it=>it.sys===sid&&!have.has(it.id)&&!it.id.startsWith('nc_')&&(!q||it.label.toLowerCase().includes(q)||it.nl.toLowerCase().includes(q)));
     if(a.length)h+=`<div class="grp">${esc(name)}</div><div class="chips">${a.map(it=>`<button class="chip" data-a="add" data-id="${it.id}">+ ${esc(it.label)}</button>`).join('')}</div>`}
   return h}
 function refresh(k){const its=items(k),done=its.filter(x=>isDone(k,x.id)).length,keyLeft=its.filter(x=>x.flag&&!isDone(k,x.id)).length;
@@ -618,6 +647,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
     else if(id==='nc_refl'){for(const m of REFL)for(const sd of['R','L'])d.w.refl[sd+':'+m]='2+';d.w.refl['toe:R']=d.w.refl['toe:L']='downgoing'}
     else if(id==='nihss'){for(const q of NIH)d.w.nih[q[0]]=0}save();refreshItem(k,id)}
   else if(a==='nih'){const c=b.dataset.c,v=b.dataset.v==='UN'?'UN':+b.dataset.v;d.w.nih[c]=String(d.w.nih[c])===String(v)?'':v;save();refreshItem(k,'nihss')}
+  else if(a==='devpick'){const id=b.dataset.id,i=d.dev.indexOf(id);if(i<0)d.dev.push(id);else{d.dev.splice(i,1);delete d.m[id];if(d.loc)delete d.loc[id]}
+    d.dev.sort((x,y)=>DEVICES.indexOf(x)-DEVICES.indexOf(y));save();render(true)}
   else if(a==='addtog'){addOpen=!addOpen;addQ='';render(true)}
   else if(a==='add'){d.extra.push(b.dataset.id);save();render(true);toast(I[b.dataset.id].label+' added.')}
 });
@@ -625,6 +656,7 @@ app.addEventListener('input',e=>{const t=e.target,k=route();
   if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderHome();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
   if(!k)return;const d=D(k);
   if(t.id==='addq'){addQ=t.value;const p=t.selectionStart;render(true);const q=document.getElementById('addq');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.dataset.loc){(d.loc=d.loc||{})[t.dataset.loc]=t.value;save();refresh(k);return}
   if(t.dataset.tx){const id=t.dataset.tx;d.tx[id]=t.value;if(t.value.trim())d.m[id]='a';save();refreshItem(k,id)}});
 app.addEventListener('change',e=>{const t=e.target,k=route();if(!k||!t.dataset.w)return;const d=D(k),w=t.dataset.w;
   if(t.value)d.w[w][t.dataset.c]=t.value;else delete d.w[w][t.dataset.c];
