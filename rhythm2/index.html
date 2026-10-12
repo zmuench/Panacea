@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rhythm 2">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Rhythm 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Rhythm 2: a daily ECG curriculum through Chizner's ECG Interpretation Made Ridiculously Simple. Palette and type match the rest of PANACEA. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  color-scheme:light only;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding-left:16px;padding-right:16px}
+main.wrap{padding-top:12px;padding-bottom:120px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:10px;min-height:56px}
+.hd h1{font-size:1.25rem;margin:0;flex:1;letter-spacing:-.01em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{border:0;background:none;color:var(--accent);font-size:2.1rem;line-height:1;padding:0 8px 4px 0;cursor:pointer;font-family:inherit}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover,.homebtn:active{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hdlink{border:0;background:none;color:var(--accent);font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;padding:8px 2px}
+.syncdot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}
+.syncdot.ok{background:var(--ok)}.syncdot.syncing{background:var(--accent)}.syncdot.error{background:var(--warn)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.block{display:block;width:100%}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.92rem;font-weight:700;padding:6px 2px;cursor:pointer}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* progress */
+.prog{display:flex;align-items:center;gap:14px}
+.ring{flex:none;width:58px;height:58px}
+.ring circle{fill:none;stroke-width:6}
+.ring .tr{stroke:var(--line)}.ring .pr{stroke:var(--ok);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .3s}
+.ring text{font:700 13px "Atkinson Hyperlegible",sans-serif;fill:var(--ink)}
+.prog .txt{flex:1;min-width:0}
+.prog .big{font-weight:700;font-size:1.05rem}
+.prog .sm{color:var(--muted);font-size:.88rem}
+.status{display:flex;gap:12px;align-items:flex-start}
+.status .ck{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ok);display:grid;place-items:center}
+.status .ck svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.status h2{margin:2px 0 2px;font-size:1.1rem}
+.status p{margin:0;color:var(--muted);font-size:.92rem}
+.next{margin-top:12px;padding:12px;border-radius:12px;background:var(--bg)}
+.next .eb{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.next .nt{font-weight:700;margin-top:2px}
+
+/* lesson */
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin:18px 0 4px}
+h2.lt{font-size:1.6rem;line-height:1.2;margin:0 0 12px;letter-spacing:-.015em;text-wrap:balance}
+.reads{display:flex;flex-direction:column;gap:6px;margin:0 0 14px;padding:0;list-style:none}
+.reads li{display:flex;gap:10px;align-items:baseline;font-size:.92rem;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.reads .bk{flex:none;font-weight:700;color:var(--accent);min-width:7.6em}
+.reads .ch{color:var(--ink)}
+.bl{background:var(--accent-soft);border-radius:14px;padding:14px 16px;margin:0 0 14px;font-size:1.02rem;line-height:1.55}
+.bl b{display:block;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+section.sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+section.sec h3{margin:0 0 8px;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+section.sec h3 svg{width:17px;height:17px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+section.sec ul{margin:0;padding-left:18px}
+section.sec li{margin:6px 0;line-height:1.45}
+.ev li{list-style:none;margin:0;padding:9px 0;border-bottom:1px solid var(--line)}
+.ev ul{padding-left:0}
+.ev li:last-child{border-bottom:0;padding-bottom:2px}
+.ev li:first-child{padding-top:2px}
+.ev .tn{display:block;font-weight:700;font-size:.92rem}
+.ev .tf{display:block;color:var(--ink);font-size:.95rem}
+.qz .qq{font-weight:700;margin:0 0 8px}
+.qz .qa{display:none;margin:10px 0 0;padding:10px 12px;border-left:3px solid var(--ok);background:var(--ok-soft);border-radius:8px}
+.qz.open .qa{display:block}
+textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-height:80px;resize:vertical;line-height:1.45;display:block}
+.complete{margin:18px 0 8px}
+.donemsg{text-align:center;color:var(--ok);font-weight:700;margin:8px 0}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+.pager button{flex:1;text-align:left;font:inherit;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--ink);min-height:56px;min-width:0}
+.pager button:last-child{text-align:right}
+.pager button[disabled]{visibility:hidden}
+.pager small{display:block;color:var(--muted);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.pager span{display:block;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* curriculum list */
+.search{font:inherit;font-size:16px;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:var(--surface);color:var(--ink);margin:4px 0 12px}
+details.unit{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
+details.unit>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer;min-height:56px}
+details.unit>summary::-webkit-details-marker{display:none}
+details.unit>summary .un{flex:none;width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+details.unit>summary .nm{flex:1;font-weight:700;min-width:0}
+details.unit>summary .ct{font-size:.85rem;color:var(--muted);font-weight:700}
+details.unit>summary .ct.all{color:var(--ok)}
+details.unit>summary .chev{width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s;flex:none}
+details.unit[open]>summary .chev{transform:rotate(90deg)}
+details.unit[open]>summary{border-bottom:1px solid var(--line)}
+.lrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 14px;cursor:pointer;min-height:52px}
+.lrow:last-child{border-bottom:0}
+.lrow:hover{background:var(--paper)}
+.lrow .dn{flex:none;width:44px;font-size:.78rem;font-weight:700;color:var(--muted)}
+.lrow .lt2{flex:1;min-width:0;font-size:.97rem}
+.lrow .lt2 small{display:block;color:var(--muted);font-size:.78rem}
+.lrow .bx{flex:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);display:grid;place-items:center}
+.lrow.d .bx{background:var(--ok);border-color:var(--ok)}
+.lrow .bx svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.lrow.d .bx svg{opacity:1}
+.lrow.today{background:var(--accent-soft)}
+.lrow.today .dn{color:var(--accent)}
+.foot{color:var(--muted);font-size:.8rem;margin-top:24px;line-height:1.5}
+.foot ul{padding-left:18px;margin:6px 0}
+.toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.rdh{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.reads li{align-items:center}
+.reads button.rck{all:unset;flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);display:grid;place-items:center;cursor:pointer;box-sizing:border-box}
+.reads button.rck:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.reads button.rck svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.reads li.rd button.rck{background:var(--ok);border-color:var(--ok)}
+.reads li.rd button.rck svg{opacity:1}
+.reads li.rd .ch,.reads li.rd .bk{opacity:.55}
+.reads .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.reads .tx .bk{min-width:0;font-size:.78rem;letter-spacing:.02em}
+.reads li.rd .ch{text-decoration:line-through}
+.reads button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:baseline;width:100%;cursor:pointer}
+.reads li.lk{border-color:var(--accent)}
+.reads li.lk:hover{background:var(--accent-soft)}
+.reads .op{flex:none;margin-left:auto;font-size:.78rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.reads li.nl .op{color:var(--muted)}
+.bkrow{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.bkrow:last-child{border-bottom:0}
+.bkrow .tx{flex:1;min-width:0}
+.bkrow .nm{font-weight:700}
+.bkrow .st{font-size:.85rem;color:var(--muted)}
+.bkrow .st.ok{color:var(--ok)}.bkrow .st.bad{color:var(--warn)}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.note{font-size:.88rem;color:var(--muted);margin:10px 0 0}
+.reader{display:flex;flex-direction:column;gap:10px;align-items:center}
+.pg{width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;position:relative;display:block}
+.pg canvas{width:100%;height:100%;display:block;border-radius:6px}
+.pg .pn{position:absolute;right:8px;bottom:6px;font-size:.72rem;color:var(--muted);background:rgba(255,255,255,.85);padding:1px 6px;border-radius:6px}
+.pgchip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);font-size:.85rem;font-weight:700;padding:6px 12px;border-radius:999px;z-index:15}
+.loading{color:var(--muted);text-align:center;padding:40px 0}
+/* Rhythm additions */
+.reads .op{min-width:3.6em;text-align:right}
+.noread{font-size:.92rem;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:0 0 14px}
+.sec.mod{border-color:#E7D9B8;background:#FFFBF2}
+.sec.mod h3 svg{stroke:#8A5A00}
+.pgw{width:100%;display:flex;flex-direction:column;gap:8px}
+.pgw .miss{display:grid;place-items:center;color:var(--muted);font-size:.9rem;aspect-ratio:.77;background:var(--paper)}
+.cal{width:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.cal .tx{flex:1;min-width:12em}
+.cal .btn{min-height:36px;padding:6px 12px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap hd" id="hd"></div></header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* The text: lessons point to printed page numbers in Chizner; nothing from the book is reproduced here. */
+const BOOKS={
+ D:{short:"Chizner",full:"ECG Interpretation Made Ridiculously Simple (Michael A. Chizner, MedMaster 2021)",first:1,last:134}
+};
+/* Printed p. 133 lines up with the inside back cover in the scanned PDF. */
+const REFT={133:"Sequence of ECG interpretation · Normal values"};
+const UNITS=[
+ {n:1,t:"The ECG and a systematic read"},
+ {n:2,t:"Ischemia and infarction"},
+ {n:3,t:"Chamber enlargement"},
+ {n:4,t:"Arrhythmias and conduction"},
+ {n:5,t:"Patterns, pitfalls and tools"},
+ {n:6,t:"Practice ECGs"}
+];
+const L=[];
+L.push(
+/* ---------- Unit 1: The ECG (ch. 1–2, pp. 2–23) ---------- */
+{id:"ecg1",u:1,t:"Electrical activity, the conduction system and the leads",p:[[2,8]],
+ bl:"Each heartbeat is an electrical wave that starts in the SA node, crosses the atria, pauses in the AV node, and races down the His bundle, bundle branches and Purkinje fibers. Twelve leads record that same wave from twelve angles: six limb leads in the frontal plane and six chest leads in the horizontal plane.",
+ key:["P wave: atrial depolarization. QRS: ventricular depolarization. T wave: ventricular repolarization.","The AV node’s delay is what separates the P wave from the QRS and gives the ventricles time to fill.","Depolarization moving toward a lead’s positive electrode writes an upward deflection; moving away writes a downward one.","Lead groups: inferior II, III, aVF; lateral I, aVL, V5–V6; septal V1–V2; anterior V3–V4."],
+ ed:["Put the lead groups to work from day one: a territorial pattern points to a coronary artery, a diffuse one points elsewhere.","Before calling a lethal rhythm on the monitor, look at the patient. Artifact can mimic VT or VF."],
+ q:["Which leads look at the inferior wall?","II, III and aVF."]},
+
+{id:"ecg2",u:1,t:"The 12-lead, rate, rhythm, P wave and QRS",p:[[9,15]],ref:[133],
+ bl:"Read every ECG in the same order. Confirm the calibration, then the rate and rhythm, then each wave and interval, then the axis. Rate: 300 ÷ large boxes between R waves for regular rhythms, or QRS complexes in 6 seconds × 10 for irregular ones.",
+ key:["Standard paper: 25 mm/s, so a small box is 0.04 s and a large box 0.20 s; 10 mm is 1 mV.","Normal sinus rhythm: an upright P in I, II and aVF before every QRS, at 60–100 per minute.","P wave: under 0.12 s and under 2.5 mm tall. A broad notched P suggests left atrial enlargement; a tall peaked P suggests right atrial enlargement.","QRS: normally under 0.10–0.12 s. A wide QRS means slow ventricular activation: a bundle branch block, a ventricular origin, preexcitation, pacing, or a drug or electrolyte effect."],
+ ed:["Measure intervals yourself in the lead where they are longest; machine reads miss in both directions.","A regular narrow tachycardia at about 150 is flutter with 2:1 block until you have looked hard for flutter waves."],
+ q:["R waves are 4 large boxes apart. What is the rate?","75 per minute (300 ÷ 4)."]},
+
+{id:"ecg3",u:1,t:"T and U waves, PR, ST, QT and the axis",p:[[16,23]],ref:[133],
+ bl:"After the QRS, check the T wave, any U wave, the PR interval, the ST segment and the QT interval, then work out the axis. Each has a short list of meanings: peaked T for hyperkalemia, a prominent U for hypokalemia, a short PR for preexcitation, ST shifts for injury, and a long QT for torsades risk.",
+ key:["PR 0.12–0.20 s. Long: first-degree AV block. Short: preexcitation (WPW) or a low atrial or junctional origin.","ST elevation: injury, pericarditis, early repolarization, LV aneurysm, LBBB, LVH. ST depression: ischemia, reciprocal change, digoxin, strain.","QT varies with rate, so use the corrected QT (QTc). A QTc over about 0.45–0.47 s is prolonged; over 0.50 s is a real torsades risk.","Axis: QRS mainly upright in I and aVF is normal. Upright in I, negative in aVF and II is left axis deviation; negative in I and upright in aVF is right axis deviation."],
+ ed:["Electrolyte clues: peaked T waves then a widening QRS with hyperkalemia; flat T and U waves with hypokalemia; a long ST segment (long QT) with hypocalcemia.","New QT-prolonging drug plus syncope: check potassium and magnesium and stop the drug."],
+ q:["QRS upright in lead I, negative in II and aVF. What is the axis?","Left axis deviation (consider left anterior fascicular block)."]},
+
+/* ---------- Unit 2: Ischemia and infarction (ch. 3, pp. 24–38) ---------- */
+{id:"mi1",u:2,t:"Ischemia, injury and infarction: angina, STEMI and NSTEMI",p:[[24,27]],
+ bl:"Ischemia shows as ST depression or T wave inversion, injury as ST elevation, and established infarction as pathologic Q waves. Stable and unstable angina usually cause transient ST depression; Prinzmetal’s vasospasm causes transient ST elevation; an occluded artery causes ST elevation MI.",
+ key:["STEMI evolves: hyperacute T waves within minutes, ST elevation over hours, Q waves and T inversion over days, and the ST returns to baseline over weeks.","NSTEMI shows ST depression and/or T inversion without new Q waves; troponin makes the diagnosis.","Pathologic Q waves are wide (0.04 s or more) or deep (over a quarter of the R wave) in leads that should not have them."],
+ ed:["A normal ECG does not rule out ACS. Repeat it every 15–30 minutes while symptoms continue or change.","STEMI criteria: new ST elevation at the J point in two contiguous leads (1 mm in most leads; more in V2–V3). Activate the cath lab early."],
+ mod:["Some occlusions don’t meet millimeter STEMI criteria. Hyperacute T waves, reciprocal ST depression and posterior changes can identify occlusion MI (OMI) earlier."],
+ q:["What is the earliest ECG sign of an acute coronary occlusion?","Hyperacute T waves: tall, broad-based and symmetric."]},
+
+{id:"mi2",u:2,t:"Localizing the infarct: inferior, lateral, anterior, posterior and RV",p:[[28,31]],
+ bl:"The leads with ST elevation or Q waves name the wall, and the wall names the artery. Inferior (II, III, aVF) is usually the RCA; lateral (I, aVL, V5–V6) the circumflex; anterior (V1–V4) the LAD. Posterior MI shows as the mirror image in V1–V2: ST depression with tall R waves.",
+ key:["Reciprocal ST depression (aVL with inferior MI, inferior leads with high lateral MI) strongly supports a true infarction.","Posterior MI: ST depression and tall broad R waves in V1–V3; confirm with posterior leads V7–V9.","Right ventricular MI comes with inferior MI: ST elevation in V4R (and sometimes V1), with ST elevation in III greater than in II."],
+ ed:["With inferior STEMI, get a right-sided ECG. RV infarction is preload dependent: avoid nitrates and give fluid for hypotension.","Inferior MI often brings bradycardia and AV block from the RCA’s supply to the AV node; it is usually transient and responds to atropine."],
+ q:["ST elevation in II, III and aVF, greater in III than II, with ST elevation in V4R. What is the diagnosis?","Inferior MI with right ventricular involvement, usually a proximal RCA occlusion."]},
+
+{id:"mi3",u:2,t:"Evolution, STEMI in LBBB, reperfusion and the ECG’s limits",p:[[32,38]],
+ bl:"LBBB hides infarction because it already moves the ST segment, so use the Sgarbossa criteria. After reperfusion, look for rapid ST resolution and reperfusion arrhythmias. Know what the ECG can miss, and what can mimic infarction.",
+ key:["Sgarbossa: concordant ST elevation of 1 mm or more, concordant ST depression of 1 mm or more in V1–V3, or excessively discordant ST elevation (5 mm, or over 25% of the S wave in the modified version).","Reperfusion signs: ST resolution of 50% or more within 60–90 minutes, T wave inversion, and accelerated idioventricular rhythm.","Infarct mimics: WPW (pseudo-Q waves), LVH, LBBB, pericarditis, early repolarization, hypertrophic cardiomyopathy, and Takotsubo."],
+ ed:["The circumflex territory is electrically quiet, so lateral and posterior infarcts are often missed. Look at V1–V2 and aVL closely.","Persistent ST elevation weeks after an anterior MI suggests LV aneurysm, not new injury."],
+ q:["After thrombolysis, the patient develops a regular wide rhythm at 80. What is it likely to be?","Accelerated idioventricular rhythm, a common and usually benign reperfusion arrhythmia."]},
+
+/* ---------- Unit 3: Chamber enlargement (ch. 4, pp. 39–42) ---------- */
+{id:"hyp1",u:3,t:"Atrial enlargement and ventricular hypertrophy",p:[[39,42]],
+ bl:"Left atrial enlargement gives a broad notched P in II and a deep, wide terminal negative P in V1. Right atrial enlargement gives a tall peaked P (2.5 mm or more) in II. LVH gives tall voltage, often with strain; RVH gives a tall R in V1 with right axis deviation.",
+ key:["LVH voltage: S in V1 plus R in V5 or V6 of 35 mm or more (Sokolow–Lyon), or R in aVL over 11 mm.","LV ‘strain’: down-sloping ST depression with asymmetric T inversion in the lateral leads; it raises the stakes for LVH.","RVH: R greater than S in V1, right axis deviation, and often right atrial enlargement and RV strain in V1–V3.","Voltage alone is unreliable in young, thin patients."],
+ ed:["LVH with strain mimics lateral ischemia; compare with an old ECG before calling it new.","New RV strain, right axis and an S1Q3T3 pattern in a dyspneic patient should raise concern for pulmonary embolism."],
+ q:["S in V1 is 18 mm and R in V5 is 22 mm. Does this meet Sokolow–Lyon LVH voltage?","Yes: 40 mm is above the 35 mm threshold."]},
+
+/* ---------- Unit 4: Arrhythmias and conduction (ch. 5, pp. 43–67) ---------- */
+{id:"arr1",u:4,t:"Palpitations, arrhythmia mechanisms and atrial arrhythmias",p:[[43,47]],
+ bl:"Arrhythmias arise from abnormal automaticity, triggered activity, or reentry. Atrial arrhythmias range from a single PAC through ectopic atrial rhythm, wandering pacemaker and MAT to flutter, fibrillation and atrial tachycardia with block.",
+ key:["PACs: early, differently shaped P waves, usually with a non-compensatory pause. A blocked PAC is the most common cause of an unexplained pause.","MAT: three or more P wave shapes at a rate over 100, usually in severe lung disease. With a rate under 100, it is wandering atrial pacemaker.","Atrial flutter: sawtooth waves at about 300 per minute, often 2:1 conduction giving a ventricular rate near 150.","AF: no organized P waves and an irregularly irregular ventricular response."],
+ ed:["Treat MAT by treating the lungs and correcting potassium and magnesium; cardioversion does not work.","AF with RVR: ask whether the fast rate is causing the problem or compensating for one (sepsis, hypovolemia, PE) before rate-controlling it."],
+ q:["An irregular narrow tachycardia at 120 with three different P wave shapes. What is it?","Multifocal atrial tachycardia."]},
+
+{id:"arr2",u:4,t:"Junctional arrhythmias, AVNRT, digoxin toxicity and vagal maneuvers",p:[[48,50]],
+ bl:"Junctional rhythms have a narrow QRS with absent or retrograde P waves. AVNRT, the most common paroxysmal SVT, uses a reentry circuit within the AV node, so anything that briefly blocks the AV node can stop it.",
+ key:["Junctional escape is 40–60 per minute; accelerated junctional rhythm is 60–100.","AVNRT: a regular narrow tachycardia at 150–250 with P waves hidden in the QRS or seen as a pseudo r’ in V1.","Digoxin toxicity: atrial tachycardia with block, accelerated junctional rhythm, ‘regularized’ AF, and bidirectional VT.","Carotid sinus massage or Valsalva may stop AVNRT or AVRT, slows the ventricular response in flutter or AF (unmasking flutter waves), and has no effect on sinus tachycardia beyond gradual slowing."],
+ ed:["Stable SVT: modified Valsalva first, then adenosine 6 mg rapid push with a flush, then 12 mg. Synchronized cardioversion if unstable.","Avoid carotid massage with a carotid bruit or a recent stroke or TIA."],
+ mod:["The modified Valsalva (strain, then lie flat with the legs raised; REVERT, Lancet 2015) converts about 43% of SVT, versus 17% with a standard Valsalva."],
+ q:["Regular narrow tachycardia at 180 that slows abruptly and then stops with adenosine. Most likely mechanism?","AV nodal reentrant tachycardia (or AVRT): a reentry circuit that needs the AV node."]},
+
+{id:"arr3",u:4,t:"Preexcitation: WPW, LGL and preexcited AF",p:[[51,53]],
+ bl:"An accessory pathway (bundle of Kent) lets the impulse reach the ventricle early, giving a short PR and a slurred delta wave. In AF, impulses can race down the pathway at very fast rates and degenerate into VF.",
+ key:["WPW pattern: PR under 0.12 s, a delta wave, and a wide QRS. WPW syndrome adds tachyarrhythmias.","Orthodromic AVRT (down the AV node, up the pathway) is narrow and regular; antidromic AVRT is wide and can look like VT.","Preexcited AF: irregular, very fast (over 200), with wide and changing QRS shapes.","Delta waves can produce pseudo-Q waves that mimic old infarction."],
+ ed:["In preexcited AF, avoid AV nodal blockers (adenosine, diltiazem, verapamil, beta-blockers, digoxin): they can speed conduction down the pathway. Use procainamide or synchronized cardioversion.","Any young patient with palpitations and a short PR or a delta wave needs electrophysiology referral."],
+ q:["Irregular wide tachycardia at 240 with QRS shapes that keep changing, in a 25-year-old. What is it, and what drug must you avoid?","AF with WPW preexcitation. Avoid AV nodal blockers; use procainamide or cardioversion."]},
+
+{id:"arr4",u:4,t:"Ventricular arrhythmias, VT versus SVT, cardioversion",p:[[54,56]],
+ bl:"Ventricular arrhythmias run from PVCs through accelerated idioventricular rhythm to VT, torsades and VF. A regular wide-complex tachycardia is VT until proven otherwise, especially with structural heart disease.",
+ key:["PVCs: early wide beats without a preceding P wave, usually with a full compensatory pause.","Clues for VT: AV dissociation, fusion and capture beats, a very wide QRS, an extreme (northwest) axis, and precordial concordance.","Torsades: polymorphic VT twisting around the baseline in the setting of a long QT.","Synchronized cardioversion times the shock to the R wave to avoid the vulnerable period; VF and pulseless VT get unsynchronized defibrillation."],
+ ed:["A stable-appearing patient can still be in VT; hemodynamics don’t distinguish VT from SVT.","Torsades: magnesium 2 g IV, stop QT-prolonging drugs, correct potassium; overdrive pacing or isoproterenol for recurrences."],
+ mod:["PROCAMIO (Eur Heart J 2017): for stable wide-complex tachycardia, procainamide caused fewer major cardiac adverse events than amiodarone."],
+ q:["Name two findings that clinch VT on a wide-complex tachycardia.","AV dissociation and fusion or capture beats (also precordial concordance and a northwest axis)."]},
+
+{id:"arr5",u:4,t:"Sinus node disease, syncope and AV block",p:[[57,59]],
+ bl:"Bradyarrhythmias come from the sinus node (sinus pause, arrest, exit block, sick sinus syndrome) or from the AV conduction system. AV block is graded by what happens to the P waves, and the level of block decides the risk.",
+ key:["First-degree: PR over 0.20 s. Mobitz I (Wenckebach): the PR lengthens until a beat drops. Mobitz II: a constant PR with sudden dropped beats. Third-degree: P waves and QRSs are independent.","Mobitz I is usually in the AV node and benign; Mobitz II is usually below it and can progress suddenly to complete block.","Sick sinus syndrome often alternates bradycardia and pauses with bursts of AF (tachy-brady syndrome).","Neurocardiogenic syncope: a vagal surge slows the heart and drops the blood pressure, triggered by pain, standing, micturition, coughing, or pressure on the carotid sinus."],
+ ed:["Unstable bradycardia: atropine 1 mg (repeat to 3 mg), then transcutaneous pacing or an epinephrine or dopamine infusion.","Look for reversible causes: hyperkalemia, beta-blocker or calcium-channel-blocker toxicity, digoxin, inferior MI, hypothermia and Lyme carditis."],
+ q:["Constant PR intervals, then a P wave with no QRS. Which block, and why does it matter?","Mobitz II. It is usually infranodal and can progress suddenly to complete heart block; the patient needs pacing."]},
+
+{id:"arr6",u:4,t:"Bundle branch and fascicular blocks",p:[[60,62]],
+ bl:"Bundle branch block widens the QRS to 0.12 s or more. RBBB gives an rSR’ in V1 and a wide S in I and V6; LBBB gives a broad notched R in I, aVL and V5–V6 and a deep QS or rS in V1. Fascicular blocks shift the axis.",
+ key:["Secondary ST-T changes run opposite the main QRS deflection in BBB; that discordance is expected.","New LBBB suggests significant heart disease; RBBB can be seen in healthy people.","Left anterior fascicular block: left axis deviation (about −45° or beyond) with qR in I and aVL and rS in II, III, aVF. Left posterior: right axis deviation with rS in I and qR in III.","Brugada pattern: an RBBB-like pattern with coved ST elevation in V1–V2, a marker of risk for VT and VF."],
+ ed:["Bifascicular block (RBBB plus a fascicular block) with syncope suggests intermittent complete heart block; admit for monitoring.","A new LBBB with chest pain is no longer automatically a STEMI equivalent; apply the Sgarbossa criteria and the clinical picture."],
+ q:["Wide QRS with rSR’ in V1 and left axis deviation. What two blocks are present?","RBBB plus left anterior fascicular block (bifascicular block)."]},
+
+{id:"arr7",u:4,t:"Pacemakers, CRT, ICDs and arrhythmia pearls",p:[[63,67]],
+ bl:"Pacemakers are named by a code: the chamber paced, the chamber sensed, and the response to sensing (for example VVI or DDD). A paced ventricular beat from the RV apex looks like LBBB with left axis deviation. Malfunctions are failure to pace, failure to capture, failure to sense, and oversensing.",
+ key:["Failure to capture: a spike with no following complex. Failure to sense: spikes firing into native complexes. Oversensing: the pacer is inhibited by noise or muscle potentials.","Pacemaker syndrome: fatigue and hypotension from AV dissociation in ventricular-only pacing (loss of atrial kick).","Biventricular pacing (CRT) resynchronizes the ventricles in heart failure with a wide QRS; the paced QRS is often narrower.","ICDs treat VT with antitachycardia pacing or a shock, and VF with defibrillation."],
+ ed:["A magnet over most pacemakers forces asynchronous fixed-rate pacing; over an ICD, it suspends shocks but not pacing.","Sgarbossa criteria also apply to ventricular-paced rhythms."],
+ q:["Pacing spikes appear but no QRS follows them. What is the problem?","Failure to capture."]},
+
+/* ---------- Unit 5: Patterns, pitfalls and tools (ch. 6–8, App. A, pp. 68–87) ---------- */
+{id:"pat1",u:5,t:"Pericarditis, early repolarization, hypothermia, LV aneurysm and mimics",p:[[68,71]],
+ bl:"Several non-coronary patterns elevate the ST segment. Pericarditis gives diffuse concave ST elevation with PR depression; early repolarization gives J-point notching in young healthy people; hypothermia gives Osborn (J) waves; LV aneurysm gives persistent ST elevation with Q waves.",
+ key:["Pericarditis: widespread ST elevation without reciprocal depression (except aVR and V1), PR depression, and evolution to T inversion after the ST normalizes.","A large pericardial effusion gives low voltage and electrical alternans.","Early repolarization: notched or slurred J point, concave ST elevation, often in the lateral precordial leads, stable over time.","Mimics of infarction include LVH, LBBB, WPW, hyperkalemia, Brugada, Takotsubo and intracranial hemorrhage."],
+ ed:["Reciprocal ST depression and convex (tombstone) ST elevation favor STEMI over pericarditis.","Sinus tachycardia, low voltage and electrical alternans: think tamponade and get a bedside echo."],
+ q:["Diffuse concave ST elevation with PR depression and PR elevation in aVR. Most likely diagnosis?","Acute pericarditis."]},
+
+{id:"pit1",u:5,t:"Pitfalls: misreads, lead problems, artifact and the computer",p:[[72,75]],
+ bl:"Many ‘abnormal’ ECGs are normal variants or technical errors. Poor R wave progression, a juvenile T wave pattern, swapped leads, motion artifact and computer misreads all lead to wrong diagnoses if taken at face value.",
+ key:["Limb lead reversal (left and right arm) gives a negative P, QRS and T in lead I; with normal R wave progression, that is reversal rather than dextrocardia.","Motion artifact can simulate VT; look for normal QRS complexes marching through the ‘arrhythmia’.","A loose electrode on a Holter can mimic sinus arrest.","Computer interpretation is useful but often wrong on rhythm, ischemia and pacemakers; always over-read it."],
+ ed:["Always compare with a prior ECG before calling a finding new.","Before acting on a lethal-looking rhythm strip, check the patient and the leads."],
+ q:["Lead I shows a negative P, QRS and T, and the chest leads show normal R wave progression. What is the likely cause?","Reversed arm leads."]},
+
+{id:"pit2",u:5,t:"Athlete’s heart, iatrogenic disease and ECG markers of sudden death",p:[[76,78]],
+ bl:"Trained athletes commonly show sinus bradycardia, first-degree or Wenckebach AV block, early repolarization and voltage LVH, all benign. Separate those from markers of sudden cardiac death: HCM, long QT, WPW, Brugada, ARVC and ischemia.",
+ key:["HCM: LVH voltage with deep narrow Q waves or deep T inversion, especially in young athletes.","ARVC: T wave inversion in V1–V3 and an epsilon wave after the QRS in V1.","Long QT, Brugada and WPW are the other classic ECG red flags for sudden death in the young.","Iatrogenic heart disease: labeling a normal variant as disease harms people through needless restrictions and tests."],
+ ed:["Exertional syncope in a young person plus any of these patterns means no return to play and urgent cardiology.","Treat the patient, not the ECG: an abnormal tracing in a well person still needs clinical context."],
+ q:["T wave inversion in V1–V3 with a small notch after the QRS in V1 in a young athlete. What diagnosis should you consider?","Arrhythmogenic right ventricular cardiomyopathy (ARVC); the notch is an epsilon wave."]},
+
+{id:"tools1",u:5,t:"Holter, event monitors, tilt table, stress testing, SAECG and EPS",p:[[79,84]],
+ bl:"When a symptom is intermittent, the resting ECG often misses it. Holter monitors record 24–48 hours, event monitors and implantable loop recorders record for weeks to years, tilt-table testing provokes vasovagal syncope, and exercise testing unmasks ischemia.",
+ key:["Pick the monitor by symptom frequency: daily symptoms suit a Holter; weekly or rarer symptoms suit an event monitor or implantable loop recorder.","Exercise ECG: 1 mm or more of horizontal or down-sloping ST depression is a positive test; test accuracy depends on pretest probability.","Signal-averaged ECG looks for late potentials that suggest a substrate for VT.","Electrophysiology studies map and ablate pathways (WPW, AVNRT, flutter) and assess VT and conduction disease."],
+ ed:["Unexplained syncope with a normal ED workup usually needs outpatient monitoring, not just a reassuring single ECG.","False-positive exercise tests are common in low-risk patients and with baseline ST changes, LVH, LBBB, digoxin or WPW."],
+ q:["A patient has palpitations about once a month. Which monitor is most likely to capture an episode?","An event monitor or an implantable loop recorder; a 24–48 hour Holter is likely to miss it."]},
+
+{id:"appA",u:5,t:"Common ECG findings in cardiac and noncardiac conditions",p:[[85,87]],ref:[133],
+ bl:"Appendix A collects the typical ECG findings for common diseases. It is the reverse of the rest of the book: start from the diagnosis and predict the ECG, which is how you will often use it at the bedside.",
+ key:["Pulmonary embolism: sinus tachycardia most often; sometimes S1Q3T3, new RBBB, right axis and T inversion in V1–V4.","COPD: low voltage, right axis, P pulmonale and sometimes MAT.","Hyperkalemia: peaked T waves, then a long PR, a flat P and a widening QRS that can progress to a sine wave.","Hypothyroidism: sinus bradycardia and low voltage; hyperthyroidism: sinus tachycardia and AF."],
+ ed:["Use the table as a self-test: cover the findings and predict them from the diagnosis.","An ECG pattern that fits no single disease is a reason to look for two processes, or a technical error."],
+ q:["Peaked T waves, a wide QRS and no visible P waves. What should you treat right away?","Hyperkalemia: calcium first to stabilize the membrane, then shift potassium (insulin and glucose, albuterol) and remove it."]},
+
+/* ---------- Unit 6: Practice ECGs (App. B, pp. 88–120) ---------- */
+{id:"prac1",u:6,t:"Practice ECGs 1–10",p:[[88,93]],ref:[133],
+ bl:"Each practice ECG starts with a one-line history, and the interpretation is printed right under the tracing. Scroll so only the tracing shows, read it in full, then check.",
+ key:["Read in the same order every time: calibration, rate, rhythm, intervals, axis, P, QRS, ST, T, U.","Commit to an interpretation before you read the answer. Say it out loud in one sentence.","Use the history for pretest probability, but don’t let it replace reading the tracing."],
+ ed:["On shift, the comparison ECG is often the most useful piece of data. Ask for the old one every time."],
+ q:["What should you confirm before measuring any voltage on an ECG?","The calibration mark: standard is 10 mm per mV."]},
+
+{id:"prac2",u:6,t:"Practice ECGs 11–20",p:[[94,99]],ref:[133],
+ bl:"This set leans on pacemakers, blocks and acute chest pain. For every chest-pain tracing, decide whether it shows an occluded artery that needs reperfusion now, and which territory.",
+ key:["Localize ST elevation by lead group and look for reciprocal depression.","Check V1–V2 for the posterior mirror image: ST depression with tall R waves.","For paced rhythms, identify which chamber is paced and whether every spike captures."],
+ ed:["For an acute STEMI, door-to-balloon time starts at the first ECG. Read it within 10 minutes of arrival."],
+ q:["Which leads show reciprocal ST depression in an acute inferior MI?","Lead I and especially aVL."]},
+
+{id:"prac3",u:6,t:"Practice ECGs 21–28",p:[[100,104]],ref:[133],
+ bl:"Rhythm strips, syncope and drug effects. For every rhythm: is it fast or slow, regular or irregular, narrow or wide, and how do the P waves relate to the QRS?",
+ key:["Find the P waves first and march them out; their relation to the QRS usually names the rhythm.","With syncope, look for the causes that kill: long QT, Brugada, WPW, high-grade AV block, HCM.","Think of drugs whenever a rhythm doesn’t fit: digoxin, QT-prolongers, AV nodal blockers."],
+ ed:["Syncope plus an abnormal ECG is a high-risk feature in every syncope rule."],
+ q:["What are the four questions to ask of any rhythm?","Fast or slow, regular or irregular, narrow or wide, and the relationship of P waves to QRS complexes."]},
+
+{id:"prac4",u:6,t:"Practice ECGs 29–40",p:[[105,110]],ref:[133],
+ bl:"A wide mix: young asymptomatic patients, pregnancy, cardiac arrest survivors, palpitations and unstable angina. Pay attention to normal variants in young people, and to subtle high-risk patterns.",
+ key:["In young, healthy people, separate normal variants (early repolarization, juvenile T waves, athlete’s changes) from markers of sudden death.","After cardiac arrest, look for the cause on the ECG: ischemia, long QT, Brugada, WPW, hyperkalemia.","Deep symmetric T inversion in V2–V3 in a patient with recent chest pain (Wellens) means critical LAD stenosis."],
+ ed:["A Wellens pattern is a reason for urgent angiography, not a stress test."],
+ q:["Deep T wave inversion in V2–V3 in a now pain-free patient with recent angina. What does it suggest?","Wellens syndrome: critical proximal LAD stenosis."]},
+
+{id:"prac5",u:6,t:"Practice ECGs 41–48",p:[[111,115]],ref:[133],
+ bl:"Palpitations, trauma, pleuritic pain, prior infarction and pacemakers. Keep an eye out for findings the history steers you away from.",
+ key:["Pleuritic pain after a viral illness with diffuse ST elevation suggests pericarditis; look for PR depression.","Persistent ST elevation with Q waves after an old anterior MI suggests LV aneurysm.","Mitral valve prolapse is associated with PACs, PVCs and inferior T wave changes."],
+ ed:["Blunt chest trauma can cause new conduction blocks, arrhythmias or ST changes (myocardial contusion); get a baseline ECG and troponin."],
+ q:["Persistent ST elevation in V1–V4 with Q waves, months after an anterior MI. What is the likely cause?","Left ventricular aneurysm."]},
+
+{id:"prac6",u:6,t:"Practice ECGs 49–55",p:[[116,120]],ref:[133],
+ bl:"The final set: athletes, a medical student, exertional chest pain, and a ‘tearing’ chest pain. Read each one start to finish, then go back and see what the series as a whole taught you.",
+ key:["Murmur since childhood in an athlete plus a striking ECG: think HCM.","Tearing chest pain is aortic dissection until proven otherwise; ST elevation can occur if a coronary ostium is involved, so don’t reflexively give thrombolytics.","Obesity lowers QRS voltage and can hide LVH."],
+ ed:["Before thrombolysis or anticoagulation for STEMI, ask about tearing pain, pulse and blood pressure differences between arms, and a widened mediastinum."],
+ q:["Why can aortic dissection cause an inferior STEMI pattern?","The dissection can extend into the right coronary ostium and occlude it."]}
+);
+
+/* reading items: "p65-80" (page range in the book) and "r335" (one reference sheet) */
+function items(l){return l.p.map(([a,b])=>'p'+a+'-'+b).concat((l.ref||[]).map(r=>'r'+r))}
+function itemPages(c){if(c[0]==='r')return[+c.slice(1),+c.slice(1)];const[a,b]=c.slice(1).split('-').map(Number);return[a,b]}
+function itemLabel(c){const[a,b]=itemPages(c);if(c[0]==='r')return{bk:'Quick reference · inside back cover',ch:REFT[a]||''};return{bk:'Chizner',ch:a===b?'p. '+a:'pp. '+a+'–'+b+' · '+(b-a+1)+' pages'}}
+function lessonPages(l){const o=[];for(const[a,b]of l.p)for(let i=a;i<=b;i++)o.push(i);return o}
+
+/* ---------- state: completions, reading ticks and notes (earlier typed answers are kept in S.ans), per device, optionally synced ---------- */
+const KEY='panacea.rhythm2.v1';
+let S={done:{},notes:{},read:{},ans:{}};
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.done=r.done||{};S.notes=r.notes||{};S.read=r.read||{};S.ans=r.ans||{}}}catch(e){}
+let saveT=null;function writeNow(){clearTimeout(saveT);saveT=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}scheduleSync()}
+function save(){clearTimeout(saveT);saveT=setTimeout(writeNow,250)}
+window.addEventListener('pagehide',()=>{if(saveT)writeNow()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)writeNow()});
+
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const fmtDay=s=>new Date(s+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isDone=id=>!!(S.done[id]&&S.done[id].on);
+const isRead=(l,c)=>!!(S.read[l+':'+c]&&S.read[l+':'+c].on);
+const IDX=Object.fromEntries(L.map((l,i)=>[l.id,i]));
+const unitOf=u=>UNITS.find(x=>x.n===u);
+function current(){return L.find(l=>!isDone(l.id))||null}
+function doneToday(){const t=today();return L.filter(l=>isDone(l.id)&&S.done[l.id].day===t)}
+function streak(){
+  const days=new Set(Object.values(S.done).filter(d=>d.on).map(d=>d.day));
+  let n=0;const d=new Date();if(!days.has(today()))d.setDate(d.getDate()-1);
+  for(;;){const k=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());if(days.has(k)){n++;d.setDate(d.getDate()-1)}else break}
+  return n}
+
+/* ---------- optional sync: reuses ICU Rounder's private GitHub repo setup on this device ---------- */
+const SYNC_FILE='rhythm2.json';
+let SY=null;try{SY=JSON.parse(localStorage.getItem('icu-rounds-sync')||'null')}catch(e){}
+let syncState=SY?'idle':'off',syncing=false,syncAgain=false,syncT=null;
+const b64enc=str=>{const b=new TextEncoder().encode(str);let s2='';for(const x of b)s2+=String.fromCharCode(x);return btoa(s2)};
+const b64dec=str=>new TextDecoder().decode(Uint8Array.from(atob(str.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+async function gh(path,opts={}){
+  const r=await fetch(`https://api.github.com/repos/${SY.owner}/${SY.repo}${path}`,{cache:'no-store',...opts,
+    headers:{Authorization:`Bearer ${SY.token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(opts.headers||{})}});
+  if(!r.ok){const e=new Error('GitHub '+r.status);e.status=r.status;throw e}
+  return (opts.headers&&opts.headers.Accept||'').includes('raw')?r.text():r.json()}
+async function remoteGet(){
+  try{const m=await gh('/contents/'+SYNC_FILE);const txt=m.content?b64dec(m.content):await gh('/contents/'+SYNC_FILE,{headers:{Accept:'application/vnd.github.raw+json'}});
+    let doc=null;try{doc=JSON.parse(txt)}catch(e){}return{doc,sha:m.sha}}
+  catch(e){if(e.status===404||e.status===409)return{doc:null,sha:null};throw e}}
+function mergeMap(a,b){const out={...(b||{})};for(const[k,v]of Object.entries(a||{}))if(!out[k]||(v.ts||0)>=(out[k].ts||0))out[k]=v;return out}
+const PARTS=['done','notes','read','ans'];
+function setSync(s){syncState=s;const d=document.getElementById('syncdot');if(d){d.className='syncdot '+s;d.title=syncTitle()}}
+function syncTitle(){return{off:'Saved on this device',idle:'Sync ready',syncing:'Syncing…',ok:'Synced across devices',error:'Not synced right now; saved on this device'}[syncState]}
+function scheduleSync(ms=1200){if(!SY)return;clearTimeout(syncT);syncT=setTimeout(syncNow,ms)}
+async function syncNow(){if(!SY)return;clearTimeout(syncT);if(syncing){syncAgain=true;return}syncing=true;setSync('syncing');
+  try{for(let attempt=0;;attempt++){
+      const rem=await remoteGet();
+      if(rem.doc){let changed=false;
+        for(const k of PARTS){const m=mergeMap(S[k],rem.doc[k]);if(JSON.stringify(m)!==JSON.stringify(S[k]))changed=true;S[k]=m}
+        if(changed){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}softRender()}}
+      const out={app:'rhythm2',version:1,updated:new Date().toISOString()};for(const k of PARTS)out[k]=S[k];
+      if(rem.doc&&PARTS.every(k=>JSON.stringify(rem.doc[k]||{})===JSON.stringify(out[k])))break;
+      try{await gh('/contents/'+SYNC_FILE,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Rhythm 2 sync',content:b64enc(JSON.stringify(out)),...(rem.sha?{sha:rem.sha}:{})})});break}
+      catch(e){if((e.status===409||e.status===422)&&attempt<2)continue;throw e}}
+    setSync('ok')}
+  catch(e){setSync('error')}
+  finally{syncing=false;if(syncAgain){syncAgain=false;scheduleSync(300)}}}
+function softRender(){const ae=document.activeElement;if(ae&&ae.tagName==='TEXTAREA')return;render(true)}
+if(SY){syncNow();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncNow()});window.addEventListener('online',syncNow)}
+
+/* ---------- rendering ---------- */
+const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const CK=`<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const CHEV=`<svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>`;
+const IC={
+ key:`<svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>`,
+ ed:`<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>`,
+ mod:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>`,
+ q:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.3 2.4c-.5.2-.8.6-.8 1.1V14M12 17.5v.01"/></svg>`,
+ ans:`<svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>`,
+ nt:`<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></svg>`};
+const hd=document.getElementById('hd'),app=document.getElementById('app');
+let filter='';
+
+function route(){const h=location.hash.slice(1);if(h==='all')return{v:'all'};if(h==='books')return{v:'books'};
+  const rm=h.match(/^read\/(\d+)-(\d+)$/);if(rm)return{v:'read',a:+rm[1],b:+rm[2]};
+  if(h.startsWith('l/')&&IDX[h.slice(2)]!==undefined)return{v:'lesson',id:h.slice(2)};return{v:'today'}}
+function render(keep){const r=route();const y=window.scrollY;
+  if(r.v!=='read')closeReader();
+  if(r.v==='books')renderBooks();else if(r.v==='read')renderReader(r.a,r.b);else if(r.v==='all')renderAll();else if(r.v==='lesson')renderLesson(L[IDX[r.id]]);else renderToday();
+  window.scrollTo(0,keep?y:0)}
+function header(title,back){hd.innerHTML=`${HOME}${back?`<button class="back" data-go="${back}" aria-label="Back">‹</button>`:''}<h1>${esc(title)}</h1><span class="syncdot ${syncState}" id="syncdot" title="${esc(syncTitle())}"></span>${back?'':`<button class="hdlink" data-go="#all">All lessons</button>`}`}
+
+function ring(n,t){const r=24,c=2*Math.PI*r,off=c*(1-(t?n/t:0));
+  return `<svg class="ring" viewBox="0 0 58 58" aria-hidden="true"><circle class="tr" cx="29" cy="29" r="${r}"/><circle class="pr" cx="29" cy="29" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/><text x="29" y="33.5" text-anchor="middle">${Math.round(t?n/t*100:0)}%</text></svg>`}
+function progressCard(){const n=L.filter(l=>isDone(l.id)).length,st=streak();
+  return `<div class="card prog">${ring(n,L.length)}<div class="txt"><div class="big">${n} of ${L.length} lessons</div><div class="sm">${st?`${st}-day streak · `:''}Chizner, cover to cover, one lesson a day</div></div></div>`}
+
+function renderToday(){
+  document.title='Rhythm 2';header('Rhythm 2');
+  const cur=current(),dt=doneToday();
+  let h=progressCard();
+  if(!cur){h+=`<div class="card status"><span class="ck">${CK}</span><div><h2>Curriculum complete</h2><p>All ${L.length} lessons done. Revisit any lesson from the full list.</p></div></div>`;app.innerHTML=h;return}
+  if(dt.length){
+    const last=dt[dt.length-1];
+    h+=`<div class="card"><div class="status"><span class="ck">${CK}</span><div><h2>Today’s lesson is done</h2><p>${esc(last.t)}</p></div></div>
+      <div class="next"><div class="eb">Tomorrow · Day ${IDX[cur.id]+1}</div><div class="nt">${esc(cur.t)}</div></div>
+      <div class="btnrow" style="margin-top:12px"><button class="btn sm" data-go="#l/${last.id}">Review today’s</button><button class="btn sm" data-go="#l/${cur.id}">Read ahead</button></div></div>`;
+    app.innerHTML=h;return}
+  app.innerHTML=h+lessonBody(cur,true);
+}
+
+function readList(l){
+  const its=items(l);
+  if(!its.length)return `<div class="noread">No Chizner pages today: this lesson goes past the book. Read the lesson, then answer the check below.</div>`;
+  const n=its.filter(c=>isRead(l.id,c)).length;
+  return `<div class="rdh"><span>Today’s reading</span><span id="rdct">${n} of ${its.length} read</span></div>
+  <ul class="reads">${its.map(c=>{const x=itemLabel(c),lk=!!srcFor(itemPages(c)[0]),rd=isRead(l.id,c);
+    return `<li class="${lk?'lk':'nl'}${rd?' rd':''}"><button class="rck" data-a="rtick" data-l="${l.id}" data-c="${c}" role="checkbox" aria-checked="${rd}" aria-label="Mark ${esc(x.bk)} ${esc(x.ch)} as read"><span>${CK}</span></button><button data-read="${c}" data-from="${l.id}"><span class="tx"><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span></span><span class="op">${lk?'Open':'Link PDF'}</span></button></li>`}).join('')}</ul>`}
+
+function lessonBody(l,isToday){
+  const i=IDX[l.id],u=unitOf(l.u),d=S.done[l.id],done=isDone(l.id);
+  const prev=L[i-1],next=L[i+1];
+  const list=a=>`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  return `<div class="eyebrow">${isToday?'Today · ':''}Day ${i+1} · Unit ${u.n}: ${esc(u.t)}</div>
+  <h2 class="lt">${esc(l.t)}</h2>
+  ${readList(l)}
+  <div class="bl"><b>Bottom line</b>${esc(l.bl)}</div>
+  <section class="sec"><h3>${IC.key}Key points</h3>${list(l.key)}</section>
+  <section class="sec"><h3>${IC.ed}On shift</h3>${list(l.ed)}</section>
+  ${l.mod?`<section class="sec mod"><h3>${IC.mod}Beyond the book</h3>${list(l.mod)}</section>`:''}
+  <section class="sec qz" id="qz"><h3>${IC.q}Check yourself</h3><p class="qq">${esc(l.q[0])}</p><button class="linkbtn" data-a="reveal">Show answer</button><div class="qa">${esc(l.q[1])}</div></section>
+  <section class="sec"><h3>${IC.nt}My notes</h3><textarea data-note="${l.id}" placeholder="Takeaways, strips to look for on shift, questions">${esc((S.notes[l.id]||{}).t||'')}</textarea></section>
+  <div class="complete">${done?`<p class="donemsg">Completed ${d.day===today()?'today':fmtDay(d.day)}</p><button class="btn block" data-a="undo" data-id="${l.id}">Mark as not done</button>`:`<button class="btn primary block" data-a="done" data-id="${l.id}">Complete lesson</button>`}</div>
+  <div class="pager"><button data-go="#l/${prev?prev.id:''}" ${prev?'':'disabled'}><small>Previous</small><span>${prev?esc(prev.t):''}</span></button><button data-go="#l/${next?next.id:''}" ${next?'':'disabled'}><small>Next</small><span>${next?esc(next.t):''}</span></button></div>`;
+}
+function renderLesson(l){document.title=l.t+' · Rhythm 2';header('Day '+(IDX[l.id]+1),'#');app.innerHTML=lessonBody(l,current()===l&&!doneToday().length)}
+
+function renderAll(){
+  document.title='All lessons · Rhythm 2';header('All lessons','#today');
+  const f=filter.toLowerCase(),cur=current();
+  let h=`<input class="search" id="q" type="search" placeholder="Search lessons" value="${esc(filter)}" autocomplete="off">`;
+  for(const u of UNITS){
+    const ls=L.filter(l=>l.u===u.n&&(!f||(l.t+' '+l.bl+' '+l.key.join(' ')).toLowerCase().includes(f)));
+    if(!ls.length)continue;
+    const all=L.filter(l=>l.u===u.n),nd=all.filter(l=>isDone(l.id)).length;
+    const open=f||(cur&&cur.u===u.n);
+    h+=`<details class="unit"${open?' open':''}><summary><span class="un">${u.n}</span><span class="nm">${esc(u.t)}</span><span class="ct${nd===all.length?' all':''}">${nd}/${all.length}</span>${CHEV}</summary>`;
+    for(const l of ls){const d=isDone(l.id),pg=l.p.map(([a,b])=>a+'–'+b).join(', ');
+      h+=`<button class="lrow${d?' d':''}${cur===l?' today':''}" data-go="#l/${l.id}"><span class="dn">Day ${IDX[l.id]+1}</span><span class="lt2">${esc(l.t)}<small>${d?`Done ${fmtDay(S.done[l.id].day)}`:cur===l?'Up next':pg?'pp. '+pg:'Beyond the book'}</small></span><span class="bx">${CK}</span></button>`}
+    h+=`</details>`}
+  h+=`<div class="btnrow" style="margin-top:6px"><button class="btn block" data-go="#books">Your PDF · ${BM.D?'linked on this device':'not linked yet'}</button></div>`;
+  h+=`<div class="foot">Readings point to printed page numbers in ${esc(BOOKS.D.full)}. Lessons are summaries for learning, not orders for a specific patient.${SY?'':' Progress and notes are saved on this device; if ICU Rounder sync is turned on here, Rhythm 2 syncs through the same private repo.'}</div>`;
+  app.innerHTML=h;
+}
+
+/* ---------- your PDF: kept only in this browser (IndexedDB), never uploaded ---------- */
+const BMKEY='panacea.rhythm2.books';
+let BM={};try{BM=JSON.parse(localStorage.getItem(BMKEY)||'{}')||{}}catch(e){}
+const saveBM=()=>{try{localStorage.setItem(BMKEY,JSON.stringify(BM))}catch(e){}};
+let dbP=null;
+function db(){return dbP||(dbP=new Promise((res,rej)=>{const r=indexedDB.open('rhythm2-books',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function idb(mode,fn){const d=await db();return new Promise((res,rej)=>{const tx=d.transaction('files',mode);const st=tx.objectStore('files');const rq=fn(st);tx.oncomplete=()=>res(rq&&rq.result);tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)})}
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+let pdfjsP=null;
+function loadPdfjs(){return pdfjsP||(pdfjsP=new Promise((res,rej)=>{if(window.pdfjsLib){res();return}const sc=document.createElement('script');sc.src=PDFJS;
+  sc.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace('pdf.min.js','pdf.worker.min.js');res()};sc.onerror=()=>{pdfjsP=null;rej(new Error('Couldn’t load the PDF reader. Check your connection.'))};document.head.appendChild(sc)}))}
+const DOCS={};
+async function getDoc(code){if(DOCS[code])return DOCS[code];
+  const blob=await idb('readonly',st=>st.get(code));if(!blob)throw new Error('That PDF isn’t on this device anymore. Link it again.');
+  await loadPdfjs();const data=new Uint8Array(await blob.arrayBuffer());
+  DOCS[code]=await pdfjsLib.getDocument({data}).promise;return DOCS[code]}
+/* Which linked file shows a printed page, and at which PDF page. */
+function srcFor(p){
+  if(BM.D){const pp=p+(BM.D.off||0);if(!BM.D.pages||(pp>=1&&pp<=BM.D.pages))return{code:'D',off:BM.D.off||0}}
+  return null}
+/* Read printed page numbers from the PDF's text to line printed pages up with PDF pages. */
+async function detectOffset(doc){
+  const N=doc.numPages,idx=[];const want=Math.min(N,40);
+  for(let k=0;k<want;k++){const i=N<=40?k+1:Math.round(1+(N-1)*(k+.5)/want);if(!idx.includes(i))idx.push(i)}
+  const votes={};let used=0;
+  for(const i of idx){let tc;try{tc=await(await doc.getPage(i)).getTextContent()}catch(e){continue}
+    const seen=new Set();let any=false;
+    for(const it of tc.items){const s=(it.str||'').trim();if(!s)continue;any=true;if(!/^\d{1,3}$/.test(s))continue;const n=+s;if(n<1||n>400)continue;seen.add(i-n)}
+    if(any)used++;for(const o of seen)votes[o]=(votes[o]||0)+1}
+  let best=null,bv=0;for(const[o,v]of Object.entries(votes))if(v>bv){bv=v;best=+o}
+  return bv>=Math.max(2,Math.ceil(used*.3))?best:null}
+let linking='';
+async function linkBook(code,file){linking=code;render(true);
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+    let doc=null,pages=null,off=null;
+    try{await loadPdfjs();doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;pages=doc.numPages;off=await detectOffset(doc)}catch(e){}
+    await idb('readwrite',st=>st.put(file,code));DOCS[code]=doc;
+    if(off===null)off=0;
+    BM[code]={name:file.name,size:file.size,pages,off,auto:off!==null,at:Date.now()};saveBM();
+    toast(!pages?'Linked, but the file couldn’t be read as a PDF.':'Chizner linked. If pages look off, use the shift buttons in the reader.')}
+  catch(e){toast(e&&e.name==='QuotaExceededError'?'Not enough storage on this device for that file.':'Couldn’t save that file on this device.')}
+  linking='';render(true)}
+async function unlinkBook(code){try{await idb('readwrite',st=>st.delete(code))}catch(e){}delete BM[code];delete DOCS[code];saveBM();render(true)}
+const mb=n=>(n/1048576).toFixed(n>10485760?0:1)+' MB';
+function renderBooks(){
+  document.title='Your PDF · Rhythm 2';header('Your PDF','#bback');
+  let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of Chizner once on this device. Every reading then opens straight to its pages.</p>
+   <p class="note" style="margin-top:6px">Files stay in this browser only. They aren’t uploaded, synced, or added to PANACEA, so link them again on each phone or computer. Your progress and notes do sync.</p></div><div class="card">`;
+  for(const[k,b]of Object.entries(BOOKS)){const m=BM[k];
+    const st=linking===k?'<span class="st">Saving…</span>':m?`<span class="st ok">Linked · ${esc(m.name)} · ${m.pages?m.pages+' pages · ':''}${mb(m.size)}</span>`:'<span class="st">Not linked</span>';
+    h+=`<div class="bkrow"><div class="tx"><div class="nm">The book</div><div class="st" style="margin-bottom:2px">${esc(b.full)}</div>${st}</div>
+      <div class="btnrow" style="flex:none;flex-direction:column;align-items:stretch">
+      <label class="btn sm filebtn">${m?'Replace':'Choose PDF'}<input type="file" accept="application/pdf,.pdf" data-file="${k}"></label>
+      ${m?`<button class="linkbtn" data-a="unlink" data-b="${k}">Remove</button>`:''}</div></div>`}
+  h+=`</div>`;
+  if(srcFor(133))h+=`<button class="btn block" data-a="openref">Open the sequence and normal values</button>`;
+  app.innerHTML=h}
+
+let RD=null;
+function closeReader(){if(RD){RD.obs&&RD.obs.disconnect();RD.vis&&RD.vis.disconnect();RD.dead=true;RD=null}const c=document.getElementById('pgchip');if(c)c.remove()}
+async function renderReader(a,b){
+  closeReader();
+  const lab=a===b?'p. '+a:'pp. '+a+'–'+b;
+  document.title='Chizner '+lab+' · Rhythm 2';header('Chizner · '+lab,'#rback');
+  const src=srcFor(a);
+  if(!src){app.innerHTML=`<div class="card" style="margin-top:12px"><p style="margin:0 0 10px">Link your PDF on this device to read here.</p><button class="btn sm" data-go="#books">Your PDF</button></div>`;return}
+  app.innerHTML=`<div class="reader" id="rdr" style="margin-top:12px"><div class="loading">Opening…</div></div>`;
+  const me=RD={dead:false};
+  let doc;try{doc=await getDoc(src.code)}catch(e){if(!me.dead)document.getElementById('rdr').innerHTML=`<div class="card" style="width:100%"><p style="margin:0 0 10px">${esc(e.message)}</p><button class="btn sm" data-go="#books">Your PDF</button></div>`;return}
+  if(me.dead)return;
+  const off=src.off,first=await doc.getPage(Math.min(Math.max(a+off,1),doc.numPages));const vp1=first.getViewport({scale:1});const ratio=vp1.height/vp1.width;
+  if(me.dead)return;
+  const box=document.getElementById('rdr');box.innerHTML='';
+  const cal=document.createElement('div');cal.className='cal';
+  cal.innerHTML=`<span class="tx">Printed p. ${a} is PDF page ${a+off}. Pages off?</span><button class="btn sm" data-a="shift" data-c="${src.code}" data-d="-1" aria-label="Shift back one page">−1</button><button class="btn sm" data-a="shift" data-c="${src.code}" data-d="1" aria-label="Shift forward one page">+1</button>`;
+  box.appendChild(cal);
+  for(let p=a;p<=b;p++){const pp=p+off,w=document.createElement('div');w.className='pgw';
+    const ok=pp>=1&&pp<=doc.numPages;
+    w.innerHTML=`<div class="pg${ok?'':' miss'}" data-p="${pp}" style="aspect-ratio:${(1/ratio).toFixed(4)}"><span class="pn">p. ${p}</span>${ok?'':'Not in this PDF'}</div>`;
+    box.appendChild(w)}
+  const end=document.createElement('div');end.className='btnrow';end.style.margin='14px 0 64px';end.innerHTML=`<button class="btn" data-go="#rback">Back to the lesson</button>`;box.appendChild(end);
+  const chip=document.createElement('div');chip.className='pgchip';chip.id='pgchip';chip.textContent=a===b?'p. '+a:`p. ${a} · 1 of ${b-a+1}`;document.body.appendChild(chip);
+  const rendered=new Map();
+  async function draw(el){const p=+el.dataset.p;if(rendered.has(p)||me.dead||el.classList.contains('miss'))return;rendered.set(p,'busy');
+    try{const pg=await doc.getPage(p);if(me.dead)return;const w=el.clientWidth,dpr=Math.min(window.devicePixelRatio||1,2);
+      const vp=pg.getViewport({scale:w/pg.getViewport({scale:1}).width*dpr});const cv=document.createElement('canvas');cv.width=Math.floor(vp.width);cv.height=Math.floor(vp.height);
+      await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;if(me.dead||!rendered.has(p))return;el.prepend(cv);rendered.set(p,cv)}
+    catch(err){rendered.delete(p)}}
+  function drop(el){const p=+el.dataset.p,cv=rendered.get(p);if(cv&&cv!=='busy'){cv.width=cv.height=0;cv.remove()}rendered.delete(p)}
+  me.obs=new IntersectionObserver(es=>{for(const x of es){if(x.isIntersecting)draw(x.target);else drop(x.target)}},{rootMargin:'1200px 0px'});
+  me.vis=new IntersectionObserver(es=>{for(const x of es)if(x.isIntersecting){const p=+x.target.dataset.p-off;chip.textContent=a===b?'p. '+p:`p. ${p} · ${p-a+1} of ${b-a+1}`}},{rootMargin:'-45% 0px -45% 0px'});
+  box.querySelectorAll('.pg').forEach(el=>{me.obs.observe(el);me.vis.observe(el)});
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');
+  if(g){const to=g.dataset.go;if(to==='#l/')return;
+    if(to==='#today'){location.hash='';return}
+    if(to==='#rback'){location.hash=sessionStorage.getItem('rhythm2.readBack')||'';return}
+    if(to==='#bback'){const v=sessionStorage.getItem('rhythm2.booksBack');location.hash=v===null?'all':v;sessionStorage.removeItem('rhythm2.booksBack');return}
+    if(to==='#'){location.hash=sessionStorage.getItem('rhythm2.back')||'';return}
+    const v=route().v;if(to.startsWith('#l/')&&v!=='lesson')sessionStorage.setItem('rhythm2.back',v==='all'?'all':'');
+    if(to==='#books'&&v!=='books')sessionStorage.setItem('rhythm2.booksBack',location.hash.slice(1)||'');
+    location.hash=to.slice(1);return}
+  const rd=e.target.closest('[data-read]');
+  if(rd){const c=rd.dataset.read,[a,b]=itemPages(c),back=route().v==='today'?'':'l/'+rd.dataset.from;
+    sessionStorage.setItem('rhythm2.readBack',back);
+    if(srcFor(a))location.hash='read/'+a+'-'+b;else{sessionStorage.setItem('rhythm2.booksBack',back);location.hash='books'}return}
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const A=b.dataset.a;
+  if(A==='unlink'){unlinkBook(b.dataset.b);return}
+  if(A==='openref'){sessionStorage.setItem('rhythm2.readBack','books');location.hash='read/133-133';return}
+  if(A==='shift'){const m=BM[b.dataset.c];if(!m)return;m.off=(m.off??0)+(+b.dataset.d);m.auto=false;saveBM();const r=route();if(r.v==='read')renderReader(r.a,r.b);return}
+  if(A==='rtick'){const key=b.dataset.l+':'+b.dataset.c,on=!isRead(b.dataset.l,b.dataset.c);S.read[key]={on,ts:Date.now()};save();
+    const li=b.closest('li');li.classList.toggle('rd',on);b.setAttribute('aria-checked',on);
+    const l=L[IDX[b.dataset.l]],its=items(l),n=its.filter(c=>isRead(l.id,c)).length,ct=document.getElementById('rdct');if(ct)ct.textContent=`${n} of ${its.length} read`;
+    if(on&&n===its.length&&!isDone(l.id))toast('All readings done. Complete the lesson when you’re ready.');return}
+  if(A==='reveal'){const q=document.getElementById('qz');q.classList.toggle('open');b.textContent=q.classList.contains('open')?'Hide answer':'Show answer'}
+  else if(A==='done'){const id=b.dataset.id;const wasToday=route().v==='today';S.done[id]={on:true,day:today(),ts:Date.now()};save();
+    toast('Lesson complete.');if(wasToday){location.hash='';render()}else render(true)}
+  else if(A==='undo'){S.done[b.dataset.id]={on:false,day:'',ts:Date.now()};save();render(true)}
+});
+app.addEventListener('change',e=>{const t=e.target;if(t.dataset.file&&t.files&&t.files[0])linkBook(t.dataset.file,t.files[0])});
+app.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderAll();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.dataset.note){S.notes[t.dataset.note]={t:t.value,ts:Date.now()};save();return}
+});
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2600)}
+window.addEventListener('hashchange',()=>render());
+render();
+</script>
+</body>
+</html>
