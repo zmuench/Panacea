@@ -502,7 +502,7 @@ function renderAll(){
   app.innerHTML=h;
 }
 
-/* ---------- your PDF: kept only in this browser (IndexedDB), never uploaded ---------- */
+/* ---------- your PDFs: kept in this browser (IndexedDB), and in the private sync repo when sync is on ---------- */
 const BMKEY='panacea.rhythm2.books';
 let BM={};try{BM=JSON.parse(localStorage.getItem(BMKEY)||'{}')||{}}catch(e){}
 const saveBM=()=>{try{localStorage.setItem(BMKEY,JSON.stringify(BM))}catch(e){}};
@@ -515,7 +515,7 @@ function loadPdfjs(){return pdfjsP||(pdfjsP=new Promise((res,rej)=>{if(window.pd
   sc.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace('pdf.min.js','pdf.worker.min.js');res()};sc.onerror=()=>{pdfjsP=null;rej(new Error('Couldn’t load the PDF reader. Check your connection.'))};document.head.appendChild(sc)}))}
 const DOCS={};
 async function getDoc(code){if(DOCS[code])return DOCS[code];
-  const blob=await idb('readonly',st=>st.get(code));if(!blob)throw new Error('That PDF isn’t on this device anymore. Link it again.');
+  let blob=await idb('readonly',st=>st.get(code));if(!blob)blob=await cloudFetch(code);if(!blob)throw new Error('That PDF isn’t on this device anymore. Link it again.');
   await loadPdfjs();const data=new Uint8Array(await blob.arrayBuffer());
   DOCS[code]=await pdfjsLib.getDocument({data}).promise;return DOCS[code]}
 /* Which linked file shows a printed page, and at which PDF page. */
@@ -540,19 +540,86 @@ async function linkBook(code,file){linking=code;render(true);
     try{await loadPdfjs();doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;pages=doc.numPages;off=await detectOffset(doc)}catch(e){}
     await idb('readwrite',st=>st.put(file,code));DOCS[code]=doc;
     if(off===null)off=0;
-    BM[code]={name:file.name,size:file.size,pages,off,auto:off!==null,at:Date.now()};saveBM();
+    BM[code]={name:file.name,size:file.size,pages,off,auto:off!==null,at:Date.now()};saveBM();cloudUpload(code,file);
     toast(!pages?'Linked, but the file couldn’t be read as a PDF.':'Chizner linked. If pages look off, use the shift buttons in the reader.')}
   catch(e){toast(e&&e.name==='QuotaExceededError'?'Not enough storage on this device for that file.':'Couldn’t save that file on this device.')}
   linking='';render(true)}
-async function unlinkBook(code){try{await idb('readwrite',st=>st.delete(code))}catch(e){}delete BM[code];delete DOCS[code];saveBM();render(true)}
+async function unlinkBook(code){cloudRemove(code);try{await idb('readwrite',st=>st.delete(code))}catch(e){}delete BM[code];delete DOCS[code];saveBM();render(true)}
+
+/* ---------- PDFs across devices ----------
+   With sync turned on (the private repo set up in ICU Rounder), a linked PDF is also saved to that repo in
+   10 MB parts under pdfs/rhythm2/<book>/. Other devices see it there and download it the first time a reading
+   is opened, then keep it in this browser. The repo must be private: nothing is uploaded to a public repo. */
+const CLOUD_APP='rhythm2',CLOUD_CODES=Object.keys(BOOKS),CLOUD_CHUNK=10*1048576;
+const CL={};let cloudPriv=null;const FETCHING={};
+const cloudPath=(code,f)=>`pdfs/${CLOUD_APP}/${code}/${f}`;
+const partName=i=>'part-'+String(i).padStart(3,'0');
+function cloudForget(code){delete DOCS[code]}
+async function ghFile(path){const r=await fetch(`https://api.github.com/repos/${SY.owner}/${SY.repo}/contents/${path}`,{cache:'no-store',
+  headers:{Authorization:`Bearer ${SY.token}`,Accept:'application/vnd.github.raw+json','X-GitHub-Api-Version':'2022-11-28'}});
+  if(!r.ok){const e=new Error('GitHub '+r.status);e.status=r.status;throw e}return r}
+async function isPrivate(){if(cloudPriv===null)cloudPriv=!!(await gh('')).private;return cloudPriv}
+function blobB64(b){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]||'');fr.onerror=()=>rej(fr.error);fr.readAsDataURL(b)})}
+async function cloudShas(code){try{const l=await gh('/contents/'+cloudPath(code,'').replace(/\/$/,''));return Object.fromEntries((Array.isArray(l)?l:[]).map(x=>[x.name,x.sha]))}catch(e){if(e.status===404)return{};throw e}}
+async function shaOf(path){try{return(await gh('/contents/'+path)).sha}catch(e){if(e.status===404)return null;throw e}}
+async function putFile(path,content,sha,message){
+  for(let a=0;;a++){try{return await gh('/contents/'+path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,content,...(sha?{sha}:{})})})}
+    catch(e){if(a>=3||(e.status&&e.status<500&&e.status!==409&&e.status!==422))throw e;await new Promise(r=>setTimeout(r,1500*(a+1)));sha=await shaOf(path)}}}
+function clRender(){if(route().v==='books')render(true)}
+function clProgress(code){const c=CL[code]||{};const el=document.querySelector('#rdr .loading');if(el&&c.down!=null)el.textContent=`Downloading your PDF from sync… ${c.down}%`;clRender()}
+async function cloudUpload(code,file){
+  if(!SY||!BM[code])return;CL[code]={up:0};clRender();
+  try{if(!await isPrivate()){CL[code]={err:'Your sync repo is public, so this PDF stays on this device only.'};clRender();return}
+    const old=await cloudShas(code),n=Math.ceil(file.size/CLOUD_CHUNK);
+    for(let i=0;i<n;i++){const c=await blobB64(file.slice(i*CLOUD_CHUNK,(i+1)*CLOUD_CHUNK));
+      await putFile(cloudPath(code,partName(i)),c,old[partName(i)],`PDF ${CLOUD_APP}/${code}: part ${i+1} of ${n}`);
+      CL[code]={up:Math.round((i+1)/n*100)};clRender()}
+    const {cloud,remote,...meta}=BM[code];
+    await putFile(cloudPath(code,'meta.json'),b64enc(JSON.stringify({...meta,parts:n})),old['meta.json'],`PDF ${CLOUD_APP}/${code}: done`);
+    for(const[k,sha]of Object.entries(old))if(/^part-\d+$/.test(k)&&+k.slice(5)>=n){try{await gh('/contents/'+cloudPath(code,k),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:`PDF ${CLOUD_APP}/${code}: tidy`,sha})})}catch(e){}}
+    if(BM[code]){BM[code].cloud=true;saveBM()}CL[code]={};toast('Saved to sync. Your other devices will download it the first time you open a reading.')}
+  catch(e){CL[code]={err:'Couldn’t save to sync right now. It’s still on this device.'}}
+  clRender()}
+async function cloudRetry(code){const blob=await idb('readonly',st=>st.get(code));if(blob)cloudUpload(code,blob)}
+function cloudFetch(code){
+  if(!SY||!BM[code]||!BM[code].cloud)return Promise.resolve(null);
+  return FETCHING[code]||(FETCHING[code]=(async()=>{
+    try{const meta=JSON.parse(await(await ghFile(cloudPath(code,'meta.json'))).text()),bufs=[];
+      for(let i=0;i<meta.parts;i++){CL[code]={down:Math.round(i/meta.parts*100)};clProgress(code);bufs.push(await(await ghFile(cloudPath(code,partName(i)))).arrayBuffer())}
+      const blob=new Blob(bufs,{type:'application/pdf'});
+      try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});await idb('readwrite',st=>st.put(blob,code))}catch(e){}
+      if(BM[code]){BM[code].remote=false;saveBM()}CL[code]={};clRender();return blob}
+    catch(e){CL[code]={err:'Couldn’t download from sync. Check your connection and try again.'};clRender();return null}
+    finally{delete FETCHING[code]}})())}
+async function cloudRemove(code){if(!SY)return;try{const old=await cloudShas(code);const ks=Object.keys(old).sort((a,b)=>a==='meta.json'?-1:b==='meta.json'?1:0);
+  for(const k of ks)await gh('/contents/'+cloudPath(code,k),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:`PDF ${CLOUD_APP}/${code}: removed`,sha:old[k]})})}catch(e){}}
+/* On open: pick up PDFs linked (or replaced, or removed) on another device. */
+async function cloudBoot(){if(!SY)return;let changed=false;
+  for(const code of CLOUD_CODES){let meta=null;
+    try{meta=JSON.parse(await(await ghFile(cloudPath(code,'meta.json'))).text())}catch(e){if(e.status!==404)return}
+    const loc=BM[code];
+    if(meta&&(!loc||(meta.at||0)>(loc.at||0))){if(loc){try{await idb('readwrite',st=>st.delete(code))}catch(e){}cloudForget(code)}
+      const {parts,...m}=meta;BM[code]={...m,cloud:true,remote:true};changed=true}
+    else if(meta&&loc&&!loc.cloud&&(meta.at||0)===(loc.at||0)){loc.cloud=true;changed=true}
+    else if(!meta&&loc&&loc.cloud&&!CL[code]){try{await idb('readwrite',st=>st.delete(code))}catch(e){}cloudForget(code);delete BM[code];changed=true}}
+  if(changed){saveBM();render(true)}}
+function cloudNote(k){const c=CL[k]||{},m=BM[k];
+  if(c.up!=null)return `<div class="st">Saving to sync… ${c.up}%. Keep this page open.</div>`;
+  if(c.down!=null)return `<div class="st">Downloading from sync… ${c.down}%</div>`;
+  if(c.err)return `<div class="st bad">${esc(c.err)}</div>${m&&!m.cloud&&SY?`<button class="linkbtn" data-a="cloudup" data-b="${k}">Try again</button>`:''}`;
+  if(!m)return '';
+  if(!SY)return `<div class="st">On this device only. Turn on sync in ICU Rounder to share it with your other devices.</div>`;
+  if(m.cloud)return `<div class="st ok">Synced to all your devices${m.remote?' · downloads here the first time you open a reading':''}</div>`;
+  return `<div class="st">On this device only.</div><button class="linkbtn" data-a="cloudup" data-b="${k}">Save to sync</button>`}
+if(SY)cloudBoot();
 const mb=n=>(n/1048576).toFixed(n>10485760?0:1)+' MB';
 function renderBooks(){
   document.title='Your PDF · Rhythm 2';header('Your PDF','#bback');
-  let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of Chizner once on this device. Every reading then opens straight to its pages.</p>
-   <p class="note" style="margin-top:6px">Files stay in this browser only. They aren’t uploaded, synced, or added to PANACEA, so link them again on each phone or computer. Your progress and notes do sync.</p></div><div class="card">`;
+  let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of Chizner once. Every reading then opens straight to its pages.</p>
+   <p class="note" style="margin-top:6px">With sync turned on (set up in ICU Rounder), the file is also saved to your private sync repo, and your other devices download it automatically the first time you open a reading. Without sync, it stays on this device. Remove takes it off every device.</p></div><div class="card">`;
   for(const[k,b]of Object.entries(BOOKS)){const m=BM[k];
     const st=linking===k?'<span class="st">Saving…</span>':m?`<span class="st ok">Linked · ${esc(m.name)} · ${m.pages?m.pages+' pages · ':''}${mb(m.size)}</span>`:'<span class="st">Not linked</span>';
-    h+=`<div class="bkrow"><div class="tx"><div class="nm">The book</div><div class="st" style="margin-bottom:2px">${esc(b.full)}</div>${st}</div>
+    h+=`<div class="bkrow"><div class="tx"><div class="nm">The book</div><div class="st" style="margin-bottom:2px">${esc(b.full)}</div>${st}${cloudNote(k)}</div>
       <div class="btnrow" style="flex:none;flex-direction:column;align-items:stretch">
       <label class="btn sm filebtn">${m?'Replace':'Choose PDF'}<input type="file" accept="application/pdf,.pdf" data-file="${k}"></label>
       ${m?`<button class="linkbtn" data-a="unlink" data-b="${k}">Remove</button>`:''}</div></div>`}
@@ -613,6 +680,7 @@ document.addEventListener('click',e=>{
     if(srcFor(a))location.hash='read/'+a+'-'+b;else{sessionStorage.setItem('rhythm2.booksBack',back);location.hash='books'}return}
   const b=e.target.closest('[data-a]');if(!b)return;
   const A=b.dataset.a;
+  if(A==='cloudup'){cloudRetry(b.dataset.b);return}
   if(A==='unlink'){unlinkBook(b.dataset.b);return}
   if(A==='openref'){sessionStorage.setItem('rhythm2.readBack','books');location.hash='read/133-133';return}
   if(A==='shift'){const m=BM[b.dataset.c];if(!m)return;m.off=(m.off??0)+(+b.dataset.d);m.auto=false;saveBM();const r=route();if(r.v==='read')renderReader(r.a,r.b);return}
