@@ -8,7 +8,7 @@ Clinical documentation and residency planning tools.
 | Px | `/px/` | Exam builder: focused exams by complaint, plus ICU, comprehensive neuro and NIHSS |
 | Dispo | `/dispo/` | ED MDM and discharge instructions |
 | Consult | `/consult/` | Consult call prep by service: what they'll ask, call script, note line |
-| ICU Rounder | `/icu-rounder/` | Daily ICU rounds and problem-based A/P |
+| ICU Rounder | `/icu-rounder/` | Daily ICU rounds and problem-based A/P, with CPOT, RASS and CAM-ICU calculators |
 | Spectrum | `/spectrum/` | ID consults: HPI, cultures and antimicrobial days, daily ID note, bugs and drugs reference |
 | Sweep | `/sweep/` | Morning ICU considerations, system by system |
 | Primer | `/primer/` | Daily ICU curriculum: one lesson a day with readings, orders, evidence and a self-check |

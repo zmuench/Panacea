@@ -229,6 +229,29 @@ pre.labdia{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;lin
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
 .ho p{margin:6px 0}
 .req{color:var(--warn);font-size:.9rem;margin:4px 0 0}
+.calcbtns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
+.calchd{position:sticky;top:0;background:var(--surface);z-index:1;padding-bottom:2px}
+.calchd .sheethd{position:static}
+.scorebar{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:10px 12px;margin:2px 0 10px}
+.scorebar .big{font-size:2rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;min-width:2.2ch;text-align:center}
+.scorebar .big small{font-size:.9rem;color:var(--muted);font-weight:400}
+.scorebar .what{flex:1;min-width:0;font-size:.92rem}
+.scorebar.pos{background:var(--warn-soft)}.scorebar.pos .big,.scorebar.pos .what b{color:var(--warn)}
+.scorebar.neg{background:var(--ok-soft)}.scorebar.neg .big,.scorebar.neg .what b{color:var(--ok)}
+.opts{display:flex;flex-direction:column;gap:6px;margin:4px 0 12px}
+.opt{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 11px;cursor:pointer}
+.opt .sc{font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums;text-align:center}
+.opt small{display:block;color:var(--muted);font-size:.85rem;line-height:1.35;margin-top:1px}
+.opt.on{background:var(--accent-soft);border-color:var(--accent)}
+.opt.on .sc{color:var(--accent)}
+.feat{border-top:1px solid var(--line);padding-top:4px;margin-top:6px}
+.feat h3{margin:12px 0 4px}
+.feat p{margin:4px 0}
+.letters{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;font-weight:700;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.letters span{width:30px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.letters span.a{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.qs{margin:6px 0;padding-left:1.3em}.qs li{margin:3px 0}
+.seg.rass button{min-width:44px;padding:8px 6px;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -430,6 +453,59 @@ const fmtL=ml=>(ml>0?'+':ml<0?'−':'')+(Math.abs(ml)/1000).toFixed(1)+' L';
 function firstWeight(p,d){for(const x of p.days){if(x.date<d.date&&x.data&&x.data.vitals&&num(x.data.vitals.wt)!=null)return {date:x.date,wt:x.data.vitals.wt}}return null}
 function lastData(p,d){for(let i=p.days.length-1;i>=0;i--){if(p.days[i].date<d.date)return p.days[i].data}return null}
 
+/* ---------- bedside scores: CPOT, RASS, CAM-ICU ----------
+   Item answers live in d.fh.calc; finished scores are written to the existing
+   FAST HUGS fields (fh.cpot, fh.rass, fh.cam), so the note text is unchanged. */
+const RASS=[['+4','Combative','Overtly combative or violent; immediate danger to staff'],['+3','Very agitated','Pulls or removes tubes or catheters; aggressive'],['+2','Agitated','Frequent non-purposeful movement; fights the ventilator'],['+1','Restless','Anxious or apprehensive, but movements not aggressive or vigorous'],['0','Alert and calm',''],['-1','Drowsy','Not fully alert, but sustained awakening to voice (eye opening and contact 10 s or longer)'],['-2','Light sedation','Briefly awakens to voice (eye contact under 10 s)'],['-3','Moderate sedation','Movement or eye opening to voice, but no eye contact'],['-4','Deep sedation','No response to voice, but movement or eye opening to physical stimulation'],['-5','Unarousable','No response to voice or physical stimulation']];
+const CPOT=[
+ ['face','Facial expression','',[['0','Relaxed, neutral','No muscle tension observed'],['1','Tense','Frowning, brow lowering, orbit tightening, levator contraction'],['2','Grimacing','All of the above plus eyelids tightly closed; may bite the tube']]],
+ ['body','Body movements','',[['0','Absent or normal position','Does not move, or lies in a normal position'],['1','Protection','Slow, cautious movements; touches or rubs the pain site; seeks attention through movement'],['2','Restless, agitated','Pulls at the tube, tries to sit up, thrashes, does not follow commands, strikes at staff, tries to climb out of bed']]],
+ ['vent','Compliance with the ventilator','Intubated patients',[['0','Tolerating ventilator or movement','Alarms not activated, easy ventilation'],['1','Coughing but tolerating','Alarms may sound but stop on their own'],['2','Fighting the ventilator','Asynchrony, blocking ventilation, frequent alarms']]],
+ ['voc','Vocalization','Extubated patients',[['0','Normal tone or no sound',''],['1','Sighing, moaning',''],['2','Crying out, sobbing','']]],
+ ['muscle','Muscle tension','Passive flexion and extension of the upper extremities',[['0','Relaxed','No resistance to passive movement'],['1','Tense, rigid','Resistance to passive movement'],['2','Very tense or rigid','Strong resistance; cannot complete the movement']]]];
+const showSign=v=>String(v).replace('-','−');
+function rassNum(v){if(v==null||v==='')return null;const m=String(v).replace(/[−–—]/g,'-').match(/^\s*([+-]?)\s*(\d)(?!\d)/);if(!m)return null;const n=+m[2];if(n>5)return null;if(n===0)return 0;return m[1]==='-'?-n:m[1]==='+'?n:null}
+const fhCalc=d=>{d.fh=d.fh||{};d.fh.calc=d.fh.calc||{};return d.fh.calc};
+const cpotMode=d=>((d.fh||{}).calc||{}).cpot&&d.fh.calc.cpot.mode||((d.resp||{}).type==='Ventilator'?'Intubated':'Not intubated');
+function cpotScore(d){const c=(((d.fh||{}).calc||{}).cpot)||{};const keys=['face','body',cpotMode(d)==='Intubated'?'vent':'voc','muscle'];
+  const vals=keys.map(k=>c[k]).filter(v=>v!==''&&v!=null);return {n:vals.length,total:vals.length===4?vals.reduce((a,v)=>a+(+v),0):null}}
+function camResult(d){const f=d.fh||{},c=((f.calc||{}).cam)||{};const r=rassNum(f.rass);
+  if(r==null)return {need:'Score RASS first (feature 3 uses it).'};
+  if(r<=-4)return {res:'Unable to assess',why:'RASS −4 or −5: too sedated to assess. Reassess when lighter.'};
+  if(!c.f1)return {need:'Next: feature 1, acute change or fluctuating course.'};
+  if(c.f1==='No')return {res:'Negative',why:'No acute change or fluctuation in mental status.'};
+  if(!c.f2)return {need:'Next: feature 2, the letters test for inattention.'};
+  if(c.f2!=='≥3')return {res:'Negative',why:'Feature 2 absent: 0–2 errors on the letters test.'};
+  if(r!==0)return {res:'Positive',why:`Features 1 and 2 present, and RASS ${showSign(f.rass)} means altered level of consciousness (feature 3).`};
+  if(!c.f4)return {need:'RASS is 0, so feature 3 is absent. Next: feature 4, disorganized thinking.'};
+  return c.f4==='≥2'?{res:'Positive',why:'Features 1, 2 and 4 present (disorganized thinking).'}:{res:'Negative',why:'RASS 0 and 0–1 errors on disorganized thinking.'}}
+function applyScores(d){const f=d.fh||(d.fh={}),c=f.calc||{};
+  const cp=cpotScore(d);if(c.cpot&&cp.total!=null)f.cpot=String(cp.total);
+  if(c.cam&&Object.values(c.cam).some(Boolean)){const r=camResult(d);if(r.res)f.cam=r.res}}
+function optList(b,opts,isOn){return `<div class="opts">${opts.map(([v,l,ds])=>{const on=isOn(v);return `<button type="button" class="opt ${on?'on':''}" data-set="${b}" data-v="${esc(v)}" aria-pressed="${on}"><span class="sc">${esc(showSign(v))}</span><span><b>${esc(l)}</b>${ds?`<small>${esc(ds)}</small>`:''}</span></button>`}).join('')}</div>`}
+function rassSeg(d){const cur=rassNum((d.fh||{}).rass);return `<div class="seg rass" role="group" aria-label="RASS">${RASS.map(([v,l])=>{const on=cur!=null&&cur===rassNum(v);return `<button type="button" class="${on?'on':''}" data-set="d:fh.rass" data-v="${v}" aria-pressed="${on}" title="${esc(l)}">${showSign(v)}</button>`}).join('')}</div>`}
+function calcSheet(p,d){const k=V.calc,f=d.fh||{},c=f.calc||{};let bar='',body='';
+  if(k==='cpot'){const cc=c.cpot||{},mode=cpotMode(d),sc=cpotScore(d);
+    bar=sc.total==null?`<div class="scorebar"><span class="big">–<small>/8</small></span><span class="what">${sc.n} of 4 items scored. The total goes into FAST HUGS when all four are done.</span></div>`
+      :`<div class="scorebar ${sc.total>2?'pos':'neg'}"><span class="big">${sc.total}<small>/8</small></span><span class="what"><b>${sc.total>2?'Significant pain likely':'Significant pain unlikely'}</b> (cutoff above 2). ${sc.total>2?'Treat and reassess.':''}</span></div>`;
+    body=`<p class="tip">Observe at rest for 1 minute, then during a procedure such as turning or suctioning.</p><div class="fld"><span>Patient is</span>${seg('d:fh.calc.cpot.mode',['Intubated','Not intubated'])}</div>`+
+      CPOT.filter(([key])=>key!==(mode==='Intubated'?'voc':'vent')).map(([key,l,sub,opts])=>`<h3>${l}${sub?` <span class="muted" style="font-weight:400;font-size:.88rem">· ${sub}</span>`:''}</h3>${optList('d:fh.calc.cpot.'+key,opts,v=>cc[key]===v)}`).join('')}
+  if(k==='rass'){const r=rassNum(f.rass),row=r==null?null:RASS.find(x=>rassNum(x[0])===r);
+    bar=`<div class="scorebar"><span class="big">${row?showSign(row[0]):'–'}</span><span class="what">${row?`<b>${row[1]}</b>`:'Pick the level that fits.'}${f.rassGoal?` Goal ${esc(f.rassGoal)}.`:''}</span></div>`;
+    body=`<ol class="tip qs"><li>Observe. Alert and calm, restless, or agitated: 0 to +4.</li><li>If not alert, say the patient's name and ask them to open their eyes and look at you. Eye contact 10 s or longer: −1. Under 10 s: −2. Movement without eye contact: −3.</li><li>If no response to voice, shake the shoulder or rub the sternum. Any movement: −4. Nothing: −5.</li></ol>`+
+      optList('d:fh.rass',RASS,v=>r!=null&&rassNum(v)===r)}
+  if(k==='cam'){const cc=c.cam||{},r=rassNum(f.rass),res=camResult(d);
+    bar=res.res?`<div class="scorebar ${res.res==='Positive'?'pos':res.res==='Negative'?'neg':''}"><span class="what"><b>CAM-ICU ${res.res.toLowerCase()}</b>${res.res==='Positive'?' (delirium)':''}. ${esc(res.why)}</span></div>`
+      :`<div class="scorebar"><span class="what">${esc(res.need)}</span></div>`;
+    body=`<div class="fld"><span>RASS now</span>${rassSeg(d)}</div>`;
+    if(r!=null&&r>-4){
+      body+=`<div class="feat"><h3>1 · Acute change or fluctuating course</h3><p class="muted">Different from baseline mental status, or fluctuating in the past 24 hours (RASS, GCS, or an earlier delirium assessment)?</p>${seg('d:fh.calc.cam.f1',['Yes','No'])}</div>`;
+      if(cc.f1==='Yes')body+=`<div class="feat"><h3>2 · Inattention</h3><p>“Squeeze my hand when I say the letter A.” Read in a normal tone, about 3 seconds apart:</p><div class="letters" aria-label="S A V E A H A A R T">${'SAVEAHAART'.split('').map(x=>`<span class="${x==='A'?'a':''}">${x}</span>`).join('')}</div><p class="muted">An error is no squeeze on A, or a squeeze on any other letter.</p><div class="fld"><span>Errors</span>${seg('d:fh.calc.cam.f2',['0','1','2','≥3'])}</div></div>`;
+      if(cc.f1==='Yes'&&cc.f2==='≥3')body+=`<div class="feat"><h3>3 · Altered level of consciousness</h3><p>${r===0?'RASS is 0: <b>absent</b>. Go on to feature 4.':`RASS is ${showSign(f.rass)}: <b>present</b>. Feature 4 is not needed.`}</p></div>`;
+      if(cc.f1==='Yes'&&cc.f2==='≥3'&&r===0)body+=`<div class="feat"><h3>4 · Disorganized thinking</h3><p>Yes or no questions:</p><ol class="qs"><li>Will a stone float on water?</li><li>Are there fish in the sea?</li><li>Does one pound weigh more than two pounds?</li><li>Can you use a hammer to pound a nail?</li></ol><p>Command: “Hold up this many fingers” (hold up 2), then “Now do the same thing with the other hand” without demonstrating. If they can't move both arms, ask them to add one more finger.</p><p class="muted">Each wrong answer is one error, and not completing the whole command is one error.</p><div class="fld"><span>Errors</span>${seg('d:fh.calc.cam.f4',['0','1','≥2'])}</div></div>`}}
+  const t={cpot:'CPOT',rass:'RASS',cam:'CAM-ICU'}[k];
+  return `<div class="sheet-bg" data-act="closeCalc"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${t} calculator"><div class="calchd"><div class="sheethd"><h2>${t}</h2><button class="btn sm" data-act="closeCalc">Done</button></div>${bar}</div>${body}${k==='cam'||k==='cpot'?`<button type="button" class="linkbtn danger" data-act="calcReset">Start over</button>`:''}</div>`}
+
 /* ---------- new draft ---------- */
 function newDraft(p){
   const d={date:today(),carried:false,overnight:{f:[],note:''},vitals:{},exam:{},resp:{},drips:{},labs:{},abx:[],cx:[],img:{cxr:{},other:[],ekg:{}},renal:{},lines:[],consults:[],tx:[],reviewed:{},fh:{},plan:{},dispo:'',goc:''};
@@ -442,7 +518,7 @@ function newDraft(p){
     d.lines=(c.lines||[]).filter(x=>x.ready!=='Remove today'&&x.need!=='Remove today').map(x=>{delete x.ready;delete x.output;delete x.need;return x});
     d.consults=(c.consults||[]).filter(x=>x.status!=='Signed off');d.tx=c.tx||[];
     if(d.renal){d.renal.issues=[];}
-    d.fh=c.fh||{};['sat','sbt','sbtNote','cam','deesc','deescNote','hypo','hypoNote'].forEach(k=>delete d.fh[k]);
+    d.fh=c.fh||{};['sat','sbt','sbtNote','cam','calc','deesc','deescNote','hypo','hypoNote'].forEach(k=>delete d.fh[k]);
     d.dispo=c.dispo||'';
     if(c.vitals&&c.vitals.mapGoal)d.vitals.mapGoal=c.vitals.mapGoal;
     p.problems.filter(x=>!x.resolved).forEach(pr=>{const lp=c.plan&&c.plan[pr.id];if(lp&&!lp.resolved&&(String(lp.note||'').trim()||lp.status))d.plan[pr.id]={note:lp.note||'',status:lp.status==='New'?'':(lp.status||''),carried:true}});}
@@ -526,7 +602,7 @@ function roundView(){const p=P(),d=p.draft,st=STEPS[V.step];const flagged=new Se
   <nav class="steps wrap" aria-label="Rounding sections">${STEPS.map((s,i)=>`<button class="${i===V.step?'cur':''} ${flagged.has(s[0])?'hasflag':''}" data-act="step" data-i="${i}" ${i===V.step?'aria-current="step"':''}>${d.reviewed&&d.reviewed[s[0]]?'✓ ':''}${s[1]}${flagged.has(s[0])?'<span class="sr"> (has flags)</span>':''}</button>`).join('')}</nav></header>
   <main class="wrap">${bedEditor(p)}${STEPFN[st[0]](p,d).replace('</h2>','</h2>'+flagBox(p,d,st[0]))}</main>
   <div class="bar"><div class="wrap barin"><button class="btn" data-act="prev" ${V.step===0?'disabled':''}>Back</button>${last?`<button class="btn primary" data-act="finish">Finish rounds</button>`:`<button class="btn primary" data-act="next">Next: ${STEPS[V.step+1][1]}</button>`}</div></div>
-  ${V.sheet?`<div class="sheet-bg" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Action list"><div class="sheethd"><h2>Action list</h2><button class="btn sm" data-act="closeSheet">Done</button></div>${actionEditor(p)}</div>`:''}`}
+  ${V.sheet?`<div class="sheet-bg" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Action list"><div class="sheethd"><h2>Action list</h2><button class="btn sm" data-act="closeSheet">Done</button></div>${actionEditor(p)}</div>`:''}${V.calc?calcSheet(p,d):''}`}
 
 function drip([k,name,units]){const b='d:drips.'+k;const o=val(b)||{};const on=!!o.on;
   return `<div class="drip ${on?'on':''}"><button type="button" class="dripname" data-act="dripToggle" data-k="${k}" data-u="${units[0]}" aria-pressed="${on}"><span class="box"></span>${name}</button>
@@ -609,8 +685,8 @@ renal:(p,d)=>{const r=d.renal;
 fh:(p,d)=>{const f=d.fh;const row=(l,t,body)=>`<div class="fhrow"><span class="ltr" aria-hidden="true">${l}</span><div><h3>${t}</h3>${body}</div></div>`;
   return `<h2>FAST HUGS BID</h2>${carry(d)}
   ${row('F','Feeding',seg('d:fh.feed',['NPO','PO','Tube feeds','TPN'])+(f.feed==='Tube feeds'?`<div class="row">${inp('d:fh.tfFormula','Formula',{w:'m'})}${inp('d:fh.tfRate','Rate',{num:1,unit:'mL/hr',w:'s'})}${inp('d:fh.tfGoal','Goal',{num:1,unit:'mL/hr',w:'s'})}</div><div class="fld"><span>At goal?</span>${seg('d:fh.atGoal',['Yes','No'])}</div>`:f.feed?inp('d:fh.diet','Details',{ph:f.feed==='PO'?'e.g. cardiac diet':''}):''))}
-  ${row('A','Analgesia',`<div class="row">${inp('d:fh.cpot','CPOT',{num:1,w:'s'})}<div class="fld"><span>Pain</span>${seg('d:fh.pain',['Controlled','Uncontrolled'])}</div></div>`)}
-  ${row('S','Sedation',`<div class="row">${inp('d:fh.rass','RASS',{w:'s'})}${inp('d:fh.rassGoal','RASS goal',{w:'s',ph:'e.g. 0 to −1'})}</div><div class="fld"><span>Daily awakening trial</span>${seg('d:fh.sat',['Done','Not done','Contraindicated','N/A'])}</div><div class="fld"><span>CAM-ICU</span>${seg('d:fh.cam',['Negative','Positive','Unable to assess'])}</div>`)}
+  ${row('A','Analgesia',`<div class="row">${inp('d:fh.cpot','CPOT',{num:1,w:'s'})}<div class="fld"><span>Pain</span>${seg('d:fh.pain',['Controlled','Uncontrolled'])}</div></div><div class="calcbtns"><button type="button" class="btn sm" data-act="calc" data-k="cpot">CPOT calculator</button></div>`)}
+  ${row('S','Sedation',`<div class="row">${inp('d:fh.rass','RASS',{w:'s'})}${inp('d:fh.rassGoal','RASS goal',{w:'s',ph:'e.g. 0 to −1'})}</div><div class="fld"><span>Daily awakening trial</span>${seg('d:fh.sat',['Done','Not done','Contraindicated','N/A'])}</div><div class="fld"><span>CAM-ICU</span>${seg('d:fh.cam',['Negative','Positive','Unable to assess'])}</div><div class="calcbtns"><button type="button" class="btn sm" data-act="calc" data-k="rass">RASS calculator</button><button type="button" class="btn sm" data-act="calc" data-k="cam">CAM-ICU calculator</button></div>`)}
   ${row('T','Thromboprophylaxis',dvtSection(p,d))}
   ${row('H','Head of bed',seg('d:fh.hob',['Elevated ≥30°','Not elevated']))}
   ${row('U','Ulcer prophylaxis',seg('d:fh.gi',['PPI','H2 blocker','None'])+inp('d:fh.giNote','Indication or details'))}
@@ -1267,10 +1343,10 @@ function render(){const a=document.getElementById('app');
   if(!['census','edit','handoff'].includes(V.screen)&&!P())V.screen='census';
   let added=[];if(V.screen==='round'){const p=P();stampDates(p,p.draft);added=syncAuto(p,p.draft)}
   const fn={census,edit:editPt,patient:patientView,round:roundView,day:dayView,trends:trendsView,handoff:handoffView,dict:dictView}[V.screen];
-  a.innerHTML=fn();updateCalcs();
+  const shOld=a.querySelector('.sheet'),shTop=shOld?shOld.scrollTop:0;a.innerHTML=fn();const shNew=a.querySelector('.sheet');if(shNew&&shOld)shNew.scrollTop=shTop;updateCalcs();
   if(added.length)toast('Added to problem list: '+added.join('; '));
   if(V.screen==='round'){const s=document.querySelector('.steps'),t=s&&s.querySelector('.cur');if(t)s.scrollLeft=t.offsetLeft-s.clientWidth/2+t.clientWidth/2}}
-function go(screen){V.screen=screen;V.err='';V.sheet=false;V.bedEdit=null;render();window.scrollTo(0,0)}
+function go(screen){V.screen=screen;V.err='';V.sheet=false;V.calc=null;V.bedEdit=null;render();window.scrollTo(0,0)}
 
 let toastT;
 function toast(msg){let el=document.querySelector('.toast');if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}el.textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>el.remove(),2200)}
@@ -1287,7 +1363,7 @@ document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.act
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-set],[data-tog],[data-act]');if(!t)return;
   if(t.dataset.confirm&&!t.dataset.armed){const orig=t.textContent;t.dataset.armed='1';t.classList.add('armed');t.textContent=t.dataset.confirm;setTimeout(()=>{if(t.isConnected){delete t.dataset.armed;t.classList.remove('armed');t.textContent=orig}},3000);return}
-  if(t.dataset.set){const {o,path}=ref(t.dataset.set);const cur=getPath(o,path);setPath(o,path,cur===t.dataset.v?'':t.dataset.v);if(t.dataset.set[0]!=='n')save();render();return}
+  if(t.dataset.set){const {o,path}=ref(t.dataset.set);const cur=getPath(o,path);setPath(o,path,cur===t.dataset.v?'':t.dataset.v);if(/^d:fh\.(calc|rass)/.test(t.dataset.set))applyScores(P().draft);if(t.dataset.set[0]!=='n')save();render();return}
   if(t.dataset.tog){const {o,path}=ref(t.dataset.tog);let arr=getPath(o,path);if(!Array.isArray(arr)){arr=[];setPath(o,path,arr)}const i=arr.indexOf(t.dataset.v);if(i>=0)arr.splice(i,1);else arr.push(t.dataset.v);save();render();return}
   const a=t.dataset.act,p=V.pid?P():null,d=p&&p.draft;
   switch(a){
@@ -1326,6 +1402,9 @@ document.addEventListener('click',e=>{
     case 'dismissAuto':{const pr=p.problems.find(x=>x.id===t.dataset.pr);p.dismissed=p.dismissed||[];if(pr.auto&&!p.dismissed.includes(pr.auto))p.dismissed.push(pr.auto);p.problems=p.problems.filter(x=>x!==pr);delete d.plan[pr.id];save();render();break}
     case 'labTog':{const pr=p.problems.find(x=>x.id===t.dataset.pr);const cur=prLabs(pr).slice();const k=t.dataset.k;const i=cur.indexOf(k);if(i>=0)cur.splice(i,1);else cur.push(k);pr.labs=TORDER.filter(x=>cur.includes(x));V.openLabPick=pr.id;save();render();break}
     case 'openSheet':V.sheet=true;render();break;
+    case 'calc':{const d=P().draft,c=fhCalc(d);V.calc=t.dataset.k;if(V.calc==='cpot'&&!(c.cpot&&c.cpot.mode))(c.cpot=c.cpot||{}).mode=cpotMode(d);if(V.calc==='cam')c.cam=c.cam||{};save();render();break}
+    case 'closeCalc':V.calc=null;render();break;
+    case 'calcReset':{const c=fhCalc(P().draft);if(V.calc==='cpot')c.cpot={mode:cpotMode(P().draft)};if(V.calc==='cam')c.cam={};save();render();break}
     case 'bedOpen':V.bedEdit=p.id;render();window.scrollTo(0,0);{const el=document.getElementById('newBed');if(el){el.focus();el.select()}}break;
     case 'cancelBed':V.bedEdit=null;render();break;
     case 'saveBed':{const el=document.getElementById('newBed');const v=el?el.value.trim():'';if(!v){toast('Enter a bed number.');break}
@@ -1365,7 +1444,7 @@ document.addEventListener('click',e=>{
       p.draft=null;V.dictUndo=null;save();V.dayDate=d.date;toast('Rounds saved');go('day');break}
   }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='newBed'){e.preventDefault();document.querySelector('[data-act="saveBed"]').click();return}if(e.key==='Enter'&&(e.target.id==='newProb'||e.target.id==='newProbR'||e.target.id==='newAction')){e.preventDefault();const btn=e.target.parentElement.querySelector('button');btn&&btn.click()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&V.calc){V.calc=null;render();return}if(e.key==='Enter'&&e.target.id==='newBed'){e.preventDefault();document.querySelector('[data-act="saveBed"]').click();return}if(e.key==='Enter'&&(e.target.id==='newProb'||e.target.id==='newProbR'||e.target.id==='newAction')){e.preventDefault();const btn=e.target.parentElement.querySelector('button');btn&&btn.click()}});
 
 load();initSnap();render();syncBoot();
 </script>
