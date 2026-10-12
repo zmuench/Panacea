@@ -208,8 +208,10 @@ const SVC=Object.fromEntries(SERVICES.map(s=>[s.id,s]));
 /* storage: per-device only */
 const KEY='panacea.consult.v1';
 let S={me:{name:'',role:'',cb:''},d:{}};
-try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.me={...S.me,...(r.me||{})};S.d=r.d||{}}}catch(e){}
-let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
+/* Your name, role and callback number are remembered; consult drafts start blank on every visit, on the service list. */
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.me={...S.me,...(r.me||{})}}}catch(e){}
+if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify({me:S.me}))}catch(e){toast('Could not save on this device.')}},250)}
 function draft(id){return S.d[id]||(S.d[id]={age:'',sex:'',bed:'',urg:'',q:'',one:'',chk:{},val:{},done:'',pend:'',who:'',recs:'',out:'',t:''})}
 function started(id){const d=S.d[id];if(!d)return false;return !!(d.q||d.one||d.age||Object.values(d.chk||{}).some(Boolean)||Object.values(d.val||{}).some(v=>v&&v.trim()))}
 function parse(s){return s.items.map((x,i)=>{const[g,t,ph]=x.split('|');return{i,g,t,ph:ph||''}})}

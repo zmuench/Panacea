@@ -1679,6 +1679,9 @@ app.addEventListener('input',e=>{
 });
 let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2600)}
 window.addEventListener('hashchange',()=>render());
+/* Always open on the main page, not the last screen. */
+if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+window.addEventListener('pageshow',e=>{if(e.persisted&&location.hash){history.replaceState(null,'',location.pathname+location.search);render()}});
 render();
 </script>
 </body>

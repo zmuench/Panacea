@@ -1128,6 +1128,10 @@ app.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();return ok}}
 let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2200)}
 window.addEventListener('hashchange',()=>{try{sessionStorage.setItem('sp.nav','1')}catch(_){}render()});
+/* Always open on the patient list, not the last screen. */
+if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+try{sessionStorage.removeItem('sp.nav')}catch(_){}
+window.addEventListener('pageshow',e=>{if(e.persisted&&location.hash){history.replaceState(null,'',location.pathname+location.search);render()}});
 initSnap();render();syncBoot();
 </script>
 </body>

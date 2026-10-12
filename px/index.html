@@ -577,8 +577,10 @@ const NIH=[
 
 /* ---------- state (this device only) ---------- */
 const KEY='panacea.px.v1';
-let S={d:{}};try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.d)S=r}catch(e){}
-let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}},250)}
+/* Exams start blank on every visit and on the main page; drafts are kept only while the app is open. */
+let S={d:{}};try{localStorage.removeItem(KEY)}catch(e){}
+if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+function save(){}
 function D(k){return S.d[k]||(S.d[k]={m:{},ch:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{},derm:[]},extra:[],dev:[],sex:''});if(!S.d[k].dev)S.d[k].dev=[];return S.d[k]}
 function started(k){const d=S.d[k];return !!(d&&(((d.w&&d.w.derm)||[]).some(L=>Object.keys(L).length)||Object.keys(d.m).length||Object.keys(d.w.nih||{}).length||Object.keys(d.w.str||{}).length))}
 
