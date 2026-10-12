@@ -13,7 +13,7 @@ Clinical documentation and residency planning tools.
 | Sweep | `/sweep/` | Morning ICU considerations, system by system |
 | Primer | `/primer/` | Daily ICU curriculum: one lesson a day with readings, orders, evidence and a self-check |
 | Core | `/core/` | Daily EM curriculum through Tintinalli’s 9th ed.: chapter checklist, PDF linked on-device, workup/treatment/dispo, self-check |
-| Rhythm | `/rhythm/` | Daily EKG curriculum through Dubin: readings checklist, your PDF linked on-device, typed answers per page |
+| Rhythm | `/rhythm/` | Daily EKG curriculum through Dubin: readings checklist, your PDF linked on-device, an answer box for each in-text question, and a read form for the practice 12-leads |
 | Nenya | `/nenya/` | EM residency rank list |
 
 Every app is a single static HTML file. No build step and no server.

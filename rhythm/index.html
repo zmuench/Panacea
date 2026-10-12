@@ -169,13 +169,19 @@ details.ansx>summary .ct{margin-left:auto;text-transform:none;letter-spacing:0;f
 details.ansx>summary .chev{width:15px;height:15px;stroke:var(--muted);transition:transform .15s}
 details.ansx[open]>summary .chev{transform:rotate(90deg)}
 .ansl{margin-top:10px;display:flex;flex-direction:column;gap:8px}
-.arow{display:flex;gap:10px;align-items:flex-start}
-.arow .pl{flex:none;width:3.4em;font-size:.82rem;font-weight:700;color:var(--muted);padding-top:11px}
-.arow.has .pl{color:var(--ok)}
+.apg{display:flex;gap:10px;align-items:flex-start;padding-top:8px;border-top:1px solid var(--line)}
+.apg:first-child{border-top:0;padding-top:0}
+.apg .pl{flex:none;width:3.4em;font-size:.82rem;font-weight:700;color:var(--muted);padding-top:11px}
+.apg.has .pl{color:var(--ok)}
+.aqs{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.aq{display:flex;gap:8px;align-items:flex-start}
+.aq .qn{flex:none;width:1.9em;height:1.9em;margin-top:8px;border-radius:50%;display:grid;place-items:center;font-size:.78rem;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--line)}
+.aq.w .qn{width:6.6em;height:auto;margin-top:11px;border:0;background:none;border-radius:0;place-items:start;font-size:.8rem}
+.aq textarea{flex:1;min-width:0}
 textarea.ans{min-height:44px;padding:9px 11px}
 .pgw{width:100%;display:flex;flex-direction:column;gap:8px}
 .pgw .ab{display:flex;flex-direction:column;gap:4px}
-.pgw .ab span{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pgw .ab .abh{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pgw .miss{display:grid;place-items:center;color:var(--muted);font-size:.9rem;aspect-ratio:.77;background:var(--paper)}
 .cal{width:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
 .cal .tx{flex:1;min-width:12em}
@@ -193,6 +199,11 @@ const BOOKS={
  R:{short:"Reference sheets",full:"Dubin’s Personal Quick Reference Sheets (pp. 333–346)",first:333,last:346}
 };
 const REFT={333:"Title page",334:"Dubin’s method",335:"Rate",336:"Rhythm: irregular rhythms",337:"Rhythm: escape and premature beats",338:"Rhythm: tachyarrhythmias",339:"Rhythm: heart blocks",340:"Axis",341:"Hypertrophy",342:"Infarction",343:"Infarct location and vessels",344:"Miscellaneous: PE and pacemakers",345:"Electrolytes and drugs",346:"Weight conversion and monitoring leads"};
+/* How many in-text questions (programmed frames) each printed page has, pp. 1–328, counted page by page from the book. */
+const QN="2233323323333323232312234231233223322332233200233331321244222221232233223221232323332243023233332221323230123233033103432222323222232220422121123333321022222111303012331023220223021232333221212323322320233232332232333233334413331333231233323003333332222223230322231312231223220123332210022233222334232302223003223322132223322232";
+/* The practice 12-leads (pp. 347–363): each tracing page gets the interpretation form Dubin uses. */
+const CASES=[348,350,352,354,356,358,360,362];
+const CASEF=[["rate","Rate"],["rhythm","Rhythm"],["axis","Axis"],["hyp","Hypertrophy"],["inf","Infarction"],["com","Comment"]];
 const UNITS=[
  {n:1,t:"Foundations"},
  {n:2,t:"Rate"},
@@ -207,46 +218,48 @@ const UNITS=[
 ];
 const L=[];
 L.push(
-/* ---------- Unit 1: Foundations (pp. 1–64) ---------- */
-{id:"basics1",u:1,t:"Depolarization and the P, QRS and T",p:[[1,16]],ref:[334],
- bl:"Every wave on the EKG is a summed electrical vector seen from one lead’s point of view. Atrial depolarization makes the P wave, ventricular depolarization the QRS, and ventricular repolarization the T wave. Atrial repolarization is buried in the QRS.",
- key:["Depolarization spreading toward a positive electrode writes an upward deflection; spreading away writes a downward one; perpendicular writes a small biphasic or flat one.","The SA node is the fastest natural pacemaker, which is why it normally sets the rate.","The pause between P and QRS is mostly the AV node deliberately slowing conduction so the atria can finish filling the ventricles.","The QRS is narrow because the His–Purkinje system spreads the impulse through both ventricles almost at once."],
- ed:["When a QRS is wide, ask whether the impulse traveled outside the conduction system: a bundle branch block, a ventricular origin, pre-excitation, a paced beat, or a sodium-channel problem (hyperkalemia, TCA).","A missing P wave is a rhythm question; a weird P wave is an origin or atrial-enlargement question."],
+/* ---------- Unit 1: Foundations (Dubin ch. 1–3, pp. 1–64) ---------- */
+{id:"basics1",u:1,t:"Depolarization, the SA node and the P wave",p:[[1,19]],ref:[334],
+ bl:"The EKG records the heart’s electrical activity from the skin. Depolarization is a wave of positive charge spreading through the myocytes; moving toward a positive electrode, it writes an upward deflection. The SA node starts each beat, atrial depolarization writes the P wave, and the AV node then slows conduction so the ventricles can fill.",
+ key:["Depolarization spreading toward a positive electrode writes an upward deflection; spreading away writes a downward one; perpendicular writes a small biphasic or flat one.","The SA node is the dominant pacemaker because it fires fastest; slower automaticity foci are normally overdrive-suppressed.","The P wave is depolarization of both atria. Atrial repolarization is too small to see and is buried in the QRS.","The AV valves electrically insulate the ventricles from the atria, so the AV node is the only normal path between them. The flat segment after the P wave is its deliberate delay."],
+ ed:["A missing P wave is a rhythm question; an abnormal P wave is an origin or atrial-enlargement question.","Inverted P waves in II, III and aVF mean the atria are depolarizing from below: a junctional or low atrial origin, or retrograde conduction."],
  mod:["Dubin’s ‘automaticity foci’ model is a good teaching scaffold, but most clinical tachycardias (AVNRT, AVRT, flutter, most VT) are reentry circuits, not irritable single foci. That matters later for why adenosine and cardioversion work."],
  q:["A wave of depolarization moves directly away from a lead’s positive electrode. What does that lead record?","A negative (downward) deflection."]},
 
-{id:"basics2",u:1,t:"Intervals and the cardiac cycle",p:[[17,32]],
- bl:"Intervals are timing measurements, and timing tells you where conduction is slow. On standard paper one small box is 0.04 s (40 ms) and one large box is 0.20 s (200 ms).",
- key:["PR interval (start of P to start of QRS): 120–200 ms. Longer suggests AV nodal delay; shorter suggests pre-excitation or a junctional/low atrial origin.","QRS duration: under about 110–120 ms. At 120 ms or more, think bundle branch block, ventricular origin, paced, pre-excited or toxic/metabolic.","QT interval (start of QRS to end of T) shortens as heart rate rises, so it is corrected for rate (QTc).","The ST segment should sit at the baseline (judged against the TP or PR segment). Its shift is the core of ischemia reading."],
- ed:["Measure intervals in the lead where they are longest and clearest, not just from the machine read. Machines over-call and under-call QT and QRS regularly.","A PR under 120 ms with a slurred QRS upstroke is WPW until proven otherwise."],
+{id:"basics2",u:1,t:"The QRS, ST segment, T wave and QT",p:[[20,30]],
+ bl:"Past the AV node, the impulse races down the His bundle, the bundle branches and the Purkinje fibers, so both ventricles depolarize almost at once and write a narrow QRS. The ST segment is the plateau of ventricular repolarization, the T wave its rapid phase, and the QT interval spans ventricular systole.",
+ key:["Naming the QRS: Q is a downward wave before any upward wave, R is the first upward wave, S is a downward wave after an R. A complex with no upward wave at all is a QS.","The ST segment should sit level with the baseline; its elevation or depression is the core of ischemia reading.","The QT shortens as heart rate rises, so it is corrected for rate (QTc). At normal rates, a QT under half the R-to-R interval is a quick reassurance.","Sodium carries fast conduction through myocytes and Purkinje fibers, calcium carries slow AV nodal conduction and triggers contraction, and potassium outflow repolarizes."],
+ ed:["When a QRS is wide, ask whether the impulse traveled outside the conduction system: a bundle branch block, a ventricular origin, pre-excitation, a paced beat, or a sodium-channel problem (hyperkalemia, TCA).","A QTc over about 500 ms with syncope or a new QT-prolonging drug is a torsades risk: check potassium and magnesium and stop the drug."],
+ mod:["Bazett’s formula overcorrects at fast rates; Fridericia (QT ÷ cube root of RR) is often preferred, especially when the rate is over 100.","Dubin’s ion framing maps onto drug toxicity: sodium-channel blockers widen the QRS, potassium-channel blockers lengthen the QT, and calcium-channel blockers slow the AV node."],
+ q:["A QRS complex has no upward deflection at all. What is it called?","A QS complex."]},
+
+{id:"basics3",u:1,t:"EKG paper, intervals and the limb leads",p:[[31,44]],
+ bl:"Standard paper runs at 25 mm/s, so one small box is 0.04 s (40 ms) and one large box is 0.20 s (200 ms); vertically, 10 mm is 1 mV. Six limb leads (I, II, III, aVR, aVL, aVF) look at the heart in the frontal plane from six different angles.",
+ key:["Normal PR is 120–200 ms (up to one large box); normal QRS is under about 110–120 ms (three small boxes).","Leads I, II and III are bipolar and form Einthoven’s triangle; aVR, aVL and aVF use one limb as positive and the other two as a common ground.","Moved to a common center, the six limb leads divide the frontal plane every 30 degrees.","Every lead records the same electrical activity; each looks different only because it views it from a different angle."],
+ ed:["Measure intervals in the lead where they are longest and clearest, not just from the machine read. Machines over-call and under-call QT and QRS regularly.","Check the calibration mark before calling voltage: half-standard (5 mm/mV) hides LVH and exaggerates low voltage.","Limb lead reversal can fake ischemia or an axis change. An upright P in aVR with an inverted P in lead I means swapped arm leads until proven to be dextrocardia."],
  mod:["Standard QRS cutoffs today: under 110 ms normal, 110–119 ms incomplete or nonspecific delay, 120 ms or more for complete bundle branch block."],
- q:["How many milliseconds is 5 small boxes?","200 ms, which is one large box and the upper limit of a normal PR interval."]},
+ q:["How many milliseconds is 5 small boxes?","200 ms: one large box, and the upper limit of a normal PR interval."]},
 
-{id:"basics3",u:1,t:"Leads: limb, augmented and chest",p:[[33,48]],
- bl:"Twelve leads are twelve camera angles on the same heart. Six limb leads look in the frontal plane (up/down, left/right); six chest leads look in the horizontal plane (front to back, right to left).",
- key:["Leads I, II and III form Einthoven’s triangle; aVR, aVL and aVF fill in the gaps at 30° steps.","Lead II runs roughly parallel to normal atrial depolarization, which is why it is the classic rhythm strip lead.","V1–V2 sit over the right ventricle and septum; V3–V4 over the anterior wall; V5–V6 over the lateral wall.","aVR looks into the cavity from the right shoulder, so in a normal tracing almost everything in aVR is negative."],
- ed:["Contiguous leads that view the same territory: inferior (II, III, aVF), lateral (I, aVL, V5, V6), septal/anterior (V1–V4). Territorial patterns are how you separate infarction from diffuse processes.","Lead reversal (especially limb leads) can fake ischemia or axis changes. If lead I is entirely negative with a negative P, check the electrodes before diagnosing dextrocardia."],
- q:["Which lead is most nearly opposite lead II, and why is it useful for spotting limb lead reversal?","aVR. Normally P, QRS and T are all negative in aVR; an upright P in aVR (with inverted P in I) suggests arm leads are swapped or true dextrocardia."]},
-
-{id:"basics4",u:1,t:"Recording the EKG and autonomic tone",p:[[49,64]],
- bl:"Paper speed (25 mm/s) and calibration (10 mm/mV) are the rulers every measurement depends on. Sympathetic tone speeds the SA node and AV conduction; parasympathetic (vagal) tone slows both.",
- key:["Check the calibration mark before calling voltage: half-standard (5 mm/mV) hides LVH and exaggerates ‘low voltage’.","Vagal maneuvers and the AV node: increased vagal tone slows AV nodal conduction, which can unmask flutter waves or terminate reentrant SVT.","Atropine blocks vagal input; it speeds the SA node and AV node but does little for blocks below the AV node.","Artifact (tremor, loose leads, movement) can mimic VF or flutter. Look for QRS complexes marching through the ‘arrhythmia’."],
- ed:["Before calling a lethal rhythm on the monitor, look at the patient. A talking patient with ‘VF’ on the screen is artifact.","Carotid massage and the modified Valsalva are your bedside autonomic tools; know which rhythms they help and which they only clarify."],
+{id:"basics4",u:1,t:"Chest leads and the autonomic nervous system",p:[[45,64]],
+ bl:"The six chest leads look at the heart in the horizontal plane, from V1 over the right ventricle around to V6 over the lateral left ventricle. The autonomic nervous system tunes the heart: sympathetic tone speeds the SA node and AV conduction, and parasympathetic (vagal) tone slows both.",
+ key:["Lateral leads I and aVL (plus V5–V6) use a left-sided positive electrode; inferior leads II, III and aVF use the left-foot electrode.","V1–V2 sit over the right ventricle and septum, V3–V4 over the anterior wall, V5–V6 over the lateral wall. The QRS goes from mainly negative in V1 to mainly positive in V6.","Sympathetic stimulation (norepinephrine on β1 receptors) raises rate, conduction and contractility; vagal stimulation (acetylcholine) slows the SA node and AV conduction.","Vasovagal and neurocardiogenic syncope: a reflex vagal surge slows the heart and dilates the arteries at the same time."],
+ ed:["Contiguous lead groups (inferior, lateral, septal/anterior) are how you separate a territorial infarction from a diffuse process.","Vagal maneuvers slow AV conduction: they can end reentrant SVT, or unmask flutter waves without converting the flutter.","Atropine blocks vagal input. It speeds the SA and AV nodes but does little for block below the AV node."],
+ mod:["The modified Valsalva (REVERT, Lancet 2015) has largely replaced carotid sinus massage in the ED; avoid carotid massage with a bruit or prior stroke."],
  q:["Why does atropine help a Mobitz I block but often fail in a Mobitz II block?","Mobitz I is usually at the AV node, which has vagal innervation; Mobitz II is usually below it (His–Purkinje), where vagal tone has little effect."]},
 
-/* ---------- Unit 2: Rate (pp. 65–96) ---------- */
-{id:"rate1",u:2,t:"Rate by the triplets",p:[[65,80]],ref:[335],
- bl:"Find an R wave on a heavy line, then count the following heavy lines: 300, 150, 100, then 75, 60, 50. Where the next R lands is the rate. It is fast, approximate and works only for regular rhythms.",
- key:["Normal sinus rate is 60–100. Over 100 is sinus tachycardia; under 60 is sinus bradycardia.","For precision: 1500 ÷ small boxes between R waves (or 300 ÷ large boxes).","Determine the atrial and ventricular rates separately whenever P waves and QRSs might not be linked."],
- ed:["A regular narrow tachycardia at almost exactly 150 is atrial flutter with 2:1 block until you have looked hard for hidden flutter waves.","Sinus tachycardia is a symptom. Find the reason (pain, fever, hypovolemia, PE, hypoxia, withdrawal, thyrotoxicosis) rather than treating the rate."],
- q:["R waves are 3 large boxes apart. What is the rate?","100 per minute (300 ÷ 3)."]},
+/* ---------- Unit 2: Rate (Dubin ch. 4, pp. 65–96) ---------- */
+{id:"rate1",u:2,t:"Normal rate and the automaticity foci",p:[[65,77]],
+ bl:"Normal sinus rate is 60–100. Below the SA node sit backup pacemakers at three levels, each with its own inherent rate: atrial 60–80, junctional 40–60 and ventricular 20–40. The fastest active pacemaker overdrive-suppresses all the slower ones.",
+ key:["Sinus bradycardia is under 60 and sinus tachycardia is over 100.","Overdrive suppression is a failsafe: if the SA node fails, the next fastest focus escapes and paces at its inherent rate.","The escape rate points to the level: about 40–60 is junctional (usually narrow), 20–40 is ventricular (wide).","The upper AV node has no automaticity; the junctional foci sit lower in the AV junction."],
+ ed:["Sinus tachycardia is a symptom. Find the reason (pain, fever, hypovolemia, PE, hypoxia, withdrawal, thyrotoxicosis) rather than treating the rate.","A slow, wide escape rhythm may be the only pacemaker left: never suppress it with lidocaine or amiodarone."],
+ q:["The SA node and every atrial focus fail. Where do you expect the rhythm to come from, and at what rate?","A junctional focus, at about 40–60 per minute."]},
 
-{id:"rate2",u:2,t:"Bradycardia, fine rates and irregular rhythms",p:[[81,96]],ref:[335],
- bl:"For slow or irregular rhythms, count QRS complexes in a 6-second strip and multiply by 10. If there are 10 large boxes between beats, the rate is 30.",
- key:["Irregular rhythms (like AF) are reported as an average ventricular rate, and a range if it swings widely.","Atrial and ventricular rates can be independent (AV dissociation, complete heart block); report each.","Most monitor strips are marked in 3-second intervals at the top."],
- ed:["The bradycardia question in the ED is perfusion, not number: hypotension, altered mental status, chest pain, heart failure or shock make it unstable.","Common reversible causes: hyperkalemia, beta-blocker or calcium channel blocker toxicity, digoxin, inferior MI, hypothermia, hypothyroidism, increased ICP. ‘BRASH’ (bradycardia, renal failure, AV nodal blockade, shock, hyperkalemia) is a common combination."],
- mod:["AHA 2020: atropine 1 mg IV every 3–5 minutes up to 3 mg for symptomatic bradycardia; if ineffective, transcutaneous pacing or an epinephrine or dopamine infusion."],
- q:["You count 4 QRS complexes in a 6-second strip. Rate?","About 40 per minute."]},
+{id:"rate2",u:2,t:"Rate by the triplets and the 6-second strip",p:[[78,96]],ref:[335],
+ bl:"Find an R wave on a heavy line, then name the heavy lines that follow: 300, 150, 100, then 75, 60, 50. Where the next R wave lands is the rate. For slow or irregular rhythms, count the cycles in a 6-second strip and multiply by 10.",
+ key:["The triplets work only for regular rhythms; for more precision use 1500 ÷ small boxes between R waves (or 300 ÷ large boxes).","Most strips carry 3-second marks along the top; two intervals make a 6-second strip.","Irregular rhythms (like AF) are reported as an average ventricular rate, plus a range if it swings widely.","Determine atrial and ventricular rates separately whenever P waves and QRSs might not be linked."],
+ ed:["A regular narrow tachycardia at almost exactly 150 is atrial flutter with 2:1 block until you have looked hard for flutter waves.","Bradycardia is about perfusion, not the number: hypotension, altered mental status, chest pain, heart failure or shock make it unstable.","Common reversible causes of bradycardia: hyperkalemia, beta-blocker or calcium-channel-blocker toxicity, digoxin, inferior MI, hypothermia, hypothyroidism and raised ICP. BRASH (bradycardia, renal failure, AV nodal blockade, shock, hyperkalemia) is a common combination."],
+ mod:["AHA 2020: atropine 1 mg IV every 3–5 minutes up to 3 mg for symptomatic bradycardia; if it fails, transcutaneous pacing or an epinephrine or dopamine infusion."],
+ q:["R waves are 3 large boxes apart. What is the rate?","100 per minute (300 ÷ 3)."]},
 
 /* ---------- Unit 3: Rhythm basics, escape and premature beats (pp. 97–145) ---------- */
 {id:"rhy1",u:3,t:"Sinus rhythm and sinus arrhythmia",p:[[97,106]],ref:[336],
@@ -303,9 +316,9 @@ L.push(
  ed:["Flutter responds well to synchronized cardioversion at low energy, and rate control is often harder than in AF.","Turn the strip upside down or look at V1 to spot flutter waves buried in QRS and T waves."],
  q:["Atrial rate 300, ventricular rate 75. What is the conduction ratio?","4:1."]},
 
-{id:"tachy4",u:4,t:"Fibrillation: atrial and ventricular",p:[[164,172]],ref:[338],
+{id:"tachy4",u:4,t:"Fibrillation, WPW and LGL",p:[[164,172]],ref:[338],
  bl:"Fibrillation is chaotic multifocal activity with no organized contraction. In the atria it produces a wavy baseline and an irregularly irregular ventricular response; in the ventricles it produces no cardiac output at all.",
- key:["Coarse AF can mimic flutter; fine AF can look like a flat baseline. The irregular QRS rhythm is the reliable sign.","AF with a regular slow ventricular rate means complete heart block with a junctional or ventricular escape; think digoxin toxicity.","VF: no identifiable P, QRS or T. Confirm pulselessness, then defibrillate immediately."],
+ key:["Coarse AF can mimic flutter; fine AF can look like a flat baseline. The irregular QRS rhythm is the reliable sign.","AF with a regular slow ventricular rate means complete heart block with a junctional or ventricular escape; think digoxin toxicity.","VF: no identifiable P, QRS or T. Confirm pulselessness, then defibrillate immediately.","WPW: a short PR and a slurred delta wave from an accessory pathway (bundle of Kent) that pre-excites part of the ventricle. LGL describes a short PR without a delta wave."],
  ed:["New AF in the ED: look for the trigger (sepsis, alcohol, thyrotoxicosis, PE, ischemia, electrolytes).","A very fast, irregular, wide-complex rhythm with changing QRS shapes is AF with WPW. Avoid AV nodal blockers; use procainamide or cardioversion."],
  mod:["Early rhythm control (EAST-AFNET 4, NEJM 2020) improved outcomes in recently diagnosed AF, shifting practice away from rate control alone."],
  q:["An AF patient on digoxin now has a regular ventricular rate of 45. What happened?","Complete heart block with a junctional or ventricular escape rhythm, a sign of digoxin toxicity."]},
@@ -405,9 +418,9 @@ L.push(
  q:["Axis −60°, qR in aVL, rS in II, III, aVF, QRS 100 ms. Diagnosis?","Left anterior fascicular block."]},
 
 /* ---------- Unit 9: Miscellaneous (pp. 309–328) ---------- */
-{id:"misc1",u:9,t:"Pulmonary embolism",p:[[309,313]],ref:[344],
+{id:"misc1",u:9,t:"Three syndromes, COPD and pulmonary embolism",p:[[309,313]],ref:[344],
  bl:"Dubin’s PE picture is an acutely strained right heart: S1Q3T3, a new (often incomplete) RBBB, right axis, and T inversions across V1–V4. The most common finding by far is plain sinus tachycardia.",
- key:["S1Q3T3 is specific but insensitive; most PE patients don’t have it.","T inversion in both the inferior and the anterior (V1–V4) leads together is a strong RV strain clue.","AF or flutter of new onset can also be a PE presentation."],
+ key:["Dubin’s three can’t-miss syndromes: Brugada (RBBB pattern with coved ST elevation in V1–V3), Wellens (deep or biphasic T waves in V2–V3 from a critical LAD stenosis) and long QT.","COPD gives low voltage, right axis deviation and often MAT.","S1Q3T3 is specific but insensitive; most PE patients don’t have it.","T inversion in both the inferior and the anterior (V1–V4) leads together is a strong RV strain clue.","AF or flutter of new onset can also be a PE presentation."],
  ed:["The EKG doesn’t rule PE in or out. Use it to spot RV strain (which raises the stakes) and to exclude MI.","RV strain on EKG plus hypotension: think massive PE, and get bedside echo."],
  q:["What is the most common EKG finding in PE?","Sinus tachycardia (and often a normal EKG apart from that)."]},
 
@@ -424,7 +437,7 @@ L.push(
  mod:["Quinidine is rarely used now; read this section as the template for every QT-prolonging drug. Bazett’s correction (QT ÷ √RR) overcorrects at fast rates; Fridericia is often preferred."],
  q:["Name a rhythm that is almost pathognomonic of digoxin toxicity.","Bidirectional VT (also atrial tachycardia with block, and regularized AF)."]},
 
-{id:"misc4",u:9,t:"Artificial pacemakers",p:[[321,328]],ref:[344],
+{id:"misc4",u:9,t:"Artificial pacemakers and monitor strips",p:[[321,329]],ref:[344],
  bl:"A pacemaker spike followed by a captured complex is normal paced rhythm. Ventricular pacing (lead in the RV) gives a wide, LBBB-like QRS. Demand pacemakers fire only when the native rate falls below their set rate.",
  key:["Failure to capture: spikes without a following complex.","Failure to sense (undersensing): spikes firing inappropriately into native complexes.","Oversensing: the pacer is inhibited by noise and fails to fire when it should."],
  ed:["A magnet over most pacemakers forces asynchronous pacing at a fixed rate, useful when oversensing is suspected. Over an ICD, a magnet suspends shocks but not pacing.","Transcutaneous pacing: confirm electrical capture (wide QRS and T after each spike) and mechanical capture (a femoral pulse, not a carotid), then set the current about 10 mA above threshold."],
@@ -435,7 +448,20 @@ L.push(
  bl:"Put it together: rate, rhythm, axis, hypertrophy, infarction, every time and in that order. The reference sheets are the one-page version to keep on your phone.",
  key:["Rate: triplets for regular rhythms, 6-second count for slow or irregular ones.","Rhythm: P before every QRS, QRS after every P, PR, QRS width; then scan for early beats and pauses.","Axis: I and aVF, then the isoelectric limb lead; check for a fascicular block if the axis is off.","Hypertrophy: P waves for the atria, V1 and V5 for the ventricles.","Infarction: Q waves, ST changes and T changes, located by lead group and matched to an artery."],
  ed:["Add a final step for the ED: compare with the last EKG, and decide whether this one needs to change what you do in the next ten minutes."],
- q:["What are Dubin’s five steps, in order?","Rate, rhythm, axis, hypertrophy, infarction."]}
+ q:["What are Dubin’s five steps, in order?","Rate, rhythm, axis, hypertrophy, infarction."]},
+
+{id:"cases1",u:9,t:"Practice 12-leads: cases 1–4",p:[[347,355]],
+ bl:"Dubin ends with real 12-lead tracings, each with a short history. Read every one with the full five-step method and fill in the form before you turn the page to his interpretation.",
+ key:["Write something for every step, even ‘normal’. A skipped step is where findings get missed.","Use the history the way you would on shift: it sets your pretest probability, but it doesn’t replace reading the tracing.","The first two cases are the same patient decades apart. Compare them deliberately: what changed, and what would explain it?"],
+ ed:["On shift, the comparison EKG is often the single most useful piece of data. Ask for the old one every time.","Say your read out loud in the same order you write it. A consistent order is what makes reads fast and complete."],
+ q:["What are the five steps you should record for every 12-lead?","Rate, rhythm, axis, hypertrophy and infarction (coronary status), then a comment tying it to the patient."]},
+
+{id:"cases2",u:9,t:"Practice 12-leads: cases 5–8",p:[[356,363]],
+ bl:"Four more real tracings. These lean harder on infarction: localize any Q waves, ST shifts and T changes by lead group, then name the likely artery before you check Dubin’s answer.",
+ key:["Localize by contiguous lead groups: inferior (II, III, aVF), lateral (I, aVL, V5–V6), anterior and septal (V1–V4).","Q waves mean necrosis, ST elevation means acute injury, and T inversion means ischemia; an EKG can show all three at once.","Always check V1–V2 for the mirror image of posterior infarction: ST depression with tall R waves."],
+ ed:["Ongoing chest pain with a non-diagnostic EKG means repeat tracings every 15–30 minutes, not reassurance.","Read every EKG as if the next decision depends on it: activate the cath lab, admit, or discharge."],
+ mod:["Some of Dubin’s infarct labels (‘subendocardial’, ‘transmural’) have been replaced by STEMI, NSTEMI and occlusion MI terminology; Unit 10 covers the modern framing."],
+ q:["ST elevation in II, III and aVF with ST depression in aVL. Which territory, and which artery most often?","Inferior; usually the right coronary artery (sometimes the circumflex)."]}
 );
 L.push(
 /* ---------- Unit 10: Beyond Dubin, the ED EKG ---------- */
@@ -507,6 +533,14 @@ function items(l){return l.p.map(([a,b])=>'p'+a+'-'+b).concat((l.ref||[]).map(r=
 function itemPages(c){if(c[0]==='r')return[+c.slice(1),+c.slice(1)];const[a,b]=c.slice(1).split('-').map(Number);return[a,b]}
 function itemLabel(c){const[a,b]=itemPages(c);if(c[0]==='r')return{bk:'Quick reference · p. '+a,ch:REFT[a]||''};return{bk:'Dubin',ch:a===b?'p. '+a:'pp. '+a+'–'+b+' · '+(b-a+1)+' pages'}}
 function lessonPages(l){const o=[];for(const[a,b]of l.p)for(let i=a;i<=b;i++)o.push(i);return o}
+/* Answer boxes for a page. Question 1 keeps the plain page key, so answers typed before boxes were split stay in box 1. */
+function slots(p){
+  if(CASES.includes(p))return CASEF.map(([k,t])=>({k:p+'.'+k,t,w:1}));
+  const n=p>=1&&p<=QN.length?+QN[p-1]:0,o=[];
+  for(let i=1;i<=n;i++)o.push({k:i===1?String(p):p+'.'+i,t:String(i)});
+  if(!n&&ansOf(p).trim())o.push({k:String(p),t:'·'});
+  return o}
+function slotHTML(p,sl){return sl.map(x=>`<label class="aq${x.w?' w':''}"><span class="qn">${esc(x.t)}</span><textarea class="ans" rows="1" data-ans="${x.k}" data-pg="${p}" aria-label="Page ${p}, ${x.w?esc(x.t):'question '+x.t}">${esc(ansOf(x.k))}</textarea></label>`).join('')}
 
 /* ---------- state: completions, reading ticks, typed answers and notes, per device, optionally synced ---------- */
 const KEY='panacea.rhythm.v1';
@@ -620,11 +654,11 @@ function readList(l){
     return `<li class="${lk?'lk':'nl'}${rd?' rd':''}"><button class="rck" data-a="rtick" data-l="${l.id}" data-c="${c}" role="checkbox" aria-checked="${rd}" aria-label="Mark ${esc(x.bk)} ${esc(x.ch)} as read"><span>${CK}</span></button><button data-read="${c}" data-from="${l.id}"><span class="tx"><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span></span><span class="op">${lk?'Open':'Link PDF'}</span></button></li>`}).join('')}</ul>`}
 
 function answersSec(l,open){
-  const pg=lessonPages(l);if(!pg.length)return '';
-  const n=pg.filter(p=>ansOf(p).trim()).length;
-  return `<section class="sec"><details class="ansx"${open?' open':''}><summary>${IC.ans}In-text answers<span class="ct" id="anct">${n} of ${pg.length} pages</span>${CHEV}</summary>
-    <p class="note" style="margin:8px 0 0">Type your answers to Dubin’s questions page by page. The same boxes sit under each page in the reader.</p>
-    <div class="ansl">${pg.map(p=>`<div class="arow${ansOf(p).trim()?' has':''}"><span class="pl">p. ${p}</span><textarea class="ans" rows="1" data-ans="${p}" aria-label="Answers for page ${p}">${esc(ansOf(p))}</textarea></div>`).join('')}</div></details></section>`}
+  const pg=lessonPages(l).map(p=>[p,slots(p)]).filter(x=>x[1].length);if(!pg.length)return '';
+  const all=pg.flatMap(x=>x[1]),n=all.filter(x=>ansOf(x.k).trim()).length,cs=pg.some(x=>CASES.includes(x[0]));
+  return `<section class="sec"><details class="ansx"${open?' open':''}><summary>${IC.ans}${cs?'Your reads':'In-text answers'}<span class="ct" id="anct">${n} of ${all.length}</span>${CHEV}</summary>
+    <p class="note" style="margin:8px 0 0">${cs?'Fill in each step for every tracing before turning the page to Dubin’s interpretation.':'One box per question, numbered in the order they appear on the page.'} The same boxes sit under each page in the reader.</p>
+    <div class="ansl">${pg.map(([p,sl])=>`<div class="apg${sl.some(x=>ansOf(x.k).trim())?' has':''}"><span class="pl">p. ${p}</span><div class="aqs">${slotHTML(p,sl)}</div></div>`).join('')}</div></details></section>`}
 
 function lessonBody(l,isToday){
   const i=IDX[l.id],u=unitOf(l.u),d=S.done[l.id],done=isDone(l.id);
@@ -638,7 +672,7 @@ function lessonBody(l,isToday){
   <section class="sec"><h3>${IC.ed}On shift</h3>${list(l.ed)}</section>
   ${l.mod?`<section class="sec mod"><h3>${IC.mod}${l.p.length?'Since Dubin':'Current practice'}</h3>${list(l.mod)}</section>`:''}
   <section class="sec qz" id="qz"><h3>${IC.q}Check yourself</h3><p class="qq">${esc(l.q[0])}</p><button class="linkbtn" data-a="reveal">Show answer</button><div class="qa">${esc(l.q[1])}</div></section>
-  ${answersSec(l,lessonPages(l).some(p=>ansOf(p).trim()))}
+  ${answersSec(l,lessonPages(l).some(p=>slots(p).some(x=>ansOf(x.k).trim())))}
   <section class="sec"><h3>${IC.nt}My notes</h3><textarea data-note="${l.id}" placeholder="Takeaways, strips to look for on shift, questions">${esc((S.notes[l.id]||{}).t||'')}</textarea></section>
   <div class="complete">${done?`<p class="donemsg">Completed ${d.day===today()?'today':fmtDay(d.day)}</p><button class="btn block" data-a="undo" data-id="${l.id}">Mark as not done</button>`:`<button class="btn primary block" data-a="done" data-id="${l.id}">Complete lesson</button>`}</div>
   <div class="pager"><button data-go="#l/${prev?prev.id:''}" ${prev?'':'disabled'}><small>Previous</small><span>${prev?esc(prev.t):''}</span></button><button data-go="#l/${next?next.id:''}" ${next?'':'disabled'}><small>Next</small><span>${next?esc(next.t):''}</span></button></div>`;
@@ -744,7 +778,7 @@ async function renderReader(a,b){
   for(let p=a;p<=b;p++){const pp=p+off,w=document.createElement('div');w.className='pgw';
     const ok=pp>=1&&pp<=doc.numPages;
     w.innerHTML=`<div class="pg${ok?'':' miss'}" data-p="${pp}" style="aspect-ratio:${(1/ratio).toFixed(4)}"><span class="pn">p. ${p}</span>${ok?'':'Not in this PDF'}</div>
-      <label class="ab"><span>Answers · p. ${p}</span><textarea class="ans" rows="1" data-ans="${p}">${esc(ansOf(p))}</textarea></label>`;
+      ${(sl=>sl.length?`<div class="ab"><span class="abh">${CASES.includes(p)?'Your read':'Answers'} · p. ${p}</span><div class="aqs">${slotHTML(p,sl)}</div></div>`:'')(slots(p))}`;
     box.appendChild(w)}
   const end=document.createElement('div');end.className='btnrow';end.style.margin='14px 0 64px';end.innerHTML=`<button class="btn" data-go="#rback">Back to the lesson</button>`;box.appendChild(end);
   growAll();
@@ -799,8 +833,8 @@ app.addEventListener('input',e=>{
   if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderAll();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
   if(t.dataset.note){S.notes[t.dataset.note]={t:t.value,ts:Date.now()};save();return}
   if(t.dataset.ans){const p=t.dataset.ans;S.ans[p]={t:t.value,ts:Date.now()};save();grow(t);
-    const row=t.closest('.arow');if(row)row.classList.toggle('has',!!t.value.trim());
-    const ct=document.getElementById('anct');if(ct){const all=[...document.querySelectorAll('.ansl textarea')];ct.textContent=`${all.filter(x=>x.value.trim()).length} of ${all.length} pages`}}
+    const row=t.closest('.apg');if(row)row.classList.toggle('has',[...row.querySelectorAll('textarea')].some(x=>x.value.trim()));
+    const ct=document.getElementById('anct');if(ct){const all=[...document.querySelectorAll('.ansl textarea')];ct.textContent=`${all.filter(x=>x.value.trim()).length} of ${all.length}`}}
 });
 let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2600)}
 window.addEventListener('hashchange',()=>render());
