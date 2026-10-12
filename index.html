@@ -54,6 +54,28 @@ footer{color:var(--muted);font-size:.8rem}
   .name{font-size:1.05rem}
   .seg button{font-size:.88rem;flex-direction:column;gap:3px}
 }
+/* Sync section */
+.sync{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.sync h2{margin:0;font-size:1.05rem;display:flex;align-items:center;gap:8px}
+.sync h2 .dot{width:9px;height:9px;border-radius:50%;background:#9AA7B4}
+.sync h2 .dot.on{background:#1C7C4C}
+.sync p{margin:0;color:var(--muted);font-size:.92rem}
+.sync p b{color:var(--ink)}
+.sync ul.what{display:block;margin:0;padding-left:20px;list-style:disc;color:var(--muted);font-size:.92rem}
+.sync ul.what li{display:list-item}
+.sync .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sync label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sync input{font:inherit;font-size:1rem;text-transform:none;letter-spacing:0;color:var(--ink);background:#F7F9FA;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+.sync input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.sync .btns{display:flex;gap:8px;flex-wrap:wrap}
+.sync button{font:inherit;font-weight:700;font-size:.95rem;min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.sync button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.sync button:disabled{opacity:.6;cursor:default}
+.sync .err{color:#A3261B;font-size:.92rem;margin:0}
+.sync details{font-size:.92rem;color:var(--muted)}
+.sync details summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.sync ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+@media (max-width:599px){.sync .row{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -169,6 +191,8 @@ footer{color:var(--muted);font-size:.8rem}
   </ul>
 
 
+
+  <section class="sync" id="sync" aria-labelledby="sync-h"></section>
 </div>
 <script>
 /* Group buttons: show one group at a time. Arrow keys move between them. */
@@ -182,6 +206,51 @@ tabs.forEach(b=>b.addEventListener('click',()=>history.replaceState(null,'','#'+
 window.addEventListener('hashchange',fromHash);
 window.addEventListener('pageshow',fromHash);
 fromHash();
+
+/* Sync across devices: one private GitHub repo and token, saved in this browser and used by every app
+   (ICU Rounder and Spectrum patients; curricula progress, notes and PDFs). */
+const SYNC_KEY='icu-rounds-sync';
+const syncEl=document.getElementById('sync');
+let syncErr='',syncBusy=false,typed={token:'',repo:''};
+const escH=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function getSync(){try{const r=JSON.parse(localStorage.getItem(SYNC_KEY)||'null');return r&&r.token&&r.owner&&r.repo?r:null}catch(e){return null}}
+const ownerGuess=()=>location.hostname.endsWith('.github.io')?location.hostname.split('.')[0]:'your-username';
+function renderSync(){const SY=getSync();
+  const what=`<ul class="what"><li>ICU Rounder and Spectrum patient lists</li><li>Progress and notes in Primer, Core, Rhythm, Rhythm 2 and Systole</li><li>The PDFs you link in those curricula</li></ul>`;
+  syncEl.innerHTML=SY?`<h2 id="sync-h"><span class="dot on"></span>Sync is on</h2>
+    <p>This device syncs through your private repo <b>${escH(SY.owner)}/${escH(SY.repo)}</b>:</p>${what}
+    <p>Set up each phone or computer the same way, with the same repo and token.</p>
+    <div class="btns"><button type="button" data-s="off">Stop syncing on this device</button></div>`
+  :`<h2 id="sync-h"><span class="dot"></span>Sync across devices</h2>
+    <p>Turn on sync once per device to keep these the same on your phone, laptop and desktop:</p>${what}
+    <p>Everything is saved to a <b>private</b> GitHub repo with a token you paste once on each device.</p>
+    <div class="row"><label>GitHub token<input type="password" id="syncToken" placeholder="github_pat_…" autocomplete="off" value="${escH(typed.token)}"></label>
+    <label>Private repo<input type="text" id="syncRepo" value="${escH(typed.repo||ownerGuess()+'/panacea-data')}" autocapitalize="off" spellcheck="false"></label></div>
+    ${syncErr?`<p class="err">${escH(syncErr)}</p>`:''}
+    <div class="btns"><button type="button" class="primary" data-s="on"${syncBusy?' disabled':''}>${syncBusy?'Checking…':'Turn on sync'}</button></div>
+    <details><summary>How to set this up</summary><ol>
+    <li>On github.com, create a new <b>private</b> repository named <code>panacea-data</code>.</li>
+    <li>Profile picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
+    <li>Repository access: <em>Only select repositories</em> → <code>panacea-data</code>. Permissions → Contents: <em>Read and write</em>.</li>
+    <li>Paste the token here and tap <b>Turn on sync</b>. Repeat on each device.</li></ol></details>`}
+async function turnOn(){
+  const token=document.getElementById('syncToken').value.trim(),full=document.getElementById('syncRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/+$/,'');
+  typed={token,repo:full};const[owner,repo]=full.split('/');syncErr='';
+  if(!token||!owner||!repo){syncErr='Add your token and the repo as owner/name.';renderSync();return}
+  syncBusy=true;renderSync();
+  try{const r=await fetch(`https://api.github.com/repos/${owner}/${repo}`,{cache:'no-store',headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}});
+    if(!r.ok){syncErr=r.status===401?'GitHub didn’t accept that token.':r.status===404?`This token can’t see ${owner}/${repo}. Check the name and that the token includes that repo.`:'Couldn’t reach GitHub. Check your connection.'}
+    else{const info=await r.json();
+      if(!info.private)syncErr=`${owner}/${repo} is public. Make it private (its Settings → General → Danger Zone) so patient data and PDFs aren’t visible to anyone.`;
+      else if(info.permissions&&!info.permissions.push)syncErr='That token can read the repo but not save to it. Give it “Contents: Read and write”.';
+      else{localStorage.setItem(SYNC_KEY,JSON.stringify({token,owner:info.owner&&info.owner.login||owner,repo:info.name||repo}));typed={token:'',repo:''};try{localStorage.removeItem('panacea.spectrum.sync')}catch(e){}}}}
+  catch(e){syncErr='Couldn’t reach GitHub. Check your connection.'}
+  syncBusy=false;renderSync()}
+syncEl.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;
+  if(b.dataset.s==='on')turnOn();
+  else if(b.dataset.s==='off'){if(b.dataset.armed){localStorage.removeItem(SYNC_KEY);try{localStorage.removeItem('panacea.spectrum.sync')}catch(e){}renderSync()}else{b.dataset.armed='1';b.textContent='Tap again to stop. Data on this device stays.'}}});
+renderSync();
+if(location.hash==='#sync')syncEl.scrollIntoView();
 </script>
 </body>
 </html>

@@ -19,5 +19,5 @@ Clinical documentation and residency planning tools.
 | Nenya | `/nenya/` | EM residency rank list |
 
 Every app is a single static HTML file. No build step and no server.
-Nothing entered is sent anywhere. ICU Rounder, Sweep, Px, Consult, Spectrum, Primer, Rhythm, Rhythm 2, Systole, Core and Nenya save to the browser on the device you use.
+Nothing entered is sent anywhere. ICU Rounder, Sweep, Px, Consult, Spectrum, Primer, Rhythm, Rhythm 2, Systole, Core and Nenya save to the browser on the device you use. Sync across devices is set up once per device in the Sync section at the bottom of the PANACEA page.
 Do not enter names, MRNs, or dates of birth.

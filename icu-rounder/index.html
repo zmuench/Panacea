@@ -74,6 +74,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .chip.on{background:var(--accent-soft);border-color:var(--accent);font-weight:700}
 .chip.on::before{content:"✓ ";color:var(--accent)}
 .btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
 .btn.block{display:block;width:100%;margin:14px 0}
@@ -470,18 +471,10 @@ function census(){
   </div>
   <h2>Sync across devices</h2><div class="card">
   ${SY?`<p class="calc"><span id="syncline">${esc(syncLabel())}</span></p>
-  <p class="calc">Patients sync through your private repo <strong>${esc(SY.owner)}/${esc(SY.repo)}</strong>. Open ICU Rounder on another computer that’s set up the same way and the list follows you.</p>
-  <div class="row gap"><button class="btn" data-act="syncNow">Sync now</button><button class="btn" data-act="syncOff" data-confirm="Tap again to stop">Stop syncing on this device</button></div>`
-  :`<p class="calc">Keep the same patient list on your laptop and desktop. Patients are saved to a <strong>private</strong> GitHub repo using a token you paste once on each device.</p>
-  <div class="row"><label class="fld"><span>GitHub token</span><input type="password" id="syncToken" placeholder="github_pat_…" autocomplete="off"></label>
-  <label class="fld"><span>Private repo</span><input type="text" id="syncRepo" value="${esc((ghOwnerGuess()||'your-username')+'/panacea-data')}" autocapitalize="off" spellcheck="false"></label></div>
-  ${V.syncErr?`<p class="flag">${esc(V.syncErr)}</p>`:''}
-  <div class="row gap"><button class="btn primary" data-act="syncConnect">Turn on sync</button></div>
-  <details><summary>How to set this up</summary><ol class="calc steps">
-  <li>On github.com, create a new <strong>private</strong> repository named <code>panacea-data</code>.</li>
-  <li>Profile picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
-  <li>Repository access: <em>Only select repositories</em> → <code>panacea-data</code>. Permissions → Contents: <em>Read and write</em>.</li>
-  <li>Paste the token here and tap <strong>Turn on sync</strong>. Repeat on each computer.</li></ol></details>`}
+  <p class="calc">Patients sync through your private repo <strong>${esc(SY.owner)}/${esc(SY.repo)}</strong>.</p>
+  <div class="row gap"><button class="btn" data-act="syncNow">Sync now</button><a class="btn" href="../#sync">Sync settings</a></div>`
+  :`<p class="calc">Sync is off on this device. Turn it on once from the PANACEA home page to keep the same patient list on all your devices.</p>
+  <div class="row gap"><a class="btn primary" href="../#sync">Set up sync</a></div>`}
   </div>
   <p class="privacy">${SY?'Patients are saved in this browser and synced to your private GitHub repo.':'Everything entered here stays in this browser on this device.'} Identify patients by bed number only: no names, MRNs, or birth dates.</p>
   </main>`}

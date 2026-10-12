@@ -58,6 +58,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>.fld{flex:1;min-width:120px}
 .row>.fld.s{flex:.6;min-width:80px}
 .btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
 .linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.92rem;font-weight:700;padding:6px 2px;cursor:pointer;text-decoration:none}
@@ -491,7 +492,9 @@ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}ca
 /* ---------- sync across devices (optional: same private GitHub repo as ICU Rounder) ----------
    Each patient carries _mod (last-changed time); deleted patients leave a dated tombstone in S._deleted.
    Merging keeps the newer copy of each patient, so two devices can both edit without losing changes. */
-const SYNC_KEY='panacea.spectrum.sync',SYNC_FILE='spectrum.json',ROUNDER_SYNC='icu-rounds-sync';
+/* Sync uses the shared PANACEA setting (set up on the home page); an older Spectrum-only setting is moved over once. */
+const SYNC_KEY='icu-rounds-sync',SYNC_FILE='spectrum.json',ROUNDER_SYNC='icu-rounds-sync';
+try{const own=localStorage.getItem('panacea.spectrum.sync');if(own){if(!localStorage.getItem(SYNC_KEY))localStorage.setItem(SYNC_KEY,own);localStorage.removeItem('panacea.spectrum.sync')}}catch(e){}
 let SY=null;try{SY=JSON.parse(localStorage.getItem(SYNC_KEY)||'null')}catch(e){}
 let syncInfo={status:SY?'idle':'off',msg:'',at:null},syncErr='';
 let snap={},syncing=false,syncAgain=false,syncT=null,renderPending=false;
@@ -575,17 +578,10 @@ const ghOwnerGuess=()=>location.hostname.endsWith('.github.io')?location.hostnam
 function syncCard(){
   if(SY)return`<div class="card"><h3>Sync across devices</h3><p class="sub"><span id="syncline">${esc(syncLabel())}</span></p>
     <p class="cardsub">Patients sync through your private repo <b>${esc(SY.owner)}/${esc(SY.repo)}</b> (file <code>spectrum.json</code>).</p>
-    <div class="btnrow" style="margin-top:8px"><button class="btn sm" data-a="syncnow">Sync now</button><button class="btn sm" data-a="syncoff">Stop syncing on this device</button></div></div>`;
-  const rr=rounderSync();
+    <div class="btnrow" style="margin-top:8px"><button class="btn sm" data-a="syncnow">Sync now</button><a class="btn sm" href="../#sync">Sync settings</a></div></div>`;
   return`<div class="card"><h3>Sync across devices</h3>
-    ${rr?`<p class="sub">ICU Rounder already syncs on this device through <b>${esc(rr.owner)}/${esc(rr.repo)}</b>. Spectrum can use the same repo and token.</p>
-      <div class="btnrow" style="margin-top:8px"><button class="btn primary" data-a="syncrounder">Use the same sync</button></div>
-      <details class="dd"><summary>Use a different repo or token</summary>`:`<p class="sub">Keep the same patients on your laptop, desktop, and phone. They’re saved to a <b>private</b> GitHub repo with a token you paste once per device. If ICU Rounder already syncs, use the same repo and token.</p>`}
-    <div class="row"><label class="fld"><span>GitHub token</span><input type="password" id="syncToken" placeholder="github_pat_…" autocomplete="off"></label>
-    <label class="fld"><span>Private repo</span><input type="text" id="syncRepo" value="${esc((ghOwnerGuess()||'your-username')+'/panacea-data')}" autocapitalize="off" spellcheck="false"></label></div>
-    <div class="btnrow"><button class="btn${rr?'':' primary'}" data-a="syncconnect">Turn on sync</button></div>
-    ${rr?'</details>':''}
-    ${syncErr?`<p class="flag warn">${esc(syncErr)}</p>`:''}</div>`}
+    <p class="sub">Sync is off on this device. Turn it on once from the PANACEA home page to keep the same patients on all your devices.</p>
+    <div class="btnrow" style="margin-top:8px"><a class="btn primary" href="../#sync">Set up sync</a></div></div>`}
 
 function newPt(){return{id:uid(),bed:'',age:'',sex:'',team:'',pmh:'',created:today(),off:false,
   reason:'',q:'',story:'',pert:{},exp:{},expD:'',imm:[],prior:[],recent:'',allergy:'',devices:'',vacc:'',concern:'',inclMicro:true,

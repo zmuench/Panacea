@@ -380,7 +380,7 @@ function streak(){
   for(;;){const k=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());if(days.has(k)){n++;d.setDate(d.getDate()-1)}else break}
   return n}
 
-/* ---------- optional sync: reuses ICU Rounder's private GitHub repo setup on this device ---------- */
+/* ---------- optional sync: uses the shared PANACEA sync setting (set up on the home page) ---------- */
 const SYNC_FILE='rhythm2.json';
 let SY=null;try{SY=JSON.parse(localStorage.getItem('icu-rounds-sync')||'null')}catch(e){}
 let syncState=SY?'idle':'off',syncing=false,syncAgain=false,syncT=null;
@@ -498,7 +498,7 @@ function renderAll(){
       h+=`<button class="lrow${d?' d':''}${cur===l?' today':''}" data-go="#l/${l.id}"><span class="dn">Day ${IDX[l.id]+1}</span><span class="lt2">${esc(l.t)}<small>${d?`Done ${fmtDay(S.done[l.id].day)}`:cur===l?'Up next':pg?'pp. '+pg:'Beyond the book'}</small></span><span class="bx">${CK}</span></button>`}
     h+=`</details>`}
   h+=`<div class="btnrow" style="margin-top:6px"><button class="btn block" data-go="#books">Your PDF · ${BM.D?'linked on this device':'not linked yet'}</button></div>`;
-  h+=`<div class="foot">Readings point to printed page numbers in ${esc(BOOKS.D.full)}. Lessons are summaries for learning, not orders for a specific patient.${SY?'':' Progress and notes are saved on this device; if ICU Rounder sync is turned on here, Rhythm 2 syncs through the same private repo.'}</div>`;
+  h+=`<div class="foot">Readings point to printed page numbers in ${esc(BOOKS.D.full)}. Lessons are summaries for learning, not orders for a specific patient.${SY?'':' Progress and notes are saved on this device; turn on sync on the PANACEA home page to use them on your other devices too.'}</div>`;
   app.innerHTML=h;
 }
 
@@ -547,7 +547,7 @@ async function linkBook(code,file){linking=code;render(true);
 async function unlinkBook(code){cloudRemove(code);try{await idb('readwrite',st=>st.delete(code))}catch(e){}delete BM[code];delete DOCS[code];saveBM();render(true)}
 
 /* ---------- PDFs across devices ----------
-   With sync turned on (the private repo set up in ICU Rounder), a linked PDF is also saved to that repo in
+   With sync turned on (the private repo set up on the PANACEA home page), a linked PDF is also saved to that repo in
    10 MB parts under pdfs/rhythm2/<book>/. Other devices see it there and download it the first time a reading
    is opened, then keep it in this browser. The repo must be private: nothing is uploaded to a public repo. */
 const CLOUD_APP='rhythm2',CLOUD_CODES=Object.keys(BOOKS),CLOUD_CHUNK=10*1048576;
@@ -608,7 +608,7 @@ function cloudNote(k){const c=CL[k]||{},m=BM[k];
   if(c.down!=null)return `<div class="st">Downloading from sync… ${c.down}%</div>`;
   if(c.err)return `<div class="st bad">${esc(c.err)}</div>${m&&!m.cloud&&SY?`<button class="linkbtn" data-a="cloudup" data-b="${k}">Try again</button>`:''}`;
   if(!m)return '';
-  if(!SY)return `<div class="st">On this device only. Turn on sync in ICU Rounder to share it with your other devices.</div>`;
+  if(!SY)return `<div class="st">On this device only. Turn on sync on the PANACEA home page to share it with your other devices.</div>`;
   if(m.cloud)return `<div class="st ok">Synced to all your devices${m.remote?' · downloads here the first time you open a reading':''}</div>`;
   return `<div class="st">On this device only.</div><button class="linkbtn" data-a="cloudup" data-b="${k}">Save to sync</button>`}
 if(SY)cloudBoot();
@@ -616,7 +616,7 @@ const mb=n=>(n/1048576).toFixed(n>10485760?0:1)+' MB';
 function renderBooks(){
   document.title='Your PDF · Rhythm 2';header('Your PDF','#bback');
   let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of Chizner once. Every reading then opens straight to its pages.</p>
-   <p class="note" style="margin-top:6px">With sync turned on (set up in ICU Rounder), the file is also saved to your private sync repo, and your other devices download it automatically the first time you open a reading. Without sync, it stays on this device. Remove takes it off every device.</p></div><div class="card">`;
+   <p class="note" style="margin-top:6px">With sync turned on (set up on the PANACEA home page), the file is also saved to your private sync repo, and your other devices download it automatically the first time you open a reading. Without sync, it stays on this device. Remove takes it off every device.</p></div><div class="card">`;
   for(const[k,b]of Object.entries(BOOKS)){const m=BM[k];
     const st=linking===k?'<span class="st">Saving…</span>':m?`<span class="st ok">Linked · ${esc(m.name)} · ${m.pages?m.pages+' pages · ':''}${mb(m.size)}</span>`:'<span class="st">Not linked</span>';
     h+=`<div class="bkrow"><div class="tx"><div class="nm">The book</div><div class="st" style="margin-bottom:2px">${esc(b.full)}</div>${st}${cloudNote(k)}</div>
