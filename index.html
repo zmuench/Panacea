@@ -11,8 +11,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: two columns (six left, five right), filled top to bottom (ED tools and Core left; ICU tools, curricula and Nenya right).
-   Narrow phones keep two columns but switch to compact stacked cards.
+/* Layout: three group buttons (clinical tools, curricula, residency) switch which apps show; the page always opens on clinical tools.
+   Apps sit in two columns; narrow phones switch to compact stacked cards.
    Palette and type match Hx, Dispo, ICU Rounder, Sweep and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
 :root{
   --bg:#EBEFF2; --surface:#FFFFFF; --ink:#14233A; --muted:#5A6A7E; --line:#D2DAE1;
@@ -26,7 +26,13 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:36px 48px;display:flex;flex-direction:column;gap:22px}
 header h1{font-weight:700;font-size:1.7rem;letter-spacing:-.01em;margin:0;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
-ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(6,auto);grid-auto-flow:column;gap:10px}
+ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ul[hidden]{display:none}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;background:#DDE3E9;border-radius:14px}
+.seg button{appearance:none;border:0;background:none;font:inherit;font-weight:700;font-size:.95rem;color:var(--muted);min-height:44px;padding:8px 6px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;line-height:1.15;text-align:center}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,35,58,.12)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg .ct{font-size:.75rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:1px 7px}
 li{display:flex}li>a.app{flex:1}
 a.app{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;min-height:76px;transition:border-color .15s,transform .15s}
 a.app:hover{border-color:var(--accent)}
@@ -46,6 +52,7 @@ footer{color:var(--muted);font-size:.8rem}
   .desc{display:none}
   .go{position:absolute;top:14px;right:10px}
   .name{font-size:1.05rem}
+  .seg button{font-size:.88rem;flex-direction:column;gap:3px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -58,7 +65,13 @@ footer{color:var(--muted);font-size:.8rem}
     <p>Shift tools in one place.</p>
   </header>
 
-  <ul>
+  <nav class="seg" role="tablist" aria-label="App groups">
+    <button type="button" role="tab" id="tab-clinical" aria-controls="g-clinical" aria-selected="true" data-g="clinical">Clinical tools<span class="ct">7</span></button>
+    <button type="button" role="tab" id="tab-curricula" aria-controls="g-curricula" aria-selected="false" data-g="curricula">Curricula<span class="ct">4</span></button>
+    <button type="button" role="tab" id="tab-residency" aria-controls="g-residency" aria-selected="false" data-g="residency">Residency<span class="ct">1</span></button>
+  </nav>
+
+  <ul class="grp" id="g-clinical" role="tabpanel" aria-labelledby="tab-clinical">
     <li><a class="app" href="hx/">
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M8 8.5h8M8 12h5"/></svg></span>
       <span class="txt"><span class="name">Hx</span><span class="kind">HPI builder</span>
@@ -94,13 +107,6 @@ footer{color:var(--muted);font-size:.8rem}
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
 
-    <li><a class="app" href="core/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>
-      <span class="txt"><span class="name">Core</span><span class="kind">EM curriculum</span>
-        <p class="desc">All of Tintinalli’s, one lesson a day: chapters, workup, treatment and dispo.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
     <li><a class="app" href="icu-rounder/">
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8 13h2l1.5-3 2 5 1.5-2h1"/></svg></span>
       <span class="txt"><span class="name">ICU Rounder</span><span class="kind">Daily rounds</span>
@@ -114,11 +120,20 @@ footer{color:var(--muted);font-size:.8rem}
         <p class="desc">A morning pass through every system, with open items flagged for rounds.</p></span>
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
+  </ul>
 
+  <ul class="grp" id="g-curricula" role="tabpanel" aria-labelledby="tab-curricula" hidden>
     <li><a class="app" href="primer/">
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/></svg></span>
       <span class="txt"><span class="name">Primer</span><span class="kind">ICU curriculum</span>
         <p class="desc">One lesson a day: readings, what to order, the evidence, and a self-check.</p></span>
+      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a></li>
+
+    <li><a class="app" href="core/">
+      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>
+      <span class="txt"><span class="name">Core</span><span class="kind">EM curriculum</span>
+        <p class="desc">All of Tintinalli’s, one lesson a day: chapters, workup, treatment and dispo.</p></span>
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
 
@@ -135,7 +150,9 @@ footer{color:var(--muted);font-size:.8rem}
         <p class="desc">Chizner’s ECG Interpretation Made Ridiculously Simple, one lesson a day, ending with 55 practice ECGs.</p></span>
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
+  </ul>
 
+  <ul class="grp" id="g-residency" role="tabpanel" aria-labelledby="tab-residency" hidden>
     <li><a class="app" href="nenya/">
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="7" ry="3"/><path d="M7 11.5c1.5 1 3.2 1.5 5 1.5s3.5-.5 5-1.5"/><path d="M12 13v6M9 20h6"/></svg></span>
       <span class="txt"><span class="name">Nenya</span><span class="kind">EM rank list</span>
@@ -144,6 +161,15 @@ footer{color:var(--muted);font-size:.8rem}
     </a></li>
   </ul>
 
+
 </div>
+<script>
+/* Group buttons: show one group at a time. Arrow keys move between them. */
+const tabs=[...document.querySelectorAll('.seg button')];
+function show(t){tabs.forEach(b=>{const on=b===t;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;document.getElementById('g-'+b.dataset.g).hidden=!on})}
+tabs.forEach((b,i)=>{b.tabIndex=i?-1:0;b.addEventListener('click',()=>show(b));
+  b.addEventListener('keydown',e=>{const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;const n=tabs[(i+d+tabs.length)%tabs.length];n.focus();show(n)})});
+window.addEventListener('pageshow',e=>{if(e.persisted)show(tabs[0])});
+</script>
 </body>
 </html>
