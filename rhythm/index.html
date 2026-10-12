@@ -162,26 +162,7 @@ details.unit[open]>summary{border-bottom:1px solid var(--line)}
 .noread{font-size:.92rem;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:0 0 14px}
 .sec.mod{border-color:#E7D9B8;background:#FFFBF2}
 .sec.mod h3 svg{stroke:#8A5A00}
-details.ansx>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;margin:0;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
-details.ansx>summary::-webkit-details-marker{display:none}
-details.ansx>summary svg{width:17px;height:17px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-details.ansx>summary .ct{margin-left:auto;text-transform:none;letter-spacing:0;font-size:.85rem}
-details.ansx>summary .chev{width:15px;height:15px;stroke:var(--muted);transition:transform .15s}
-details.ansx[open]>summary .chev{transform:rotate(90deg)}
-.ansl{margin-top:10px;display:flex;flex-direction:column;gap:8px}
-.apg{display:flex;gap:10px;align-items:flex-start;padding-top:8px;border-top:1px solid var(--line)}
-.apg:first-child{border-top:0;padding-top:0}
-.apg .pl{flex:none;width:3.4em;font-size:.82rem;font-weight:700;color:var(--muted);padding-top:11px}
-.apg.has .pl{color:var(--ok)}
-.aqs{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-.aq{display:flex;gap:8px;align-items:flex-start}
-.aq .qn{flex:none;width:1.9em;height:1.9em;margin-top:8px;border-radius:50%;display:grid;place-items:center;font-size:.78rem;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--line)}
-.aq.w .qn{width:6.6em;height:auto;margin-top:11px;border:0;background:none;border-radius:0;place-items:start;font-size:.8rem}
-.aq textarea{flex:1;min-width:0}
-textarea.ans{min-height:44px;padding:9px 11px}
 .pgw{width:100%;display:flex;flex-direction:column;gap:8px}
-.pgw .ab{display:flex;flex-direction:column;gap:4px}
-.pgw .ab .abh{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pgw .miss{display:grid;place-items:center;color:var(--muted);font-size:.9rem;aspect-ratio:.77;background:var(--paper)}
 .cal{width:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
 .cal .tx{flex:1;min-width:12em}
@@ -199,11 +180,6 @@ const BOOKS={
  R:{short:"Reference sheets",full:"Dubin’s Personal Quick Reference Sheets (pp. 333–346)",first:333,last:346}
 };
 const REFT={333:"Title page",334:"Dubin’s method",335:"Rate",336:"Rhythm: irregular rhythms",337:"Rhythm: escape and premature beats",338:"Rhythm: tachyarrhythmias",339:"Rhythm: heart blocks",340:"Axis",341:"Hypertrophy",342:"Infarction",343:"Infarct location and vessels",344:"Miscellaneous: PE and pacemakers",345:"Electrolytes and drugs",346:"Weight conversion and monitoring leads"};
-/* How many in-text questions (programmed frames) each printed page has, pp. 1–328, counted page by page from the book. */
-const QN="2233323323333323232312234231233223322332233200233331321244222221232233223221232323332243023233332221323230123233033103432222323222232220422121123333321022222111303012331023220223021232333221212323322320233232332232333233334413331333231233323003333332222223230322231312231223220123332210022233222334232302223003223322132223322232";
-/* The practice 12-leads (pp. 347–363): each tracing page gets the interpretation form Dubin uses. */
-const CASES=[348,350,352,354,356,358,360,362];
-const CASEF=[["rate","Rate"],["rhythm","Rhythm"],["axis","Axis"],["hyp","Hypertrophy"],["inf","Infarction"],["com","Comment"]];
 const UNITS=[
  {n:1,t:"Foundations"},
  {n:2,t:"Rate"},
@@ -451,8 +427,8 @@ L.push(
  q:["What are Dubin’s five steps, in order?","Rate, rhythm, axis, hypertrophy, infarction."]},
 
 {id:"cases1",u:9,t:"Practice 12-leads: cases 1–4",p:[[347,355]],
- bl:"Dubin ends with real 12-lead tracings, each with a short history. Read every one with the full five-step method and fill in the form before you turn the page to his interpretation.",
- key:["Write something for every step, even ‘normal’. A skipped step is where findings get missed.","Use the history the way you would on shift: it sets your pretest probability, but it doesn’t replace reading the tracing.","The first two cases are the same patient decades apart. Compare them deliberately: what changed, and what would explain it?"],
+ bl:"Dubin ends with real 12-lead tracings, each with a short history. Read every one with the full five-step method and commit to your read before you turn the page to his interpretation.",
+ key:["Say something for every step, even ‘normal’. A skipped step is where findings get missed.","Use the history the way you would on shift: it sets your pretest probability, but it doesn’t replace reading the tracing.","The first two cases are the same patient decades apart. Compare them deliberately: what changed, and what would explain it?"],
  ed:["On shift, the comparison EKG is often the single most useful piece of data. Ask for the old one every time.","Say your read out loud in the same order you write it. A consistent order is what makes reads fast and complete."],
  q:["What are the five steps you should record for every 12-lead?","Rate, rhythm, axis, hypertrophy and infarction (coronary status), then a comment tying it to the patient."]},
 
@@ -533,16 +509,8 @@ function items(l){return l.p.map(([a,b])=>'p'+a+'-'+b).concat((l.ref||[]).map(r=
 function itemPages(c){if(c[0]==='r')return[+c.slice(1),+c.slice(1)];const[a,b]=c.slice(1).split('-').map(Number);return[a,b]}
 function itemLabel(c){const[a,b]=itemPages(c);if(c[0]==='r')return{bk:'Quick reference · p. '+a,ch:REFT[a]||''};return{bk:'Dubin',ch:a===b?'p. '+a:'pp. '+a+'–'+b+' · '+(b-a+1)+' pages'}}
 function lessonPages(l){const o=[];for(const[a,b]of l.p)for(let i=a;i<=b;i++)o.push(i);return o}
-/* Answer boxes for a page. Question 1 keeps the plain page key, so answers typed before boxes were split stay in box 1. */
-function slots(p){
-  if(CASES.includes(p))return CASEF.map(([k,t])=>({k:p+'.'+k,t,w:1}));
-  const n=p>=1&&p<=QN.length?+QN[p-1]:0,o=[];
-  for(let i=1;i<=n;i++)o.push({k:i===1?String(p):p+'.'+i,t:String(i)});
-  if(!n&&ansOf(p).trim())o.push({k:String(p),t:'·'});
-  return o}
-function slotHTML(p,sl){return sl.map(x=>`<label class="aq${x.w?' w':''}"><span class="qn">${esc(x.t)}</span><textarea class="ans" rows="1" data-ans="${x.k}" data-pg="${p}" aria-label="Page ${p}, ${x.w?esc(x.t):'question '+x.t}">${esc(ansOf(x.k))}</textarea></label>`).join('')}
 
-/* ---------- state: completions, reading ticks, typed answers and notes, per device, optionally synced ---------- */
+/* ---------- state: completions, reading ticks and notes (earlier typed answers are kept in S.ans), per device, optionally synced ---------- */
 const KEY='panacea.rhythm.v1';
 let S={done:{},notes:{},read:{},ans:{}};
 try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.done=r.done||{};S.notes=r.notes||{};S.read=r.read||{};S.ans=r.ans||{}}}catch(e){}
@@ -556,7 +524,6 @@ const fmtDay=s=>new Date(s+'T12:00').toLocaleDateString(undefined,{month:'short'
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isDone=id=>!!(S.done[id]&&S.done[id].on);
 const isRead=(l,c)=>!!(S.read[l+':'+c]&&S.read[l+':'+c].on);
-const ansOf=p=>(S.ans[p]&&S.ans[p].t)||'';
 const IDX=Object.fromEntries(L.map((l,i)=>[l.id,i]));
 const unitOf=u=>UNITS.find(x=>x.n===u);
 function current(){return L.find(l=>!isDone(l.id))||null}
@@ -653,13 +620,6 @@ function readList(l){
   <ul class="reads">${its.map(c=>{const x=itemLabel(c),lk=!!srcFor(itemPages(c)[0]),rd=isRead(l.id,c);
     return `<li class="${lk?'lk':'nl'}${rd?' rd':''}"><button class="rck" data-a="rtick" data-l="${l.id}" data-c="${c}" role="checkbox" aria-checked="${rd}" aria-label="Mark ${esc(x.bk)} ${esc(x.ch)} as read"><span>${CK}</span></button><button data-read="${c}" data-from="${l.id}"><span class="tx"><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span></span><span class="op">${lk?'Open':'Link PDF'}</span></button></li>`}).join('')}</ul>`}
 
-function answersSec(l,open){
-  const pg=lessonPages(l).map(p=>[p,slots(p)]).filter(x=>x[1].length);if(!pg.length)return '';
-  const all=pg.flatMap(x=>x[1]),n=all.filter(x=>ansOf(x.k).trim()).length,cs=pg.some(x=>CASES.includes(x[0]));
-  return `<section class="sec"><details class="ansx"${open?' open':''}><summary>${IC.ans}${cs?'Your reads':'In-text answers'}<span class="ct" id="anct">${n} of ${all.length}</span>${CHEV}</summary>
-    <p class="note" style="margin:8px 0 0">${cs?'Fill in each step for every tracing before turning the page to Dubin’s interpretation.':'One box per question, numbered in the order they appear on the page.'} The same boxes sit under each page in the reader.</p>
-    <div class="ansl">${pg.map(([p,sl])=>`<div class="apg${sl.some(x=>ansOf(x.k).trim())?' has':''}"><span class="pl">p. ${p}</span><div class="aqs">${slotHTML(p,sl)}</div></div>`).join('')}</div></details></section>`}
-
 function lessonBody(l,isToday){
   const i=IDX[l.id],u=unitOf(l.u),d=S.done[l.id],done=isDone(l.id);
   const prev=L[i-1],next=L[i+1];
@@ -672,12 +632,11 @@ function lessonBody(l,isToday){
   <section class="sec"><h3>${IC.ed}On shift</h3>${list(l.ed)}</section>
   ${l.mod?`<section class="sec mod"><h3>${IC.mod}${l.p.length?'Since Dubin':'Current practice'}</h3>${list(l.mod)}</section>`:''}
   <section class="sec qz" id="qz"><h3>${IC.q}Check yourself</h3><p class="qq">${esc(l.q[0])}</p><button class="linkbtn" data-a="reveal">Show answer</button><div class="qa">${esc(l.q[1])}</div></section>
-  ${answersSec(l,lessonPages(l).some(p=>slots(p).some(x=>ansOf(x.k).trim())))}
   <section class="sec"><h3>${IC.nt}My notes</h3><textarea data-note="${l.id}" placeholder="Takeaways, strips to look for on shift, questions">${esc((S.notes[l.id]||{}).t||'')}</textarea></section>
   <div class="complete">${done?`<p class="donemsg">Completed ${d.day===today()?'today':fmtDay(d.day)}</p><button class="btn block" data-a="undo" data-id="${l.id}">Mark as not done</button>`:`<button class="btn primary block" data-a="done" data-id="${l.id}">Complete lesson</button>`}</div>
   <div class="pager"><button data-go="#l/${prev?prev.id:''}" ${prev?'':'disabled'}><small>Previous</small><span>${prev?esc(prev.t):''}</span></button><button data-go="#l/${next?next.id:''}" ${next?'':'disabled'}><small>Next</small><span>${next?esc(next.t):''}</span></button></div>`;
 }
-function renderLesson(l){document.title=l.t+' · Rhythm';header('Day '+(IDX[l.id]+1),'#');app.innerHTML=lessonBody(l,current()===l&&!doneToday().length);growAll()}
+function renderLesson(l){document.title=l.t+' · Rhythm';header('Day '+(IDX[l.id]+1),'#');app.innerHTML=lessonBody(l,current()===l&&!doneToday().length)}
 
 function renderAll(){
   document.title='All lessons · Rhythm';header('All lessons','#today');
@@ -693,7 +652,7 @@ function renderAll(){
       h+=`<button class="lrow${d?' d':''}${cur===l?' today':''}" data-go="#l/${l.id}"><span class="dn">Day ${IDX[l.id]+1}</span><span class="lt2">${esc(l.t)}<small>${d?`Done ${fmtDay(S.done[l.id].day)}`:cur===l?'Up next':pg?'pp. '+pg:'Beyond the book'}</small></span><span class="bx">${CK}</span></button>`}
     h+=`</details>`}
   h+=`<div class="btnrow" style="margin-top:6px"><button class="btn block" data-go="#books">Your PDF · ${BM.D?'linked on this device':BM.R?'reference sheets linked':'not linked yet'}</button></div>`;
-  h+=`<div class="foot">Readings point to printed page numbers in ${esc(BOOKS.D.full)}. Lessons are summaries for learning, not orders for a specific patient.${SY?'':' Progress, answers and notes are saved on this device; if ICU Rounder sync is turned on here, Rhythm syncs through the same private repo.'}</div>`;
+  h+=`<div class="foot">Readings point to printed page numbers in ${esc(BOOKS.D.full)}. Lessons are summaries for learning, not orders for a specific patient.${SY?'':' Progress and notes are saved on this device; if ICU Rounder sync is turned on here, Rhythm syncs through the same private repo.'}</div>`;
   app.innerHTML=h;
 }
 
@@ -745,8 +704,8 @@ async function unlinkBook(code){try{await idb('readwrite',st=>st.delete(code))}c
 const mb=n=>(n/1048576).toFixed(n>10485760?0:1)+' MB';
 function renderBooks(){
   document.title='Your PDF · Rhythm';header('Your PDF','#bback');
-  let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of Dubin once on this device. Every reading then opens straight to its pages, with an answer box under each page.</p>
-   <p class="note" style="margin-top:6px">Files stay in this browser only. They aren’t uploaded, synced, or added to PANACEA, so link them again on each phone or computer. Your answers and progress do sync.</p></div><div class="card">`;
+  let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of Dubin once on this device. Every reading then opens straight to its pages.</p>
+   <p class="note" style="margin-top:6px">Files stay in this browser only. They aren’t uploaded, synced, or added to PANACEA, so link them again on each phone or computer. Your progress and notes do sync.</p></div><div class="card">`;
   for(const[k,b]of Object.entries(BOOKS)){const m=BM[k];
     const st=linking===k?'<span class="st">Saving…</span>':m?`<span class="st ok">Linked · ${esc(m.name)} · ${m.pages?m.pages+' pages · ':''}${mb(m.size)}</span>`:'<span class="st">Not linked</span>';
     h+=`<div class="bkrow"><div class="tx"><div class="nm">${esc(k==='D'?'The book':b.short)}</div><div class="st" style="margin-bottom:2px">${esc(b.full)}${k==='R'?' · only needed if you don’t link the whole book':''}</div>${st}</div>
@@ -777,11 +736,9 @@ async function renderReader(a,b){
   box.appendChild(cal);
   for(let p=a;p<=b;p++){const pp=p+off,w=document.createElement('div');w.className='pgw';
     const ok=pp>=1&&pp<=doc.numPages;
-    w.innerHTML=`<div class="pg${ok?'':' miss'}" data-p="${pp}" style="aspect-ratio:${(1/ratio).toFixed(4)}"><span class="pn">p. ${p}</span>${ok?'':'Not in this PDF'}</div>
-      ${(sl=>sl.length?`<div class="ab"><span class="abh">${CASES.includes(p)?'Your read':'Answers'} · p. ${p}</span><div class="aqs">${slotHTML(p,sl)}</div></div>`:'')(slots(p))}`;
+    w.innerHTML=`<div class="pg${ok?'':' miss'}" data-p="${pp}" style="aspect-ratio:${(1/ratio).toFixed(4)}"><span class="pn">p. ${p}</span>${ok?'':'Not in this PDF'}</div>`;
     box.appendChild(w)}
   const end=document.createElement('div');end.className='btnrow';end.style.margin='14px 0 64px';end.innerHTML=`<button class="btn" data-go="#rback">Back to the lesson</button>`;box.appendChild(end);
-  growAll();
   const chip=document.createElement('div');chip.className='pgchip';chip.id='pgchip';chip.textContent=a===b?'p. '+a:`p. ${a} · 1 of ${b-a+1}`;document.body.appendChild(chip);
   const rendered=new Map();
   async function draw(el){const p=+el.dataset.p;if(rendered.has(p)||me.dead||el.classList.contains('miss'))return;rendered.set(p,'busy');
@@ -796,8 +753,6 @@ async function renderReader(a,b){
 }
 
 /* ---------- events ---------- */
-function grow(t){t.style.height='auto';t.style.height=Math.max(44,t.scrollHeight+2)+'px'}
-function growAll(){document.querySelectorAll('textarea.ans').forEach(grow)}
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');
   if(g){const to=g.dataset.go;if(to==='#l/')return;
@@ -827,14 +782,10 @@ document.addEventListener('click',e=>{
   else if(A==='undo'){S.done[b.dataset.id]={on:false,day:'',ts:Date.now()};save();render(true)}
 });
 app.addEventListener('change',e=>{const t=e.target;if(t.dataset.file&&t.files&&t.files[0])linkBook(t.dataset.file,t.files[0])});
-app.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('ansx')&&e.target.open)growAll()},true);
 app.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderAll();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
   if(t.dataset.note){S.notes[t.dataset.note]={t:t.value,ts:Date.now()};save();return}
-  if(t.dataset.ans){const p=t.dataset.ans;S.ans[p]={t:t.value,ts:Date.now()};save();grow(t);
-    const row=t.closest('.apg');if(row)row.classList.toggle('has',[...row.querySelectorAll('textarea')].some(x=>x.value.trim()));
-    const ct=document.getElementById('anct');if(ct){const all=[...document.querySelectorAll('.ansl textarea')];ct.textContent=`${all.filter(x=>x.value.trim()).length} of ${all.length}`}}
 });
 let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2600)}
 window.addEventListener('hashchange',()=>render());
