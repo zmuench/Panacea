@@ -1080,7 +1080,7 @@ function softRender(){const ae=document.activeElement;if(ae&&ae.tagName==='TEXTA
 if(SY){syncNow();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncNow()});window.addEventListener('online',syncNow)}
 
 /* ---------- rendering ---------- */
-const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const HOME=`<a class="homebtn" href="../#curricula" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
 const CK=`<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 const IC={
  ord:`<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>`,
@@ -1258,9 +1258,9 @@ app.addEventListener('input',e=>{
 });
 let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2200)}
 window.addEventListener('hashchange',()=>render());
-/* Always open on the main page, not the last screen. */
-if(location.hash)history.replaceState(null,'',location.pathname+location.search);
-window.addEventListener('pageshow',e=>{if(e.persisted&&location.hash){history.replaceState(null,'',location.pathname+location.search);render()}});
+/* Always open on All lessons, not the last screen. */
+if(location.hash!=='#all')history.replaceState(null,'',location.pathname+location.search+'#all');
+window.addEventListener('pageshow',e=>{if(e.persisted&&location.hash!=='#all'){history.replaceState(null,'',location.pathname+location.search+'#all');render()}});
 render();
 </script>
 </body>

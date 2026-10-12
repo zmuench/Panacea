@@ -448,7 +448,7 @@ function newDraft(p){
   return d}
 
 /* ---------- screens ---------- */
-function topbar(title,back,right=''){return `<header class="top"><div class="wrap hd">${back?`<button class="back" data-act="go" data-to="${back}" aria-label="Back">‹</button>`:`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`}<h1>${esc(title)}</h1>${right}</div></header>`}
+function topbar(title,back,right=''){return `<header class="top"><div class="wrap hd">${back?`<button class="back" data-act="go" data-to="${back}" aria-label="Back">‹</button>`:`<a class="homebtn" href="../#clinical" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`}<h1>${esc(title)}</h1>${right}</div></header>`}
 
 function census(){
   const act=S.patients.filter(p=>p.status!=='discharged').sort((a,b)=>String(a.bed).localeCompare(String(b.bed),undefined,{numeric:true}));

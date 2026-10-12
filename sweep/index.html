@@ -461,7 +461,7 @@ function stats(p,d=DATE){const x=day(p,d)||{m:{}};let done=0,flags=0;for(const i
 function sysStats(x,s){let done=0,flags=0;for(const it of s.items){const v=x&&x.m[it.id];if(v)done++;if(v==='flag')flags++}return{done,flags,n:s.items.length}}
 
 /* ---------- views ---------- */
-const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const HOME=`<a class="homebtn" href="../#clinical" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
 function header(title,back){return`<header class="top"><div class="wrap hd">${back?`<button class="back" data-act="go" data-to="${back}" aria-label="Back">‹</button>`:HOME}<h1>${esc(title)}</h1><input type="date" class="datein" data-act="date" value="${DATE}" aria-label="Rounding date"></div></header>`}
 function ring(done){const r=19,c=2*Math.PI*r,f=done/TOTAL;return`<svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle class="tr" cx="23" cy="23" r="${r}"/><circle class="pr" cx="23" cy="23" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-f)}"/><text x="23" y="27" text-anchor="middle">${Math.round(f*100)}%</text></svg>`}
 

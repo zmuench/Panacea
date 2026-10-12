@@ -473,7 +473,7 @@ const orL=a=>a.length<2?(a[0]||''):a.length===2?a.join(' or '):a.slice(0,-1).joi
 const noArt=s=>s.replace(/^(a|an|the) /,'');
 const sent=s=>{s=String(s||'').trim();if(!s)return'';s=s[0].toUpperCase()+s.slice(1);return/[.!?]$/.test(s)?s:s+'.'};
 const lc1=s=>s?s[0].toLowerCase()+s.slice(1):s;
-const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const HOME=`<a class="homebtn" href="../#clinical" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
 const CHECK=`<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 const GO=`<svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
 
