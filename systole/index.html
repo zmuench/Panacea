@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Systole">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Systole</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Systole: a daily clinical cardiology curriculum through Chizner's Clinical Cardiology Made Ridiculously Simple, for the cardiology sub-I. Palette and type match the rest of PANACEA. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  color-scheme:light only;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;padding-left:16px;padding-right:16px}
+main.wrap{padding-top:12px;padding-bottom:120px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:10px;min-height:56px}
+.hd h1{font-size:1.25rem;margin:0;flex:1;letter-spacing:-.01em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{border:0;background:none;color:var(--accent);font-size:2.1rem;line-height:1;padding:0 8px 4px 0;cursor:pointer;font-family:inherit}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover,.homebtn:active{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hdlink{border:0;background:none;color:var(--accent);font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;padding:8px 2px}
+.syncdot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}
+.syncdot.ok{background:var(--ok)}.syncdot.syncing{background:var(--accent)}.syncdot.error{background:var(--warn)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 16px;border-radius:12px;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.block{display:block;width:100%}
+.btn.sm{padding:8px 12px;min-height:38px;font-size:.92rem}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.92rem;font-weight:700;padding:6px 2px;cursor:pointer}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* progress */
+.prog{display:flex;align-items:center;gap:14px}
+.ring{flex:none;width:58px;height:58px}
+.ring circle{fill:none;stroke-width:6}
+.ring .tr{stroke:var(--line)}.ring .pr{stroke:var(--ok);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .3s}
+.ring text{font:700 13px "Atkinson Hyperlegible",sans-serif;fill:var(--ink)}
+.prog .txt{flex:1;min-width:0}
+.prog .big{font-weight:700;font-size:1.05rem}
+.prog .sm{color:var(--muted);font-size:.88rem}
+.status{display:flex;gap:12px;align-items:flex-start}
+.status .ck{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ok);display:grid;place-items:center}
+.status .ck svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.status h2{margin:2px 0 2px;font-size:1.1rem}
+.status p{margin:0;color:var(--muted);font-size:.92rem}
+.next{margin-top:12px;padding:12px;border-radius:12px;background:var(--bg)}
+.next .eb{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.next .nt{font-weight:700;margin-top:2px}
+
+/* lesson */
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin:18px 0 4px}
+h2.lt{font-size:1.6rem;line-height:1.2;margin:0 0 12px;letter-spacing:-.015em;text-wrap:balance}
+.reads{display:flex;flex-direction:column;gap:6px;margin:0 0 14px;padding:0;list-style:none}
+.reads li{display:flex;gap:10px;align-items:baseline;font-size:.92rem;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.reads .bk{flex:none;font-weight:700;color:var(--accent);min-width:7.6em}
+.reads .ch{color:var(--ink)}
+.bl{background:var(--accent-soft);border-radius:14px;padding:14px 16px;margin:0 0 14px;font-size:1.02rem;line-height:1.55}
+.bl b{display:block;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+section.sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+section.sec h3{margin:0 0 8px;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+section.sec h3 svg{width:17px;height:17px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+section.sec ul{margin:0;padding-left:18px}
+section.sec li{margin:6px 0;line-height:1.45}
+.ev li{list-style:none;margin:0;padding:9px 0;border-bottom:1px solid var(--line)}
+.ev ul{padding-left:0}
+.ev li:last-child{border-bottom:0;padding-bottom:2px}
+.ev li:first-child{padding-top:2px}
+.ev .tn{display:block;font-weight:700;font-size:.92rem}
+.ev .tf{display:block;color:var(--ink);font-size:.95rem}
+.qz .qq{font-weight:700;margin:0 0 8px}
+.qz .qa{display:none;margin:10px 0 0;padding:10px 12px;border-left:3px solid var(--ok);background:var(--ok-soft);border-radius:8px}
+.qz.open .qa{display:block}
+textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-height:80px;resize:vertical;line-height:1.45;display:block}
+.complete{margin:18px 0 8px}
+.donemsg{text-align:center;color:var(--ok);font-weight:700;margin:8px 0}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+.pager button{flex:1;text-align:left;font:inherit;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--ink);min-height:56px;min-width:0}
+.pager button:last-child{text-align:right}
+.pager button[disabled]{visibility:hidden}
+.pager small{display:block;color:var(--muted);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.pager span{display:block;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* curriculum list */
+.search{font:inherit;font-size:16px;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:var(--surface);color:var(--ink);margin:4px 0 12px}
+details.unit{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
+details.unit>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer;min-height:56px}
+details.unit>summary::-webkit-details-marker{display:none}
+details.unit>summary .un{flex:none;width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+details.unit>summary .nm{flex:1;font-weight:700;min-width:0}
+details.unit>summary .ct{font-size:.85rem;color:var(--muted);font-weight:700}
+details.unit>summary .ct.all{color:var(--ok)}
+details.unit>summary .chev{width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s;flex:none}
+details.unit[open]>summary .chev{transform:rotate(90deg)}
+details.unit[open]>summary{border-bottom:1px solid var(--line)}
+.lrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 14px;cursor:pointer;min-height:52px}
+.lrow:last-child{border-bottom:0}
+.lrow:hover{background:var(--paper)}
+.lrow .dn{flex:none;width:44px;font-size:.78rem;font-weight:700;color:var(--muted)}
+.lrow .lt2{flex:1;min-width:0;font-size:.97rem}
+.lrow .lt2 small{display:block;color:var(--muted);font-size:.78rem}
+.lrow .bx{flex:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);display:grid;place-items:center}
+.lrow.d .bx{background:var(--ok);border-color:var(--ok)}
+.lrow .bx svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.lrow.d .bx svg{opacity:1}
+.lrow.today{background:var(--accent-soft)}
+.lrow.today .dn{color:var(--accent)}
+.foot{color:var(--muted);font-size:.8rem;margin-top:24px;line-height:1.5}
+.foot ul{padding-left:18px;margin:6px 0}
+.toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.rdh{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.reads li{align-items:center}
+.reads button.rck{all:unset;flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);display:grid;place-items:center;cursor:pointer;box-sizing:border-box}
+.reads button.rck:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.reads button.rck svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.reads li.rd button.rck{background:var(--ok);border-color:var(--ok)}
+.reads li.rd button.rck svg{opacity:1}
+.reads li.rd .ch,.reads li.rd .bk{opacity:.55}
+.reads .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.reads .tx .bk{min-width:0;font-size:.78rem;letter-spacing:.02em}
+.reads li.rd .ch{text-decoration:line-through}
+.reads button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:baseline;width:100%;cursor:pointer}
+.reads li.lk{border-color:var(--accent)}
+.reads li.lk:hover{background:var(--accent-soft)}
+.reads .op{flex:none;margin-left:auto;font-size:.78rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.reads li.nl .op{color:var(--muted)}
+.bkrow{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.bkrow:last-child{border-bottom:0}
+.bkrow .tx{flex:1;min-width:0}
+.bkrow .nm{font-weight:700}
+.bkrow .st{font-size:.85rem;color:var(--muted)}
+.bkrow .st.ok{color:var(--ok)}.bkrow .st.bad{color:var(--warn)}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.note{font-size:.88rem;color:var(--muted);margin:10px 0 0}
+.reader{display:flex;flex-direction:column;gap:10px;align-items:center}
+.pg{width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;position:relative;display:block}
+.pg canvas{width:100%;height:100%;display:block;border-radius:6px}
+.pg .pn{position:absolute;right:8px;bottom:6px;font-size:.72rem;color:var(--muted);background:rgba(255,255,255,.85);padding:1px 6px;border-radius:6px}
+.pgchip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);font-size:.85rem;font-weight:700;padding:6px 12px;border-radius:999px;z-index:15}
+.loading{color:var(--muted);text-align:center;padding:40px 0}
+/* Curriculum additions */
+.reads .op{min-width:3.6em;text-align:right}
+.noread{font-size:.92rem;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:0 0 14px}
+.sec.mod{border-color:#E7D9B8;background:#FFFBF2}
+.sec.mod h3 svg{stroke:#8A5A00}
+.pgw{width:100%;display:flex;flex-direction:column;gap:8px}
+.pgw .miss{display:grid;place-items:center;color:var(--muted);font-size:.9rem;aspect-ratio:.77;background:var(--paper)}
+.cal{width:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.cal .tx{flex:1;min-width:12em}
+.cal .btn{min-height:36px;padding:6px 12px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap hd" id="hd"></div></header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* The text: lessons point to printed page numbers in Chizner; nothing from the book is reproduced here. */
+const BOOKS={
+ D:{short:"Chizner",full:"Clinical Cardiology Made Ridiculously Simple, 4th ed. (Michael A. Chizner, MedMaster 2016)",first:1,last:358}
+};
+const REFT={};
+const UNITS=[
+ {n:1,t:"History and physical exam"},
+ {n:2,t:"ECG, chest x-ray and testing"},
+ {n:3,t:"Cardiovascular therapy"},
+ {n:4,t:"Coronary disease, heart failure and risk factors"},
+ {n:5,t:"Valves, myocardium and endocarditis"},
+ {n:6,t:"Aorta, pericardium, pulmonary hypertension and arrhythmias"},
+ {n:7,t:"Special situations and emergencies"}
+];
+const L=[];
+L.push(
+/* ---------- Unit 1: History and physical (ch. 1–2, pp. 1–78) ---------- */
+{id:"hx1",u:1,t:"The history: chest pain",p:[[1,8]],
+ bl:"Chizner’s five fingers of cardiac diagnosis are the history, exam, ECG, chest x-ray and lab tests, and the history carries the most weight. Angina is a pressure or tightness, often diffuse, brought on by exertion or emotion and relieved by rest or nitroglycerin within minutes. Unstable angina is new, worsening or rest angina.",
+ key:["Typical angina has three features: substernal discomfort, provoked by exertion or stress, relieved by rest or nitroglycerin. Two of three is atypical; one or none is noncardiac chest pain.","Pain that is sharp, pinpoint, positional, pleuritic or lasts seconds (or all day) is less likely ischemic, but women, diabetics and the elderly often have atypical presentations.","Pericarditis: sharp, pleuritic, better sitting forward. Aortic dissection: abrupt, tearing, maximal at onset, radiating to the back.","Exertional chest pain or syncope with a systolic murmur points to outflow obstruction: aortic stenosis or HCM."],
+ ed:["On admission, document the anginal pattern precisely: onset, threshold, duration, relief, and change over time. That is what the team uses to call it stable or unstable.","Ask every chest-pain patient about risk factors: age, sex, smoking, diabetes, hypertension, lipids, family history of premature CAD, and cocaine or stimulant use."],
+ mod:["The 2021 AHA/ACC chest pain guideline discourages ‘atypical’ and prefers ‘cardiac, possibly cardiac, or noncardiac’, because ‘atypical’ was often misread as benign."],
+ q:["Which chest pain features suggest aortic dissection rather than ACS?","Abrupt onset, maximal at onset, tearing or ripping quality, radiation to the back, and pulse or blood pressure differences between arms."]},
+
+{id:"hx2",u:1,t:"The history: dyspnea, palpitations, syncope and other symptoms",p:[[9,19]],
+ bl:"Dyspnea on exertion, orthopnea and paroxysmal nocturnal dyspnea are the classic left heart failure triad. Palpitations need a pattern (onset, rate, regularity, termination), and syncope needs a careful account of what happened before, during and after.",
+ key:["Orthopnea and PND reflect raised left atrial pressure; count the pillows.","Abrupt-onset, abrupt-offset regular palpitations suggest a reentrant SVT; an irregular ‘fluttering’ suggests AF.","Syncope with exertion, while supine, with palpitations beforehand, or without a warning prodrome suggests a cardiac (arrhythmic or obstructive) cause.","Vasovagal syncope has a trigger and a prodrome (warmth, nausea, tunnel vision) and quick recovery."],
+ ed:["Collateral history from witnesses matters most for syncope: color, duration, jerking, and how quickly the patient came round.","Review the medication list for culprits: QT-prolongers, AV nodal blockers, vasodilators, NSAIDs (fluid retention), and recent changes."],
+ q:["A patient faints while lying in bed without warning. Is this likely vasovagal?","No. Syncope while supine or without a prodrome suggests an arrhythmic cause and needs monitoring."]},
+
+{id:"px1",u:1,t:"Cardiac anatomy, physiology and inspection",p:[[20,28]],
+ bl:"Know the surface anatomy, the chambers and valves, and the normal flow of blood, then start the exam by looking. General appearance, body habitus and skin findings often give the diagnosis away before you touch the patient.",
+ key:["Marfanoid habitus suggests aortic root disease and MVP; Down syndrome suggests endocardial cushion defects; Turner syndrome suggests coarctation and bicuspid aortic valve.","Central cyanosis suggests right-to-left shunting or hypoxemia; peripheral cyanosis suggests low output.","Xanthomas and xanthelasma suggest hyperlipidemia; splinter hemorrhages, Osler nodes and Janeway lesions suggest endocarditis.","Clubbing with cyanosis suggests cyanotic congenital heart disease or endocarditis."],
+ ed:["Do the general look from the foot of the bed on every new patient: work of breathing, ability to lie flat, color, edema.","Endocarditis stigmata are easy to miss; look at the nails, palms and conjunctivae every time someone has fever and a murmur."],
+ q:["Name three peripheral signs of infective endocarditis.","Splinter hemorrhages, Osler nodes, Janeway lesions (also Roth spots and conjunctival petechiae)."]},
+
+{id:"px2",u:1,t:"JVP, blood pressure and the arterial pulse",p:[[29,37]],
+ bl:"The JVP is the bedside right atrial pressure gauge. The arterial pulse’s volume and contour, and the blood pressure in both arms, add information about the aortic valve, the aorta and cardiac output.",
+ key:["Estimate JVP with the patient at 30–45°: height above the sternal angle plus about 5 cm. Over 8–9 cm H₂O is raised.","Abdominojugular (hepatojugular) reflux: a sustained rise of 3 cm or more with 10 seconds of abdominal pressure suggests raised left-sided filling pressures or RV failure.","Large v waves suggest tricuspid regurgitation; cannon a waves suggest AV dissociation; a raised JVP that rises on inspiration (Kussmaul) suggests constriction.","Pulsus parvus et tardus: aortic stenosis. Bounding, collapsing pulse: aortic regurgitation. Pulsus alternans: severe LV dysfunction. Pulsus paradoxus over 10 mmHg: tamponade."],
+ ed:["Daily JVP and weight are the core of volume assessment on a heart failure service; record both every morning.","Check blood pressure in both arms when you suspect dissection or coarctation; a difference over 20 mmHg is significant."],
+ q:["How do you measure pulsus paradoxus?","Inflate the cuff above systolic, deflate slowly: note the pressure where sounds are first heard only in expiration, then where heard throughout. A difference over 10 mmHg is abnormal."]},
+
+{id:"px3",u:1,t:"Palpation, the cardiac cycle and the stethoscope",p:[[38,51]],
+ bl:"Palpate the apex for location, size and character, then the parasternal area for an RV heave and the base for thrills. Before auscultating, know the cardiac cycle: which events happen in systole and diastole, and where each sound comes from.",
+ key:["Normal apex: dime-sized, in the 5th intercostal space at the midclavicular line. Displaced and diffuse: LV dilation. Sustained and forceful: LV pressure overload (AS, hypertension, HCM).","Parasternal lift: RV pressure or volume overload, or a large left atrium in MR pushing the heart forward.","A palpable thrill means a murmur of grade 4 or louder.","Diaphragm for high-pitched sounds (S1, S2, AR, MR); bell, held lightly, for low-pitched sounds (S3, S4, mitral stenosis)."],
+ ed:["Time every sound by palpating the carotid while you listen: S1 comes just before the carotid upstroke.","Listen at the apex with the patient in left lateral decubitus for S3, S4 and mitral stenosis; sitting forward in expiration for aortic regurgitation."],
+ q:["Which part of the stethoscope do you use to hear an S3, and how hard do you press?","The bell, held very lightly against the skin."]},
+
+{id:"px4",u:1,t:"Dynamic auscultation and the heart sounds",p:[[52,64]],
+ bl:"Maneuvers that change preload and afterload change murmurs in predictable ways. Then go sound by sound: S1, S2 and its splitting, ejection sounds and clicks in systole, and S3 and S4 in diastole.",
+ key:["Inspiration increases right-sided murmurs and sounds. Valsalva and standing reduce preload: most murmurs soften, but HCM gets louder and the MVP click moves earlier.","Squatting and handgrip increase afterload: AR, MR and VSD murmurs get louder; HCM softens.","Wide fixed splitting of S2: ASD. Paradoxical splitting: LBBB or severe AS. A loud P2: pulmonary hypertension.","S3 (ventricular gallop): volume overload or systolic failure, normal under about 40. S4 (atrial gallop): a stiff ventricle (hypertension, AS, ischemia, HCM); never heard in AF."],
+ ed:["An S3 in an adult admitted with dyspnea is a strong sign of heart failure.","Practice Valsalva and standing on every systolic murmur; HCM is the one that gets louder."],
+ q:["A systolic murmur gets louder when the patient stands. What two diagnoses do you think of?","Hypertrophic obstructive cardiomyopathy and mitral valve prolapse (the click and murmur move earlier and last longer)."]},
+
+{id:"px5",u:1,t:"Systolic murmurs",p:[[65,72]],
+ bl:"First decide innocent or ‘guilty’. Then place the murmur by timing and shape: early-to-mid systolic ejection murmurs (innocent, AS, PS, HOCM, ASD flow) versus holosystolic murmurs (MR, TR, VSD).",
+ key:["Innocent murmurs: soft (grade 1–2), early to mid systolic, normal S2, no symptoms and no other findings.","Aortic stenosis: crescendo-decrescendo at the right upper sternal border radiating to the carotids. Severity markers: late-peaking murmur, soft or absent A2, slow-rising carotid pulse, LVH.","Mitral regurgitation: holosystolic, apical, radiating to the axilla. Tricuspid regurgitation: holosystolic at the left lower sternal border, louder on inspiration (Carvallo’s sign).","VSD: harsh holosystolic murmur at the left lower sternal border, often with a thrill; small defects are the loudest."],
+ ed:["Every new systolic murmur with symptoms, grade 3 or louder, or associated abnormal findings needs an echo.","In AS, loudness does not track severity once the ventricle fails; a soft murmur can mean critical stenosis."],
+ q:["What are the bedside signs of severe aortic stenosis?","A late-peaking murmur, a soft or absent A2, a delayed and weak carotid upstroke (parvus et tardus), and a sustained apical impulse."]},
+
+{id:"px6",u:1,t:"Diastolic and continuous murmurs, and rubs",p:[[73,78]],
+ bl:"Diastolic murmurs are always pathologic. Early diastolic, high-pitched and decrescendo means aortic or pulmonic regurgitation; mid-diastolic, low-pitched rumbles mean mitral or tricuspid stenosis or increased flow. Continuous murmurs and pericardial rubs round out the exam.",
+ key:["AR: blowing early diastolic murmur at the left sternal border, best sitting forward in held expiration. Austin Flint murmur: an apical mid-diastolic rumble in severe AR.","Mitral stenosis: loud S1, opening snap, then a low-pitched mid-diastolic rumble with presystolic accentuation, best with the bell at the apex in left lateral decubitus.","Patent ductus arteriosus: a continuous ‘machinery’ murmur below the left clavicle. Venous hum: continuous, disappears with neck pressure or lying down.","Pericardial rub: scratchy, often three components, best leaning forward; varies with position and over time."],
+ ed:["A new diastolic murmur in a febrile patient is endocarditis until proven otherwise.","Listen for a rub every day after MI or cardiac surgery, and in any patient with pericarditis or uremia."],
+ q:["A short interval between S2 and the opening snap in mitral stenosis means what?","More severe stenosis (higher left atrial pressure opens the valve earlier)."]},
+
+/* ---------- Unit 2: ECG, chest x-ray and testing (ch. 3–5, pp. 79–156) ---------- */
+{id:"dx1",u:2,t:"ECG basics and a systematic approach",p:[[79,91]],
+ bl:"Read every ECG in the same order: calibration, rate and rhythm, each wave and interval (P, QRS, T, U, PR, ST, QT) and the axis. The same order on every tracing is what keeps you from missing things.",
+ key:["Rate: 300 ÷ large boxes between R waves; for irregular rhythms, QRS complexes in 6 seconds × 10.","PR 0.12–0.20 s; QRS under 0.10–0.12 s; QTc under about 0.45–0.47 s.","Peaked T waves: hyperkalemia. Prominent U waves: hypokalemia. Long QT: hypocalcemia, drugs, congenital.","Axis: upright QRS in I and aVF is normal; left axis deviation suggests left anterior fascicular block; right axis deviation suggests RV strain or left posterior fascicular block."],
+ ed:["On the wards, compare every new ECG with the last one before calling a change new.","Check the QTc when starting QT-prolonging drugs (many antiemetics, antipsychotics, antibiotics, antiarrhythmics)."],
+ mod:["Rhythm and Rhythm 2 in PANACEA cover the ECG in much more depth; use this lesson as the cardiologist’s quick review."],
+ q:["What does a QTc over 0.50 s mean clinically?","A significantly raised risk of torsades de pointes: review drugs, correct potassium and magnesium, and monitor."]},
+
+{id:"dx2",u:2,t:"ECG abnormalities: ischemia, infarction, hypertrophy and patterns",p:[[92,104]],
+ bl:"Ischemia shows as ST depression or T wave inversion, injury as ST elevation, infarction as Q waves. Localize by lead groups. Recognize chamber enlargement and the miscellaneous patterns that mimic disease.",
+ key:["Inferior (II, III, aVF): usually the RCA. Lateral (I, aVL, V5–V6): circumflex. Anterior (V1–V4): LAD. Posterior: ST depression and tall R in V1–V2.","LVH: S in V1 plus R in V5 or V6 of 35 mm or more, often with lateral strain.","Pericarditis: diffuse concave ST elevation with PR depression and no reciprocal changes (except aVR).","Wellens: deep symmetric or biphasic T waves in V2–V3 in a pain-free patient means a critical proximal LAD stenosis."],
+ ed:["Inferior MI on the ECG: get a right-sided ECG (V4R) to look for RV infarction before giving nitrates.","An admitted chest-pain patient with recurrent pain needs an ECG during the pain, not just after."],
+ q:["ST elevation in II, III, aVF with ST depression in V1–V3 and tall R waves in V1–V2. What is happening?","Inferior MI with posterior extension."]},
+
+{id:"dx3",u:2,t:"ECG: arrhythmias and conduction disturbances",p:[[105,119]],
+ bl:"Classify every rhythm by rate, regularity, QRS width and the relation of P waves to QRS complexes. The common ward rhythms are AF, flutter, SVT, PVCs and NSVT, AV blocks, and bundle branch blocks.",
+ key:["Irregularly irregular without P waves: AF. Sawtooth at about 300 with 2:1 block: flutter at 150.","Regular wide-complex tachycardia: VT until proven otherwise, especially with known heart disease.","Mobitz I: progressive PR prolongation before a dropped beat (usually nodal, benign). Mobitz II: constant PR with sudden drops (infranodal, needs pacing).","RBBB: rSR’ in V1. LBBB: broad notched R in V5–V6 with a deep S in V1."],
+ ed:["Telemetry alarms: look at the patient and the full strip before acting; artifact is common.","New Mobitz II or complete heart block: pads on, hold AV nodal blockers, call cardiology for pacing."],
+ q:["Which second-degree AV block needs a pacemaker?","Mobitz II (and high-grade AV block), because it is usually below the AV node and can progress suddenly to complete block."]},
+
+{id:"dx4",u:2,t:"The chest x-ray",p:[[120,127]],
+ bl:"Read the cardiac silhouette, the pulmonary vasculature, the lung fields and the bones. Chamber enlargement changes the silhouette in recognizable ways, and the vessels show pulmonary venous or arterial hypertension.",
+ key:["Cardiothoracic ratio over 0.5 on a PA film suggests cardiomegaly (AP films exaggerate it).","Left atrial enlargement: a double density, straightening of the left heart border and a splayed carina.","Pulmonary venous hypertension progresses from cephalization to interstitial edema (Kerley B lines) to alveolar edema and effusions.","A widened mediastinum suggests aortic dissection or aneurysm; rib notching suggests coarctation."],
+ ed:["On a heart failure admission, follow effusions and edema on films alongside weight and JVP.","A ‘water bottle’ heart (large globular silhouette with clear lungs) suggests a large pericardial effusion; get an echo."],
+ q:["Name the chest x-ray signs of pulmonary venous congestion in order of increasing severity.","Cephalization of vessels, then interstitial edema with Kerley B lines and peribronchial cuffing, then alveolar edema and pleural effusions."]},
+
+{id:"dx5",u:2,t:"Blood tests, echo, Holter and tilt-table testing",p:[[128,138]],
+ bl:"Troponin is the biomarker for myocardial injury; natriuretic peptides help diagnose heart failure. Echocardiography is the workhorse test for structure and function; TEE adds detail on valves, the atria and the aorta. Ambulatory monitoring and tilt testing work up palpitations and syncope.",
+ key:["Troponin rises within hours of injury and stays up for days. A rise and/or fall with symptoms or ECG changes defines MI; a flat elevation suggests chronic injury.","BNP or NT-proBNP: a low value makes heart failure unlikely in a dyspneic patient; obesity lowers it and renal failure raises it.","TEE is better than transthoracic echo for prosthetic valves, endocarditis vegetations and abscesses, left atrial appendage thrombus and aortic dissection.","Choose the monitor by symptom frequency: Holter for daily symptoms, event or implantable loop recorder for rare ones."],
+ ed:["Trend troponins (and note the assay and times) rather than reacting to one value.","Before cardioversion of AF lasting over 48 hours without anticoagulation, a TEE to exclude atrial appendage thrombus is the usual route."],
+ mod:["High-sensitivity troponin assays now allow 0/1-hour or 0/2-hour rule-out pathways, faster than the serial testing described in the book.","CK-MB has largely been retired in favor of troponin."],
+ q:["Which imaging test best shows left atrial appendage thrombus before cardioversion?","Transesophageal echocardiography."]},
+
+{id:"dx6",u:2,t:"Stress testing, nuclear, CT, MRI, catheterization and EPS",p:[[139,156]],
+ bl:"Stress testing (exercise or pharmacologic, with ECG, nuclear or echo imaging) detects ischemia and stratifies risk. CT shows coronary calcium and anatomy; MRI characterizes the myocardium. Catheterization defines coronary anatomy and hemodynamics, and EPS maps arrhythmias.",
+ key:["Exercise ECG is the starting test if the patient can exercise and the resting ECG is interpretable; add imaging for LBBB, paced rhythm, LVH with strain, digoxin or WPW.","Pharmacologic stress: vasodilators (adenosine, regadenoson) with nuclear imaging, or dobutamine with echo.","Stress testing is contraindicated in acute MI, unstable angina not yet stabilized, severe symptomatic AS and decompensated heart failure.","Coronary angiography is the reference for anatomy; right heart catheterization measures filling pressures, output and pulmonary pressures."],
+ ed:["Before a stress test, know whether to hold beta-blockers and nitrates, and that caffeine must be held for vasodilator stress.","After catheterization, check the access site, distal pulses and creatinine (contrast nephropathy)."],
+ mod:["Coronary CT angiography is now a first-line test for many stable chest-pain patients (2021 chest pain guideline), and FFR or iFR guides which stenoses are treated."],
+ q:["Why can’t you use plain exercise ECG for a patient with LBBB?","LBBB causes baseline ST-T changes that make exercise ST depression uninterpretable; add imaging (preferably vasodilator nuclear)."]}
+);
+L.push(
+/* ---------- Unit 3: Therapy (ch. 6–10, pp. 157–198) ---------- */
+{id:"rx1",u:3,t:"Principles of therapy; beta-blockers, calcium blockers, nitrates, ACE inhibitors and ARBs",p:[[157,166]],
+ bl:"Treat the patient, not the test, and weigh benefit against risk for every drug. Beta-blockers, calcium-channel blockers and nitrates relieve angina; beta-blockers, ACE inhibitors and ARBs also change outcomes after MI and in heart failure.",
+ key:["Beta-blockers lower heart rate, contractility and blood pressure; they reduce mortality after MI and in HFrEF. Avoid in decompensated HF, severe bradycardia or high-grade block, and use caution in severe bronchospasm.","Non-dihydropyridine calcium blockers (verapamil, diltiazem) slow the AV node and depress contractility; avoid in HFrEF. Dihydropyridines (amlodipine) are vasodilators.","Nitrates: sublingual for angina relief, long-acting with a nitrate-free interval to avoid tolerance; never with PDE-5 inhibitors.","ACE inhibitors and ARBs: watch potassium and creatinine; ACE inhibitors cause cough and angioedema; both are contraindicated in pregnancy."],
+ ed:["Check potassium and creatinine within 1–2 weeks of starting or up-titrating an ACE inhibitor or ARB.","Ask about sildenafil or tadalafil before giving nitroglycerin."],
+ mod:["In HFrEF, sacubitril-valsartan (ARNI) is now preferred over an ACE inhibitor or ARB (PARADIGM-HF); start it at least 36 hours after the last ACE inhibitor dose."],
+ q:["Why must patients have a nitrate-free interval?","Continuous nitrate exposure causes tolerance; a daily nitrate-free period (usually overnight) restores the effect."]},
+
+{id:"rx2",u:3,t:"Inotropes, diuretics, antiplatelets and anticoagulants",p:[[167,175]],
+ bl:"Inotropes support a failing heart short term. Diuretics relieve congestion. Antiplatelet agents prevent arterial thrombosis (coronary events), while anticoagulants prevent venous and cardioembolic thrombosis.",
+ key:["Digoxin controls ventricular rate in AF and improves symptoms in HFrEF without lowering mortality; toxicity rises with renal failure and hypokalemia.","Dobutamine and milrinone are short-term inotropes for low-output states; both can provoke arrhythmias.","Loop diuretics are the mainstay for congestion; thiazides add synergy (sequential nephron blockade); spironolactone and eplerenone lower mortality in HFrEF.","Aspirin plus a P2Y12 inhibitor (clopidogrel, prasugrel, ticagrelor) after ACS and stenting; warfarin needs INR monitoring and has many drug and food interactions."],
+ ed:["Daily weights, strict ins and outs and a BMP during diuresis; replete potassium and magnesium.","Before any procedure, know each patient’s antiplatelet and anticoagulant plan, including stent dates and why the drugs were started."],
+ mod:["DOACs (apixaban, rivaroxaban, dabigatran, edoxaban) have replaced warfarin for most nonvalvular AF and VTE; warfarin is still required for mechanical valves and moderate-to-severe rheumatic mitral stenosis.","Prasugrel and ticagrelor are preferred over clopidogrel after ACS in most patients; DAPT duration is now individualized by bleeding risk."],
+ q:["Which patients with AF still need warfarin rather than a DOAC?","Those with a mechanical heart valve or moderate-to-severe rheumatic mitral stenosis."]},
+
+{id:"rx3",u:3,t:"Lipid-lowering drugs and antiarrhythmics",p:[[176,183]],
+ bl:"Statins are the cornerstone of lipid therapy and secondary prevention; other agents are add-ons. Antiarrhythmics are classified by Vaughan Williams (I sodium, II beta, III potassium, IV calcium) and all of them can cause arrhythmias.",
+ key:["Statins: monitor symptoms of myopathy; check LFTs at baseline. High-intensity statin after ACS.","Ezetimibe adds LDL lowering when statins aren’t enough or aren’t tolerated.","Class IC (flecainide, propafenone): avoid in structural or ischemic heart disease (CAST). Class III (amiodarone, sotalol, dofetilide): watch the QT.","Amiodarone toxicity: thyroid, lung, liver, eye and skin; check TSH and LFTs and get baseline PFTs and a chest x-ray."],
+ ed:["Amiodarone raises warfarin and digoxin levels; adjust doses when you start it.","Sotalol and dofetilide are started in hospital with QT monitoring and renal dosing."],
+ mod:["PCSK9 inhibitors and inclisiran lower LDL by about 50–60% and reduce events; bempedoic acid helps statin-intolerant patients.","Current targets after ACS are LDL under 70 mg/dL and often under 55 mg/dL in very high-risk patients."],
+ q:["Why is flecainide avoided in patients with prior MI?","In CAST, class IC drugs increased mortality after MI by provoking ventricular arrhythmias."]},
+
+{id:"rx4",u:3,t:"PCI, valve interventions, ablation, cardioversion, devices and surgery",p:[[184,198]],
+ bl:"Percutaneous coronary intervention opens blocked arteries with balloons and stents. Valves can be dilated or replaced by catheter or surgery. Ablation cures many arrhythmias. Pacemakers, CRT and ICDs treat bradycardia, dyssynchrony and sudden death risk, and bypass surgery remains best for some multivessel disease.",
+ key:["Primary PCI is the preferred reperfusion for STEMI when done promptly; drug-eluting stents need dual antiplatelet therapy.","CABG is favored for left main disease, three-vessel disease with diabetes or reduced EF.","Radiofrequency ablation is first-line for WPW, AVNRT and typical flutter.","ICD for secondary prevention after VT or VF arrest, and for primary prevention with EF 35% or less despite therapy."],
+ ed:["After PCI: access site checks, antiplatelet adherence, and never stopping DAPT early without talking to cardiology.","After cardiac surgery, watch for AF (common on days 2–4), tamponade, bleeding and pericarditis."],
+ mod:["TAVR is now used across surgical risk levels for aortic stenosis in older patients; transcatheter edge-to-edge mitral repair (MitraClip) treats selected MR.","Catheter ablation (including pulsed field) is increasingly first-line for AF, and leadless pacemakers and subcutaneous ICDs are common."],
+ q:["Name two indications for a primary prevention ICD.","LVEF 35% or less with NYHA class II–III symptoms on optimal therapy (ischemic or nonischemic), at least 40 days after MI or 90 days after revascularization."]}
+);
+
+L.push(
+/* ---------- Unit 4: CAD, HF, HTN, lipids (ch. 11–14, pp. 199–263) ---------- */
+{id:"cad1",u:4,t:"Stable and unstable angina",p:[[199,208]],
+ bl:"Stable angina is predictable exertional discomfort; unstable angina is new, crescendo or rest angina and belongs with NSTEMI under acute coronary syndromes. Stable angina is managed with risk-factor control, antianginals and selective revascularization; unstable angina needs admission, antithrombotic therapy and risk stratification.",
+ key:["Stable angina: aspirin, statin, a beta-blocker as first-line antianginal, sublingual nitroglycerin, and risk-factor control.","Revascularization in stable disease relieves symptoms; it improves survival mainly in left main or extensive multivessel disease with reduced EF.","Unstable angina/NSTEMI: aspirin, a P2Y12 inhibitor, anticoagulation (heparin or enoxaparin), beta-blocker, high-intensity statin, and nitrates for pain.","Risk scores (TIMI, GRACE) decide early invasive versus conservative strategy."],
+ ed:["On an ACS admission, document pain-free status and check troponin trends and repeat ECGs; recurrent pain on therapy means an urgent cath.","Make sure every ACS patient leaves on aspirin, a P2Y12 inhibitor, a high-intensity statin, a beta-blocker and an ACE inhibitor if indicated, with cardiac rehab referral."],
+ mod:["ISCHEMIA (NEJM 2020): in stable CAD with moderate-to-severe ischemia, an initial invasive strategy did not reduce death or MI compared with optimal medical therapy.","SGLT2 inhibitors and GLP-1 receptor agonists reduce cardiovascular events in patients with diabetes and CAD."],
+ q:["What features make angina unstable?","New onset (recent), crescendo (more frequent, longer or with less effort), or occurring at rest."]},
+
+{id:"cad2",u:4,t:"Acute MI: recognition and management",p:[[209,224]],
+ bl:"Acute MI presents with prolonged ischemic pain, often with diaphoresis, nausea and dyspnea; the ECG splits it into STEMI (immediate reperfusion) and NSTEMI. Time is myocardium: door-to-balloon under 90 minutes, or fibrinolysis within 30 minutes if PCI isn’t available in time.",
+ key:["Immediate care: aspirin 162–325 mg chewed, nitroglycerin (unless hypotensive, RV infarct or PDE-5 use), oxygen only if hypoxemic, anticoagulation and a P2Y12 inhibitor.","Fibrinolysis contraindications include prior intracranial hemorrhage, recent ischemic stroke, suspected aortic dissection, active bleeding and recent major surgery or head trauma.","Beta-blockers within 24 hours unless heart failure, shock risk, bradycardia or block.","Start a high-intensity statin and, with EF under 40%, diabetes, hypertension or CKD, an ACE inhibitor."],
+ ed:["Know the reperfusion times and the door-to-balloon chain; the sub-I’s job is often getting the ECG read and the team called in minutes.","Day 1–3 post-MI checks: chest pain, new murmur, rhythm, heart failure signs and access site."],
+ mod:["Routine oxygen in normoxic MI is no longer recommended (DETO2X-AMI).","Complete revascularization of non-culprit lesions improves outcomes in STEMI with multivessel disease (COMPLETE)."],
+ q:["Which MI patients should not get nitroglycerin?","Hypotension, suspected RV infarction, recent PDE-5 inhibitor use, and severe aortic stenosis."]},
+
+{id:"cad3",u:4,t:"Complications of MI and secondary prevention",p:[[225,234]],
+ bl:"Electrical complications (VF, VT, AF, AV block) come early; mechanical complications (papillary muscle rupture, VSD, free-wall rupture) typically appear days 3–5. Secondary prevention starts in hospital: drugs, risk-factor control and cardiac rehabilitation.",
+ key:["New loud holosystolic murmur with shock after MI: acute MR from papillary muscle rupture or a VSD; get an urgent echo.","RV infarction: hypotension, clear lungs and a raised JVP with inferior MI; give fluids, avoid nitrates and diuretics.","LV aneurysm: persistent ST elevation, heart failure, arrhythmias and mural thrombus. Free-wall rupture: sudden tamponade and PEA.","Post-MI pericarditis early, and Dressler’s syndrome weeks later."],
+ ed:["Sudden hypotension days after MI is a mechanical complication until an echo says otherwise.","Discharge checklist: DAPT, statin, beta-blocker, ACE inhibitor or ARB, aldosterone antagonist if EF 40% or less with HF or diabetes, smoking cessation and rehab."],
+ q:["Three days after an inferior MI, a patient develops pulmonary edema and a new holosystolic apical murmur. Likely cause?","Papillary muscle rupture (usually the posteromedial muscle, supplied by a single artery) causing acute mitral regurgitation."]},
+
+{id:"hf1",u:4,t:"Heart failure: causes, systolic and diastolic dysfunction",p:[[235,244]],
+ bl:"Heart failure is a syndrome: the heart can’t meet the body’s needs without high filling pressures. Classify by ejection fraction (reduced versus preserved), stage (A–D) and symptoms (NYHA I–IV), and always look for the cause and the trigger.",
+ key:["Common causes: ischemic heart disease, hypertension, valve disease, cardiomyopathies (dilated, hypertrophic, restrictive), alcohol, tachycardia and toxins.","Common triggers: nonadherence to salt, fluid or drugs, ischemia, AF, uncontrolled hypertension, infection, NSAIDs, and kidney injury.","Diastolic dysfunction (HFpEF): a stiff ventricle, usually older patients with hypertension, obesity, diabetes or AF.","Dilated cardiomyopathy needs a workup for ischemia, alcohol, thyroid disease, myocarditis, tachycardia and genetic causes."],
+ ed:["Every HF admission: name the EF, the cause and the trigger in your assessment.","An ischemic evaluation is standard for new-onset HFrEF."],
+ mod:["HF is now categorized as HFrEF (EF 40% or less), HFmrEF (41–49%) and HFpEF (50% or more), with ‘HF with improved EF’ for those who recover."],
+ q:["Name four common triggers for heart failure decompensation.","Dietary or medication nonadherence, new AF or other arrhythmia, ischemia, uncontrolled hypertension (also infection, NSAIDs, kidney injury)."]},
+
+{id:"hf2",u:4,t:"Treating chronic and acute heart failure",p:[[245,248]],
+ bl:"Chronic HFrEF therapy combines drugs that lower mortality with diuretics for symptoms, plus devices for selected patients. Acute decompensation is treated by profile: most patients are ‘warm and wet’ and need diuresis and vasodilation.",
+ key:["Mortality-lowering HFrEF drugs: beta-blocker (carvedilol, metoprolol succinate, bisoprolol), ACE inhibitor/ARB/ARNI, and mineralocorticoid antagonist.","Diuretics relieve congestion but don’t change survival; salt restriction and daily weights help.","Acute pulmonary edema: sit up, oxygen or noninvasive ventilation, IV loop diuretic, nitroglycerin for hypertension; inotropes only for low output.","CRT for EF 35% or less with LBBB and QRS 150 ms or more; ICD for EF 35% or less."],
+ ed:["Diuresis goals: net negative 1–2 L/day, daily weights, BMP and magnesium; increase the loop dose if urine output is poor after the first dose.","Before discharge, start or restart guideline therapy, and arrange follow-up within 7–14 days."],
+ mod:["The four pillars of HFrEF therapy now include an SGLT2 inhibitor (dapagliflozin or empagliflozin; DAPA-HF, EMPEROR-Reduced), alongside ARNI, beta-blocker and MRA, started early and together (STRONG-HF).","SGLT2 inhibitors also reduce HF hospitalization in HFpEF (EMPEROR-Preserved, DELIVER)."],
+ q:["What are the four pillars of HFrEF therapy?","A beta-blocker, an ARNI (or ACE inhibitor/ARB), a mineralocorticoid receptor antagonist and an SGLT2 inhibitor."]},
+
+{id:"htn1",u:4,t:"Hypertension",p:[[249,259]],
+ bl:"Most hypertension is primary; look for secondary causes in the young, the resistant and those with suggestive clues. Treatment combines lifestyle change with drugs chosen for the patient’s comorbidities. Separate emergencies (acute end-organ damage) from urgencies.",
+ key:["Secondary causes: renal parenchymal disease, renovascular disease, primary aldosteronism (hypokalemia), pheochromocytoma, Cushing’s, sleep apnea, coarctation and drugs.","First-line agents: thiazide, ACE inhibitor or ARB, dihydropyridine calcium blocker; ACE inhibitor or ARB for diabetes with proteinuria or CKD.","Hypertensive emergency: lower mean arterial pressure by no more than about 25% in the first hour with IV agents (except aortic dissection: faster and lower).","Resistant hypertension: uncontrolled on three drugs including a diuretic; check adherence, technique and aldosterone, and add spironolactone."],
+ ed:["Inpatient ‘urgency’ without end-organ damage usually needs oral therapy and pain control, not IV pushes.","Measure blood pressure properly: seated, arm supported, right cuff size."],
+ mod:["2017 ACC/AHA: hypertension is now 130/80 or higher, with a target under 130/80 for most adults."],
+ q:["What is the difference between hypertensive emergency and urgency?","Emergency has acute end-organ damage (brain, heart, kidney, aorta, eyes) and needs IV therapy; urgency is severe hypertension without acute damage and is treated orally."]},
+
+{id:"lip1",u:4,t:"Dyslipidemia",p:[[260,263]],
+ bl:"LDL cholesterol drives atherosclerosis, and lowering it reduces events. Statins are first-line, and treatment intensity follows risk: everyone with established atherosclerotic disease gets a high-intensity statin.",
+ key:["High-intensity statins: atorvastatin 40–80 mg, rosuvastatin 20–40 mg.","Statin benefit groups: clinical ASCVD, LDL 190 or higher, diabetes aged 40–75, and raised 10-year risk.","Very high triglycerides (over 500–1000) risk pancreatitis and need fibrates and lifestyle change.","Recheck lipids 4–12 weeks after starting therapy to check response and adherence."],
+ ed:["Every ACS and stroke patient should leave on a high-intensity statin unless there’s a clear reason not to."],
+ mod:["Current guidelines add non-statin therapy (ezetimibe, then PCSK9 inhibitors) when LDL stays above 70 (or 55) in very high-risk patients; lipoprotein(a) is measured once in adults to refine risk."],
+ q:["Name the two high-intensity statins and their doses.","Atorvastatin 40–80 mg and rosuvastatin 20–40 mg."]},
+
+/* ---------- Unit 5: Valves, HCM, IE (ch. 15–17, pp. 264–292) ---------- */
+{id:"vhd1",u:5,t:"Aortic stenosis and aortic regurgitation",p:[[264,272]],
+ bl:"Aortic stenosis has a long silent phase; once angina, syncope or heart failure appear, survival falls sharply without valve replacement. Aortic regurgitation is chronic (dilated, compensated LV) or acute (sudden, poorly tolerated, a surgical emergency).",
+ key:["Severe AS by echo: valve area under 1.0 cm², mean gradient 40 mmHg or more, or peak velocity 4 m/s or more.","Symptomatic severe AS is an indication for valve replacement; avoid vasodilators and volume depletion in the meantime.","Chronic AR signs: wide pulse pressure, bounding pulses, displaced apex and an early diastolic murmur. Operate when symptomatic, or with LV dilation or EF dropping.","Acute AR (endocarditis, dissection): sudden pulmonary edema with a short, soft murmur and little pulse-pressure widening; needs urgent surgery."],
+ ed:["In severe AS, be careful with nitrates, diuretics and anything that lowers preload or afterload.","Severe AS patients are at high risk for noncardiac surgery; flag them at admission."],
+ mod:["TAVR has largely replaced surgical AVR in older patients across risk categories (PARTNER 3, Evolut Low Risk); the 2020 ACC/AHA guidelines favor TAVR over 80 and surgery under 65."],
+ q:["Name the three classic symptoms of severe aortic stenosis.","Angina, syncope and heart failure (dyspnea)."]},
+
+{id:"vhd2",u:5,t:"Mitral regurgitation, MVP, mitral stenosis and tricuspid regurgitation",p:[[273,282]],
+ bl:"Mitral regurgitation is primary (the valve itself) or secondary (a dilated, failing ventricle). MVP is common and usually benign. Rheumatic mitral stenosis causes left atrial hypertension, AF and pulmonary congestion. Tricuspid regurgitation is usually secondary to left heart disease or pulmonary hypertension.",
+ key:["Chronic severe primary MR: operate (repair preferred) when symptomatic, or when EF falls to 60% or below or the LV end-systolic diameter reaches 40 mm.","MVP: midsystolic click and late systolic murmur; reassure, and watch for progression of MR.","Mitral stenosis: dyspnea worsened by tachycardia (pregnancy, AF, exercise); rate control prolongs diastolic filling. Balloon valvotomy for suitable valves.","TR: holosystolic murmur that rises on inspiration, large v waves, a pulsatile liver and edema."],
+ ed:["In mitral stenosis with AF, anticoagulate with warfarin and control the rate tightly.","Secondary MR often improves with heart failure therapy; treat the ventricle first."],
+ mod:["Transcatheter edge-to-edge repair (MitraClip) improves outcomes in selected secondary MR on maximal therapy (COAPT)."],
+ q:["Why does tachycardia worsen symptoms in mitral stenosis?","It shortens diastole, leaving less time for blood to cross the narrowed valve, so left atrial pressure rises."]},
+
+{id:"cm1",u:5,t:"Hypertrophic cardiomyopathy",p:[[283,286]],
+ bl:"HCM is inherited LV hypertrophy, often asymmetric, with or without outflow tract obstruction. The murmur gets louder with less preload (standing, Valsalva) and softer with squatting or handgrip. It is a leading cause of sudden death in young athletes.",
+ key:["Avoid dehydration, vasodilators, nitrates and high-dose diuretics, which worsen obstruction.","Beta-blockers or non-dihydropyridine calcium blockers relieve symptoms; disopyramide adds negative inotropy.","Septal reduction (myectomy or alcohol ablation) for refractory obstructive symptoms.","Sudden death risk factors: prior arrest or sustained VT, family history of sudden death, unexplained syncope, wall thickness 30 mm or more, NSVT; these guide ICD placement."],
+ ed:["Hypotension in HCM: give fluids and phenylephrine; avoid inotropes, which increase obstruction.","First-degree relatives need screening with ECG and echo."],
+ mod:["Cardiac myosin inhibitors (mavacamten, aficamten) reduce obstruction and symptoms (EXPLORER-HCM, SEQUOIA-HCM) and can defer septal reduction."],
+ q:["Which maneuvers increase the HCM murmur?","Standing from squatting and the Valsalva strain phase, both of which reduce preload."]},
+
+{id:"ie1",u:5,t:"Infective endocarditis",p:[[287,292]],
+ bl:"Suspect endocarditis in anyone with fever and a murmur, especially with a prosthetic valve, prior endocarditis, injection drug use or recent bacteremia. Diagnose with blood cultures and echo (Duke criteria), treat with prolonged IV antibiotics, and refer for surgery when indicated.",
+ key:["Draw at least three sets of blood cultures from separate sites before antibiotics.","Staph aureus is the most common cause overall; viridans streptococci with native valves; Staph epidermidis with early prosthetic-valve infection.","Surgery indications: heart failure from valve dysfunction, uncontrolled infection (abscess, persistent bacteremia, fungal or resistant organisms), and large mobile vegetations with emboli.","Prophylaxis before dental procedures only for the highest-risk patients: prosthetic valves, prior endocarditis, certain congenital disease and transplant valvulopathy."],
+ ed:["Daily on an endocarditis patient: fever curve, repeat cultures until clear, new murmurs, ECG for PR prolongation (aortic root abscess) and neuro checks for emboli.","A new AV block in aortic valve endocarditis suggests a perivalvular abscess; get a TEE."],
+ mod:["The 2023 Duke–ISCVID criteria update microbiology and imaging (PET/CT, CT) criteria; POET supports switching stable patients to oral antibiotics in selected left-sided endocarditis.","Spectrum, the ID app in PANACEA, covers organisms and antibiotics in more depth."],
+ q:["A new PR prolongation in a patient with aortic valve endocarditis suggests what?","Perivalvular (aortic root) abscess extending into the conduction system; get a TEE and a surgical consult."]},
+
+/* ---------- Unit 6: Aorta, pericardium, PH, murmurs, arrhythmias (ch. 18–22, pp. 293–320) ---------- */
+{id:"ao1",u:6,t:"Aortic and peripheral arterial disease; pericardial disease",p:[[293,301]],
+ bl:"Aortic dissection is a lethal emergency: type A (ascending) needs surgery, type B is usually medical. Abdominal aortic aneurysms are screened and repaired by size. Pericardial disease ranges from acute pericarditis to tamponade and constriction.",
+ key:["Dissection: control heart rate first (IV beta-blocker, target HR under 60), then blood pressure (systolic 100–120).","AAA repair at 5.5 cm in men (5.0 cm in women), or rapid growth or symptoms.","Pericarditis: NSAIDs or aspirin plus colchicine; avoid steroids as first-line. Tamponade: Beck’s triad (hypotension, raised JVP, muffled sounds), pulsus paradoxus, and urgent pericardiocentesis.","Constrictive pericarditis: raised JVP with Kussmaul’s sign, pericardial knock and edema; treat with pericardiectomy."],
+ ed:["Never give thrombolytics or anticoagulation if dissection is on the differential.","Tamponade is preload dependent: give fluids and avoid diuretics, nitrates and positive-pressure ventilation where possible."],
+ mod:["Colchicine for 3 months with acute pericarditis halves recurrence (ICAP); rilonacept treats recurrent pericarditis."],
+ q:["What do you control first in acute aortic dissection, and with what?","Heart rate (and the force of ejection), with an IV beta-blocker such as esmolol or labetalol, before adding vasodilators."]},
+
+{id:"ph1",u:6,t:"Pulmonary hypertension and the patient with a murmur",p:[[302,309]],
+ bl:"Pulmonary hypertension is mostly secondary to left heart or lung disease; idiopathic pulmonary arterial hypertension is a diagnosis of exclusion confirmed by right heart catheterization. For murmurs, know when an echo is needed and when a careful exam is enough.",
+ key:["PH exam: loud P2, RV heave, TR murmur, raised JVP and edema.","WHO groups: 1 PAH, 2 left heart disease, 3 lung disease or hypoxia, 4 chronic thromboembolic, 5 multifactorial.","PAH therapy targets endothelin, nitric oxide and prostacyclin pathways and is managed by specialty centers.","Echo for: diastolic and continuous murmurs, loud systolic murmurs (grade 3+), murmurs with symptoms or abnormal ECG or x-ray, and holosystolic or late systolic murmurs."],
+ ed:["Rule out chronic thromboembolic PH with a V/Q scan; it is potentially curable.","In severe PH, avoid hypoxia, acidosis and hypotension, which all worsen RV failure."],
+ mod:["PH is now defined by mean pulmonary artery pressure over 20 mmHg (previously 25) at right heart catheterization (2022 ESC/ERS)."],
+ q:["Which test screens for chronic thromboembolic pulmonary hypertension?","A ventilation-perfusion (V/Q) scan."]},
+
+{id:"arr1",u:6,t:"Arrhythmias: general approach and atrial fibrillation",p:[[310,316]],
+ bl:"Approach any arrhythmia by asking whether the patient is stable, then by rate, rhythm and QRS width. AF management has three parts: rate or rhythm control, stroke prevention, and treating the cause.",
+ key:["Unstable tachyarrhythmia (hypotension, ischemia, altered mental status, pulmonary edema): synchronized cardioversion.","AF rate control: beta-blockers or diltiazem (avoid in HFrEF); digoxin or amiodarone if pressure or EF is low.","Stroke risk: CHA₂DS₂-VASc (anticoagulate at 2 or more in men, 3 or more in women); weigh bleeding risk.","Cardioversion of AF over 48 hours (or unknown) needs 3 weeks of anticoagulation first, or a TEE, and 4 weeks after."],
+ ed:["New AF on the wards: look for the trigger (infection, PE, thyroid, alcohol, electrolytes, post-op, ischemia) as well as the rate.","Check renal function and weight to dose DOACs correctly."],
+ mod:["Early rhythm control (EAST-AFNET 4) and catheter ablation in HFrEF (CASTLE-AF) improve outcomes; the 2023 AF guideline staged AF and emphasized risk-factor control (weight loss, alcohol reduction, sleep apnea)."],
+ q:["At what CHA₂DS₂-VASc score is anticoagulation recommended?","2 or more in men, 3 or more in women (and considered at 1 in men or 2 in women)."]},
+
+{id:"arr2",u:6,t:"SVT, VT and bradyarrhythmias",p:[[317,320]],
+ bl:"Most SVT is reentry that ends with vagal maneuvers or adenosine and is cured by ablation. VT signals structural heart disease until proven otherwise. Bradycardias need a search for reversible causes before a pacemaker.",
+ key:["SVT: vagal maneuvers, then adenosine 6 mg then 12 mg rapid IV push; avoid AV nodal blockers if preexcitation is suspected.","Wide-complex tachycardia: treat as VT. Stable: procainamide or amiodarone; unstable: cardioversion.","Bradycardia causes: drugs (beta-blockers, calcium blockers, digoxin), hyperkalemia, hypothyroidism, ischemia, infection (Lyme), and degenerative conduction disease.","Pacemakers for symptomatic sinus node dysfunction, Mobitz II, high-grade and complete heart block."],
+ ed:["Before calling a pacemaker consult, hold nodal blockers, check potassium and TSH, and review the telemetry.","After any sustained VT, look for ischemia and get an echo for structural disease."],
+ q:["What should you check before blaming a new bradycardia on intrinsic conduction disease?","Medications (beta-blockers, calcium blockers, digoxin, antiarrhythmics), potassium, thyroid function, ischemia and sleep apnea."]},
+
+/* ---------- Unit 7: Special situations (ch. 23–27, pp. 321–345) ---------- */
+{id:"chd1",u:7,t:"Adult congenital heart disease",p:[[321,326]],
+ bl:"The common lesions seen in adults are bicuspid aortic valve, pulmonic stenosis, ASD and PFO, VSD, coarctation, PDA and Marfan syndrome. Each has a classic exam finding and a typical late complication.",
+ key:["Bicuspid aortic valve: ejection click, early AS or AR, and aortopathy (dilated aorta); screen first-degree relatives.","ASD: wide fixed split S2, RV volume overload, AF and paradoxical embolism.","Coarctation: upper-extremity hypertension, radio-femoral delay, rib notching; associated with bicuspid valve.","Marfan: aortic root dilation and dissection risk; beta-blockers or ARBs and elective root repair."],
+ ed:["Adult congenital patients should be followed at specialist centers; flag them early in an admission.","Upper-extremity hypertension in a young patient: check femoral pulses for coarctation."],
+ q:["Which exam finding is classic for an atrial septal defect?","Wide, fixed splitting of S2."]},
+
+{id:"periop1",u:7,t:"Noncardiac surgery and cardiac tumors",p:[[327,332]],
+ bl:"Preoperative cardiac assessment balances the patient’s risk factors, the surgery’s risk and functional capacity. Most patients go to surgery without further testing. Cardiac tumors are rare: myxomas are the most common primary tumor; metastases are far more common than primary tumors.",
+ key:["Proceed without testing if functional capacity is 4 METs or more (climbing a flight of stairs) and there’s no active cardiac condition.","Active conditions that delay elective surgery: unstable coronary syndromes, decompensated HF, significant arrhythmias, severe valve disease.","Continue beta-blockers and statins perioperatively; don’t start high-dose beta-blockers right before surgery (POISE).","Atrial myxoma: dyspnea, emboli, constitutional symptoms and a ‘tumor plop’; treat with surgical excision."],
+ ed:["Delay elective surgery after drug-eluting stents (ideally 6 months) because of the need for DAPT.","Know how to hold and restart anticoagulants around procedures; most AF patients on warfarin don’t need bridging (BRIDGE)."],
+ mod:["The 2024 ACC/AHA perioperative guideline adds biomarkers (BNP, troponin) and emphasizes postoperative troponin surveillance in higher-risk patients."],
+ q:["What functional capacity lets most patients proceed to noncardiac surgery without stress testing?","4 METs or more, such as climbing a flight of stairs without symptoms."]},
+
+{id:"false1",u:7,t:"‘False’ heart disease, the athlete’s heart and iatrogenic disease",p:[[333,339]],
+ bl:"Many symptoms, signs, ECGs and tests mislead. Innocent murmurs, normal ECG variants, athletic adaptation and test artifacts cause unnecessary worry and testing. Labeling a healthy person with heart disease is itself harmful.",
+ key:["Common pitfalls: innocent flow murmurs, juvenile T waves, early repolarization, lead misplacement, motion artifact and false-positive stress tests in low-risk patients.","Athlete’s heart: sinus bradycardia, first-degree or Wenckebach block, voltage LVH and early repolarization, all normal.","Separate athletic adaptation from HCM: HCM has deep T inversions, abnormal Q waves, diastolic dysfunction and does not regress with deconditioning.","Iatrogenic heart disease: harm from labeling, restriction and unnecessary procedures."],
+ ed:["Interpret every test with the pretest probability in mind; a positive test in a low-risk patient is often false.","Reassurance is a treatment: explain clearly when findings are normal variants."],
+ q:["How can you tell athlete’s heart from HCM?","Athlete’s heart has symmetric modest hypertrophy, normal diastolic function and regresses with deconditioning; HCM has asymmetric or extreme hypertrophy, deep T inversions, diastolic dysfunction and a family history."]},
+
+{id:"emerg1",u:7,t:"Acute cardiac emergencies: arrest, brady, tachy and shock",p:[[340,345]],
+ bl:"Cardiac arrest care is high-quality CPR and early defibrillation for shockable rhythms, with epinephrine and a search for reversible causes. Bradycardia and tachycardia with a pulse are managed by stability. Shock is classified and treated by cause.",
+ key:["VF or pulseless VT: shock, CPR for 2 minutes, epinephrine 1 mg every 3–5 minutes, amiodarone 300 mg (then 150 mg) or lidocaine.","PEA and asystole: CPR, epinephrine early, and the Hs and Ts (hypovolemia, hypoxia, acidosis, hypo/hyperkalemia, hypothermia; tension pneumothorax, tamponade, toxins, thrombosis).","Unstable bradycardia: atropine 1 mg, then pacing or epinephrine or dopamine infusion.","Cardiogenic shock: cold and wet; norepinephrine, inotropes, revascularization for MI, and mechanical support."],
+ ed:["On a sub-I you may run part of a code: know the rhythm checks every 2 minutes, compressor swaps and the Hs and Ts by heart.","Recognize cardiogenic shock early: cool extremities, rising lactate, falling urine output and confusion."],
+ mod:["CPR quality targets: 100–120 compressions per minute, 2–2.4 inches deep, full recoil, minimal pauses; ECPR and mechanical support are used in selected centers."],
+ q:["List the reversible causes of PEA arrest.","Hypovolemia, hypoxia, hydrogen ion (acidosis), hypo- or hyperkalemia, hypothermia; tension pneumothorax, tamponade, toxins, and thrombosis (coronary or pulmonary)."]}
+);
+
+/* reading items: "p65-80" (page range in the book) and "r335" (one reference sheet) */
+function items(l){return l.p.map(([a,b])=>'p'+a+'-'+b).concat((l.ref||[]).map(r=>'r'+r))}
+function itemPages(c){if(c[0]==='r')return[+c.slice(1),+c.slice(1)];const[a,b]=c.slice(1).split('-').map(Number);return[a,b]}
+function itemLabel(c){const[a,b]=itemPages(c);if(c[0]==='r')return{bk:'Quick reference · inside back cover',ch:REFT[a]||''};return{bk:'Chizner',ch:a===b?'p. '+a:'pp. '+a+'–'+b+' · '+(b-a+1)+' pages'}}
+function lessonPages(l){const o=[];for(const[a,b]of l.p)for(let i=a;i<=b;i++)o.push(i);return o}
+
+/* ---------- state: completions, reading ticks and notes (earlier typed answers are kept in S.ans), per device, optionally synced ---------- */
+const KEY='panacea.systole.v1';
+let S={done:{},notes:{},read:{},ans:{}};
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&typeof r==='object'){S.done=r.done||{};S.notes=r.notes||{};S.read=r.read||{};S.ans=r.ans||{}}}catch(e){}
+let saveT=null;function writeNow(){clearTimeout(saveT);saveT=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save on this device.')}scheduleSync()}
+function save(){clearTimeout(saveT);saveT=setTimeout(writeNow,250)}
+window.addEventListener('pagehide',()=>{if(saveT)writeNow()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)writeNow()});
+
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const fmtDay=s=>new Date(s+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isDone=id=>!!(S.done[id]&&S.done[id].on);
+const isRead=(l,c)=>!!(S.read[l+':'+c]&&S.read[l+':'+c].on);
+const IDX=Object.fromEntries(L.map((l,i)=>[l.id,i]));
+const unitOf=u=>UNITS.find(x=>x.n===u);
+function current(){return L.find(l=>!isDone(l.id))||null}
+function doneToday(){const t=today();return L.filter(l=>isDone(l.id)&&S.done[l.id].day===t)}
+function streak(){
+  const days=new Set(Object.values(S.done).filter(d=>d.on).map(d=>d.day));
+  let n=0;const d=new Date();if(!days.has(today()))d.setDate(d.getDate()-1);
+  for(;;){const k=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());if(days.has(k)){n++;d.setDate(d.getDate()-1)}else break}
+  return n}
+
+/* ---------- optional sync: reuses ICU Rounder's private GitHub repo setup on this device ---------- */
+const SYNC_FILE='systole.json';
+let SY=null;try{SY=JSON.parse(localStorage.getItem('icu-rounds-sync')||'null')}catch(e){}
+let syncState=SY?'idle':'off',syncing=false,syncAgain=false,syncT=null;
+const b64enc=str=>{const b=new TextEncoder().encode(str);let s2='';for(const x of b)s2+=String.fromCharCode(x);return btoa(s2)};
+const b64dec=str=>new TextDecoder().decode(Uint8Array.from(atob(str.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+async function gh(path,opts={}){
+  const r=await fetch(`https://api.github.com/repos/${SY.owner}/${SY.repo}${path}`,{cache:'no-store',...opts,
+    headers:{Authorization:`Bearer ${SY.token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(opts.headers||{})}});
+  if(!r.ok){const e=new Error('GitHub '+r.status);e.status=r.status;throw e}
+  return (opts.headers&&opts.headers.Accept||'').includes('raw')?r.text():r.json()}
+async function remoteGet(){
+  try{const m=await gh('/contents/'+SYNC_FILE);const txt=m.content?b64dec(m.content):await gh('/contents/'+SYNC_FILE,{headers:{Accept:'application/vnd.github.raw+json'}});
+    let doc=null;try{doc=JSON.parse(txt)}catch(e){}return{doc,sha:m.sha}}
+  catch(e){if(e.status===404||e.status===409)return{doc:null,sha:null};throw e}}
+function mergeMap(a,b){const out={...(b||{})};for(const[k,v]of Object.entries(a||{}))if(!out[k]||(v.ts||0)>=(out[k].ts||0))out[k]=v;return out}
+const PARTS=['done','notes','read','ans'];
+function setSync(s){syncState=s;const d=document.getElementById('syncdot');if(d){d.className='syncdot '+s;d.title=syncTitle()}}
+function syncTitle(){return{off:'Saved on this device',idle:'Sync ready',syncing:'Syncing…',ok:'Synced across devices',error:'Not synced right now; saved on this device'}[syncState]}
+function scheduleSync(ms=1200){if(!SY)return;clearTimeout(syncT);syncT=setTimeout(syncNow,ms)}
+async function syncNow(){if(!SY)return;clearTimeout(syncT);if(syncing){syncAgain=true;return}syncing=true;setSync('syncing');
+  try{for(let attempt=0;;attempt++){
+      const rem=await remoteGet();
+      if(rem.doc){let changed=false;
+        for(const k of PARTS){const m=mergeMap(S[k],rem.doc[k]);if(JSON.stringify(m)!==JSON.stringify(S[k]))changed=true;S[k]=m}
+        if(changed){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}softRender()}}
+      const out={app:'systole',version:1,updated:new Date().toISOString()};for(const k of PARTS)out[k]=S[k];
+      if(rem.doc&&PARTS.every(k=>JSON.stringify(rem.doc[k]||{})===JSON.stringify(out[k])))break;
+      try{await gh('/contents/'+SYNC_FILE,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Systole sync',content:b64enc(JSON.stringify(out)),...(rem.sha?{sha:rem.sha}:{})})});break}
+      catch(e){if((e.status===409||e.status===422)&&attempt<2)continue;throw e}}
+    setSync('ok')}
+  catch(e){setSync('error')}
+  finally{syncing=false;if(syncAgain){syncAgain=false;scheduleSync(300)}}}
+function softRender(){const ae=document.activeElement;if(ae&&ae.tagName==='TEXTAREA')return;render(true)}
+if(SY){syncNow();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncNow()});window.addEventListener('online',syncNow)}
+
+/* ---------- rendering ---------- */
+const HOME=`<a class="homebtn" href="../" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
+const CK=`<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const CHEV=`<svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>`;
+const IC={
+ key:`<svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>`,
+ ed:`<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>`,
+ mod:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>`,
+ q:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.3 2.4c-.5.2-.8.6-.8 1.1V14M12 17.5v.01"/></svg>`,
+ ans:`<svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>`,
+ nt:`<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></svg>`};
+const hd=document.getElementById('hd'),app=document.getElementById('app');
+let filter='';
+
+function route(){const h=location.hash.slice(1);if(h==='all')return{v:'all'};if(h==='books')return{v:'books'};
+  const rm=h.match(/^read\/(\d+)-(\d+)$/);if(rm)return{v:'read',a:+rm[1],b:+rm[2]};
+  if(h.startsWith('l/')&&IDX[h.slice(2)]!==undefined)return{v:'lesson',id:h.slice(2)};return{v:'today'}}
+function render(keep){const r=route();const y=window.scrollY;
+  if(r.v!=='read')closeReader();
+  if(r.v==='books')renderBooks();else if(r.v==='read')renderReader(r.a,r.b);else if(r.v==='all')renderAll();else if(r.v==='lesson')renderLesson(L[IDX[r.id]]);else renderToday();
+  window.scrollTo(0,keep?y:0)}
+function header(title,back){hd.innerHTML=`${HOME}${back?`<button class="back" data-go="${back}" aria-label="Back">‹</button>`:''}<h1>${esc(title)}</h1><span class="syncdot ${syncState}" id="syncdot" title="${esc(syncTitle())}"></span>${back?'':`<button class="hdlink" data-go="#all">All lessons</button>`}`}
+
+function ring(n,t){const r=24,c=2*Math.PI*r,off=c*(1-(t?n/t:0));
+  return `<svg class="ring" viewBox="0 0 58 58" aria-hidden="true"><circle class="tr" cx="29" cy="29" r="${r}"/><circle class="pr" cx="29" cy="29" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/><text x="29" y="33.5" text-anchor="middle">${Math.round(t?n/t*100:0)}%</text></svg>`}
+function progressCard(){const n=L.filter(l=>isDone(l.id)).length,st=streak();
+  return `<div class="card prog">${ring(n,L.length)}<div class="txt"><div class="big">${n} of ${L.length} lessons</div><div class="sm">${st?`${st}-day streak · `:''}Chizner, cover to cover, one lesson a day</div></div></div>`}
+
+function renderToday(){
+  document.title='Systole';header('Systole');
+  const cur=current(),dt=doneToday();
+  let h=progressCard();
+  if(!cur){h+=`<div class="card status"><span class="ck">${CK}</span><div><h2>Curriculum complete</h2><p>All ${L.length} lessons done. Revisit any lesson from the full list.</p></div></div>`;app.innerHTML=h;return}
+  if(dt.length){
+    const last=dt[dt.length-1];
+    h+=`<div class="card"><div class="status"><span class="ck">${CK}</span><div><h2>Today’s lesson is done</h2><p>${esc(last.t)}</p></div></div>
+      <div class="next"><div class="eb">Tomorrow · Day ${IDX[cur.id]+1}</div><div class="nt">${esc(cur.t)}</div></div>
+      <div class="btnrow" style="margin-top:12px"><button class="btn sm" data-go="#l/${last.id}">Review today’s</button><button class="btn sm" data-go="#l/${cur.id}">Read ahead</button></div></div>`;
+    app.innerHTML=h;return}
+  app.innerHTML=h+lessonBody(cur,true);
+}
+
+function readList(l){
+  const its=items(l);
+  if(!its.length)return `<div class="noread">No Chizner pages today: this lesson goes past the book. Read the lesson, then answer the check below.</div>`;
+  const n=its.filter(c=>isRead(l.id,c)).length;
+  return `<div class="rdh"><span>Today’s reading</span><span id="rdct">${n} of ${its.length} read</span></div>
+  <ul class="reads">${its.map(c=>{const x=itemLabel(c),lk=!!srcFor(itemPages(c)[0]),rd=isRead(l.id,c);
+    return `<li class="${lk?'lk':'nl'}${rd?' rd':''}"><button class="rck" data-a="rtick" data-l="${l.id}" data-c="${c}" role="checkbox" aria-checked="${rd}" aria-label="Mark ${esc(x.bk)} ${esc(x.ch)} as read"><span>${CK}</span></button><button data-read="${c}" data-from="${l.id}"><span class="tx"><span class="bk">${esc(x.bk)}</span><span class="ch">${esc(x.ch)}</span></span><span class="op">${lk?'Open':'Link PDF'}</span></button></li>`}).join('')}</ul>`}
+
+function lessonBody(l,isToday){
+  const i=IDX[l.id],u=unitOf(l.u),d=S.done[l.id],done=isDone(l.id);
+  const prev=L[i-1],next=L[i+1];
+  const list=a=>`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  return `<div class="eyebrow">${isToday?'Today · ':''}Day ${i+1} · Unit ${u.n}: ${esc(u.t)}</div>
+  <h2 class="lt">${esc(l.t)}</h2>
+  ${readList(l)}
+  <div class="bl"><b>Bottom line</b>${esc(l.bl)}</div>
+  <section class="sec"><h3>${IC.key}Key points</h3>${list(l.key)}</section>
+  <section class="sec"><h3>${IC.ed}On the wards</h3>${list(l.ed)}</section>
+  ${l.mod?`<section class="sec mod"><h3>${IC.mod}Beyond the book</h3>${list(l.mod)}</section>`:''}
+  <section class="sec qz" id="qz"><h3>${IC.q}Check yourself</h3><p class="qq">${esc(l.q[0])}</p><button class="linkbtn" data-a="reveal">Show answer</button><div class="qa">${esc(l.q[1])}</div></section>
+  <section class="sec"><h3>${IC.nt}My notes</h3><textarea data-note="${l.id}" placeholder="Takeaways, things to look for on rounds, questions">${esc((S.notes[l.id]||{}).t||'')}</textarea></section>
+  <div class="complete">${done?`<p class="donemsg">Completed ${d.day===today()?'today':fmtDay(d.day)}</p><button class="btn block" data-a="undo" data-id="${l.id}">Mark as not done</button>`:`<button class="btn primary block" data-a="done" data-id="${l.id}">Complete lesson</button>`}</div>
+  <div class="pager"><button data-go="#l/${prev?prev.id:''}" ${prev?'':'disabled'}><small>Previous</small><span>${prev?esc(prev.t):''}</span></button><button data-go="#l/${next?next.id:''}" ${next?'':'disabled'}><small>Next</small><span>${next?esc(next.t):''}</span></button></div>`;
+}
+function renderLesson(l){document.title=l.t+' · Systole';header('Day '+(IDX[l.id]+1),'#');app.innerHTML=lessonBody(l,current()===l&&!doneToday().length)}
+
+function renderAll(){
+  document.title='All lessons · Systole';header('All lessons','#today');
+  const f=filter.toLowerCase(),cur=current();
+  let h=`<input class="search" id="q" type="search" placeholder="Search lessons" value="${esc(filter)}" autocomplete="off">`;
+  for(const u of UNITS){
+    const ls=L.filter(l=>l.u===u.n&&(!f||(l.t+' '+l.bl+' '+l.key.join(' ')).toLowerCase().includes(f)));
+    if(!ls.length)continue;
+    const all=L.filter(l=>l.u===u.n),nd=all.filter(l=>isDone(l.id)).length;
+    const open=f||(cur&&cur.u===u.n);
+    h+=`<details class="unit"${open?' open':''}><summary><span class="un">${u.n}</span><span class="nm">${esc(u.t)}</span><span class="ct${nd===all.length?' all':''}">${nd}/${all.length}</span>${CHEV}</summary>`;
+    for(const l of ls){const d=isDone(l.id),pg=l.p.map(([a,b])=>a+'–'+b).join(', ');
+      h+=`<button class="lrow${d?' d':''}${cur===l?' today':''}" data-go="#l/${l.id}"><span class="dn">Day ${IDX[l.id]+1}</span><span class="lt2">${esc(l.t)}<small>${d?`Done ${fmtDay(S.done[l.id].day)}`:cur===l?'Up next':pg?'pp. '+pg:'Beyond the book'}</small></span><span class="bx">${CK}</span></button>`}
+    h+=`</details>`}
+  h+=`<div class="btnrow" style="margin-top:6px"><button class="btn block" data-go="#books">Your PDF · ${BM.D?'linked on this device':'not linked yet'}</button></div>`;
+  h+=`<div class="foot">Readings point to printed page numbers in ${esc(BOOKS.D.full)}. Lessons are summaries for learning, not orders for a specific patient.${SY?'':' Progress and notes are saved on this device; if ICU Rounder sync is turned on here, Systole syncs through the same private repo.'}</div>`;
+  app.innerHTML=h;
+}
+
+/* ---------- your PDF: kept only in this browser (IndexedDB), never uploaded ---------- */
+const BMKEY='panacea.systole.books';
+let BM={};try{BM=JSON.parse(localStorage.getItem(BMKEY)||'{}')||{}}catch(e){}
+const saveBM=()=>{try{localStorage.setItem(BMKEY,JSON.stringify(BM))}catch(e){}};
+let dbP=null;
+function db(){return dbP||(dbP=new Promise((res,rej)=>{const r=indexedDB.open('systole-books',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function idb(mode,fn){const d=await db();return new Promise((res,rej)=>{const tx=d.transaction('files',mode);const st=tx.objectStore('files');const rq=fn(st);tx.oncomplete=()=>res(rq&&rq.result);tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)})}
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+let pdfjsP=null;
+function loadPdfjs(){return pdfjsP||(pdfjsP=new Promise((res,rej)=>{if(window.pdfjsLib){res();return}const sc=document.createElement('script');sc.src=PDFJS;
+  sc.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace('pdf.min.js','pdf.worker.min.js');res()};sc.onerror=()=>{pdfjsP=null;rej(new Error('Couldn’t load the PDF reader. Check your connection.'))};document.head.appendChild(sc)}))}
+const DOCS={};
+async function getDoc(code){if(DOCS[code])return DOCS[code];
+  const blob=await idb('readonly',st=>st.get(code));if(!blob)throw new Error('That PDF isn’t on this device anymore. Link it again.');
+  await loadPdfjs();const data=new Uint8Array(await blob.arrayBuffer());
+  DOCS[code]=await pdfjsLib.getDocument({data}).promise;return DOCS[code]}
+/* Which linked file shows a printed page, and at which PDF page. */
+function srcFor(p){
+  if(BM.D){const pp=p+(BM.D.off||0);if(!BM.D.pages||(pp>=1&&pp<=BM.D.pages))return{code:'D',off:BM.D.off||0}}
+  return null}
+/* Read printed page numbers from the PDF's text to line printed pages up with PDF pages. */
+async function detectOffset(doc){
+  const N=doc.numPages,idx=[];const want=Math.min(N,40);
+  for(let k=0;k<want;k++){const i=N<=40?k+1:Math.round(1+(N-1)*(k+.5)/want);if(!idx.includes(i))idx.push(i)}
+  const votes={};let used=0;
+  for(const i of idx){let tc;try{tc=await(await doc.getPage(i)).getTextContent()}catch(e){continue}
+    const seen=new Set();let any=false;
+    for(const it of tc.items){const s=(it.str||'').trim();if(!s)continue;any=true;if(!/^\d{1,3}$/.test(s))continue;const n=+s;if(n<1||n>400)continue;seen.add(i-n)}
+    if(any)used++;for(const o of seen)votes[o]=(votes[o]||0)+1}
+  let best=null,bv=0;for(const[o,v]of Object.entries(votes))if(v>bv){bv=v;best=+o}
+  return bv>=Math.max(2,Math.ceil(used*.3))?best:null}
+let linking='';
+async function linkBook(code,file){linking=code;render(true);
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+    let doc=null,pages=null,off=null;
+    try{await loadPdfjs();doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;pages=doc.numPages;off=await detectOffset(doc)}catch(e){}
+    await idb('readwrite',st=>st.put(file,code));DOCS[code]=doc;
+    if(off===null)off=0;
+    BM[code]={name:file.name,size:file.size,pages,off,auto:off!==null,at:Date.now()};saveBM();
+    toast(!pages?'Linked, but the file couldn’t be read as a PDF.':'Chizner linked. If pages look off, use the shift buttons in the reader.')}
+  catch(e){toast(e&&e.name==='QuotaExceededError'?'Not enough storage on this device for that file.':'Couldn’t save that file on this device.')}
+  linking='';render(true)}
+async function unlinkBook(code){try{await idb('readwrite',st=>st.delete(code))}catch(e){}delete BM[code];delete DOCS[code];saveBM();render(true)}
+const mb=n=>(n/1048576).toFixed(n>10485760?0:1)+' MB';
+function renderBooks(){
+  document.title='Your PDF · Systole';header('Your PDF','#bback');
+  let h=`<div class="card"><p style="margin:0 0 4px">Pick your copy of Chizner once on this device. Every reading then opens straight to its pages.</p>
+   <p class="note" style="margin-top:6px">Files stay in this browser only. They aren’t uploaded, synced, or added to PANACEA, so link them again on each phone or computer. Your progress and notes do sync.</p></div><div class="card">`;
+  for(const[k,b]of Object.entries(BOOKS)){const m=BM[k];
+    const st=linking===k?'<span class="st">Saving…</span>':m?`<span class="st ok">Linked · ${esc(m.name)} · ${m.pages?m.pages+' pages · ':''}${mb(m.size)}</span>`:'<span class="st">Not linked</span>';
+    h+=`<div class="bkrow"><div class="tx"><div class="nm">The book</div><div class="st" style="margin-bottom:2px">${esc(b.full)}</div>${st}</div>
+      <div class="btnrow" style="flex:none;flex-direction:column;align-items:stretch">
+      <label class="btn sm filebtn">${m?'Replace':'Choose PDF'}<input type="file" accept="application/pdf,.pdf" data-file="${k}"></label>
+      ${m?`<button class="linkbtn" data-a="unlink" data-b="${k}">Remove</button>`:''}</div></div>`}
+  h+=`</div>`;
+  
+  app.innerHTML=h}
+
+let RD=null;
+function closeReader(){if(RD){RD.obs&&RD.obs.disconnect();RD.vis&&RD.vis.disconnect();RD.dead=true;RD=null}const c=document.getElementById('pgchip');if(c)c.remove()}
+async function renderReader(a,b){
+  closeReader();
+  const lab=a===b?'p. '+a:'pp. '+a+'–'+b;
+  document.title='Chizner '+lab+' · Systole';header('Chizner · '+lab,'#rback');
+  const src=srcFor(a);
+  if(!src){app.innerHTML=`<div class="card" style="margin-top:12px"><p style="margin:0 0 10px">Link your PDF on this device to read here.</p><button class="btn sm" data-go="#books">Your PDF</button></div>`;return}
+  app.innerHTML=`<div class="reader" id="rdr" style="margin-top:12px"><div class="loading">Opening…</div></div>`;
+  const me=RD={dead:false};
+  let doc;try{doc=await getDoc(src.code)}catch(e){if(!me.dead)document.getElementById('rdr').innerHTML=`<div class="card" style="width:100%"><p style="margin:0 0 10px">${esc(e.message)}</p><button class="btn sm" data-go="#books">Your PDF</button></div>`;return}
+  if(me.dead)return;
+  const off=src.off,first=await doc.getPage(Math.min(Math.max(a+off,1),doc.numPages));const vp1=first.getViewport({scale:1});const ratio=vp1.height/vp1.width;
+  if(me.dead)return;
+  const box=document.getElementById('rdr');box.innerHTML='';
+  const cal=document.createElement('div');cal.className='cal';
+  cal.innerHTML=`<span class="tx">Printed p. ${a} is PDF page ${a+off}. Pages off?</span><button class="btn sm" data-a="shift" data-c="${src.code}" data-d="-1" aria-label="Shift back one page">−1</button><button class="btn sm" data-a="shift" data-c="${src.code}" data-d="1" aria-label="Shift forward one page">+1</button>`;
+  box.appendChild(cal);
+  for(let p=a;p<=b;p++){const pp=p+off,w=document.createElement('div');w.className='pgw';
+    const ok=pp>=1&&pp<=doc.numPages;
+    w.innerHTML=`<div class="pg${ok?'':' miss'}" data-p="${pp}" style="aspect-ratio:${(1/ratio).toFixed(4)}"><span class="pn">p. ${p}</span>${ok?'':'Not in this PDF'}</div>`;
+    box.appendChild(w)}
+  const end=document.createElement('div');end.className='btnrow';end.style.margin='14px 0 64px';end.innerHTML=`<button class="btn" data-go="#rback">Back to the lesson</button>`;box.appendChild(end);
+  const chip=document.createElement('div');chip.className='pgchip';chip.id='pgchip';chip.textContent=a===b?'p. '+a:`p. ${a} · 1 of ${b-a+1}`;document.body.appendChild(chip);
+  const rendered=new Map();
+  async function draw(el){const p=+el.dataset.p;if(rendered.has(p)||me.dead||el.classList.contains('miss'))return;rendered.set(p,'busy');
+    try{const pg=await doc.getPage(p);if(me.dead)return;const w=el.clientWidth,dpr=Math.min(window.devicePixelRatio||1,2);
+      const vp=pg.getViewport({scale:w/pg.getViewport({scale:1}).width*dpr});const cv=document.createElement('canvas');cv.width=Math.floor(vp.width);cv.height=Math.floor(vp.height);
+      await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;if(me.dead||!rendered.has(p))return;el.prepend(cv);rendered.set(p,cv)}
+    catch(err){rendered.delete(p)}}
+  function drop(el){const p=+el.dataset.p,cv=rendered.get(p);if(cv&&cv!=='busy'){cv.width=cv.height=0;cv.remove()}rendered.delete(p)}
+  me.obs=new IntersectionObserver(es=>{for(const x of es){if(x.isIntersecting)draw(x.target);else drop(x.target)}},{rootMargin:'1200px 0px'});
+  me.vis=new IntersectionObserver(es=>{for(const x of es)if(x.isIntersecting){const p=+x.target.dataset.p-off;chip.textContent=a===b?'p. '+p:`p. ${p} · ${p-a+1} of ${b-a+1}`}},{rootMargin:'-45% 0px -45% 0px'});
+  box.querySelectorAll('.pg').forEach(el=>{me.obs.observe(el);me.vis.observe(el)});
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');
+  if(g){const to=g.dataset.go;if(to==='#l/')return;
+    if(to==='#today'){location.hash='';return}
+    if(to==='#rback'){location.hash=sessionStorage.getItem('systole.readBack')||'';return}
+    if(to==='#bback'){const v=sessionStorage.getItem('systole.booksBack');location.hash=v===null?'all':v;sessionStorage.removeItem('systole.booksBack');return}
+    if(to==='#'){location.hash=sessionStorage.getItem('systole.back')||'';return}
+    const v=route().v;if(to.startsWith('#l/')&&v!=='lesson')sessionStorage.setItem('systole.back',v==='all'?'all':'');
+    if(to==='#books'&&v!=='books')sessionStorage.setItem('systole.booksBack',location.hash.slice(1)||'');
+    location.hash=to.slice(1);return}
+  const rd=e.target.closest('[data-read]');
+  if(rd){const c=rd.dataset.read,[a,b]=itemPages(c),back=route().v==='today'?'':'l/'+rd.dataset.from;
+    sessionStorage.setItem('systole.readBack',back);
+    if(srcFor(a))location.hash='read/'+a+'-'+b;else{sessionStorage.setItem('systole.booksBack',back);location.hash='books'}return}
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const A=b.dataset.a;
+  if(A==='unlink'){unlinkBook(b.dataset.b);return}
+  if(A==='shift'){const m=BM[b.dataset.c];if(!m)return;m.off=(m.off??0)+(+b.dataset.d);m.auto=false;saveBM();const r=route();if(r.v==='read')renderReader(r.a,r.b);return}
+  if(A==='rtick'){const key=b.dataset.l+':'+b.dataset.c,on=!isRead(b.dataset.l,b.dataset.c);S.read[key]={on,ts:Date.now()};save();
+    const li=b.closest('li');li.classList.toggle('rd',on);b.setAttribute('aria-checked',on);
+    const l=L[IDX[b.dataset.l]],its=items(l),n=its.filter(c=>isRead(l.id,c)).length,ct=document.getElementById('rdct');if(ct)ct.textContent=`${n} of ${its.length} read`;
+    if(on&&n===its.length&&!isDone(l.id))toast('All readings done. Complete the lesson when you’re ready.');return}
+  if(A==='reveal'){const q=document.getElementById('qz');q.classList.toggle('open');b.textContent=q.classList.contains('open')?'Hide answer':'Show answer'}
+  else if(A==='done'){const id=b.dataset.id;const wasToday=route().v==='today';S.done[id]={on:true,day:today(),ts:Date.now()};save();
+    toast('Lesson complete.');if(wasToday){location.hash='';render()}else render(true)}
+  else if(A==='undo'){S.done[b.dataset.id]={on:false,day:'',ts:Date.now()};save();render(true)}
+});
+app.addEventListener('change',e=>{const t=e.target;if(t.dataset.file&&t.files&&t.files[0])linkBook(t.dataset.file,t.files[0])});
+app.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderAll();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.dataset.note){S.notes[t.dataset.note]={t:t.value,ts:Date.now()};save();return}
+});
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2600)}
+window.addEventListener('hashchange',()=>render());
+/* Always open on the main page, not the last screen. */
+if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+window.addEventListener('pageshow',e=>{if(e.persisted&&location.hash){history.replaceState(null,'',location.pathname+location.search);render()}});
+render();
+</script>
+</body>
+</html>
