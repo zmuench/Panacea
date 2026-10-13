@@ -252,6 +252,41 @@ pre.labdia{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;lin
 .letters span.a{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .qs{margin:6px 0;padding-left:1.3em}.qs li{margin:3px 0}
 .seg.rass button{min-width:44px;padding:8px 6px;font-variant-numeric:tabular-nums}
+
+/* ---------- printable rounding sheet ---------- */
+#print{display:none}
+.pp{font:8.4pt/1.32 "Atkinson Hyperlegible",-apple-system,system-ui,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pp+.pp{break-before:page;page-break-before:always}
+.pphd{display:flex;align-items:baseline;gap:10pt;border-bottom:1.5pt solid #000;padding-bottom:2pt;margin-bottom:3pt}
+.pphd .pbed{font-size:15pt;font-weight:700;line-height:1}
+.pphd .pmeta{flex:1;font-size:9pt}
+.pphd .pdate{font-size:8.5pt;color:#333;white-space:nowrap}
+.ppsum{margin:0 0 5pt;font-size:8.6pt}.ppsum p{margin:0 0 1pt}
+.pcols{column-count:2;column-gap:.26in;column-rule:.5pt solid #9aa5b1}
+.pp h2{font-size:9pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#dfe5eb;color:#000;padding:1.5pt 5pt;margin:0 0 3pt;break-after:avoid;page-break-after:avoid;break-inside:avoid}
+.pp .soap{margin-bottom:6pt}
+.pp .blk{break-inside:avoid;page-break-inside:avoid;-webkit-column-break-inside:avoid;margin:0 0 3.5pt}
+.pp .blk h3{font-size:7.6pt;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#334;margin:0 0 .5pt}
+.pp .blk p{margin:0}
+.pp .none{color:#666;font-style:italic}
+.pp .dias{display:flex;gap:2pt 14pt;justify-content:flex-start;margin:0 0 2pt}
+.pp .dias figure{margin:0;flex:0 0 2.05in;max-width:2.05in}
+.pp .dias figcaption{font-size:6.8pt;color:#334;font-weight:700;letter-spacing:.05em}
+.pp .dia text{fill:#000;font-size:15px}
+.pp .dia text.dempty{display:none}
+.pp .dline line{stroke:#000;stroke-width:1.3}
+.pp .ap{break-inside:avoid;page-break-inside:avoid;-webkit-column-break-inside:avoid;margin:0 0 11pt;padding:0 0 0 6pt;border-left:1.5pt solid #000}
+.pp .ap h3{font-size:8.8pt;font-weight:700;margin:0 0 1pt;text-transform:none;letter-spacing:0;color:#000}
+.pp .ap h3 span{font-weight:400;font-style:italic}
+.pp .ap p{margin:0}
+.pp .ap ul{margin:0;padding-left:11pt}.pp .ap li{margin:0}
+@media print{
+  @page{size:letter landscape;margin:.3in}
+  :root{padding:0!important}
+  html,body{background:#fff!important}
+  body>*:not(#print){display:none!important}
+  #print{display:block}
+}
 </style>
 </head>
 <body>
@@ -535,7 +570,7 @@ function census(){
   ${!SY&&act.length&&(!S.lastBackup||daysBetween(S.lastBackup,today())>=7)?`<div class="carry"><span>${S.lastBackup?'No backup in over a week.':'You haven’t backed up yet.'}</span><button type="button" class="btn sm" data-act="exportBackup">Export backup</button></div>`:''}
   ${act.length?`<ul class="census">${act.map(ptCard).join('')}</ul>`:`<div class="empty"><p><strong>No patients on the list.</strong></p><p class="muted">Add a patient to start a profile that follows them until discharge from the service.</p></div>`}
   <button class="btn primary block" data-act="addPt">Add patient</button>
-  ${act.length?`<button class="btn block" data-act="go" data-to="handoff">Handoff view</button>`:''}
+  ${act.length?`<button class="btn block" data-act="go" data-to="handoff">Handoff view</button><button class="btn block" data-act="printAll">Print rounding sheets</button>`:''}
   ${dis.length?`<button class="linkbtn" data-act="toggleArchive">${V.showArchive?'Hide':'Show'} discharged patients (${dis.length})</button>
   ${V.showArchive?`<ul class="census arch">${dis.map(p=>`<li><div><strong>Bed ${esc(p.bed)}</strong> <span class="muted">${esc(p.oneLiner||'')}</span></div><div class="acts"><button class="btn sm" data-act="readmit" data-id="${p.id}">Return to list</button><button class="btn sm danger" data-act="delPt" data-id="${p.id}" data-confirm="Tap again to delete">Delete</button></div></li>`).join('')}</ul>`:''}`:''}
   <h2>Backup</h2><div class="card">
@@ -586,7 +621,7 @@ function patientView(){const p=P();const t=today();const day=p.admit?daysBetween
   <section class="card"><p class="oneliner">${esc(p.oneLiner||'No one-liner yet.')}</p>
   <dl class="meta">${meta.map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}${p.pmh?`<div class="wide"><dt>PMH</dt><dd>${esc(p.pmh)}</dd></div>`:''}</dl>
   <div class="row gap"><button class="btn sm" data-act="editPt">Edit details</button><button class="btn sm" data-act="bedOpen">Change bed</button></div></section>${bedEditor(p)}
-  <button class="btn primary block" data-act="startRounds">${p.draft?'Continue rounds':'Start rounds'}</button><button class="btn block iconbtn" data-act="dictOpen" data-back="patient"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/></svg> Dictate while chart reviewing</button><button class="btn block" data-act="trends" data-back="patient">Lab trends</button>
+  <button class="btn primary block" data-act="startRounds">${p.draft?'Continue rounds':'Start rounds'}</button><button class="btn block iconbtn" data-act="dictOpen" data-back="patient"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/></svg> Dictate while chart reviewing</button><button class="btn block" data-act="trends" data-back="patient">Lab trends</button><button class="btn block" data-act="printPt">Print rounding sheet</button>
   <h2>Problem list</h2>
   ${act.length?`<ol class="probs">${act.map(pr=>`<li><strong>${esc(pr.name)}</strong>${pr.plan.length?`<ul>${pr.plan.map((it,i)=>`<li><span>${esc(it.text)}${it.started?`<span class="since">since ${fmtDate(it.started)}</span>`:''}</span><button class="x" data-act="delPlanItem" data-pr="${pr.id}" data-i="${i}" aria-label="Remove plan item">×</button></li>`).join('')}</ul>`:''}</li>`).join('')}</ol>`:'<p class="muted">No active problems. Add them here or during rounds.</p>'}
   <div class="addrow"><input id="newProb" placeholder="Add a problem" autocomplete="off"><button class="btn sm" data-act="addProbPt">Add</button></div>
@@ -723,7 +758,34 @@ summary:(p,d)=>{const fmt=V.fmt||'rounds';const t=buildSummary(p,d,fmt);V.lastSu
 const fmtToggle=fmt=>`<div class="seg">${[['rounds','Read on rounds'],['note','Progress note']].map(([k,l])=>`<button type="button" class="${fmt===k?'on':''}" data-act="fmt" data-k="${k}" aria-pressed="${fmt===k}">${l}</button>`).join('')}</div>`;
 function dayView(){const p=P();const day=p.days.find(x=>x.date===V.dayDate);const fmt=V.fmt||'rounds';
   const t=!day?'':fmt==='note'?(day.note||buildSummary(p,day.data,'note')):day.summary;V.lastSummary=t;
-  return `${topbar(fmtLong(V.dayDate),'patient')}<main class="wrap">${fmtToggle(fmt)}<article class="note-paper">${fmtSummary(t)}</article><p><button class="btn" data-act="copy">Copy text</button></p></main>`}
+  return `${topbar(fmtLong(V.dayDate),'patient')}<main class="wrap">${fmtToggle(fmt)}<article class="note-paper">${fmtSummary(t)}</article><div class="row gap"><button class="btn" data-act="copy">Copy text</button>${day?`<button class="btn" data-act="printDay">Print rounding sheet</button>`:''}</div></main>`}
+
+/* ---------- printable rounding sheet (landscape, two columns, SOAP) ---------- */
+function prLines(t){return String(t||'').split('\n').filter(l=>l.trim()).map(l=>{let e=esc(l.trim());e=e.replace(/^([A-Z][A-Za-z0-9\/&;() \-]{0,34}):/,'<strong>$1:</strong>');return '<p>'+e+'</p>'}).join('')}
+function printPatient(p,d){
+  const date=d&&d.date||today();const icu=p.admit?daysBetween(p.admit,date)+1:null;
+  const meta=[(p.age||'')+(p.sex||''),icu>0&&'ICU day '+icu,p.code,p.allergies&&'Allergies: '+p.allergies,p.severity&&p.severity].filter(Boolean).map(esc).join(' · ');
+  const P2=d?buildSummary(p,d,'parts'):{ap:[]};
+  const blk=(t,b)=>`<div class="blk"><h3>${t}</h3>${b?prLines(b):'<p class="none">None recorded.</p>'}</div>`;
+  const opt=(t,b)=>b?blk(t,b):'';
+  const labTxt=P2.labs||'';
+  const S=`<section class="soap"><h2>S · Subjective</h2>${blk('Overnight / interval events',P2.events)}</section>`;
+  const O=`<section class="soap"><h2>O · Objective</h2>${blk('Vitals and I/O',P2.vitals)}${blk('Exam',P2.exam)}${blk('Respiratory',P2.resp)}${opt('Infusions',P2.drips)}
+    <div class="blk"><h3>Labs</h3><div class="dias">${labDiagrams(d&&d.labs||{})}</div>${labTxt?prLines(labTxt):''}</div>
+    ${opt('Micro',P2.micro)}${opt('Imaging and EKG',P2.img)}${opt('Renal',P2.renal)}${opt('Consults and blood products',P2.consults)}</section>`;
+  let ap=P2.ap;if(!d)ap=p.problems.filter(x=>!x.resolved).map(pr=>({name:pr.name,status:'',note:'',lines:pr.plan.length?['Continue: '+pr.plan.map(x=>x.text).join('; ')+'.']:[]}));
+  const AP=`<section class="soap"><h2>A/P · Assessment and Plan</h2>
+    ${ap.length?ap.map((x,i)=>`<div class="ap"><h3>${i+1}. ${esc(x.name)}${x.status?` <span>— ${esc(x.status)}</span>`:''}</h3>${x.note?'<p>'+esc(x.note)+'</p>':''}${x.lines.length?'<ul>'+x.lines.map(l=>'<li>'+prLines(l).replace(/^<p>|<\/p>$/g,'')+'</li>').join('')+'</ul>':''}</div>`).join(''):'<p class="none">No active problems.</p>'}
+    ${opt('FAST HUGS BID',P2.fhugs)}${opt('Disposition and goals of care',P2.dispo)}${opt('Action list',P2.actions)}${opt('If/then',p.contingency&&sent(p.contingency))}</section>`;
+  return `<article class="pp"><header class="pphd"><span class="pbed">Bed ${esc(p.bed)}</span><span class="pmeta">${meta}</span><span class="pdate">${d?(p.draft&&d===p.draft?'Rounds in progress, ':'Rounds ')+esc(fmtLong(date)):'Not yet rounded'}</span></header>
+  <div class="ppsum">${p.oneLiner?'<p><strong>'+esc(p.oneLiner)+'</strong></p>':''}${p.pmh?'<p><strong>PMH:</strong> '+esc(p.pmh)+'</p>':''}</div>
+  <div class="pcols">${S}${O}${AP}</div></article>`}
+function printSheet(items){if(!items.length){toast('No patients to print.');return}
+  let el=document.getElementById('print');if(!el){el=document.createElement('div');el.id='print';document.body.appendChild(el)}
+  el.innerHTML=items.map(([p,d])=>printPatient(p,d)).join('');
+  const old=document.title;document.title=items.length===1?`ICU rounds bed ${items[0][0].bed} ${(items[0][1]&&items[0][1].date)||today()}`:'ICU rounds '+today();
+  const done=()=>{document.title=old;window.removeEventListener('afterprint',done)};window.addEventListener('afterprint',done);
+  setTimeout(()=>{try{window.print()}catch(e){toast('Printing isn’t available here.')}},60)}
 
 const TORDER=['wbc','hgb','hct','plt','cr','bun','na','k','cl','hco3','glu','lactate','ca','mg','phos','alb','tbili','ast','alt','alp','inr','pct','trop'];
 function spark(vals){const pts=vals.map((v,i)=>[i,v]).filter(x=>x[1]!=null);if(pts.length<2)return '';
@@ -871,25 +933,26 @@ function parseImport(text){try{const o=JSON.parse(text);const pts=Array.isArray(
 function R(o){if(!o)return'';const lo=String(o.lo||'').trim(),hi=String(o.hi||'').trim();return lo&&hi?`${lo}–${hi}`:lo||hi}
 function dripList(cat,d){return cat.map(([k,n])=>{const o=d.drips[k];if(!o||!o.on)return null;const name=n.toLowerCase();if(o.trend==='Stopped')return name+' discontinued'+(o.since?' (started '+fmtDate(o.since)+')':'');const par=[o.trend&&TREND[o.trend],o.since&&sinceStr(o.since,d.date)].filter(Boolean).join('; ');return `${name}${o.dose?' '+o.dose+' '+(o.unit||''):''}${par?' ('+par+')':''}`}).filter(Boolean)}
 
-function buildSummary(p,d,fmt){const N=fmt==='note';
+function buildSummary(p,d,fmt){const N=fmt==='note',PARTS=fmt==='parts',parts={ap:[]};
   const T=(t,b,multi)=>!b||!String(b).trim()?'':N?t.toUpperCase()+':\n'+b:multi?t+':\n'+b:t+': '+b;
   const out=[];const para=s=>{if(s&&s.trim())out.push(s.replace(/\s+$/,''))};
+  const sec=(k,t,b,multi)=>{para(T(t,b,multi));if(b&&String(b).trim())parts[k]=String(b).trim()};
   const icu=p.admit?daysBetween(p.admit,d.date)+1:null;const as=(p.age||'')+(p.sex||'');
   para((N?'ICU PROGRESS NOTE, '+fmtLong(d.date)+'\n':'')+[`Bed ${p.bed}${bedMove(p,d)}${as?', '+as:''}${icu>0?', ICU day '+icu:''}.${N?'':' Rounds '+fmtLong(d.date)+'.'}`,p.oneLiner&&sent(p.oneLiner),[p.code&&`Code status: ${p.code}.`,p.allergies&&`Allergies: ${sent(p.allergies)}`].filter(Boolean).join(' ')].filter(Boolean).join('\n'));
 
-  const ov=d.overnight||{};let os=(ov.f||[]).join('; ');os=[os&&sent(os),ov.note&&sent(ov.note)].filter(Boolean).join(' ');para(T(N?'Interval events':'Overnight',os));
+  const ov=d.overnight||{};let os=(ov.f||[]).join('; ');os=[os&&sent(os),ov.note&&sent(ov.note)].filter(Boolean).join(' ');sec('events',N?'Interval events':'Overnight',os);
 
   const v=d.vitals||{};const vp=[];if(v.tmax){vp.push(`Tmax ${v.tmax}${num(v.tmax)>50?'°F':'°C'}`)}
   [['hr','HR',''],['sbp','SBP',''],['map','MAP',''],['rr','RR',''],['spo2','SpO2','%']].forEach(([k,l,u])=>{const r=R(v[k]);if(r)vp.push(`${l} ${r}${u}`+(k==='map'&&v.mapGoal?` (goal ≥${v.mapGoal})`:''));else if(k==='map'&&v.mapGoal)vp.push(`MAP goal ≥${v.mapGoal}`)});
   let vs=vp.length?vp.join(', ')+'.':'';const io=[];
   if(v.in||v.out){const ni=num(v.in),no=num(v.out);io.push(`I/O ${v.in||'?'}/${v.out||'?'} mL${ni!=null&&no!=null?` (net ${signed(ni-no)} mL)`:''}`)}
   const cf=cumFluid(p,d);if(cf&&cf.n>1)io.push(`cumulative net ${fmtL(cf.tot)} since ${fmtDate(cf.first)}`);if(v.uop)io.push(`UOP ${v.uop} mL`);if(v.stool)io.push(`stool ${v.stool}`);if(v.wt){const fw=firstWeight(p,d);io.push(`weight ${v.wt} kg${fw&&String(fw.wt)!==String(v.wt)?' ('+fw.wt+' kg on '+fmtDate(fw.date)+')':''}`)}
-  if(io.length)vs+=(vs?' ':'')+cap(io.join(', '))+'.';para(T('Vitals',vs));
+  if(io.length)vs+=(vs?' ':'')+cap(io.join(', '))+'.';sec('vitals','Vitals',vs);
 
   const ex=d.exam||{};const el=[];EXAM.forEach(([k,l])=>{const e=ex[k]||{};const parts=[...(e.f||[])];if(k==='neuro'&&e.gcs)parts.push('GCS '+e.gcs);if(e.note)parts.push(e.note);if(parts.length)el.push(`${l}: ${sent(parts.join(', '))}`)});
-  para(T(N?'Physical exam':'Exam',el.join('\n'),1));
+  sec('exam',N?'Physical exam':'Exam',el.join('\n'),1);
 
-  para(T('Respiratory',respText(p,d)));
+  sec('resp','Respiratory',respText(p,d));
 
   const dl=[];const vp2=dripList(PRESSORS,d),sed=[...dripList(SEDATION,d),...dripList(ANALGESIA,d)],par=dripList(PARALYTICS,d);
   const oth=(d.drips.other||[]).filter(x=>x.name).map(x=>x.name+(x.dose?' '+x.dose:'')+(x.start?' ('+course(x.start,d.date,x.days)+')':''));
@@ -898,7 +961,7 @@ function buildSummary(p,d,fmt){const N=fmt==='note';
   if(d.drips.prn)dl.push(`PRN: ${sent(d.drips.prn)}`);
   if(par.length)dl.push(`Paralytic: ${par.join('; ')}${d.drips.tof?', TOF '+d.drips.tof:''}.`);
   if(oth.length)dl.push(`Other: ${oth.join('; ')}.`);
-  para(T('Infusions',dl.join('\n'),1));
+  sec('drips','Infusions',dl.join('\n'),1);
 
   const DK=['na','cl','bun','k','hco3','cr','glu','wbc','hgb','hct','plt'];const has=k=>d.labs&&String(d.labs[k]??'').trim();
   const fromStr=([k,l])=>{const pv=prevLab(p,d,k);return pv&&String(pv.v).trim()!==String(d.labs[k]).trim()?`${l} ${d.labs[k]} (from ${pv.v})`:null};
@@ -906,28 +969,28 @@ function buildSummary(p,d,fmt){const N=fmt==='note';
   const lb=LABS.filter(([k])=>!DK.includes(k)&&has(k)).map(([k,l])=>fromStr([k,l])||`${l} ${d.labs[k]}`);
   const abg=acidBase(p,d),fw=p.problems.some(x=>!x.resolved&&pAutos(x).includes('hyperna'))?'':fwdText(p,d);
   let ls=[chg.length&&`Changed: ${chg.join(', ')}.`,lb.length&&lb.join(', ')+'.',abg&&acidText(abg),fw,d.labs&&d.labs.note&&sent(d.labs.note)].filter(Boolean).join(' ');
-  if(dia||ls){para((N?'LABS:':'Labs:')+(ls?(N?'\n':' ')+ls:''));if(dia)para(dia)}
+  if(ls)parts.labs=ls;if(dia||ls){para((N?'LABS:':'Labs:')+(ls?(N?'\n':' ')+ls:''));if(dia)para(dia)}
 
   const RES={Pending:'pending',NGTD:'NGTD',Positive:'positive',Negative:'negative'};
   const ab=(d.abx||[]).filter(a=>a.drug).map(a=>abxStr(a,d)+(a.ind?' for '+a.ind:''));
   const cx=(d.cx||[]).filter(c=>c.src).map(c=>`${c.src}${c.date?' '+fmtDate(c.date):''} ${RES[c.res]||'pending'}${c.detail?' ('+c.detail+')':''}`);
-  if(ab.length||cx.length)para(T('Micro',[ab.length?`Antimicrobials: ${ab.join('; ')}.`:'No antimicrobials.',cx.length&&`Cultures: ${cx.join('; ')}.`].filter(Boolean).join('\n'),1));
+  if(ab.length||cx.length)sec('micro','Micro',[ab.length?`Antimicrobials: ${ab.join('; ')}.`:'No antimicrobials.',cx.length&&`Cultures: ${cx.join('; ')}.`].filter(Boolean).join('\n'),1);
 
   const im=[];const cr=d.img.cxr||{},ek=d.img.ekg||{};
   if(cr.done==='Obtained'){const f=[...(cr.f||[])];if(cr.note)f.push(cr.note);im.push(`CXR: ${f.length?sent(f.join(', ')):'obtained.'}`)}
   (d.img.other||[]).filter(x=>x.study).forEach(x=>im.push(`${x.study}: ${x.find?sent(x.find):'read pending.'}`));
   if(ek.done==='Obtained'){const f=[ek.rhythm,ek.rate&&'rate '+ek.rate,ek.qtc&&'QTc '+ek.qtc,...(ek.f||[]),ek.note].filter(Boolean);im.push(`EKG: ${f.length?sent(f.join(', ')):'obtained.'}`)}
-  para(T('Imaging and EKG',im.join('\n'),1));
+  sec('img','Imaging and EKG',im.join('\n'),1);
   const cs=(d.consults||[]).filter(x=>x.service).map(x=>`${x.service}${x.date?' (consulted '+fmtDate(x.date)+')':''}${x.reason?' for '+x.reason:''}${x.status==='Signed off'?', signed off':''}${x.recs?'. Recs: '+String(x.recs).trim().replace(/[.\s]+$/,''):''}`);
   const rtx=(d.tx||[]).filter(t=>t.product&&t.date&&daysBetween(t.date,d.date)>=0&&daysBetween(t.date,d.date)<=1).map(t=>`${t.product} ${t.units||'?'} unit${num(t.units)===1?'':'s'} on ${fmtDate(t.date)}${t.why?' ('+t.why+')':''}`);
   const ttot=txTotals(d);
-  para(T('Consults and blood products',[cs.length&&`Consults: ${cs.join('; ')}.`,rtx.length&&`Transfused today or yesterday: ${rtx.join('; ')}.`,ttot&&`Total logged: ${ttot}.`].filter(Boolean).join('\n'),1));
+  sec('consults','Consults and blood products',[cs.length&&`Consults: ${cs.join('; ')}.`,rtx.length&&`Transfused today or yesterday: ${rtx.join('; ')}.`,ttot&&`Total logged: ${ttot}.`].filter(Boolean).join('\n'),1);
 
   const rn=d.renal||{};let rs='';
   if(rn.mod==='CRRT'){rs=`CRRT${rn.crrt?' ('+rn.crrt+')':''}`+(rn.since?', '+sinceStr(rn.since,d.date):'')+[rn.dose&&`, effluent ${rn.dose} mL/kg/hr`,rn.uf&&`, net UF ${rn.uf} mL/hr`,rn.ac&&`, ${rn.ac==='None'?'no':rn.ac.toLowerCase()} anticoagulation`].filter(Boolean).join('')+'.';if(rn.issues&&rn.issues.length)rs+=' '+sent(cap(rn.issues.join(', ').toLowerCase()));if(rn.access)rs+=` Access: ${sent(rn.access)}`}
   else if(rn.mod==='iHD'){rs='Intermittent HD'+(rn.since?', '+sinceStr(rn.since,d.date):'')+(rn.last?`, last session ${fmtDate(rn.last)}`:'')+(rn.removed?` (UF ${rn.removed} mL)`:'')+(rn.next?`, next planned ${fmtDate(rn.next)}`:'')+'.';if(rn.access)rs+=` Access: ${sent(rn.access)}`}
   else if(rn.mod==='PD')rs='Peritoneal dialysis'+(rn.since?', '+sinceStr(rn.since,d.date):'')+'.';
-  if(rn.note)rs+=' '+sent(rn.note);para(T('Renal',rs.trim()));
+  if(rn.note)rs+=' '+sent(rn.note);sec('renal','Renal',rs.trim());
 
   const f=d.fh||{};const fl=[];
   if(f.feed){let s;if(f.feed==='Tube feeds'){s='tube feeds'+(f.tfFormula?` (${f.tfFormula})`:'')+(f.tfRate?` at ${f.tfRate} mL/hr`:'')+(f.tfGoal?`, goal ${f.tfGoal} mL/hr`:'')+(f.atGoal?(f.atGoal==='Yes'?', at goal':', not yet at goal'):'')}else s=f.feed+(f.diet?', '+f.diet:'');fl.push(`Feeding: ${sent(s)}`)}
@@ -951,15 +1014,16 @@ function buildSummary(p,d,fmt){const N=fmt==='note';
     if(N){l=`# ${pr.name}${status?' — '+status:''}`;if(s.note)l+='\n'+sent(s.note);if(ad)l+='\n- '+ad;if(md)l+='\n- Meds: '+md+'.';if(lt)l+='\n- Labs: '+lt+'.';cont.forEach(x=>l+='\n- Continue '+x);st.forEach(x=>l+='\n- Start '+x);stp.forEach(x=>l+='\n- Stop '+x)}
     else{l=`${i+1}. ${pr.name}`+(status?' — '+status+'.':'.');if(s.note)l+=' '+sent(s.note);if(ad)l+='\n   '+ad;if(md)l+='\n   Meds: '+md+'.';if(lt)l+='\n   Labs: '+lt+'.';
       if(cont.length)l+=`\n   Continue: ${cont.join('; ')}.`;if(st.length)l+=`\n   Start: ${st.join('; ')}.`;if(stp.length)l+=`\n   Stop: ${stp.join('; ')}.`}
+    parts.ap.push({name:pr.name,status,note:s.note?sent(s.note):'',lines:[ad,md&&'Meds: '+md+'.',lt&&'Labs: '+lt+'.',cont.length&&`Continue: ${cont.join('; ')}.`,st.length&&`Start: ${st.join('; ')}.`,stp.length&&`Stop: ${stp.join('; ')}.`].filter(Boolean)});
     pl.push(l)});
     para(pl.join(N?'\n\n':'\n'))}
-  para(T('FAST HUGS BID',fl.join('\n'),1));
-  const dg=[d.dispo&&`Disposition: ${sent(d.dispo)}`,d.goc&&`Goals of care: ${sent(d.goc)}`].filter(Boolean);if(dg.length)para(dg.join('\n'));
+  sec('fhugs','FAST HUGS BID',fl.join('\n'),1);
+  const dg=[d.dispo&&`Disposition: ${sent(d.dispo)}`,d.goc&&`Goals of care: ${sent(d.goc)}`].filter(Boolean);if(dg.length){para(dg.join('\n'));parts.dispo=dg.join('\n')}
   const A=p.actions||[],clean=a=>String(a.text).trim().replace(/[.\s]+$/,'');
   const td=A.filter(a=>a.kind==='todo'&&!a.done).map(clean),dn=A.filter(a=>a.kind==='todo'&&a.done&&a.doneDate===d.date).map(clean),nt=A.filter(a=>a.kind==='note').map(clean);
   const al=[td.length&&`To do: ${td.join('; ')}.`,dn.length&&`Done today: ${dn.join('; ')}.`,nt.length&&`Notes: ${nt.join('; ')}.`].filter(Boolean);
-  para(T('Action list',al.join('\n'),1));
-  return out.join('\n\n')}
+  sec('actions','Action list',al.join('\n'),1);
+  return PARTS?parts:out.join('\n\n')}
 
 function respText(p,d){const r=d.resp||{};let s='';const fi=r.fio2?`FiO2 ${r.fio2}%`:'';const c=calcs(p,d);
   switch(r.type){
@@ -1368,6 +1432,9 @@ document.addEventListener('click',e=>{
   const a=t.dataset.act,p=V.pid?P():null,d=p&&p.draft;
   switch(a){
     case 'go':go(t.dataset.to);break;
+    case 'printAll':printSheet(sortedActive().map(x=>[x,curData(x)]));break;
+    case 'printPt':printSheet([[p,curData(p)]]);break;
+    case 'printDay':{const dy=p.days.find(x=>x.date===V.dayDate);if(dy)printSheet([[p,dy.data]]);break}
     case 'syncConnect':connectSync();break;
     case 'syncNow':syncNow();break;
     case 'syncOff':localStorage.removeItem(SYNC_KEY);SY=null;setSync('off');render();toast('Sync turned off on this device. Patients stay here.');break;
