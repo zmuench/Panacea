@@ -305,12 +305,99 @@ const LES={
 const P_TECH=['General','MAC / sedation','Neuraxial','Peripheral nerve block','Local only'];
 const P_GAW=['Endotracheal tube','Supraglottic airway','Mask','Nasal ETT'];
 const P_IND=['Standard IV','Rapid sequence','Modified RSI','Inhalational','Awake intubation'];
-const P_INDAG=['Propofol','Etomidate','Ketamine','Midazolam','Fentanyl','Remifentanil','Lidocaine','Dexmedetomidine','Sevoflurane'];
-const P_NMB=['Rocuronium','Succinylcholine','Vecuronium','Cisatracurium','No paralytic'];
+/* Drugs for the case, by category. No doses: those come from the attending. p = one-line pearl (why and watch-outs). */
+const RXCATS=[['pre','Premedication'],['ind','Induction and sedation'],['opi','Opioids'],['nmb','Paralytics'],['mnt','Maintenance'],['rev','Reversal'],['vaso','Vasoactive and rate'],['ae','Antiemetics'],['la','Local anesthetics'],['adj','Analgesic adjuncts'],['abx','Antibiotics'],['oth','Other'],['em','Have available']];
+const RX=[
+ ['pre','midaz','Midazolam','Anxiolysis and amnesia. Avoid in older adults and with delirium risk; reverse with flumazenil.'],
+ ['pre','apapPO','Acetaminophen (PO)','Base of multimodal analgesia; watch liver disease and the total daily amount.'],
+ ['pre','gaba','Gabapentin','Opioid-sparing premed; sedation and dizziness, more respiratory depression with opioids in older adults.'],
+ ['pre','celecox','Celecoxib','COX-2 selective NSAID: less platelet effect; avoid in kidney disease.'],
+ ['pre','famot','Famotidine','H2 blocker: raises gastric pH when aspiration risk is high.'],
+ ['pre','citrate','Sodium citrate','Nonparticulate antacid right before induction (cesarean, full stomach).'],
+ ['pre','metoclo','Metoclopramide','Speeds gastric emptying. Avoid in bowel obstruction and Parkinson disease (dopamine antagonist).'],
+ ['pre','scop','Scopolamine patch','PONV prophylaxis placed before surgery. Anticholinergic: delirium, dry mouth, blurred vision; wash hands after touching.'],
+ ['pre','albut','Albuterol','Bronchodilator before induction for reactive airways.'],
+ ['ind','prop','Propofol','GABA-A agonist: fast on and off, antiemetic. Hypotension, apnea, injection pain. Egg or soy allergy is not a contraindication.'],
+ ['ind','etom','Etomidate','Hemodynamically stable induction. Adrenal suppression (debated after a single dose), myoclonus, PONV.'],
+ ['ind','ket','Ketamine','NMDA antagonist: keeps blood pressure, airway reflexes, and breathing; bronchodilates. Emergence reactions, secretions; myocardial depressant when catecholamines are depleted.'],
+ ['ind','metho','Methohexital','Short-acting barbiturate; lowers the seizure threshold (used for ECT); hypotension.'],
+ ['ind','dexmed','Dexmedetomidine','Alpha-2 agonist: sedation with breathing preserved, opioid-sparing. Bradycardia and hypotension; slow onset.'],
+ ['ind','lido','Lidocaine (IV)','Blunts the airway response to intubation and propofol injection pain.'],
+ ['opi','fent','Fentanyl','Fast onset, short effect after a single dose. Chest wall rigidity with large rapid doses.'],
+ ['opi','remi','Remifentanil','Ultra-short (broken down by plasma esterases); infusion. No lingering analgesia, so give a longer-acting analgesic before emergence; hyperalgesia afterward.'],
+ ['opi','sufent','Sufentanil','Very potent; infusion or neuraxial use.'],
+ ['opi','hydromorph','Hydromorphone','Longer-acting; give before emergence for postoperative pain. Preferred over morphine in kidney disease.'],
+ ['opi','morph','Morphine','Histamine release; active metabolite builds up in kidney failure.'],
+ ['opi','methadone','Methadone','Long-acting opioid and NMDA antagonist: one intraoperative dose lowers later opioid needs. Prolongs QT.'],
+ ['nmb','succ','Succinylcholine','Depolarizing; fastest onset and offset. Hyperkalemia, MH trigger, bradycardia, myalgias; prolonged with pseudocholinesterase deficiency.'],
+ ['nmb','roc','Rocuronium','Intermediate-acting; used for RSI at higher dose; fully reversible with sugammadex.'],
+ ['nmb','vec','Vecuronium','Intermediate-acting; liver and kidney clearance; reversible with sugammadex.'],
+ ['nmb','cis','Cisatracurium','Hofmann elimination: good in kidney and liver failure, no histamine release. Not reversed by sugammadex.'],
+ ['mnt','sevo','Sevoflurane','Non-pungent (inhalational induction), bronchodilator. MH trigger.'],
+ ['mnt','des','Desflurane','Fastest wake-up. Airway irritant (avoid in asthma and smokers); sympathetic surge with rapid increases; MH trigger.'],
+ ['mnt','iso','Isoflurane','Slower wake-up, inexpensive. MH trigger.'],
+ ['mnt','n2o','Nitrous oxide','Fast and analgesic, not an MH trigger. Expands closed gas spaces (pneumothorax, bowel obstruction, middle ear, intraocular gas); PONV; raises PVR.'],
+ ['mnt','propInf','Propofol infusion (TIVA)','Less PONV; needed for MEP monitoring and MH susceptibility. Use processed EEG to guard against awareness.'],
+ ['mnt','ketInf','Ketamine infusion','Opioid-sparing; helps in opioid tolerance.'],
+ ['mnt','lidoInf','Lidocaine infusion','Opioid-sparing, faster GI recovery after abdominal surgery. Counts toward local anesthetic toxicity with blocks.'],
+ ['rev','sugam','Sugammadex','Encapsulates rocuronium and vecuronium; works even from deep block. Reduces hormonal contraceptive efficacy for 7 days; rare anaphylaxis and bradycardia.'],
+ ['rev','neo','Neostigmine','Acetylcholinesterase inhibitor: only from a shallow block (several twitches). Give with glycopyrrolate; ceiling effect.'],
+ ['rev','glyco','Glycopyrrolate','Anticholinergic paired with neostigmine; dries secretions; does not cross the blood-brain barrier.'],
+ ['rev','nalox','Naloxone','Opioid reversal: titrate to breathing. Wears off before many opioids; can cause pulmonary edema and pain crisis.'],
+ ['rev','flum','Flumazenil','Benzodiazepine reversal; seizures with chronic benzodiazepine use; resedation.'],
+ ['vaso','phenyl','Phenylephrine','Pure alpha-1: raises SVR, reflex bradycardia. First choice in aortic stenosis and HCM.'],
+ ['vaso','ephed','Ephedrine','Direct and indirect: raises heart rate and BP; tachyphylaxis. Avoid with MAO inhibitors.'],
+ ['vaso','norepi','Norepinephrine','Alpha more than beta-1; infusion for persistent hypotension.'],
+ ['vaso','vasopr','Vasopressin','V1 agonist: vasoplegia and hypotension on ACE inhibitors or ARBs.'],
+ ['vaso','epi','Epinephrine','Anaphylaxis, cardiac arrest, severe bronchospasm.'],
+ ['vaso','atro','Atropine','Bradycardia; crosses the blood-brain barrier.'],
+ ['vaso','esmolol','Esmolol','Short beta-1 blocker: tachycardia and the hypertensive response to intubation.'],
+ ['vaso','labet','Labetalol','Alpha and beta blocker for hypertension.'],
+ ['vaso','hydral','Hydralazine','Arteriolar dilator; delayed onset, reflex tachycardia.'],
+ ['vaso','nicard','Nicardipine','Calcium-channel infusion for tight BP control.'],
+ ['vaso','ntg','Nitroglycerin','Venodilator for ischemia and hypertension. Avoid after PDE-5 inhibitors.'],
+ ['ae','dexa','Dexamethasone','Give at induction. Raises glucose; perineal burning if pushed while awake.'],
+ ['ae','ond','Ondansetron','5-HT3 antagonist, given near the end. QT prolongation, headache.'],
+ ['ae','drop','Droperidol','Dopamine antagonist; QT warning. Avoid in Parkinson disease.'],
+ ['ae','halo','Haloperidol','Dopamine antagonist; QT. Avoid in Parkinson disease.'],
+ ['ae','amisul','Amisulpride','Dopamine antagonist for prophylaxis or rescue; QT.'],
+ ['ae','aprep','Aprepitant','NK-1 antagonist taken by mouth before surgery; long-acting. Reduces hormonal contraceptive efficacy.'],
+ ['ae','prometh','Promethazine','Sedating; severe tissue injury if extravasated. Avoid in older adults.'],
+ ['la','lidoLA','Lidocaine (local)','Fast, intermediate duration; infiltration, IV lines, airway topicalization.'],
+ ['la','bupi','Bupivacaine','Long-acting; most cardiotoxic (resuscitation is hard). Hyperbaric for spinal.'],
+ ['la','ropi','Ropivacaine','Long-acting, less cardiotoxic, more sensory than motor block; common for nerve blocks.'],
+ ['la','chloro','Chloroprocaine','Ester: very fast, very short. Short spinals and epidural top-ups.'],
+ ['la','mepi','Mepivacaine','Intermediate; short spinals for faster discharge.'],
+ ['la','exparel','Liposomal bupivacaine','Surgeon infiltration or blocks; counts toward the toxicity limit with other bupivacaine.'],
+ ['adj','keto','Ketorolac','IV NSAID. Avoid in kidney disease and bleeding risk; some surgeons avoid it (fusions, fresh bleeding).'],
+ ['adj','apapIV','Acetaminophen (IV)','Multimodal base when not given by mouth.'],
+ ['adj','mag','Magnesium','Opioid-sparing; potentiates paralytics; hypotension.'],
+ ['adj','diphen','Diphenhydramine','Pruritus and allergic reactions; anticholinergic (delirium in older adults).'],
+ ['abx','cefaz','Cefazolin','Most clean cases: within 60 min of incision; redose every 4 h or after large blood loss.'],
+ ['abx','cefox','Cefoxitin / cefotetan','Colorectal and gynecologic cases (anaerobic coverage).'],
+ ['abx','vanc','Vancomycin','MRSA or severe beta-lactam allergy: start 60–120 min before incision; flushing if infused fast.'],
+ ['abx','clinda','Clindamycin','Alternative for beta-lactam allergy.'],
+ ['abx','metro','Metronidazole','Anaerobic coverage (with cefazolin for colorectal).'],
+ ['abx','amsulb','Ampicillin-sulbactam','Head and neck, some abdominal cases. Penicillin.'],
+ ['abx','gent','Gentamicin','Gram-negative coverage alongside clindamycin or vancomycin; kidney and ear toxicity; potentiates paralytics.'],
+ ['oth','txa','Tranexamic acid','Antifibrinolytic: less blood loss in orthopedic, spine, obstetric, trauma cases. Seizures at high doses; caution with recent clot.'],
+ ['oth','hydrocort','Hydrocortisone','Stress-dose steroid; adrenal crisis.'],
+ ['oth','insulin','Insulin','Intraoperative glucose control; watch potassium.'],
+ ['oth','calc','Calcium chloride / gluconate','Hyperkalemia, massive transfusion, low ionized calcium. Chloride preferably through a central line.'],
+ ['oth','heparin','Heparin','Vascular cases: check ACT; reverse with protamine.'],
+ ['oth','protamine','Protamine','Heparin reversal: hypotension, pulmonary hypertension, anaphylaxis (NPH insulin, fish allergy).'],
+ ['oth','oxyto','Oxytocin','Uterine tone after delivery; hypotension with rapid bolus.'],
+ ['oth','mannitol','Mannitol','Brain relaxation in neurosurgery; diuresis.'],
+ ['oth','furo','Furosemide','Diuresis for volume overload.'],
+ ['oth','ddavp','Desmopressin','von Willebrand disease, uremic platelets; hyponatremia.'],
+ ['oth','mblue','Methylene blue','Vasoplegia. Serotonin syndrome with SSRIs; falsely lowers SpO2.'],
+ ['em','dantro','Dantrolene','Malignant hyperthermia: know where the MH cart is.'],
+ ['em','lipid','Lipid emulsion 20%','Local anesthetic systemic toxicity: know where it is before any block.']
+].map(([cat,id,n,p])=>({cat,id,n,p}));
+const RXSHORT={pre:'Premed',ind:'Induction',opi:'Opioid',nmb:'Paralytic',mnt:'Maintenance',rev:'Reversal',vaso:'Vasoactive',ae:'Antiemetic',la:'Local',adj:'Adjunct',abx:'Antibiotic',oth:'Other',em:'Available'};
+const RXD=Object.fromEntries(RX.map(d=>[d.id,d]));
+const RXSETS=[['ga','GA starter'],['rsi','RSI'],['mac','MAC'],['spinal','Spinal'],['block','Nerve block']];
 const P_MNT=['Volatile','TIVA','Volatile + infusion'];
-const P_MNTAG=['Sevoflurane','Desflurane','Isoflurane','Propofol infusion','Remifentanil infusion','Dexmedetomidine','Ketamine infusion','Lidocaine infusion','Nitrous oxide'];
-const P_REV=['Sugammadex','Neostigmine + glycopyrrolate','Spontaneous recovery','Not needed'];
-const P_SED=['Propofol','Midazolam','Fentanyl','Dexmedetomidine','Ketamine','Remifentanil'];
 const P_NAX=['Spinal','Epidural','Combined spinal-epidural'];
 const P_DEV=['Direct laryngoscopy (Mac)','Direct laryngoscopy (Miller)','Video laryngoscope','Hyperangulated video','Flexible bronchoscope','Supraglottic airway'];
 const P_PREOX=['Preoxygenate to EtO2 ≥ 0.9','Head-up / ramped','Apneic oxygenation (nasal cannula or HFNO)','CPAP / PEEP during preox','Cricoid (RSI)','Bougie in the room','Video laryngoscope in the room'];
@@ -322,7 +409,8 @@ const P_BLD=['Type and screen','Crossmatch','Blood in the room','Cell saver','TX
 const P_VENT=['Lung-protective (6–8 mL/kg PBW)','PEEP ≥ 5','Recruitment maneuvers','Avoid nitrous oxide'];
 const P_WARM=['Forced-air warmer','Fluid warmer','Temperature probe','Underbody warmer'];
 const P_VTE=['SCDs','Chemoprophylaxis','Early ambulation'];
-const P_PONV=['Dexamethasone','Ondansetron','Scopolamine patch','Aprepitant','Droperidol','Haloperidol','Amisulpride','Propofol TIVA','Avoid nitrous oxide','Minimize opioids','Regional technique'];
+const P_PONV=['Propofol TIVA','Avoid nitrous oxide','Minimize opioids','Regional technique'];
+const AE_IDS=['dexa','ond','drop','halo','amisul','aprep','prometh','scop'];
 const P_EMG=['Awake extubation','Deep extubation','Remain intubated','Staged / exchange catheter'];
 const P_DISPO=['PACU → home','PACU → floor','PACU → monitored bed','ICU'];
 const P_AN=['Acetaminophen','NSAID / ketorolac','Celecoxib','Gabapentinoid','Ketamine','Lidocaine infusion','Dexmedetomidine','Magnesium','Local infiltration','Single-shot block','Block catheter','Epidural','IV opioid','PO opioid','PCA','Methadone'];
@@ -444,7 +532,7 @@ function newCase(){return{id:uid(),created:today(),date:today(),time:'',room:'',
  ex:{heart:'',lungs:'',neuro:'',back:'',iv:'',other:''},
  lab:{hgb:'',plt:'',inr:'',ptt:'',na:'',k:'',cr:'',glu:'',a1c:'',hcg:'',ts:'',other:''},st:{},
  r:{asa:'',e:false,mets:'',dasi:{},cfs:'',sb:{},op:''},
- p:{tech:[],gaw:'',ind:'',indAg:[],nmb:[],mnt:'',mntAg:[],rev:'',tof:false,sed:[],nax:'',naxTxt:'',blk:'',
+ p:{tech:[],gaw:'',ind:'',rx:[],noNmb:false,noRev:false,mnt:'',tof:false,nax:'',naxTxt:'',blk:'',
     dev:'',ett:'',preox:[],backup:'',rescue:[],
     mon:['Standard ASA monitors'],acc:[],accTxt:'',map:'',hemo:'',
     fl:'',flTxt:'',bld:[],xm:'',hbT:'7',vent:[],warm:[],abx:'',vte:[],ponv:[],steroid:'',glu:'',
@@ -452,6 +540,12 @@ function newCase(){return{id:uid(),created:today(),date:today(),time:'',room:'',
  one:''}}
 /* Fill in any fields added after a case was saved */
 function norm(c){const t=newCase();for(const k in t){if(c[k]===undefined)c[k]=t[k];else if(t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k])&&k!=='hx'&&k!=='meds'&&k!=='st'){for(const j in t[k])if(c[k][j]===undefined)c[k][j]=t[k][j]}}
+  /* Drugs used to live in separate chip lists (induction, paralytic, maintenance, sedation, PONV, reversal) */
+  const P0=c.p;if(P0.indAg||P0.nmb||P0.mntAg||P0.sed||P0.rev!==undefined){const M={'Propofol':'prop','Etomidate':'etom','Ketamine':'ket','Midazolam':'midaz','Fentanyl':'fent','Remifentanil':'remi','Lidocaine':'lido','Dexmedetomidine':'dexmed','Sevoflurane':'sevo','Rocuronium':'roc','Succinylcholine':'succ','Vecuronium':'vec','Cisatracurium':'cis','Desflurane':'des','Isoflurane':'iso','Propofol infusion':'propInf','Remifentanil infusion':'remi','Ketamine infusion':'ketInf','Lidocaine infusion':'lidoInf','Nitrous oxide':'n2o','Dexamethasone':'dexa','Ondansetron':'ond','Scopolamine patch':'scop','Aprepitant':'aprep','Droperidol':'drop','Haloperidol':'halo','Amisulpride':'amisul','Sugammadex':'sugam','Neostigmine + glycopyrrolate':'neo glyco'};
+    const add=x=>{(M[x]||'').split(' ').filter(Boolean).forEach(id=>{if(!P0.rx.includes(id))P0.rx.push(id)})};
+    [...(P0.indAg||[]),...(P0.nmb||[]),...(P0.mntAg||[]),...(P0.sed||[]),...(P0.ponv||[]),P0.rev||''].forEach(add);
+    if((P0.nmb||[]).includes('No paralytic'))P0.noNmb=true;if(P0.rev==='Not needed'||P0.rev==='Spontaneous recovery')P0.noRev=true;
+    P0.ponv=(P0.ponv||[]).filter(x=>P_PONV.includes(x));delete P0.indAg;delete P0.nmb;delete P0.mntAg;delete P0.sed;delete P0.rev}
   /* ECG and echo used to be single text fields under labs */
   if(c.lab.ecg){if(!c.st.ecg)c.st.ecg={date:'',find:c.lab.ecg};delete c.lab.ecg}
   if(c.lab.echo){if(!c.st.tte)c.st.tte={date:'',find:c.lab.echo};delete c.lab.echo}
@@ -552,6 +646,10 @@ const succHazard=c=>{const r=[];const k=num(c.lab.k);
   if(has(c,'nmd'))r.push('myopathy / muscular dystrophy');if(has(c,'cva')&&/(hemi|weak|paresis|deficit)/i.test(c.hx.cva||''))r.push('stroke with paresis');
   if(has(c,'msc'))r.push('multiple sclerosis');if(k!=null&&k>=5.5)r.push('K '+k);if(anes(c,'mh')||anes(c,'mhfam'))r.push('MH susceptibility');
   if(anes(c,'pche'))r.push('pseudocholinesterase deficiency');return r};
+const uses=(c,id)=>c.p.rx.includes(id);
+const usesAny=(c,ids)=>ids.some(id=>c.p.rx.includes(id));
+const rxNames=(c,cat)=>RX.filter(d=>d.cat===cat&&uses(c,d.id)).map(d=>d.n);
+const aeCount=c=>c.p.rx.filter(id=>AE_IDS.includes(id)).length+c.p.ponv.length;
 const anyReg=c=>pl(c,'tech','Neuraxial')||pl(c,'tech','Peripheral nerve block');
 const isGA=c=>pl(c,'tech','General');
 
@@ -560,10 +658,11 @@ function flags(c){
   const F=[],n=nums(c),A=airway(c),asp=aspiration(c),SB=stopbang(c),AP=apfel(c),add=(k,t,d,x)=>F.push({k,t,d,...(x||{})});
   const mhS=anes(c,'mh')||anes(c,'mhfam');
   if(mhS){add('warn','MH susceptible','Trigger-free anesthetic: no volatile agents, no succinylcholine. Flushed machine or charcoal filters; dantrolene available; first case if possible.');
-    if(c.p.mntAg.some(x=>/flurane/.test(x))||c.p.indAg.includes('Sevoflurane')||c.p.mnt==='Volatile'||c.p.mnt==='Volatile + infusion')add('warn','Plan: volatile agent with MH susceptibility','Switch maintenance to TIVA.',{pl:1})}
+    if(usesAny(c,['sevo','des','iso'])||c.p.mnt==='Volatile'||c.p.mnt==='Volatile + infusion')add('warn','Plan: volatile agent with MH susceptibility','Switch maintenance to TIVA.',{pl:1});
+    if(!uses(c,'dantro'))add('info','Plan: dantrolene','Add dantrolene under Have available and know where the MH cart is.',{pl:1})}
   const sh=succHazard(c);
   if(sh.length){add('warn','Avoid succinylcholine',andL(sh)+'. Use rocuronium (sugammadex available) for RSI.');
-    if(c.p.nmb.includes('Succinylcholine'))add('warn','Plan: succinylcholine is selected',`Contraindicated here (${andL(sh)}).`,{pl:1})}
+    if(uses(c,'succ'))add('warn','Plan: succinylcholine is selected',`Contraindicated here (${andL(sh)}).`,{pl:1})}
   if(has(c,'mg'))add('amb','Myasthenia gravis','Very sensitive to nondepolarizing blockers and resistant to succinylcholine. Consider avoiding paralytics; quantitative TOF; sugammadex; risk of postoperative ventilation.');
   if(A.diff)add('warn','Anticipated difficult airway',(A.prior?'Prior difficult airway. ':'')+(A.dl.length?'Predictors: '+andL(A.dl)+'. ':'')+'Plan primary, backup, and rescue; consider awake intubation; difficult airway cart in the room.');
   else if(A.dmv.length>=3)add('amb','Possible difficult mask ventilation',andL(A.dmv)+'. Two-hand mask, oral airway, and SGA ready.');
@@ -582,7 +681,7 @@ function flags(c){
   if(pl(c,'tech','Neuraxial')&&((plt!=null&&plt<80)||(inr!=null&&inr>1.5)))add('warn','Plan: neuraxial with abnormal coagulation',[plt!=null&&plt<80?'platelets '+plt:'',inr!=null&&inr>1.5?'INR '+inr:''].filter(Boolean).join(', ')+'. Most practices avoid neuraxial below about 70–80k or INR above 1.5.',{pl:1});
   {const ef=efNum(c);if(ef!=null&&ef<40)add(ef<30?'warn':'amb','EF '+ef+'%'+(stv(c,'tte','ef')?' on echo':''),'Reduced systolic function: avoid myocardial depression and large afterload rises; consider arterial line and inotrope availability; careful fluids.')}
   {const q=num(stv(c,'ecg','qtc'));if(q!=null&&q>=470)add(q>=500?'warn':'amb','QTc '+q,'Avoid stacking QT-prolonging drugs (ondansetron, droperidol, haloperidol, methadone); check K and Mg; dexamethasone and other non-QT antiemetics.');
-   if(q>=470&&c.p.ponv.some(x=>/Ondansetron|Droperidol|Haloperidol|Amisulpride/.test(x)))add('amb','Plan: QT-prolonging antiemetic with QTc '+q,'Reconsider ondansetron, droperidol, haloperidol, or amisulpride.',{pl:1})}
+   const qd=['ond','drop','halo','amisul','methadone'].filter(id=>uses(c,id)).map(id=>RXD[id].n.toLowerCase());if(q>=470&&qd.length)add('amb','Plan: QT-prolonging drug with QTc '+q,'Reconsider '+andL(qd)+'.',{pl:1})}
   if(/LBBB|left bundle/i.test(stv(c,'ecg','find')))add('info','LBBB on ECG','A PA catheter can cause complete heart block (RBBB); new LBBB obscures ischemia. Know if it is old.');
   {const rv=num(stv(c,'tte','rvsp')),mp=meanPA(c);if((rv>=40||mp>20)&&!has(c,'pht'))add('amb','Possible pulmonary hypertension',[rv>=40?'RVSP '+rv:'',mp>20?'mean PA '+mp:''].filter(Boolean).join(', ')+'. '+LES.pht.d)}
   {const r=stv(c,'stress','result');if(r&&/ischemi|reversible|positive|abnormal/i.test(r)&&!/no (inducible )?ischemi|negative|normal/i.test(r))add('amb','Abnormal stress test',r+'. Confirm cardiology input and whether revascularization was planned.')}
@@ -599,14 +698,15 @@ function flags(c){
   if(has(c,'hf')&&!(efNum(c)!=null&&efNum(c)<40))add('amb','Heart failure',(c.hx.hf?'EF '+c.hx.hf+'. ':'')+LES.hf.d);
   if(has(c,'cad')||has(c,'mi')||has(c,'stent'))add('info','Coronary disease',LES.cad.d+(has(c,'stent')?' Stent: confirm type, date, and antiplatelet plan with cardiology.':''));
   if(has(c,'asthma')||has(c,'copd'))add('amb','Reactive airways','Bronchodilator before induction; consider regional or SGA; deep anesthesia before airway manipulation; avoid desflurane.');
-  if((has(c,'asthma')||has(c,'copd'))&&c.p.mntAg.includes('Desflurane'))add('amb','Plan: desflurane with reactive airways','Desflurane is an airway irritant; sevoflurane is gentler.',{pl:1});
+  if((has(c,'asthma')||has(c,'copd'))&&uses(c,'des'))add('amb','Plan: desflurane with reactive airways','Desflurane is an airway irritant; sevoflurane is gentler.',{pl:1});
   if(has(c,'uri'))add('amb','Recent URI','Higher risk of laryngospasm, bronchospasm, and desaturation. Fever, productive cough, or lower respiratory signs: consider postponing elective surgery.');
   if(has(c,'smoke'))add('info','Current smoker','More airway reactivity and pulmonary complications. Carboxyhemoglobin falsely raises SpO2 if smoked today.');
   if(has(c,'esrd'))add('amb','ESRD on dialysis','Dialysis ideally the day before; check K. No BP cuff or IV on the access arm. Avoid renally cleared active metabolites (morphine, meperidine).'+(c.hx.esrd?' '+c.hx.esrd:''));
   else if(has(c,'ckd'))add('info','CKD','Avoid nephrotoxins and NSAIDs; dose renally cleared drugs; protect renal perfusion.');
-  if((has(c,'ckd')||has(c,'esrd'))&&c.p.an.some(x=>/NSAID|Celecoxib/.test(x)))add('amb','Plan: NSAID with kidney disease','Reconsider NSAIDs.',{pl:1});
+  if((has(c,'ckd')||has(c,'esrd'))&&(c.p.an.some(x=>/NSAID|Celecoxib/.test(x))||usesAny(c,['keto','celecox'])))add('amb','Plan: NSAID with kidney disease','Reconsider NSAIDs.',{pl:1});
+  if((has(c,'ckd')||has(c,'esrd'))&&uses(c,'morph'))add('amb','Plan: morphine with kidney disease','Active metabolite accumulates; hydromorphone or fentanyl instead.',{pl:1});
   if(has(c,'cirr'))add('amb','Cirrhosis','Coagulopathy, thrombocytopenia, low albumin, ascites, altered drug handling, encephalopathy risk; check MELD.');
-  if(has(c,'dm1')||has(c,'dm2'))add('info','Diabetes','Glucose on arrival and intraoperatively, target roughly 100–180 mg/dL per protocol.'+(has(c,'dm1')?' Type 1: never stop basal insulin.':'')+(c.p.ponv.includes('Dexamethasone')?' Dexamethasone raises glucose: monitor.':''));
+  if(has(c,'dm1')||has(c,'dm2'))add('info','Diabetes','Glucose on arrival and intraoperatively, target roughly 100–180 mg/dL per protocol.'+(has(c,'dm1')?' Type 1: never stop basal insulin.':'')+(uses(c,'dexa')?' Dexamethasone raises glucose: monitor.':''));
   if(med(c,'sglt2'))add('amb','SGLT2 inhibitor','Should be held 3 days before (euglycemic DKA). Last dose: '+(c.meds.sglt2||'not entered')+'.');
   if(has(c,'adrenal')||med(c,'ster'))add('amb','Steroid exposure','Continue the usual dose; consider stress-dose steroids for moderate or major surgery; think of adrenal crisis with refractory hypotension.');
   if(has(c,'pheo'))add('warn','Pheochromocytoma','Alpha blockade first, then beta; arterial line; expect surges with intubation and tumor handling, hypotension after removal.');
@@ -618,13 +718,13 @@ function flags(c){
   if(num(c.lab.glu)>=250)add('amb','Glucose '+c.lab.glu,'Check ketones; treat before elective surgery.');
   if(has(c,'preg'))add('amb','Pregnancy','Left uterine displacement after about 20 weeks; aspiration precautions; fetal monitoring plan with OB; avoid hypoxia and hypotension.');
   if(female(c)&&n.age>=12&&n.age<=55&&!has(c,'preg')&&!c.lab.hcg)add('info','Pregnancy test','Female of reproductive age: hCG not entered.');
-  if(female(c)&&n.age<=55&&c.p.rev==='Sugammadex')add('info','Sugammadex and contraception','Hormonal contraceptives may be less effective for 7 days after sugammadex: counsel backup contraception.');
+  if(female(c)&&n.age<=55&&uses(c,'sugam'))add('info','Sugammadex and contraception','Hormonal contraceptives may be less effective for 7 days after sugammadex: counsel backup contraception.');
   if(has(c,'etoh'))add('amb','Heavy alcohol use','Withdrawal risk (CIWA); higher anesthetic needs; thiamine; check for liver disease.');
   if(has(c,'oud')||med(c,'bup')||med(c,'meth')||med(c,'opi'))add('amb','Opioid tolerance','Continue maintenance therapy; plan multimodal and regional analgesia; expect higher opioid needs; involve the pain service.');
   if(has(c,'cannabis'))add('info','Cannabis','May raise anesthetic requirement; smoked use increases airway reactivity; ask about use the day of surgery.');
   if(has(c,'stim'))add('amb','Stimulant use','Recent cocaine or methamphetamine: hemodynamic lability, arrhythmia, ischemia; check ECG and time of last use.');
   if(has(c,'pd')||med(c,'pdmed')){add('amb','Parkinson disease','Give medications on time; avoid metoclopramide, droperidol, prochlorperazine, haloperidol.');
-    if(c.p.ponv.some(x=>/Droperidol|Haloperidol/.test(x)))add('warn','Plan: dopamine antagonist with Parkinson disease','Remove droperidol or haloperidol.',{pl:1})}
+    {const da=['drop','halo','metoclo','prometh','amisul'].filter(id=>uses(c,id)).map(id=>RXD[id].n.toLowerCase());if(da.length)add('warn','Plan: dopamine antagonist with Parkinson disease','Remove '+andL(da)+'.',{pl:1})}}
   if(med(c,'maoi'))add('warn','MAO inhibitor','Avoid meperidine and ephedrine; use phenylephrine for hypotension.');
   if(med(c,'glp1')&&!asp.includes('GLP-1 agonist'))add('amb','GLP-1 agonist',MD.glp1.d);
   if(alg(c,'latex'))add('warn','Latex allergy','Latex-free OR and equipment.');
@@ -635,8 +735,8 @@ function flags(c){
   if(alg(c,'iodine'))add('info','Shellfish / iodine','Not a true cross-reactivity with povidone-iodine or contrast.');
   if(anes(c,'pche')&&!sh.length)add('warn','Pseudocholinesterase deficiency','Avoid succinylcholine and mivacurium.');
   if(n.age>=65||has(c,'dem')||anes(c,'podel')){add('amb','Delirium risk',(n.age>=65?'Age '+n.age+'. ':'')+'Avoid benzodiazepines, anticholinergics (scopolamine, diphenhydramine), and meperidine; glasses and hearing aids in PACU; consider processed EEG to avoid excess depth.');
-    if(c.p.ponv.includes('Scopolamine patch'))add('amb','Plan: scopolamine with delirium risk','Anticholinergic: consider another agent.',{pl:1});
-    if(c.p.indAg.includes('Midazolam')||c.p.sed.includes('Midazolam'))add('amb','Plan: midazolam with delirium risk','Consider avoiding benzodiazepines.',{pl:1})}
+    if(uses(c,'scop')||uses(c,'diphen')||uses(c,'prometh'))add('amb','Plan: anticholinergic or sedating antihistamine with delirium risk',andL(['scop','diphen','prometh'].filter(id=>uses(c,id)).map(id=>RXD[id].n.toLowerCase()))+': consider alternatives.',{pl:1});
+    if(uses(c,'midaz'))add('amb','Plan: midazolam with delirium risk','Consider avoiding benzodiazepines.',{pl:1})}
   if(c.r.cfs&&+c.r.cfs>=5)add('amb','Frailty (CFS '+c.r.cfs+')','Higher risk of complications and loss of independence; confirm goals of care.');
   if(n.bmi>=40)add('amb','BMI '+n.bmi,'Ramped position, tidal volume by predicted body weight, correct cuff size, OSA and aspiration screening, careful dosing by lean or ideal weight.');
   if(has(c,'ra')||has(c,'cspine')||has(c,'ankspond')||has(c,'t21'))add('amb','Cervical spine','Limit extension; video laryngoscopy or awake bronchoscopic intubation; in-line stabilization if unstable.');
@@ -654,10 +754,22 @@ function flags(c){
   if(dur>=4)add('info','Long case ('+dur+' h)','Redose antibiotics (cefazolin every 4 h), Foley, active warming, pressure point checks.');
   if(c.p.mon.includes('SSEP / MEP neuromonitoring')){add('amb','Neuromonitoring','TIVA preferred; keep volatile ≤ 0.5 MAC; no paralytic after intubation for MEPs; bite blocks.',{pl:1});
     if(c.p.mnt==='Volatile')add('amb','Plan: volatile-only with neuromonitoring','Switch to TIVA or volatile ≤ 0.5 MAC with infusion.',{pl:1})}
-  if(c.p.mntAg.includes('Nitrous oxide')){const why=[];if(has(c,'sbo'))why.push('bowel obstruction');if(AP.sc>=3)why.push('high PONV risk');if(has(c,'pht'))why.push('pulmonary hypertension');if(has(c,'icp'))why.push('raised ICP');
+  if(uses(c,'n2o')){const why=[];if(has(c,'sbo'))why.push('bowel obstruction');if(AP.sc>=3)why.push('high PONV risk');if(has(c,'pht'))why.push('pulmonary hypertension');if(has(c,'icp'))why.push('raised ICP');
     if(why.length)add('amb','Plan: nitrous oxide','Reconsider with '+andL(why)+'.',{pl:1})}
-  if(AP.sc>=3&&c.p.ponv.length<3&&c.p.tech.length)add('amb','Plan: PONV prophylaxis','Apfel '+AP.sc+' (~'+AP.risk+'%): use '+AP.agents+'.',{pl:1});
+  if(AP.sc>=3&&aeCount(c)<3&&c.p.tech.length)add('amb','Plan: PONV prophylaxis','Apfel '+AP.sc+' (~'+AP.risk+'%): use '+AP.agents+'.',{pl:1});
   if(c.urg==='emergent'||c.r.e)add('info','Emergency case','Full-stomach precautions; abbreviated workup; document why surgery cannot wait.');
+  if(med(c,'maoi')&&uses(c,'ephed'))add('warn','Plan: ephedrine with an MAO inhibitor','Use a direct-acting vasopressor (phenylephrine).',{pl:1});
+  if(has(c,'sbo')&&uses(c,'metoclo'))add('warn','Plan: metoclopramide with bowel obstruction','Contraindicated.',{pl:1});
+  if(med(c,'ssri')&&uses(c,'mblue'))add('warn','Plan: methylene blue with an SSRI or SNRI','Serotonin syndrome risk.',{pl:1});
+  if(uses(c,'cis')&&uses(c,'sugam')&&!usesAny(c,['roc','vec']))add('amb','Plan: sugammadex with cisatracurium','Sugammadex does not reverse cisatracurium; use neostigmine with glycopyrrolate.',{pl:1});
+  if(uses(c,'neo')&&!uses(c,'glyco'))add('amb','Plan: neostigmine without glycopyrrolate','Pair with an anticholinergic to prevent bradycardia.',{pl:1});
+  if(usesAny(c,['roc','vec','cis','succ'])&&!usesAny(c,['sugam','neo'])&&!c.p.noRev&&!c.p.tof&&isGA(c))add('info','Plan: reversal','Paralytic selected without a reversal agent or TOF plan.',{pl:1});
+  if(alg(c,'pcn')&&uses(c,'amsulb'))add('warn','Plan: ampicillin-sulbactam with penicillin allergy','Choose another antibiotic.',{pl:1});
+  if(alg(c,'ceph')&&usesAny(c,['cefaz','cefox']))add('warn','Plan: cephalosporin with cephalosporin allergy','Confirm the agent and reaction; consider an alternative.',{pl:1});
+  if(alg(c,'la')&&RX.some(d=>d.cat==='la'&&uses(c,d.id)))add('amb','Plan: local anesthetic with local anesthetic allergy','True allergy is rare and usually to esters; confirm which agent before using it.',{pl:1});
+  if((has(c,'adrenal')||med(c,'ster'))&&uses(c,'etom'))add('info','Plan: etomidate with steroid dependence','Adds adrenal suppression; ensure stress-dose coverage.',{pl:1});
+  if((has(c,'pheo')||has(c,'stim')||has(c,'cad'))&&uses(c,'ket'))add('info','Plan: ketamine','Sympathomimetic: watch heart rate and BP with coronary disease, stimulants, or pheochromocytoma.',{pl:1});
+  if(RX.some(d=>d.cat==='la'&&uses(c,d.id))&&pl(c,'tech','Peripheral nerve block')&&!uses(c,'lipid'))add('info','Plan: lipid emulsion','Know where lipid emulsion is before the block.',{pl:1});
   if(/DNR|DNI/.test(c.code))add('amb','Code status: '+c.code,'Required reconsideration: discuss whether the DNR is suspended, maintained, or modified in the OR and PACU, and document.');
   if(c.setting==='Outpatient'&&(has(c,'osa')||A.diff||n.bmi>=50))add('info','Outpatient','Confirm an escort and that outpatient discharge is appropriate.');
   return F}
@@ -727,14 +839,16 @@ function labText(c){const l=c.lab,b=[];
   if(l.other)b.push(l.other);
   return b.join('; ')}
 /* Plan as [label, text] pairs: used by the note and the card */
-function planLines(c){const p=c.p,n=nums(c),L=[];const j=a=>a.join(', ');
+function planLines(c,card){const p=c.p,n=nums(c),L=[];const j=a=>a.join(', ');const rn=cat=>card?[]:rxNames(c,cat);
   if(p.tech.length){let t=p.tech.join(' + ');if(isGA(c)&&p.gaw)t+=' with '+p.gaw.toLowerCase();if(pl(c,'tech','Neuraxial')&&p.nax)t+='; '+p.nax.toLowerCase()+(p.naxTxt?' at '+p.naxTxt:'');if(pl(c,'tech','Peripheral nerve block')&&p.blk)t+='; '+p.blk;L.push(['Technique',t])}
-  if(isGA(c)&&(p.ind||p.indAg.length||p.nmb.length))L.push(['Induction',[p.ind,j(p.indAg),j(p.nmb)].filter(Boolean).join('; ')]);
-  if(pl(c,'tech','MAC / sedation')&&p.sed.length)L.push(['Sedation',j(p.sed)]);
+  if(!card&&rn('pre').length)L.push(['Premedication',j(rn('pre'))]);
+  {const t=[isGA(c)?p.ind:'',j([...rn('ind'),...rn('opi')]),j(rn('nmb')),p.noNmb?'no paralytic':''].filter(Boolean);if(t.length)L.push([isGA(c)?'Induction':'Sedation',t.join('; ')])}
   if(p.dev||p.ett||p.preox.length)L.push(['Airway',[p.dev,p.ett?'ETT '+p.ett:'',j(p.preox)].filter(Boolean).join('; ')]);
   if(p.backup||p.rescue.length)L.push(['Backup / rescue',[p.backup,j(p.rescue)].filter(Boolean).join('; ')]);
-  if(isGA(c)&&(p.mnt||p.mntAg.length))L.push(['Maintenance',[p.mnt,j(p.mntAg)].filter(Boolean).join('; ')]);
-  if(p.rev||p.tof)L.push(['Reversal',[p.rev,p.tof?'quantitative TOF ≥ 0.9 before extubation':''].filter(Boolean).join('; ')]);
+  {const t=[isGA(c)?p.mnt:'',j(rn('mnt'))].filter(Boolean);if(t.length)L.push(['Maintenance',t.join('; ')])}
+  {const t=[j(rn('rev')),p.noRev?'no reversal needed':'',p.tof?'quantitative TOF ≥ 0.9 before extubation':''].filter(Boolean);if(t.length)L.push(['Reversal',t.join('; ')])}
+  if(rn('vaso').length)L.push(['Vasoactive',j(rn('vaso'))]);
+  if(rn('la').length)L.push(['Local anesthetic',j(rn('la'))]);
   if(p.mon.length)L.push(['Monitoring',j(p.mon)]);
   if(p.acc.length||p.accTxt)L.push(['Access',[j(p.acc),p.accTxt].filter(Boolean).join('; ')]);
   const les=lesions(c).map(k=>LES[k].n+': '+LES[k].s);
@@ -742,9 +856,12 @@ function planLines(c){const p=c.p,n=nums(c),L=[];const j=a=>a.join(', ');
   if(p.fl||p.flTxt||p.bld.length||p.xm)L.push(['Fluids / blood',[p.fl,p.flTxt,j(p.bld),p.xm?p.xm+' units crossmatched':''].filter(Boolean).join('; ')]);
   if(p.vent.length)L.push(['Ventilation',j(p.vent)+(n.tv6&&p.vent.some(x=>/Lung/.test(x))?` (TV ${n.tv6}–${n.tv8} mL)`:'')]);
   if(p.warm.length)L.push(['Temperature',j(p.warm)]);
-  if(p.abx)L.push(['Antibiotic',p.abx]);
+  {const t=[j(rn('abx')),p.abx].filter(Boolean);if(t.length)L.push(['Antibiotic',t.join('; ')])}
   if(p.vte.length)L.push(['VTE',j(p.vte)]);
-  if(p.ponv.length)L.push(['PONV',j(p.ponv)]);
+  {const t=[...rn('ae'),...p.ponv];if(t.length)L.push(['PONV',j(t)])}
+  if(rn('adj').length)L.push(['Adjuncts',j(rn('adj'))]);
+  if(rn('oth').length)L.push(['Other drugs',j(rn('oth'))]);
+  if(rn('em').length)L.push(['Available',j(rn('em'))]);
   if(p.steroid)L.push(['Steroids',p.steroid]);
   if(p.glu)L.push(['Glucose',p.glu]);
   if(c.pos.length||p.posTxt)L.push(['Position',[j(c.pos),p.posTxt].filter(Boolean).join('; ')]);
@@ -940,14 +1057,13 @@ function vPlan(c){const p=c.p,n=nums(c),A=airway(c),AP=apfel(c),F=flags(c).filte
   h+=`<div class="card"><h3>Technique</h3>${multi('p.tech',p.tech,P_TECH)}<p class="hint">Often combined: GA with a block, spinal with sedation. Match to the procedure, comorbidities, coagulation, and patient preference.</p></div>`;
   if(isGA(c))h+=`<div class="card"><h3>General anesthesia</h3>
    ${segF('Airway','p.gaw',p.gaw,P_GAW)}${segF('Induction','p.ind',p.ind,P_IND)}
-   <div class="fld"><span>Induction agents <i>(doses with your attending)</i></span>${multi('p.indAg',p.indAg,P_INDAG)}</div>
-   <div class="fld"><span>Paralytic</span>${multi('p.nmb',p.nmb,P_NMB)}</div>
-   ${segF('Maintenance','p.mnt',p.mnt,P_MNT)}<div class="fld"><span>Maintenance agents</span>${multi('p.mntAg',p.mntAg,P_MNTAG)}</div>
-   ${segF('Reversal','p.rev',p.rev,P_REV)}
-   <div class="chips"><button type="button" class="chip${p.tof?' on':''}" data-a="bool" data-p="p.tof">Quantitative TOF ratio ≥ 0.9 before extubation</button></div></div>`;
-  if(pl(c,'tech','MAC / sedation'))h+=`<div class="card"><h3>Sedation</h3>${multi('p.sed',p.sed,P_SED)}<p class="hint">Plan for conversion to GA: airway equipment ready, aspiration risk considered.</p></div>`;
+   ${segF('Maintenance','p.mnt',p.mnt,P_MNT)}
+   <div class="chips"><button type="button" class="chip${p.tof?' on':''}" data-a="bool" data-p="p.tof">Quantitative TOF ratio ≥ 0.9 before extubation</button></div>
+   <p class="hint">Pick the agents in Drugs below.</p></div>`;
+  if(pl(c,'tech','MAC / sedation'))h+=`<div class="card"><h3>Sedation</h3><p class="sub">Pick sedation agents in Drugs below.</p><p class="hint">Plan for conversion to GA: airway equipment ready, aspiration risk considered.</p></div>`;
   if(pl(c,'tech','Neuraxial'))h+=`<div class="card"><h3>Neuraxial</h3>${seg('p.nax',p.nax,P_NAX)}${fld('Level, approach, notes','p.naxTxt',p.naxTxt,'placeholder="L3–4, sitting"')}<p class="hint">Check anticoagulants against ASRA timing, platelets, back exam, and baseline neuro exam.</p></div>`;
   if(pl(c,'tech','Peripheral nerve block'))h+=`<div class="card"><h3>Peripheral nerve block</h3>${fld('Block','p.blk',p.blk,'placeholder="Interscalene, single shot"')}<p class="hint">Document baseline neuro exam. Know the signs of local anesthetic systemic toxicity and where the lipid emulsion is.</p></div>`;
+  h+=vDrugs(c);
   if(isGA(c)||A.diff||pl(c,'tech','MAC / sedation'))h+=`<div class="card"><h3>Airway plan ${A.diff?'<span class="tag warn">difficult predicted</span>':''}</h3>
    ${segF('Primary device','p.dev',p.dev,P_DEV)}${fld('Blade and tube size','p.ett',p.ett,'placeholder="MAC 3, 7.0 ETT"')}
    <div class="fld"><span>Preoxygenation and setup</span>${multi('p.preox',p.preox,P_PREOX)}</div>
@@ -967,7 +1083,7 @@ function vPlan(c){const p=c.p,n=nums(c),A=airway(c),AP=apfel(c),F=flags(c).filte
   h+=`<div class="card"><h3>Prophylaxis</h3>${fld('Antibiotic','p.abx',p.abx,'placeholder="Cefazolin within 60 min of incision; redose q4h"')}
    <p class="hint">Within 60 min before incision (120 for vancomycin or fluoroquinolones); redose for long cases or large blood loss.</p>
    <div class="fld"><span>VTE</span>${multi('p.vte',p.vte,P_VTE)}</div>
-   <div class="fld"><span>PONV <i>(Apfel ${AP.sc}: ${esc(AP.agents)})</i></span>${multi('p.ponv',p.ponv,P_PONV)}</div>
+   <div class="fld"><span>PONV <i>(Apfel ${AP.sc}: ${esc(AP.agents)}; ${aeCount(c)} chosen)</i></span><div class="chips">${AE_IDS.map(id=>rxChip(c,id)).join('')}</div>${multi('p.ponv',p.ponv,P_PONV)}</div>
    <p class="hint">Rescue with a drug from a different class than the prophylaxis.</p>
    ${fld('Stress-dose steroids','p.steroid',p.steroid,'placeholder="Not indicated"')}${fld('Glucose plan','p.glu',p.glu,'placeholder="POC glucose on arrival and hourly"')}</div>`;
   h+=`<div class="card"><h3>Positioning</h3><p class="sub">${c.pos.length?esc(c.pos.join(', ')):'Set positions under Chart → Case.'}</p>${fld('Positioning notes','p.posTxt',p.posTxt,'placeholder="Arms tucked, pressure points padded, eyes taped"')}</div>`;
@@ -979,6 +1095,23 @@ function vPlan(c){const p=c.p,n=nums(c),A=airway(c),AP=apfel(c),F=flags(c).filte
   h+=`<div class="card"><h3>For the attending</h3>${area('Questions and things to look up','p.q',p.q,3,'Why sugammadex over neostigmine here? Spinal vs GA for this patient?')}${area('Other notes','p.notes',p.notes,2)}</div>`;
   h+=`<div class="btnrow"><a class="btn primary" href="#c/${c.id}/card">Next: OR card ›</a></div>`;
   return h}
+
+const rxChip=(c,id)=>`<button type="button" class="chip${uses(c,id)?' on':''}" data-a="rx" data-v="${id}">${esc(RXD[id].n)}</button>`;
+function vDrugs(c){const p=c.p;
+  let h=`<div class="card"><h3>Drugs <span class="x">what you’ll draw up; doses with your attending</span></h3>
+   <div class="btnrow" style="gap:6px"><span class="sub" style="font-size:.85rem">Quick add:</span>${RXSETS.map(([k,l])=>`<button type="button" class="btn sm" data-a="rxset" data-v="${k}">${l}</button>`).join('')}${p.rx.length?'<button type="button" class="linkbtn danger" data-a="rxclear" style="color:var(--warn)">Clear</button>':''}</div>`;
+  RXCATS.forEach(([k,l])=>{h+=`<div class="sysh">${esc(l)}</div><div class="chips">${RX.filter(d=>d.cat===k).map(d=>rxChip(c,d.id)).join('')}${k==='nmb'?`<button type="button" class="chip${p.noNmb?' on':''}" data-a="bool" data-p="p.noNmb">No paralytic</button>`:''}${k==='rev'?`<button type="button" class="chip${p.noRev?' on':''}" data-a="bool" data-p="p.noRev">No reversal needed</button>`:''}</div>`});
+  const sel=RXCATS.flatMap(([k])=>RX.filter(d=>d.cat===k&&uses(c,d.id)));
+  if(sel.length)h+=`<details class="dd" open><summary>Why and watch-outs (${sel.length})</summary>${sel.map(d=>`<div class="medrow"><b style="font-size:.92rem">${esc(d.n)}</b><p class="medn">${esc(d.p)}</p></div>`).join('')}</details>`;
+  return h+`</div>`}
+function rxSet(c,k){const A=airway(c),mh=anes(c,'mh')||anes(c,'mhfam'),q=num(stv(c,'ecg','qtc')),old=nums(c).age>=65||has(c,'dem')||anes(c,'podel');
+  const S={ga:['prop','fent','roc','sevo','dexa','ond','sugam','phenyl','ephed'],rsi:['prop','roc','sugam','phenyl'],mac:['prop','midaz','fent'],spinal:['bupi','phenyl','prop'],block:['ropi','lipid','midaz','fent']}[k]||[];
+  let ids=S.slice();
+  if(mh)ids=ids.map(x=>x==='sevo'?'propInf':x).concat('dantro');
+  if(q>=470)ids=ids.filter(x=>x!=='ond');
+  if(old)ids=ids.filter(x=>x!=='midaz');
+  if(med(c,'maoi'))ids=ids.filter(x=>x!=='ephed');
+  let n=0;ids.forEach(id=>{if(!uses(c,id)){c.p.rx.push(id);n++}});return n}
 
 function vCard(c){
   return`<div class="card"><h3>One-liner</h3>${area('Edit to override the generated one','one',c.one,2,oneLiner(Object.assign({},c,{one:''})))}</div>
@@ -1019,7 +1152,9 @@ function sheet(c){const n=nums(c),e=esc,A=airway(c),R=rcri(c),SB=stopbang(c),AP=
   h+=`<div class="blk"><h4>Risk</h4><p>RCRI <b>${R.pts}</b> (${R.risk}) · ${c.r.mets==='y'?'≥ 4 METs':c.r.mets==='n'?'< 4 METs':'METs ?'}${D?' · DASI '+D.sc:''} · STOP-BANG <b>${SB.sc}${SB.unk?'+':''}</b> · Apfel <b>${AP.sc}</b> (${AP.risk}%)${c.r.cfs?' · CFS '+e(c.r.cfs):''}</p><p class="mut">${e(cardStep(c).t)}</p></div>`;
   const nb=[n.tv6?'TV '+n.tv6+'–'+n.tv8+' mL':'',n.mapB?'MAP '+n.mapB+' (±20% '+n.mapLo+'–'+n.mapHi+')':'',n.ebv?'EBV '+n.ebv:'',n.abl?'ABL '+n.abl+' (Hgb '+n.hbT+')':'',n.maint?'maint '+n.maint+' mL/h':''].filter(Boolean);
   if(nb.length)h+=`<div class="blk"><h4>Numbers</h4><p>${e(nb.join(' · '))}</p></div>`;
-  const PL=planLines(c);
+  if(c.p.rx.length){const g=RXCATS.map(([k,l])=>[k,l,RX.filter(d=>d.cat===k&&uses(c,d.id))]).filter(x=>x[2].length);
+    h+=`<div class="blk"><h4>Drugs</h4><dl>${g.map(([k,l,ds])=>`<dt>${e(RXSHORT[k]||l)}</dt><dd>${ds.map(d=>'☐ '+e(d.n)).join('&nbsp; ')}</dd>`).join('')}</dl></div>`}
+  const PL=planLines(c,true);
   h+=`<div class="blk"><h4>Plan</h4>${PL.length?`<dl>${PL.map(([k,v])=>`<dt>${e(k)}</dt><dd>${e(v)}</dd>`).join('')}</dl>`:'<p class="mut">No plan entered yet.</p>'}</div>`;
   if(c.p.consent.length)h+=`<div class="blk"><h4>Consent</h4><p>${e(c.p.consent.join(', '))}</p></div>`;
   if(c.p.q||c.p.notes)h+=`<div class="blk"><h4>Questions</h4><p>${e(c.p.q).replace(/\n/g,'<br>')}</p>${c.p.notes?`<p class="mut">${e(c.p.notes).replace(/\n/g,'<br>')}</p>`:''}</div>`;
@@ -1106,10 +1241,13 @@ app.addEventListener('click',async e=>{const c=cur();
   if(a==='multi'){let arr=getPath(c,b.dataset.p);if(!Array.isArray(arr)){arr=[];setPath(c,b.dataset.p,arr)}const i=arr.indexOf(v);if(i>=0)arr.splice(i,1);else{arr.push(v);
       if(b.dataset.p==='alg'&&v!=='nkda'){const j=arr.indexOf('nkda');if(j>=0)arr.splice(j,1)}if(b.dataset.p==='alg'&&v==='nkda')arr.splice(0,arr.length,'nkda');
       if(b.dataset.p==='anes'&&v==='fine'){const j=arr.indexOf('first');if(j>=0)arr.splice(j,1)}if(b.dataset.p==='anes'&&v==='first'){const j=arr.indexOf('fine');if(j>=0)arr.splice(j,1)}
-      if(b.dataset.p==='p.nmb'&&v==='No paralytic')arr.splice(0,arr.length,v);else if(b.dataset.p==='p.nmb'){const j=arr.indexOf('No paralytic');if(j>=0)arr.splice(j,1)}}
+}
     save();render(true);return}
-  if(a==='bool'){const p=b.dataset.p;setPath(c,p,!getPath(c,p));save();render(true);return}
+  if(a==='bool'){const p=b.dataset.p;setPath(c,p,!getPath(c,p));if(p==='p.noNmb'&&c.p.noNmb)c.p.rx=c.p.rx.filter(id=>RXD[id].cat!=='nmb');if(p==='p.noRev'&&c.p.noRev)c.p.rx=c.p.rx.filter(id=>!['sugam','neo','glyco'].includes(id));save();render(true);return}
   if(a==='cond'){if(has(c,v))delete c.hx[v];else c.hx[v]='';save();render(true);if(has(c,v)){const el=app.querySelector(`[data-p="hx.${v}"]`);if(el&&!('ontouchstart' in window))el.focus({preventScroll:true})}return}
+  if(a==='rx'){const i=c.p.rx.indexOf(v);if(i>=0)c.p.rx.splice(i,1);else{c.p.rx.push(v);if(RXD[v].cat==='nmb')c.p.noNmb=false;if(RXD[v].cat==='rev')c.p.noRev=false}save();render(true);return}
+  if(a==='rxset'){const n=rxSet(c,v);save();render(true);toast(n?n+' added.':'Already selected.');return}
+  if(a==='rxclear'){if(confirm('Clear all selected drugs?')){c.p.rx=[];save();render(true)}return}
   if(a==='study'){c.st=c.st||{};const o=c.st[v];if(o){const filled=Object.entries(o).some(([k,x])=>String(x||'').trim());if(filled&&!confirm('Remove this '+STD[v].n+' and what you entered?'))return;delete c.st[v]}else c.st[v]={date:''};save();render(true);if(!o){const el=app.querySelector(`[data-p="st.${v}.date"]`);if(el)el.scrollIntoView({block:'center'})}return}
   if(a==='med'){if(med(c,v))delete c.meds[v];else c.meds[v]='';save();render(true);return}
   if(a==='setdate'){c.date=addDays(today(),+v);save();render(true);return}
