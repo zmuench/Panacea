@@ -13,7 +13,7 @@
 <style>
 /* Layout: three group buttons (clinical tools, curricula, residency) switch which apps show; the page opens on the group named in the link (#clinical, #curricula, #residency), or clinical tools by default.
    Apps sit in two columns; narrow phones switch to compact stacked cards.
-   Palette and type match Hx, Dispo, ICU Rounder, Sweep and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
+   Palette and type match Hx, Dispo, ICU Rounder, Sweep, Ether and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
 :root{
   --bg:#EBEFF2; --surface:#FFFFFF; --ink:#14233A; --muted:#5A6A7E; --line:#D2DAE1;
   --accent:#1D4ED0; --accent-soft:#E1E9FB;
@@ -88,7 +88,7 @@ footer{color:var(--muted);font-size:.8rem}
   </header>
 
   <nav class="seg" role="tablist" aria-label="App groups">
-    <button type="button" role="tab" id="tab-clinical" aria-controls="g-clinical" aria-selected="true" data-g="clinical">Clinical tools<span class="ct">7</span></button>
+    <button type="button" role="tab" id="tab-clinical" aria-controls="g-clinical" aria-selected="true" data-g="clinical">Clinical tools<span class="ct">8</span></button>
     <button type="button" role="tab" id="tab-curricula" aria-controls="g-curricula" aria-selected="false" data-g="curricula">Curricula<span class="ct">5</span></button>
     <button type="button" role="tab" id="tab-residency" aria-controls="g-residency" aria-selected="false" data-g="residency">Residency<span class="ct">1</span></button>
   </nav>
@@ -140,6 +140,12 @@ footer{color:var(--muted);font-size:.8rem}
       <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 12l6-4.5"/><circle cx="9" cy="15.5" r=".6"/></svg></span>
       <span class="txt"><span class="name">Sweep</span><span class="kind">ICU considerations</span>
         <p class="desc">A morning pass through every system, with open items flagged for rounds.</p></span>
+      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a></li>
+    <li><a class="app" href="ether/">
+      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10h11l-1.6 6.4A3.5 3.5 0 0 1 12.5 19h-1a3.5 3.5 0 0 1-3.4-2.6z"/><path d="M12 10V6.5A2.5 2.5 0 0 1 14.5 4H18"/><path d="M4 13h2.9M17.1 13H20"/></svg></span>
+      <span class="txt"><span class="name">Ether</span><span class="kind">Anesthesia plan</span>
+        <p class="desc">Review the chart, score the risk, build the anesthetic plan, and print a card for the OR.</p></span>
       <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </a></li>
   </ul>
@@ -208,7 +214,7 @@ window.addEventListener('pageshow',fromHash);
 fromHash();
 
 /* Sync across devices: one private GitHub repo and token, saved in this browser and used by every app
-   (ICU Rounder and Spectrum patients; curricula progress, notes and PDFs). */
+   (ICU Rounder and Spectrum patients, Ether cases; curricula progress, notes and PDFs). */
 const SYNC_KEY='icu-rounds-sync';
 const syncEl=document.getElementById('sync');
 let syncErr='',syncBusy=false,typed={token:'',repo:''};
@@ -216,7 +222,7 @@ const escH=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 function getSync(){try{const r=JSON.parse(localStorage.getItem(SYNC_KEY)||'null');return r&&r.token&&r.owner&&r.repo?r:null}catch(e){return null}}
 const ownerGuess=()=>location.hostname.endsWith('.github.io')?location.hostname.split('.')[0]:'your-username';
 function renderSync(){const SY=getSync();
-  const what=`<ul class="what"><li>ICU Rounder and Spectrum patient lists</li><li>Progress and notes in Primer, Core, Rhythm, Rhythm 2 and Systole</li><li>The PDFs you link in those curricula</li></ul>`;
+  const what=`<ul class="what"><li>ICU Rounder and Spectrum patients, and Ether cases</li><li>Progress and notes in Primer, Core, Rhythm, Rhythm 2 and Systole</li><li>The PDFs you link in those curricula</li></ul>`;
   syncEl.innerHTML=SY?`<h2 id="sync-h"><span class="dot on"></span>Sync is on</h2>
     <p>This device syncs through your private repo <b>${escH(SY.owner)}/${escH(SY.repo)}</b>:</p>${what}
     <p>Set up each phone or computer the same way, with the same repo and token.</p>
