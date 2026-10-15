@@ -95,6 +95,9 @@ textarea{min-height:80px;resize:vertical;line-height:1.4}
 .pill.xp{background:var(--pos-soft);color:var(--pos)}
 .pill.xn{background:var(--neg-soft);color:var(--neg)}
 .pill.cu{background:var(--surface);border:1px solid var(--line)}
+.pill.len{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.pill.len4{background:var(--ink);border:1px solid var(--ink);color:var(--surface)}
+.pill.lenq{background:var(--sunk);border:1px dashed var(--line);color:var(--muted);font-weight:600}
 .scorebox{grid-row:1/3;grid-column:2;text-align:right}
 .big{font:700 1.6rem/1 var(--f-display);font-variant-numeric:tabular-nums}
 .big.na{color:var(--muted);font-size:1.1rem}
@@ -334,6 +337,7 @@ const $ = (sel,root=document) => root.querySelector(sel);
 let toastT; function toast(m){ let t=$('.toast'); if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t);} t.textContent=m; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,1800); }
 const shortName = n => n.replace(/\s+Program$/,'');
 function statusPill(pr){ const s=pr.status||'con'; const cls=s==='iv'?'iv':s==='sch'?'sch':''; let t=STATUS.find(x=>x[0]===s)[1]; if(s==='sch') t=pr.date?'Interview '+fmtDate(pr.date):'Interview scheduled'; if(s==='iv') t='Interviewed'; return `<span class="pill ${cls}">${esc(t)}</span>`; }
+function lenPill(p){ const n=parseInt(p.len,10); if(!n) return '<span class="pill lenq">Length not listed</span>'; return `<span class="pill ${n>=4?'len4':'len'}">${n}-year</span>`; }
 function xPill(pr){ const x=pr.x||0; if(!x) return ''; return `<span class="pill ${x>0?'xp':'xn'}">${esc(XNAME[x]||'')} ${x>0?'+':''}${x}</span>`; }
 function fmtDate(d){ const t=new Date(d+'T12:00'); return isNaN(t)?d:t.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
 const grip = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
@@ -402,7 +406,7 @@ function viewProg(){
   const cards = r.length? `<div class="pcards">${r.map(({pr,s})=>{ const p=progData(pr); return `<button class="pcard" type="button" data-act="open" data-id="${pr.id}">
       <b>${esc(shortName(p.n))}</b>
       <span class="scorebox">${s.final==null?'<span class="big na">—</span>':`<span class="big">${Math.round(s.final)}</span>`}<span class="cov">${s.n}/${s.of} rated</span></span>
-      <span class="meta">${esc(p.st||'')}${statusPill(pr)}${xPill(pr)}${pr.src==='custom'?'<span class="pill cu">Added by you</span>':''}</span></button>`; }).join('')}</div>`
+      <span class="meta">${esc(p.st||'')}${lenPill(p)}${statusPill(pr)}${xPill(pr)}${pr.src==='custom'?'<span class="pill cu">Added by you</span>':''}</span></button>`; }).join('')}</div>`
     : `<div class="empty"><b>No programs yet</b>Search the applicant spreadsheet above, or add a program yourself. Each one gets a starting score from the sheet that you refine after the interview.</div>`;
   return `<h1 class="step">Your programs</h1>
   <p class="lede">Add each program as you interview. Data comes from the 2026–2027 EM Applicant Spreadsheet.</p>
@@ -461,7 +465,7 @@ function viewDetail(){
     return `<label class="f">${esc(f.l)}${was}${fieldInput(f,cur!=null?cur:sheetV,'ed_')}</label>`; }).join('');
   return `<button class="btn ghost sm back" type="button" data-act="goto" data-t="${fromTab}">← ${fromTab==='rank'?'Rank list':'Programs'}</button>
   <div class="dhead"><div style="flex:1;min-width:0"><h1>${esc(shortName(p.n))}</h1>
-    <p class="dsub">${esc([p.st,p.rg,p.len?p.len+'-year':''].filter(Boolean).join(' · '))}${p.up?` · Sheet updated ${esc(p.up)}`:''}</p></div></div>
+    <p class="dsub">${esc([p.st,p.rg,p.len?p.len+'-year program':'Length not listed'].filter(Boolean).join(' · '))}${p.up?` · Sheet updated ${esc(p.up)}`:''}</p></div></div>
   <section class="sec"><div class="scorecard"><span class="big">${s.final==null?'—':Math.round(s.final)}<small>/ 100</small></span><p class="math">${math}</p></div></section>
   <section class="sec"><h2>Interview</h2>
     <div class="row"><div class="seg wide" role="group" aria-label="Status">${st}</div></div>
@@ -488,7 +492,7 @@ function viewRank(){
     const bar = s.x>0? `<i style="width:${f}%" class="x"></i><i style="width:${b}%"></i>` : s.x<0? `<i style="width:${Math.min(100,b)}%" class="xn"></i><i style="width:${f}%"></i>` : `<i style="width:${f}%"></i>`;
     return `<button class="rk" type="button" data-act="open" data-id="${pr.id}">
       <span class="no">${i+1}${mv}</span>
-      <span class="mid"><b>${esc(shortName(p.n))}</b><span class="meta">${esc(p.st||'')}${statusPill(pr)}${xPill(pr)}</span><span class="sbar">${bar}</span></span>
+      <span class="mid"><b>${esc(shortName(p.n))}</b><span class="meta">${esc(p.st||'')}${lenPill(p)}${statusPill(pr)}${xPill(pr)}</span><span class="sbar">${bar}</span></span>
       <span class="sc">${s.final==null?'<span class="big na">—</span>':`<span class="big">${Math.round(s.final)}</span>`}<span class="cov">${s.n}/${s.of}</span></span></button>`; }).join('');
   return `<h1 class="step">Rank list</h1>
   <p class="lede">Sorted by fit with your priorities, led by ${esc(top)}. The order shifts as you add scores and X factors. Arrows show movement since you last looked.</p>
