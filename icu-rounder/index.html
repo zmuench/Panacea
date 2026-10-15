@@ -148,6 +148,7 @@ summary{cursor:pointer;color:var(--muted);font-weight:700}
 .autonote{background:var(--accent-soft);border-radius:10px;padding:4px 12px 2px;margin:4px 0 8px}
 .autonote .fld{margin-top:2px}
 .items{list-style:none;padding:0;margin:10px 0}
+.pcons{margin:10px 0}.pcons .linkbtn{margin-right:14px}.pcons h4{margin:0 0 6px;font-size:.92rem;color:var(--muted);font-weight:600}
 .items li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
 .items li.stop .itxt{text-decoration:line-through;color:var(--muted)}
 .startrow{display:flex;gap:8px;align-items:center;margin:8px 0}
@@ -704,7 +705,7 @@ imaging:(p,d)=>{const c=d.img.cxr,e=d.img.ekg;
   <h3>EKG</h3><div class="card">${seg('d:img.ekg.done',['Not done','Obtained'])}${e.done==='Obtained'?`<div class="fld"><span>Rhythm</span>${seg('d:img.ekg.rhythm',RHY)}</div><div class="row">${inp('d:img.ekg.rate','Rate',{num:1,w:'s'})}${inp('d:img.ekg.qtc','QTc',{num:1,unit:'ms',w:'s'})}</div>${chips('d:img.ekg.f',EKGF)}${inp('d:img.ekg.note','Details')}`:''}</div>`},
 
 consults:(p,d)=>{const tot=txTotals(d);
-  return `<h2>Consults and blood products</h2>${carry(d)}<h3>Consulting services</h3><div class="card">${listEditor('d:consults',b=>`<div class="row">${inp(b+'.service','Service',{ph:'e.g. Nephrology'})}${inp(b+'.date','Consulted',{type:'date',w:'m'})}</div>${inp(b+'.reason','Reason',{ph:'e.g. CRRT management'})}<label class="fld"><span>Latest recommendations</span>${ta(b+'.recs','e.g. continue CRRT, net even',2)}</label><div class="fld"><span>Status</span>${seg(b+'.status',['Following','Signed off'])}</div>`,'Add consult',{service:'',date:d.date,reason:'',recs:'',status:'Following'})}</div>
+  return `<h2>Consults and blood products</h2>${carry(d)}<h3>Consulting services</h3><p class="muted">Link a consult to a problem and it moves into that problem's assessment and plan, on screen and on the printed sheet.</p><div class="card">${listEditor('d:consults',(b,it)=>`<div class="row">${inp(b+'.service','Service',{ph:'e.g. Nephrology'})}${inp(b+'.date','Consulted',{type:'date',w:'m'})}</div><div class="row">${probSel(p,b+'.pr',it.pr)}</div>${inp(b+'.reason','Reason',{ph:'e.g. CRRT management'})}<label class="fld"><span>Latest recommendations</span>${ta(b+'.recs','e.g. continue CRRT, net even',2)}</label><div class="fld"><span>Status</span>${seg(b+'.status',['Following','Signed off'])}</div>`,'Add consult',{service:'',date:d.date,reason:'',recs:'',status:'Following'})}</div>
   <h3>Blood products</h3><div class="card">${listEditor('d:tx',b=>`<div class="fld"><span>Product</span>${seg(b+'.product',['PRBC','Platelets','FFP','Cryo','Whole blood'])}</div><div class="row">${inp(b+'.units','Units',{num:1,w:'s'})}${inp(b+'.date','Date',{type:'date',w:'m'})}</div>${inp(b+'.why','Indication or pre-transfusion value',{ph:'e.g. Hgb 6.8'})}`,'Log transfusion',{product:'PRBC',units:'1',date:d.date,why:''})}${tot?`<p class="calc">Total logged: ${esc(tot)}</p>`:''}</div>`},
 
 lines:(p,d)=>`<h2>Lines, tubes, and drains</h2>${carry(d)}<div class="card"><p class="calc">Quick add</p><div class="chips">${LINES.filter(x=>x!=='Other').map(t=>`<button type="button" class="chip" data-act="addLine" data-t="${t}">+ ${t}</button>`).join('')}</div></div>
@@ -743,6 +744,7 @@ plan:(p,d)=>{const act=p.problems.filter(x=>!x.resolved);
     ${pr.plan.length?`<ul class="items">${pr.plan.map(it=>{const s=stops.includes(it.id);return `<li class="${s?'stop':''}"><span class="itxt"><input class="itin" data-b="p:problems.${p.problems.indexOf(pr)}.plan.${pr.plan.indexOf(it)}.text" value="${esc(it.text)}" aria-label="Plan item" autocomplete="off">${it.started?`<span class="since">since ${fmtDate(it.started)}</span>`:''}</span><div class="seg sm"><button type="button" class="${!s?'on':''}" data-act="itemCont" data-pr="${pr.id}" data-id="${it.id}">Continue</button><button type="button" class="${s?'on stopb':''}" data-act="itemStop" data-pr="${pr.id}" data-id="${it.id}">Stop</button></div></li>`}).join('')}</ul>`:''}
     <div>${(pl.starts||[]).map((s,j)=>`<div class="startrow"><span class="tag">Start</span><input data-b="${b}.starts.${j}.text" value="${esc(s.text)}" placeholder="What are you starting?" autocomplete="off"><button type="button" class="x" data-act="delStart" data-pr="${pr.id}" data-i="${j}" aria-label="Remove">×</button></div>`).join('')}
     <button type="button" class="btn sm" data-act="addStart" data-pr="${pr.id}">Add new plan item</button></div>
+    ${apConsults(p,d,pr)}
     <details class="labpick" ${V.openEdit===pr.id?'open':''}><summary>Rename or combine</summary>${inp('p:problems.'+p.problems.indexOf(pr)+'.name','Problem name')}
     ${act.length>1?`<label class="fld"><span>Combine with another problem into one plan</span><select data-act-sel="mergeProb" data-pr="${pr.id}"><option value="">Choose a problem…</option>${act.filter(x=>x!==pr).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>`:''}
     ${(pr.merged||[]).length?`<p class="calc">Combined from: ${pr.merged.map(m=>`${esc(m.name)} <button type="button" class="linkbtn" data-act="splitProb" data-pr="${pr.id}" data-id="${m.id}">Separate</button>`).join(' · ')}</p>`:''}</details>
@@ -981,7 +983,7 @@ function buildSummary(p,d,fmt){const N=fmt==='note',PARTS=fmt==='parts',parts={a
   (d.img.other||[]).filter(x=>x.study).forEach(x=>im.push(`${x.study}: ${x.find?sent(x.find):'read pending.'}`));
   if(ek.done==='Obtained'){const f=[ek.rhythm,ek.rate&&'rate '+ek.rate,ek.qtc&&'QTc '+ek.qtc,...(ek.f||[]),ek.note].filter(Boolean);im.push(`EKG: ${f.length?sent(f.join(', ')):'obtained.'}`)}
   sec('img','Imaging and EKG',im.join('\n'),1);
-  const cs=(d.consults||[]).filter(x=>x.service).map(x=>`${x.service}${x.date?' (consulted '+fmtDate(x.date)+')':''}${x.reason?' for '+x.reason:''}${x.status==='Signed off'?', signed off':''}${x.recs?'. Recs: '+String(x.recs).trim().replace(/[.\s]+$/,''):''}`);
+  const cs=(d.consults||[]).filter(x=>x.service&&!consultLinked(p,x)).map(x=>`${x.service}${x.date?' (consulted '+fmtDate(x.date)+')':''}${x.reason?' for '+x.reason:''}${x.status==='Signed off'?', signed off':''}${x.recs?'. Recs: '+String(x.recs).trim().replace(/[.\s]+$/,''):''}`);
   const rtx=(d.tx||[]).filter(t=>t.product&&t.date&&daysBetween(t.date,d.date)>=0&&daysBetween(t.date,d.date)<=1).map(t=>`${t.product} ${t.units||'?'} unit${num(t.units)===1?'':'s'} on ${fmtDate(t.date)}${t.why?' ('+t.why+')':''}`);
   const ttot=txTotals(d);
   sec('consults','Consults and blood products',[cs.length&&`Consults: ${cs.join('; ')}.`,rtx.length&&`Transfused today or yesterday: ${rtx.join('; ')}.`,ttot&&`Total logged: ${ttot}.`].filter(Boolean).join('\n'),1);
@@ -1010,11 +1012,12 @@ function buildSummary(p,d,fmt){const N=fmt==='note',PARTS=fmt==='parts',parts={a
     const status=s.resolved?'resolved':s.status?s.status.toLowerCase():'';const stops=s.stops||[];
     const cont=pr.plan.filter(x=>!stops.includes(x.id)).map(x=>x.text+(x.started?' (since '+fmtDate(x.started)+')':'')),stp=pr.plan.filter(x=>stops.includes(x.id)).map(x=>x.text+(x.started?' (started '+fmtDate(x.started)+')':'')),st=(s.starts||[]).map(x=>String(x.text||'').trim()).filter(Boolean);
     const ad=!s.resolved&&autoDetail(pr,d,p),lt=!s.resolved&&labTrendText(p,d,prLabs(pr)),md=!s.resolved&&medsFor(p,d,pr);
+    const co=consultsFor(d,pr).filter(x=>x.service).map(x=>'Consult: '+consultStr(x)+'.');
     let l;
-    if(N){l=`# ${pr.name}${status?' — '+status:''}`;if(s.note)l+='\n'+sent(s.note);if(ad)l+='\n- '+ad;if(md)l+='\n- Meds: '+md+'.';if(lt)l+='\n- Labs: '+lt+'.';cont.forEach(x=>l+='\n- Continue '+x);st.forEach(x=>l+='\n- Start '+x);stp.forEach(x=>l+='\n- Stop '+x)}
-    else{l=`${i+1}. ${pr.name}`+(status?' — '+status+'.':'.');if(s.note)l+=' '+sent(s.note);if(ad)l+='\n   '+ad;if(md)l+='\n   Meds: '+md+'.';if(lt)l+='\n   Labs: '+lt+'.';
+    if(N){l=`# ${pr.name}${status?' — '+status:''}`;if(s.note)l+='\n'+sent(s.note);if(ad)l+='\n- '+ad;if(md)l+='\n- Meds: '+md+'.';if(lt)l+='\n- Labs: '+lt+'.';co.forEach(x=>l+='\n- '+x);cont.forEach(x=>l+='\n- Continue '+x);st.forEach(x=>l+='\n- Start '+x);stp.forEach(x=>l+='\n- Stop '+x)}
+    else{l=`${i+1}. ${pr.name}`+(status?' — '+status+'.':'.');if(s.note)l+=' '+sent(s.note);if(ad)l+='\n   '+ad;if(md)l+='\n   Meds: '+md+'.';if(lt)l+='\n   Labs: '+lt+'.';co.forEach(x=>l+='\n   '+x);
       if(cont.length)l+=`\n   Continue: ${cont.join('; ')}.`;if(st.length)l+=`\n   Start: ${st.join('; ')}.`;if(stp.length)l+=`\n   Stop: ${stp.join('; ')}.`}
-    parts.ap.push({name:pr.name,status,note:s.note?sent(s.note):'',lines:[ad,md&&'Meds: '+md+'.',lt&&'Labs: '+lt+'.',cont.length&&`Continue: ${cont.join('; ')}.`,st.length&&`Start: ${st.join('; ')}.`,stp.length&&`Stop: ${stp.join('; ')}.`].filter(Boolean)});
+    parts.ap.push({name:pr.name,status,note:s.note?sent(s.note):'',lines:[ad,md&&'Meds: '+md+'.',lt&&'Labs: '+lt+'.',...co,cont.length&&`Continue: ${cont.join('; ')}.`,st.length&&`Start: ${st.join('; ')}.`,stp.length&&`Stop: ${stp.join('; ')}.`].filter(Boolean)});
     pl.push(l)});
     para(pl.join(N?'\n\n':'\n'))}
   sec('fhugs','FAST HUGS BID',fl.join('\n'),1);
@@ -1104,6 +1107,12 @@ function medsFor(p,d,pr){const out=[];
   DRIPCAT().forEach(([k,n])=>{const o=(d.drips||{})[k];if(!o||!o.on||dripFor(p,k,o)!==pr.id)return;const s=dripList([[k,n]],d)[0];if(s)out.push(s)});
   ((d.drips||{}).other||[]).forEach(x=>{if(x.name&&x.pr===pr.id)out.push(x.name+(x.dose?' '+x.dose:'')+(x.start?' ('+course(x.start,d.date,x.days)+')':''))});
   return out.join('; ')}
+/* consults nested under their problem */
+const consultsFor=(d,pr)=>(d.consults||[]).filter(x=>x.pr&&x.pr===pr.id);
+function consultLinked(p,x){return !!(x.pr&&x.pr!=='none'&&p.problems.some(y=>y.id===x.pr&&!y.resolved))}
+function consultStr(x){return `${x.service}${x.status==='Signed off'?' (signed off)':''}${x.date?', consulted '+fmtDate(x.date):''}${x.reason?' for '+String(x.reason).trim():''}${x.recs?'. Recs: '+String(x.recs).trim().replace(/[.\s]+$/,''):''}`}
+function apConsults(p,d,pr){const cs=consultsFor(d,pr);
+  return `<div class="pcons">${cs.length?`<h4>Consults</h4>${cs.map(x=>{const i=d.consults.indexOf(x),b='d:consults.'+i;return `<div class="litem"><div class="row">${inp(b+'.service','Service',{ph:'e.g. Nephrology'})}${inp(b+'.date','Consulted',{type:'date',w:'m'})}</div><label class="fld"><span>Latest recommendations</span>${ta(b+'.recs','e.g. continue CRRT, net even',2)}</label><div class="fld"><span>Status</span>${seg(b+'.status',['Following','Signed off'])}</div><button type="button" class="linkbtn" data-act="unlinkConsult" data-i="${i}">Unlink from this problem</button> <button type="button" class="linkbtn danger" data-act="del" data-b="d:consults" data-i="${i}">Remove</button></div>`}).join('')}`:''}<button type="button" class="btn sm" data-act="add" data-b="d:consults" data-t="${esc(JSON.stringify({service:'',date:d.date,reason:'',recs:'',status:'Following',pr:pr.id}))}">Add consult</button></div>`}
 function mergeProblems(p,d,A,B){
   A.merged=(A.merged||[]).concat([{id:B.id,name:B.name,auto:B.auto||null,autos:B.autos||[],labs:B.labs}]);
   A.autos=[...new Set([...(A.autos||[]),...pAutos(B)])].filter(k=>k!==A.auto);
@@ -1113,7 +1122,7 @@ function mergeProblems(p,d,A,B){
   if(d){const pa=d.plan[A.id]=d.plan[A.id]||{},pb=d.plan[B.id]||{};
     pa.note=[pa.note,pb.note].map(x=>sent(String(x||'').trim())).filter(Boolean).join(' ');pa.status=pa.status||pb.status||'';
     pa.starts=[...(pa.starts||[]),...(pb.starts||[])];pa.stops=[...(pa.stops||[]),...(pb.stops||[])];delete d.plan[B.id];
-    Object.values(d.drips||{}).forEach(o=>{if(o&&!Array.isArray(o)&&o.pr===B.id)o.pr=A.id});((d.drips||{}).other||[]).forEach(x=>{if(x.pr===B.id)x.pr=A.id})}
+    Object.values(d.drips||{}).forEach(o=>{if(o&&!Array.isArray(o)&&o.pr===B.id)o.pr=A.id});((d.drips||{}).other||[]).forEach(x=>{if(x.pr===B.id)x.pr=A.id});(d.consults||[]).forEach(x=>{if(x.pr===B.id)x.pr=A.id})}
   p.problems=p.problems.filter(x=>x!==B)}
 function splitProblem(p,d,A,id){const m=(A.merged||[]).find(x=>x.id===id);if(!m)return;A.merged=A.merged.filter(x=>x!==m);
   const ks=[m.auto,...(m.autos||[])].filter(Boolean);A.autos=(A.autos||[]).filter(k=>!ks.includes(k));
@@ -1460,6 +1469,7 @@ document.addEventListener('click',e=>{
     case 'next':if(V.step<STEPS.length-1){V.step++;render();window.scrollTo(0,0)}break;
     case 'dripToggle':{const k=t.dataset.k;const o=d.drips[k]||{};o.on=!o.on;if(o.on){o.since=d.date;o.unit=o.unit||t.dataset.u;o.trend=o.trend&&o.trend!=='Stopped'?o.trend:'New'}d.drips[k]=o;save();render();break}
     case 'add':{const {o,path}=ref(t.dataset.b);let arr=getPath(o,path);if(!Array.isArray(arr)){arr=[];setPath(o,path,arr)}arr.push(Object.assign({id:uid()},JSON.parse(t.dataset.t)));save();render();break}
+    case 'unlinkConsult':{const x=(d.consults||[])[+t.dataset.i];if(x){x.pr='none';save();toast('Moved to Consults and blood products');render()}break}
     case 'del':{const {o,path}=ref(t.dataset.b);const arr=getPath(o,path);if(Array.isArray(arr))arr.splice(+t.dataset.i,1);save();render();break}
     case 'itemCont':case 'itemStop':{const pl=d.plan[t.dataset.pr]=d.plan[t.dataset.pr]||{};pl.stops=(pl.stops||[]).filter(x=>x!==t.dataset.id);if(a==='itemStop')pl.stops.push(t.dataset.id);save();render();break}
     case 'addStart':{const pl=d.plan[t.dataset.pr]=d.plan[t.dataset.pr]||{};(pl.starts=pl.starts||[]).push({id:uid(),text:''});save();render();const ins=document.querySelectorAll(`[data-b^="d:plan.${t.dataset.pr}.starts."]`);if(ins.length)ins[ins.length-1].focus();break}
