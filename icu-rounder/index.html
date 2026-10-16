@@ -200,6 +200,11 @@ table.trend{border-collapse:collapse;font-variant-numeric:tabular-nums;width:max
 .dia{width:100%;height:auto;display:block}
 .dia text{font:600 15px -apple-system,system-ui,sans-serif;fill:var(--ink)}
 .dia text.dempty{fill:var(--line);font-weight:400}
+.lshift{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:5px;background:var(--warn-soft);color:var(--warn);font-size:.72rem;letter-spacing:.02em;text-transform:none;vertical-align:1px}
+.lshift.mild{background:var(--prog-soft);color:var(--prog)}
+.lsdet{display:block;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink);font-size:.8rem;margin-top:2px}
+.pp .lshift{border:.5pt solid #000;background:none;color:#000;font-size:6.5pt}
+.pp .lsdet{color:#000;font-size:6.5pt}
 .dline line{stroke:var(--muted);stroke-width:1.6;stroke-linecap:round}
 pre.labdia{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.35;margin:0 0 1em;white-space:pre;overflow-x:auto}
 .carried{background:var(--prog-soft);color:var(--prog);border-radius:10px;padding:7px 10px;font-size:.88rem;margin:8px 0}
@@ -432,8 +437,9 @@ const SEDATION=[['propofol','Propofol',['mcg/kg/min']],['dex','Dexmedetomidine',
 const ANALGESIA=[['fentanyl','Fentanyl',['mcg/hr']],['hydromorphone','Hydromorphone',['mg/hr']],['morphine','Morphine',['mg/hr']]];
 const PARALYTICS=[['cis','Cisatracurium',['mcg/kg/min','mg/hr']],['roc','Rocuronium',['mcg/kg/min','mg/hr']],['vec','Vecuronium',['mcg/kg/min','mg/hr']]];
 const TREND={New:'new',Up:'increasing',Stable:'stable',Weaning:'weaning',Stopped:'discontinued'};
-const LABS=[['na','Na'],['k','K'],['cl','Cl'],['hco3','HCO3'],['bun','BUN'],['cr','Cr'],['glu','Glucose'],['ca','Ca'],['mg','Mg'],['phos','Phos'],['wbc','WBC'],['hgb','Hgb'],['plt','Plt'],['lactate','Lactate'],['inr','INR'],['tbili','T bili'],['pct','Procalcitonin'],['trop','Troponin'],['hct','Hct'],['alb','Albumin'],['ast','AST'],['alt','ALT'],['alp','Alk phos']];
-const LGROUPS=[['Chemistry',['na','k','cl','hco3','bun','cr','glu','ca','mg','phos']],['CBC',['wbc','hgb','hct','plt']],['Liver',['alb','tbili','ast','alt','alp']],['Other',['lactate','inr','pct','trop']]];
+const LABS=[['na','Na'],['k','K'],['cl','Cl'],['hco3','HCO3'],['bun','BUN'],['cr','Cr'],['glu','Glucose'],['ca','Ca'],['mg','Mg'],['phos','Phos'],['wbc','WBC'],['hgb','Hgb'],['plt','Plt'],['lactate','Lactate'],['inr','INR'],['tbili','T bili'],['pct','Procalcitonin'],['trop','Troponin'],['hct','Hct'],['alb','Albumin'],['ast','AST'],['alt','ALT'],['alp','Alk phos'],['neut','Neutrophils'],['bands','Bands'],['ig','IG']];
+const LUNIT={neut:'%',bands:'%',ig:'%'};
+const LGROUPS=[['Chemistry',['na','k','cl','hco3','bun','cr','glu','ca','mg','phos']],['CBC',['wbc','hgb','hct','plt']],['Differential',['neut','bands','ig']],['Liver',['alb','tbili','ast','alt','alp']],['Other',['lactate','inr','pct','trop']]];
 const CXSRC=['Blood','Urine','Sputum','BAL','Wound','CSF','C. diff','MRSA nares','Resp viral panel','Other'];
 const CXR=['Unchanged','Improved','Worsened','New infiltrate','Effusion','Pulmonary edema','Atelectasis','Pneumothorax','ETT in good position','Lines in good position'];
 const RHY=['Sinus rhythm','Sinus tachycardia','Sinus bradycardia','Atrial fibrillation','AF with RVR','Atrial flutter','Paced','Other'];
@@ -693,8 +699,8 @@ drips:(p,d)=>{const anyPar=PARALYTICS.some(x=>d.drips[x[0]]&&d.drips[x[0]].on);
   <h3>Paralytics</h3><div class="card">${PARALYTICS.map(drip).join('')}${anyPar?`<div class="row">${inp('d:drips.tof','Train of four',{ph:'e.g. 2/4',w:'s'})}</div>`:''}</div>
   <h3>Other infusions and key meds</h3><div class="card">${listEditor('d:drips.other',(b,it)=>`<div class="row">${inp(b+'.name','Medication',{ph:'e.g. hydrocortisone, heparin gtt'})}${inp(b+'.dose','Dose',{w:'m'})}</div><div class="row">${inp(b+'.start','Start date',{type:'date',w:'m'})}${inp(b+'.days','Planned days',{num:1,w:'s'})}</div>${it.start?`<p class="calc">${esc(cap(course(it.start,d.date,it.days)))}</p>`:''}${probSel(p,b+'.pr',it.pr||'')}`,'Add medication',{name:'',dose:'',start:d.date,days:''})}</div>`},
 
-labs:(p,d)=>{const lab=([k,l])=>{const pv=prevLab(p,d,k);return `<div class="labcell">${inp('d:labs.'+k,l,{num:1})}${pv?`<span class="prev">Prev ${esc(pv.v)} on ${fmtDate(pv.date)}</span>`:''}</div>`};
-  return `<h2>Labs</h2><div class="card"><div class="dias" data-dia>${labDiagrams(d.labs||{})}</div></div><div class="card">${LGROUPS.map(([g,ks])=>`<h3>${g}</h3><div class="grid">${ks.map(k=>lab(LABS.find(x=>x[0]===k))).join('')}</div>`).join('')}<label class="fld"><span>Other results and trends</span>${ta('d:labs.note','e.g. Cr up from 1.4; LFTs downtrending',2)}</label></div><div class="card"><h3>Acid–base and sodium</h3><p class="calc" data-acid>${esc(acidText(acidBase(p,d))||'Enter Na, Cl, and HCO3 to calculate the anion gap.')}</p><p class="calc" data-fwd>${esc(fwdText(p,d))}</p></div><button class="btn" data-act="trends" data-back="round">View lab trends</button>`},
+labs:(p,d)=>{const lab=([k,l])=>{const pv=prevLab(p,d,k);return `<div class="labcell">${inp('d:labs.'+k,l,{num:1,unit:LUNIT[k]})}${pv?`<span class="prev">Prev ${esc(pv.v)} on ${fmtDate(pv.date)}</span>`:''}</div>`};
+  return `<h2>Labs</h2><div class="card"><div class="dias" data-dia>${labDiagrams(d.labs||{})}</div></div><div class="card">${LGROUPS.map(([g,ks])=>`<h3>${g}</h3><div class="grid">${ks.map(k=>lab(LABS.find(x=>x[0]===k))).join('')}</div>${g==='Differential'?'<p class="tip">Left shift is flagged at bands over 5% (bandemia at 10% or more, which meets the SIRS WBC criterion even with a normal WBC) or immature granulocytes over 2% when bands aren’t reported. ANC is WBC × (neutrophils + bands).</p>':''}`).join('')}<label class="fld"><span>Other results and trends</span>${ta('d:labs.note','e.g. Cr up from 1.4; LFTs downtrending',2)}</label></div><div class="card"><h3>Acid–base and sodium</h3><p class="calc" data-acid>${esc(acidText(acidBase(p,d))||'Enter Na, Cl, and HCO3 to calculate the anion gap.')}</p><p class="calc" data-fwd>${esc(fwdText(p,d))}</p></div><button class="btn" data-act="trends" data-back="round">View lab trends</button>`},
 
 micro:(p,d)=>`<h2>Antimicrobials and cultures</h2>${carry(d)}<h3>Antimicrobials</h3><div class="card">${listEditor('d:abx',(b,it)=>`${inp(b+'.drug','Drug',{ph:'e.g. cefepime 2 g q8h'})}<div class="row">${inp(b+'.start','Start date',{type:'date',w:'m'})}${inp(b+'.days','Planned days',{num:1,w:'s'})}</div>${it.start?`<p class="calc">${esc(cap(course(it.start,d.date,it.days)))}</p>`:''}${inp(b+'.ind','Indication',{ph:'e.g. HAP'})}${it.drug&&!String(it.ind||'').trim()?'<p class="calc">Add an indication to put this on the problem list.</p>':''}`,'Add antimicrobial',{drug:'',start:d.date,days:'',ind:''})}</div>
 <h3>Cultures and micro data</h3><div class="card">${listEditor('d:cx',b=>`<div class="row">${sel(b+'.src','Source',CXSRC)}${inp(b+'.date','Collected',{type:'date',w:'m'})}</div><div class="fld"><span>Result</span>${seg(b+'.res',['Pending','NGTD','Positive','Negative'])}</div>${inp(b+'.detail','Organism and sensitivities',{ph:'e.g. MSSA, cefazolin S'})}`,'Add culture',{src:'Blood',date:d.date,res:'Pending',detail:''})}</div>`,
@@ -789,13 +795,13 @@ function printSheet(items){if(!items.length){toast('No patients to print.');retu
   const done=()=>{document.title=old;window.removeEventListener('afterprint',done)};window.addEventListener('afterprint',done);
   setTimeout(()=>{try{window.print()}catch(e){toast('Printing isn’t available here.')}},60)}
 
-const TORDER=['wbc','hgb','hct','plt','cr','bun','na','k','cl','hco3','glu','lactate','ca','mg','phos','alb','tbili','ast','alt','alp','inr','pct','trop'];
+const TORDER=['wbc','bands','neut','ig','hgb','hct','plt','cr','bun','na','k','cl','hco3','glu','lactate','ca','mg','phos','alb','tbili','ast','alt','alp','inr','pct','trop'];
 function spark(vals){const pts=vals.map((v,i)=>[i,v]).filter(x=>x[1]!=null);if(pts.length<2)return '';
   const W=84,H=26,mn=Math.min(...pts.map(x=>x[1])),mx=Math.max(...pts.map(x=>x[1])),n=vals.length-1||1;
   const xy=pts.map(([i,v])=>[(i/n)*(W-6)+3,mx===mn?H/2:H-3-((v-mn)/(mx-mn))*(H-6)]);const last=xy[xy.length-1];
   return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${xy.map(p=>p.join(',')).join(' ')}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2.6" fill="currentColor"/></svg>`}
 const PLABS=[
- [/sepsis|septic|pneumonia|infect|bacteremia|\bUTI\b|pyelo|cellulitis|abscess|cholangitis|colitis|empyema|meningitis|endocarditis/i,['wbc','pct','lactate']],
+ [/sepsis|septic|pneumonia|infect|bacteremia|\bUTI\b|pyelo|cellulitis|abscess|cholangitis|colitis|empyema|meningitis|endocarditis/i,['wbc','bands','pct','lactate']],
  [/shock|hypotension|hypoperfusion/i,['lactate']],
  [/\bAKI\b|kidney|renal|ESRD|ESKD|\bATN\b|oligur/i,['cr','bun','k','hco3']],
  [/glyc|diabet|\bDKA\b|\bHHS\b|\bDM\b/i,['glu','k','hco3']],
@@ -968,9 +974,9 @@ function buildSummary(p,d,fmt){const N=fmt==='note',PARTS=fmt==='parts',parts={a
   const DK=['na','cl','bun','k','hco3','cr','glu','wbc','hgb','hct','plt'];const has=k=>d.labs&&String(d.labs[k]??'').trim();
   const fromStr=([k,l])=>{const pv=prevLab(p,d,k);return pv&&String(pv.v).trim()!==String(d.labs[k]).trim()?`${l} ${d.labs[k]} (from ${pv.v})`:null};
   const dia=labAscii(d.labs||{});const chg=LABS.filter(([k])=>DK.includes(k)&&has(k)).map(fromStr).filter(Boolean);
-  const lb=LABS.filter(([k])=>!DK.includes(k)&&has(k)).map(([k,l])=>fromStr([k,l])||`${l} ${d.labs[k]}`);
+  const DIFF=['neut','bands','ig'];const lb=LABS.filter(([k])=>!DK.includes(k)&&!DIFF.includes(k)&&has(k)).map(([k,l])=>fromStr([k,l])||`${l} ${d.labs[k]}`);
   const abg=acidBase(p,d),fw=p.problems.some(x=>!x.resolved&&pAutos(x).includes('hyperna'))?'':fwdText(p,d);
-  let ls=[chg.length&&`Changed: ${chg.join(', ')}.`,lb.length&&lb.join(', ')+'.',abg&&acidText(abg),fw,d.labs&&d.labs.note&&sent(d.labs.note)].filter(Boolean).join(' ');
+  let ls=[chg.length&&`Changed: ${chg.join(', ')}.`,shiftText(d.labs),lb.length&&lb.join(', ')+'.',abg&&acidText(abg),fw,d.labs&&d.labs.note&&sent(d.labs.note)].filter(Boolean).join(' ');
   if(ls)parts.labs=ls;if(dia||ls){para((N?'LABS:':'Labs:')+(ls?(N?'\n':' ')+ls:''));if(dia)para(dia)}
 
   const RES={Pending:'pending',NGTD:'NGTD',Positive:'positive',Negative:'negative'};
@@ -1061,13 +1067,26 @@ function fmtSummary(t){if(!t)return'<p class="muted">Nothing entered yet.</p>';
 
 /* ---------- lab diagrams, acid-base, free water ---------- */
 const lv=(L,k)=>String((L||{})[k]??'').trim();
+function leftShift(L){L=L||{};const w=num(L.wbc),n=num(L.neut),b=num(L.bands),ig=num(L.ig);if(n==null&&b==null&&ig==null)return null;
+  const o={b,ig,n};if(w!=null&&n!=null){const x=w*(n+(b||0))/100;o.anc=+x.toFixed(x<1?2:1)}
+  if(b!=null&&b>=10){o.level='bandemia';o.label='Bandemia'}else if(b!=null&&b>5){o.level='shift';o.label='Left shift'}
+  else if(ig!=null&&ig>2&&!(b>0)){o.level='shift';o.label='Left shift (IG)'}
+  if(o.anc!=null){if(o.anc<0.5)o.neu='Severe neutropenia';else if(o.anc<1.5)o.neu='Neutropenia'}
+  return o}
+function shiftText(L){const o=leftShift(L);if(!o)return '';const det=[o.b!=null&&`bands ${o.b}%`,o.ig!=null&&`immature granulocytes ${o.ig}%`,o.n!=null&&`neutrophils ${o.n}%`].filter(Boolean);
+  const anc=o.anc!=null?`ANC ${o.anc}${o.neu?' ('+o.neu.toLowerCase()+')':''}`:'';
+  const lead=o.level==='bandemia'?'Bandemia (left shift)':o.level?'Left shift':'Differential';
+  return `${lead}: ${[...det,anc].filter(Boolean).join(', ')}.`}
+function shiftBadge(L){const o=leftShift(L);if(!o)return '';const t=[o.label,o.neu].filter(Boolean);
+  const det=[o.b!=null&&`Bands ${o.b}%`,o.ig!=null&&`IG ${o.ig}%`,o.anc!=null&&`ANC ${o.anc}`].filter(Boolean).join(' · ');
+  return `${t.map(x=>`<span class="lshift${x==='Left shift'||x==='Left shift (IG)'?' mild':''}">${esc(x)}</span>`).join('')}${det?`<span class="lsdet">${esc(det)}</span>`:''}`}
 function labDiagrams(L){const g=k=>lv(L,k);
   const T=(x,y,v,a='middle')=>`<text x="${x}" y="${y}" text-anchor="${a}" class="${v?'':'dempty'}">${esc(v||'—')}</text>`;
   const bmp=`<svg viewBox="0 0 270 84" class="dia" role="img" aria-label="Basic metabolic panel"><g class="dline"><line x1="6" y1="42" x2="196" y2="42"/><line x1="70" y1="10" x2="70" y2="74"/><line x1="133" y1="10" x2="133" y2="74"/><line x1="196" y1="42" x2="214" y2="16"/><line x1="196" y1="42" x2="214" y2="68"/></g>
   ${T(38,32,g('na'))}${T(101,32,g('cl'))}${T(165,32,g('bun'))}${T(38,66,g('k'))}${T(101,66,g('hco3'))}${T(165,66,g('cr'))}${T(222,48,g('glu'),'start')}</svg>`;
   const cbc=`<svg viewBox="0 0 270 84" class="dia" role="img" aria-label="Complete blood count"><g class="dline"><line x1="88" y1="42" x2="182" y2="42"/><line x1="66" y1="16" x2="88" y2="42"/><line x1="66" y1="68" x2="88" y2="42"/><line x1="182" y1="42" x2="204" y2="16"/><line x1="182" y1="42" x2="204" y2="68"/></g>
   ${T(36,48,g('wbc'))}${T(135,32,g('hgb'))}${T(135,66,g('hct'))}${T(236,48,g('plt'))}</svg>`;
-  return `<figure><figcaption>BMP</figcaption>${bmp}</figure><figure><figcaption>CBC</figcaption>${cbc}</figure>`}
+  return `<figure><figcaption>BMP</figcaption>${bmp}</figure><figure><figcaption>CBC${shiftBadge(L)}</figcaption>${cbc}</figure>`}
 function labAscii(L){const g=k=>lv(L,k);const out=[];
   const c=(s,n)=>{s=s||'';const l=Math.floor((n-s.length)/2);return ' '.repeat(Math.max(l,0))+s+' '.repeat(Math.max(n-s.length-l,0))};
   const b=['na','cl','bun','k','hco3','cr'].map(g);
@@ -1209,8 +1228,8 @@ const DLAB=[
  ['na','sodium|\\bna\\b'],['k','potassium|\\bk\\b'],['cl','chloride|\\bcl\\b'],['hco3','bicarb(?:onate)?|\\bco2\\b|\\bhco3\\b'],['bun','\\bbun\\b|blood urea nitrogen|\\burea\\b'],
  ['cr','creatinine|\\bcreat\\b|\\bcr\\b'],['glu','glucose|blood sugar'],['ca','calcium|\\bca\\b'],['mg','magnesium|\\bmag\\b'],['phos','(?<!alk |alkaline )phos(?:phorus|phate)?(?! ?phatase)'],
  ['wbc','white (?:blood )?(?:cell )?count|white cells?|\\bwhites\\b|\\bwbc\\b|\\bw b c\\b|leukocytes?'],['hgb','hemoglobin|\\bhgb\\b|\\bhb\\b|\\bh (?:and|&) h\\b'],['plt','platelets?(?: count)?|\\bplts?\\b'],
- ['lactate','lactic(?: acid)?|lactate'],['inr','\\binr\\b'],['tbili','(?:total |t ?)?bili(?:rubin)?'],['pct','procal(?:citonin)?|\\bpct\\b'],['trop','troponins?|\\btrops?\\b'],['hct','hematocrit|\\bhct\\b|\\bcrit\\b'],['alb','albumin|\\balb\\b'],['ast','\\bast\\b|\\bsgot\\b'],['alt','\\balt\\b|\\bsgpt\\b'],['alp','alk(?:aline)? phos(?:phatase)?|\\balp\\b']];
-const DRANGE={'labs.na':[100,185],'labs.k':[1.5,9.5],'labs.cl':[60,140],'labs.hco3':[3,55],'labs.bun':[1,300],'labs.cr':[0.1,25],'labs.glu':[10,1800],'labs.ca':[3,18],'labs.mg':[0.3,7],'labs.phos':[0.3,16],'labs.wbc':[0.05,200],'labs.hgb':[2,25],'labs.plt':[1,2500],'labs.lactate':[0.1,35],'labs.inr':[0.5,20],'labs.tbili':[0.1,70],'labs.pct':[0,1000],'labs.hct':[6,75],'labs.alb':[0.5,6.5],'labs.ast':[3,20000],'labs.alt':[3,20000],'labs.alp':[5,5000],'vitals.mapGoal':[40,120],
+ ['lactate','lactic(?: acid)?|lactate'],['inr','\\binr\\b'],['tbili','(?:total |t ?)?bili(?:rubin)?'],['pct','procal(?:citonin)?|\\bpct\\b'],['trop','troponins?|\\btrops?\\b'],['hct','hematocrit|\\bhct\\b|\\bcrit\\b'],['alb','albumin|\\balb\\b'],['ast','\\bast\\b|\\bsgot\\b'],['alt','\\balt\\b|\\bsgpt\\b'],['alp','alk(?:aline)? phos(?:phatase)?|\\balp\\b'],['bands','\\bbands?\\b|band forms?|bandemia'],['neut','neutrophils?|\\bneuts?\\b|\\bpolys\\b|\\bsegs\\b|\\bpmns?\\b'],['ig','immature gran(?:ulocyte)?s?|\\bimm(?:ature)? grans?\\b']];
+const DRANGE={'labs.na':[100,185],'labs.k':[1.5,9.5],'labs.cl':[60,140],'labs.hco3':[3,55],'labs.bun':[1,300],'labs.cr':[0.1,25],'labs.glu':[10,1800],'labs.ca':[3,18],'labs.mg':[0.3,7],'labs.phos':[0.3,16],'labs.wbc':[0.05,200],'labs.hgb':[2,25],'labs.plt':[1,2500],'labs.lactate':[0.1,35],'labs.inr':[0.5,20],'labs.tbili':[0.1,70],'labs.pct':[0,1000],'labs.hct':[6,75],'labs.alb':[0.5,6.5],'labs.ast':[3,20000],'labs.alt':[3,20000],'labs.alp':[5,5000],'labs.bands':[0,90],'labs.neut':[0,100],'labs.ig':[0,60],'vitals.mapGoal':[40,120],
  'vitals.hr':[20,250],'vitals.sbp':[30,280],'vitals.map':[20,200],'vitals.rr':[2,80],'vitals.spo2':[40,100],'vitals.wt':[20,400],'vitals.uop':[0,15000],'vitals.in':[0,40000],'vitals.out':[0,40000],
  'resp.fio2':[21,100],'resp.peep':[0,30],'resp.vt':[100,1200],'resp.vte':[50,1500],'resp.ps':[0,40],'resp.pplat':[5,60],'resp.ppeak':[5,80],'resp.rr':[4,50],'resp.rrTotal':[2,80],'resp.flow':[0.5,80],'resp.ipap':[4,40],'resp.epap':[2,25],
  'resp.abg.ph':[6.5,7.9],'resp.abg.pco2':[10,200],'resp.abg.po2':[15,700],'resp.abg.hco3':[3,55],'fh.gluc':[20,1500],'fh.cpot':[0,8],'fh.tfRate':[1,250],'fh.tfGoal':[1,250]};
