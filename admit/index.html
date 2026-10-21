@@ -735,7 +735,8 @@ function place(el){if(innerWidth<=640){pop.style.left='';pop.style.top='';pop.st
   const room=Math.max(140,useBelow?below:above);pop.style.maxHeight=room+'px';const ph=Math.min(need,room);
   const x=Math.min(Math.max(12,r.left-200),innerWidth-pw-12),y=useBelow?r.bottom+8:r.top-8-ph;
   pop.style.left=x+'px';pop.style.top=Math.max(8,y)+'px'}
-function openPop(html,el){pinned=lastPT!=='mouse';pop.innerHTML=html;pop.hidden=false;place(el)}
+let hoverOpen=false;
+function openPop(html,el){pinned=!hoverOpen;hoverOpen=false;pop.innerHTML=html;pop.hidden=false;place(el)}
 document.addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('.close')){closePop();return}
@@ -803,7 +804,7 @@ function sendToRounder(){
 /* ---------- hover help: with a mouse, popovers close once the pointer leaves both the trigger and the popover ---------- */
 let lastPT='mouse',anchor=null,closeT=null,infoT=null;
 document.addEventListener('pointerdown',e=>{lastPT=e.pointerType||'mouse'},true);
-{const _op=openPop;openPop=function(h,el,pin){anchor=el;clearTimeout(closeT);closeT=null;_op(h,el,pin)}}
+{const _op=openPop;openPop=function(h,el,pin){anchor=el;clearTimeout(closeT);closeT=null;const pinNow=!hoverOpen;pop.style.pointerEvents=pinNow?'':'none';_op(h,el,pin)}}
 const overPop=t=>!!(t&&t.closest&&(t.closest('#pop')||(anchor&&anchor.contains(t))));
 document.addEventListener('pointermove',e=>{
   if(e.pointerType!=='mouse'||pop.hidden||pinned)return;
@@ -813,7 +814,8 @@ document.addEventListener('pointermove',e=>{
 document.documentElement.addEventListener('mouseleave',()=>{if(!pinned)closePop()});
 addEventListener('blur',()=>{if(!pinned)closePop()});
 addEventListener('scroll',()=>{if(!pinned&&!pop.hidden&&!pop.matches(':hover'))closePop()},{passive:true});
-document.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse'||pinned)return;const b=e.target.closest('[data-tipk]');if(!b)return;clearTimeout(infoT);infoT=setTimeout(()=>{if(b.matches(':hover')&&!pinned&&(pop.hidden||anchor!==b))b.click()},200)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pop.hidden)closePop()});
+document.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse'||pinned)return;const b=e.target.closest('[data-tipk]');if(!b)return;clearTimeout(infoT);infoT=setTimeout(()=>{if(b.matches(':hover')&&!pinned&&(pop.hidden||anchor!==b)){hoverOpen=true;b.click()}},200)});
 
 build();
 </script>

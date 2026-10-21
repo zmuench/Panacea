@@ -804,7 +804,7 @@ document.addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('.close')){closePop();return}
   const info=t.closest('[data-info]');
-  if(info){e.preventDefault();if(pinned&&pop.dataset.for===info.dataset.info){closePop();return}openPop(fieldTip(info.dataset.info),info,lastPT!=='mouse');pop.dataset.for=info.dataset.info;return}
+  if(info){e.preventDefault();if(pinned&&pop.dataset.for===info.dataset.info){closePop();return}openPop(fieldTip(info.dataset.info),info,true);pop.dataset.for=info.dataset.info;return}
   if(pinned&&!t.closest('#pop'))closePop();
   const sb=t.closest('[data-step]');if(sb){goto(+sb.dataset.step);return}
   const go=t.closest('[data-go]');if(go){goto(+go.dataset.go);return}
@@ -843,7 +843,7 @@ document.getElementById('copyAll').addEventListener('click',()=>copy(window.__ou
 /* ---------- hover help: with a mouse, popovers close once the pointer leaves both the trigger and the popover ---------- */
 let lastPT='mouse',anchor=null,closeT=null,infoT=null;
 document.addEventListener('pointerdown',e=>{lastPT=e.pointerType||'mouse'},true);
-{const _op=openPop;openPop=function(h,el,pin){anchor=el;clearTimeout(closeT);closeT=null;pop.style.pointerEvents=(!pin&&el.matches('[data-tip]'))?'none':'';_op(h,el,pin)}}
+{const _op=openPop;openPop=function(h,el,pin){anchor=el;clearTimeout(closeT);closeT=null;pop.style.pointerEvents=pin?'':'none';_op(h,el,pin)}}
 const overPop=t=>!!(t&&t.closest&&(t.closest('#pop')||(anchor&&anchor.contains(t))));
 document.addEventListener('pointermove',e=>{
   if(e.pointerType!=='mouse'||pop.hidden||pinned)return;
