@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Silhouette">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Silhouette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: film check, then A to E one step at a time on the left; the live report pinned on the right; one column on phones.
+   Fixed light theme to match the rest of PANACEA. Hover diagrams are drawn as schematic radiographs (dark film, white bone). */
+html,body{margin:0}
+:root{
+  --bg:#EBEFF2; --surface:#FFFFFF; --sunk:#F4F6F8; --ink:#14233A; --muted:#5A6A7E; --line:#D2DAE1;
+  --accent:#1D4ED0; --accent-soft:#E1E9FB; --accent-ink:#FFFFFF;
+  --neg:#1D6E49; --neg-soft:#E1F2E9; --pos:#A3122B; --pos-soft:#FBE6E9;
+  --warn:#8A4300; --warn-soft:#FCEFDF; --alert:#A3122B;
+  --film:#06080A;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+html{background:var(--bg)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(24px + env(safe-area-inset-top,0px)) calc(56px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.top h1{margin:0;font-size:1.7rem;letter-spacing:-.01em;line-height:1.15}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.95rem}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.92rem;cursor:pointer;min-height:42px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{background:#1840AE;color:var(--accent-ink)}
+.btn.small{min-height:36px;padding:6px 12px;font-size:.86rem}
+.btn:focus-visible,.chip:focus-visible,.info:focus-visible,.stepbtn:focus-visible,input:focus-visible,.homebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.stepbtn{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0;position:relative}
+.stepbtn .n{flex:none;width:28px;height:28px;border-radius:8px;background:var(--sunk);display:grid;place-items:center;font-weight:700;font-size:1.05rem;color:var(--muted)}
+.stepbtn .n.sm{font-size:.62rem;letter-spacing:.04em;text-transform:uppercase}
+.stepbtn .t{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.stepbtn .dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0}
+.stepbtn.done .dot{opacity:1}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepbtn[aria-current="step"] .n{background:var(--accent);color:var(--accent-ink)}
+@media (max-width:760px){.steps{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.stepbtn{flex-direction:column;gap:3px;padding:6px 2px}.stepbtn .t{font-size:.7rem;max-width:100%}}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:18px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:4px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.35rem;line-height:1.2;text-wrap:balance}
+.ph .cue{margin:2px 0 0;color:var(--muted);font-size:.93rem;max-width:64ch}
+.ph .act{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.pfoot{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:16px}
+
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.flab{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem}
+.flab .sub{font-weight:400;color:var(--muted);font-size:.85rem}
+.info{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);font-weight:700;font-size:.78rem;font-style:italic;font-family:Georgia,serif;cursor:pointer;display:grid;place-items:center;padding:0}
+.info:hover{border-color:var(--accent);background:var(--accent-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:.9rem;cursor:pointer;min-height:38px;line-height:1.2;text-align:left}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.row{display:flex;flex-wrap:wrap;gap:12px}
+.num{display:flex;flex-direction:column;gap:4px;min-width:0}
+.num label{font-size:.82rem;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px}
+.num .box{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.num .box:focus-within{border-color:var(--accent)}
+.num input{border:0;outline:0;background:transparent;width:84px;padding:9px 10px;font-variant-numeric:tabular-nums;font-size:1rem}
+.num input[type=text]{width:220px;max-width:100%}
+.num .u{padding:0 10px 0 0;color:var(--muted);font-size:.85rem}
+.hint{margin:0;font-size:.85rem;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:7px 10px}
+.calcout{margin:0;font-size:.9rem;background:var(--accent-soft);border-radius:8px;padding:8px 11px}
+.calcout b{font-variant-numeric:tabular-nums}
+.sep{height:1px;background:var(--line)}
+
+/* finding rows: each pertinent finding asks Absent / Present */
+.finds{display:flex;flex-direction:column}
+.find{border-top:1px solid var(--line);padding-block:12px;display:flex;flex-direction:column;gap:10px}
+.find:first-child{border-top:0;padding-top:0}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fname{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.98rem;min-width:0}
+.yn{display:flex;gap:4px;background:var(--sunk);border-radius:999px;padding:3px}
+.yn .chip{border-color:transparent;background:transparent;min-height:34px;padding:5px 14px;font-size:.88rem}
+.yn .chip.no[aria-pressed="true"]{background:var(--neg-soft);color:var(--neg);border-color:#B9DCC8}
+.yn .chip.yes[aria-pressed="true"]{background:var(--pos-soft);color:var(--pos);border-color:#EDB9C1}
+.fkids{display:flex;flex-direction:column;gap:12px;background:var(--sunk);border-radius:12px;padding:12px}
+.fkids .chip{background:var(--surface)}
+.fkids .chip[aria-pressed="true"]{background:var(--accent)}
+
+.out{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 92px);overflow:auto}
+@media (max-width:900px){.out{position:static;max-height:none}}
+.out h3{margin:0;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.imp{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:.98rem}
+.imp li::marker{color:var(--accent);font-weight:700}
+.imp li.crit{color:var(--alert);font-weight:700}
+.empty{margin:0;color:var(--muted);font-size:.92rem}
+.dict{white-space:pre-wrap;font-size:.86rem;line-height:1.5;background:var(--bg);border-radius:10px;padding:12px;margin:0;font-family:var(--f-body);overflow-wrap:anywhere}
+.outbtns{display:flex;gap:8px;flex-wrap:wrap}
+.outbtns .btn{flex:1}
+.toast{font-size:.82rem;color:var(--accent);min-height:1.2em;margin:0}
+
+.pop{position:fixed;z-index:50;width:340px;max-width:calc(100vw - 24px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(20,35,58,.18);padding:12px;display:flex;flex-direction:column;gap:8px;max-height:min(74vh,600px);overflow:auto}
+.pop.pinned{width:420px}
+.pop .pt{font-weight:700;font-size:.95rem;display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.pop p{margin:0;font-size:.88rem}
+.pop .pg{color:var(--muted);font-size:.78rem;font-weight:400}
+.pop .close{border:0;background:none;font-size:1.3rem;line-height:1;cursor:pointer;color:var(--muted);padding:0 2px}
+.pop .exitem{display:flex;flex-direction:column;gap:4px;padding-top:8px;border-top:1px solid var(--line)}
+.pop .exitem b{font-size:.88rem}
+.pop .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.film{display:block;width:100%;height:auto;border-radius:8px;background:var(--film)}
+.pop .note{font-size:.74rem;color:var(--muted)}
+.pop table{border-collapse:collapse;font-size:.84rem;width:100%}
+.pop td,.pop th{padding:3px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.pop th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:640px){
+  .pop,.pop.pinned{left:0!important;right:0;top:auto!important;bottom:0;width:auto;max-width:none;border-radius:16px 16px 0 0;max-height:72vh;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Silhouette</h1></div>
+      <p>Chest X-ray read, film check then A to E, written up as a report and impression.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New film</button>
+  </header>
+
+  <nav class="steps" id="steps" aria-label="Steps"></nav>
+
+  <div class="grid">
+    <main id="panes"></main>
+    <aside class="out" aria-live="polite">
+      <h3>Impression</h3>
+      <div id="impWrap"></div>
+      <h3>Full report</h3>
+      <pre class="dict" id="dict"></pre>
+      <div class="outbtns">
+        <button class="btn primary" id="copyImp" type="button">Copy impression</button>
+        <button class="btn" id="copyAll" type="button">Copy full report</button>
+      </div>
+      <p class="toast" id="toast"></p>
+    </aside>
+  </div>
+</div>
+
+<div class="pop" id="pop" hidden role="dialog" aria-live="polite"></div>
+
+<script>
+/* ===================== Schematic radiograph engine ===================== */
+// Viewer's left is the patient's right. Overlays are drawn on the patient's LEFT and mirrored for the right.
+const K={bg:'#06080A',body:'#454A50',lung:'#12161B',lung2:'#1D232A',mark:'#5E656D',soft:'#A3A8AD',bone:'#DADDE0',air:'#05070A',dev:'#F3F3F1',ann:'#FFC24B'};
+let UID=0;
+const BODY='M22 220 C16 150 16 82 32 42 C44 22 74 12 100 12 L140 12 C166 12 196 22 208 42 C224 82 224 150 218 220 Z';
+const lungR=(y,flat)=>flat?`M108 34 C82 30 52 50 44 96 C38 132 40 ${y+14} 44 ${y+22} C62 ${y+21} 88 ${y+20} 108 ${y+19} Z`:`M108 34 C82 30 52 50 44 96 C38 132 40 ${y+14} 44 ${y+22} C58 ${y} 84 ${y-6} 108 ${y+2} Z`;
+const lungL=(y,flat)=>flat?`M132 34 C158 30 188 50 196 96 C202 132 200 ${y+14} 196 ${y+22} C178 ${y+21} 152 ${y+20} 132 ${y+19} Z`:`M132 34 C158 30 188 50 196 96 C202 132 200 ${y+14} 196 ${y+22} C182 ${y} 156 ${y-6} 132 ${y+4} Z`;
+const HEART={n:'M108 102 C96 110 92 140 98 166 L168 172 C178 160 176 128 158 110 C148 102 138 102 132 98 Z',
+  big:'M108 102 C86 112 80 148 86 172 L190 178 C202 158 198 120 168 106 C152 100 140 100 132 98 Z',
+  water:'M110 100 C80 108 76 150 84 174 L192 178 C206 150 196 104 132 98 Z',
+  narrow:'M110 104 C102 114 100 146 106 178 L156 180 C164 160 160 128 148 112 C142 106 136 104 132 100 Z'};
+const MED={n:'M108 28 L132 28 L132 64 L134 100 L108 104 C104 92 104 60 108 28 Z',wide:'M98 28 L142 28 C156 42 158 80 148 94 L134 100 L108 104 C90 92 88 50 98 28 Z'};
+const mir=(s,side)=>side==='R'?`<g transform="matrix(-1 0 0 1 240 0)">${s}</g>`:s;
+const sides=side=>side==='B'?['L','R']:[side||'L'];
+const arrow=(x1,y1,x2,y2,lab,anchor)=>{const a=Math.atan2(y2-y1,x2-x1),h=6;const p1=[x2-h*Math.cos(a-.45),y2-h*Math.sin(a-.45)],p2=[x2-h*Math.cos(a+.45),y2-h*Math.sin(a+.45)];
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${K.ann}" stroke-width="1.5"/><path d="M${x2} ${y2}L${p1[0].toFixed(1)} ${p1[1].toFixed(1)}L${p2[0].toFixed(1)} ${p2[1].toFixed(1)}Z" fill="${K.ann}"/>${lab?label(x1,y1-(y1>y2?-10:3),lab,anchor):''}`};
+const label=(x,y,t,anchor)=>{const a=`x="${x}" y="${y}" font-size="9" font-weight="700" text-anchor="${anchor||'middle'}" font-family="Atkinson Hyperlegible,sans-serif"`;return `<text ${a} fill="none" stroke="${K.bg}" stroke-width="3" stroke-linejoin="round">${t}</text><text ${a} fill="${K.ann}">${t}</text>`};
+
+function markings(o){
+  const ends=[[60,48,1.3],[50,86,1.3],[48,126,1.4],[56,158,1.5],[80,56,1.1],[72,150,1.4],[86,40,1],[64,108,1.2],[84,168,1.3]];
+  let s='';const hR=[100,110],hL=[140,110];
+  ends.forEach(([x,y,w])=>{const up=y<100,wR=(o.ceph&&up?w*1.9:w)*(o.pen==='over'?.6:1);
+    const mx=(hR[0]+x)/2+(up?-4:4),my=(hR[1]+y)/2;
+    s+=`<path d="M${hR[0]} ${hR[1]} Q${mx} ${my} ${x} ${y}" stroke="${K.mark}" stroke-width="${wR}" fill="none" stroke-linecap="round" opacity="${o.pen==='over'?.45:.9}"/>`;
+    s+=`<path d="M${hL[0]} ${hL[1]} Q${240-mx} ${my} ${240-x} ${y}" stroke="${K.mark}" stroke-width="${wR}" fill="none" stroke-linecap="round" opacity="${o.pen==='over'?.45:.9}"/>`;
+  });
+  return s;
+}
+function chest(o={}){
+  o=Object.assign({yR:162,yL:168,shift:0,trach:0,mk:true,heart:'n',med:'n'},o);
+  const id=++UID, cR='cr'+id, cL='cl'+id, gl='gl'+id, gc='gc'+id;
+  const pen=o.pen||'ok';
+  const lf=pen==='under'?'#30363C':pen==='over'?'#020304':`url(#${gl})`;
+  let s=`<svg class="film" viewBox="0 0 240 220" role="img" aria-label="Schematic chest radiograph"><defs>
+    <radialGradient id="${gl}" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="${K.lung2}"/><stop offset="1" stop-color="${K.lung}"/></radialGradient>
+    <radialGradient id="${gc}" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#B9BEC3" stop-opacity=".95"/><stop offset=".65" stop-color="#9DA2A7" stop-opacity=".75"/><stop offset="1" stop-color="#9DA2A7" stop-opacity="0"/></radialGradient>
+    <clipPath id="${cR}"><path d="${lungR(o.yR,o.flat)}"/></clipPath><clipPath id="${cL}"><path d="${lungL(o.yL,o.flat)}"/></clipPath></defs>
+    <rect width="240" height="220" fill="${K.bg}"/><path d="${BODY}" fill="${pen==='under'?'#5E6369':pen==='over'?'#2E3237':K.body}"/>`;
+  // stomach bubble
+  if(!o.noBubble)s+=`<ellipse cx="170" cy="${o.yL+28}" rx="${o.bigStomach?22:11}" ry="${o.bigStomach?14:7}" fill="${K.air}" opacity=".8"/>`;
+  s+=`<path d="${lungR(o.yR,o.flat)}" fill="${lf}"/><path d="${lungL(o.yL,o.flat)}" fill="${lf}"/>`;
+  if(o.mk)s+=`<g clip-path="url(#${cR})">${markings(o)}</g><g clip-path="url(#${cL})">${markings(o)}</g>`;
+  // ribs
+  let ribs='';for(let i=0;i<11;i++){const y=26+i*15;ribs+=`<path d="M116 ${y} C96 ${y-6} 62 ${y-2} 40 ${y+22}" /><path d="M124 ${y} C144 ${y-6} 178 ${y-2} 200 ${y+22}"/>`}
+  s+=`<g stroke="${K.bone}" stroke-width="2.4" fill="none" opacity="${pen==='over'?.12:.2}">${ribs}</g>`;
+  // whole-lung pre-mediastinum overlays (effusion, collapse fill under heart)
+  s+=(o.under||'').replace(/CLIPR/g,cR).replace(/CLIPL/g,cL).replace(/GRADC/g,gc);
+  // mediastinum, heart, trachea
+  const sp=o.shift;
+  s+=`<g transform="translate(${sp} 0)"><path d="${MED[o.med]}" fill="${K.soft}"/><circle cx="142" cy="74" r="${o.knob?14:9}" fill="${K.soft}"/>${o.knobCalc?`<path d="M134 66 A11 11 0 0 1 152 68" stroke="${K.bone}" stroke-width="2" fill="none"/>`:''}<path d="${HEART[o.heart]}" fill="${K.soft}"/>`;
+  if(o.hidePen)s+='';
+  s+=`<rect x="113" y="12" width="14" height="208" fill="${K.bone}" opacity="${pen==='under'?0:pen==='over'?.32:.2}"/>`;
+  let tc=120+o.trach;
+  s+=`<path d="M120 10 Q${tc} 50 120 86" stroke="${K.air}" stroke-width="8" fill="none" opacity=".88"/><path d="M120 86 L107 106 M120 86 L135 106" stroke="${K.air}" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/></g>`;
+  // clavicles
+  s+=`<path d="M48 44 Q82 30 ${o.rot?104:110} 42" stroke="${K.bone}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M192 44 Q158 30 ${o.rot?134:130} 42" stroke="${K.bone}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  s+=(o.over||'').replace(/CLIPR/g,cR).replace(/CLIPL/g,cL).replace(/GRADC/g,gc);
+  return s+'</svg>';
+}
+// ---- overlay builders (patient-left geometry; mirrored for right) ----
+const OV={
+  eff(size,yL){const top={small:yL+12,mod:122,large:84,hemi:10}[size]||122;return `<g clip-path="url(#CLIPL)"><path d="M210 ${top} Q${size==='hemi'?150:180} ${size==='small'?top+6:top+(yL-top)*.55} 128 ${yL+10} L128 230 L210 230 Z" fill="#8F959A"/></g>`},
+  ptx(size){const d=size==='tension'?'M150 64 C162 70 168 92 166 116 C164 136 158 146 150 152':size==='large'?'M136 52 C150 54 162 72 164 110 C165 140 160 158 154 172':'M146 40 C172 44 186 70 188 110 C190 140 186 160 182 174';
+    return `<g clip-path="url(#CLIPL)"><path d="${d} L230 180 L230 0 L${size==='large'?136:size==='tension'?150:146} 0 Z" fill="${K.air}"/></g><path d="${d}" stroke="#E8EAEC" stroke-width="1" fill="none"/>`},
+  lobe:{RUL:[78,70,30,32],RML:[90,140,24,19],RLL:[64,160,24,16],LUL:[162,70,30,32],Lingula:[152,142,24,19],LLL:[178,168,22,16]},
+  cons(l,air){const [x,y,rx,ry]=OV.lobe[l];const clip=l[0]==='R'?'CLIPR':'CLIPL';
+    let s=`<g clip-path="url(#${clip})"><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#GRADC)"/>`;
+    if(air)s+=`<path d="M${x+(l[0]==='R'?14:-14)} ${y+8} Q${x} ${y} ${x+(l[0]==='R'?-14:14)} ${y-12} M${x} ${y+1} L${x+(l[0]==='R'?-6:6)} ${y+12} M${x+(l[0]==='R'?-6:6)} ${y-5} L${x+(l[0]==='R'?-16:16)} ${y-2}" stroke="${K.air}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+    return s+'</g>'},
+  kerley(){let s='';for(let i=0;i<6;i++){const y=140+i*6;s+=`<line x1="${197-(i%2)}" y1="${y}" x2="${189-(i%3)}" y2="${y}" stroke="#C4C8CC" stroke-width="1"/>`}return s},
+  bat(){return `<g clip-path="url(#CLIPR)"><ellipse cx="92" cy="112" rx="36" ry="34" fill="url(#GRADC)"/></g><g clip-path="url(#CLIPL)"><ellipse cx="148" cy="114" rx="36" ry="34" fill="url(#GRADC)"/></g>`},
+  reticular(){let s='<g stroke="#9DA2A7" stroke-width=".9" fill="none" opacity=".85">';for(let x=50;x<108;x+=7)for(let y=110;y<178;y+=7){s+=`<path d="M${x} ${y} l5 2 l-1 5"/><path d="M${240-x} ${y} l-5 2 l1 5"/>`}return s+'</g>'},
+  nodular(){let s='<g fill="#A9AEB3">';let k=0;for(let x=52;x<106;x+=9)for(let y=46;y<170;y+=9){k++;const j=(k*37)%5;s+=`<circle cx="${x+j}" cy="${y+(k%3)}" r="1.4"/><circle cx="${240-x-j}" cy="${y+(k%4)}" r="1.4"/>`}return s+'</g>'},
+  sub(){let s='';[[22,60],[18,92],[16,126],[18,160]].forEach(([x,y])=>{s+=`<path d="M${x+8} ${y} q4 6 2 12 q-3 6 1 12" stroke="${K.air}" stroke-width="2" fill="none"/><path d="M${x+14} ${y+8} q3 5 1 10" stroke="${K.air}" stroke-width="1.6" fill="none"/>`});return s},
+};
+const lungsClip=(s)=>`<g clip-path="url(#CLIPR)">${s}</g><g clip-path="url(#CLIPL)">${s}</g>`;
+
+// ---- device paths ----
+const tube=(d,w=5)=>`<path d="${d}" stroke="#CFD2D5" stroke-width="${w}" fill="none" opacity=".5" stroke-linejoin="round"/><path d="${d}" stroke="${K.dev}" stroke-width="1.2" fill="none" stroke-linejoin="round"/>`;
+const wire=(d,w=1.4)=>`<path d="${d}" stroke="${K.dev}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+const carina=`<circle cx="120" cy="86" r="2.2" fill="${K.ann}"/>`;
+const bracket=(y1,y2,lab)=>`<path d="M100 ${y1} h-5 V${y2} h5" stroke="${K.ann}" stroke-width="1.3" fill="none"/>${label(80,(y1+y2)/2+3,lab)}`;
+
+const DX={
+  normal:{},
+  penOk:{over:arrow(70,196,116,150,'spine seen through heart')},
+  penUnder:{pen:'under',mk:false,over:label(150,200,'spine lost behind heart')},
+  penOver:{pen:'over',over:label(120,206,'lungs look too black, markings faint')},
+  ribs:{over:(()=>{let s='';for(let i=0;i<10;i++){const y=26+i*15+20;s+=label(36,y+2,String(i+1),'end')}return s+arrow(70,200,70,170,'dome at rib 10')})()},
+  rotOk:{over:`<ellipse cx="120" cy="46" rx="3" ry="2.4" fill="${K.bone}"/>`+label(120,64,'equal distance')+`<path d="M110 52 h20" stroke="${K.ann}" stroke-width="1.2"/>`},
+  rotBad:{rot:1,over:`<ellipse cx="129" cy="46" rx="3" ry="2.4" fill="${K.bone}"/>`+label(120,64,'unequal: rotated')+`<path d="M104 52 h25 M129 52 h5" stroke="${K.ann}" stroke-width="1.2"/>`},
+  lordotic:{over:`<path d="M48 30 Q82 14 110 28 M192 30 Q158 14 130 28" stroke="${K.bone}" stroke-width="4" fill="none"/>`+label(120,10,'clavicles above apices')},
+  trachMid:{over:arrow(170,26,124,40,'midline')},
+  trachDevR:{trach:-12,over:arrow(60,24,110,44,'deviated right')},
+  trachDevL:{trach:12,over:arrow(180,24,130,44,'deviated left')},
+  ettOk:{over:tube('M120 0 L120 62')+carina+bracket(62,86,'3–5 cm')},
+  ettHigh:{over:tube('M120 0 L120 32')+carina+bracket(32,86,'too high')},
+  ettLow:{over:tube('M120 0 L120 82')+carina+label(160,90,'at carina')},
+  ettRmain:{over:tube('M120 0 L120 86 L106 108')+label(70,112,'R mainstem')},
+  ettEso:{over:tube('M127 0 L127 120')+carina+label(168,118,'outside the trachea')},
+  tt:{over:`<path d="M106 28 h28" stroke="${K.dev}" stroke-width="3"/>`+tube('M120 26 L120 56')+carina+bracket(56,86,'midway')},
+  ptx:{under:OV.ptx('small'),over:arrow(220,70,188,90,'pleural line','end')},
+  ptxLarge:{under:OV.ptx('large'),over:arrow(220,70,164,96,'')+label(200,62,'large')},
+  tension:{shift:-16,trach:-4,yL:184,under:OV.ptx('tension'),over:arrow(60,200,96,170,'shift away')},
+  deepSulcus:{under:OV.ptx('small')+`<path d="M184 172 L200 214 L192 186 Z" fill="${K.air}"/>`,over:arrow(222,210,200,200,'deep sulcus','end')},
+  hydro:{under:OV.ptx('large')+`<g clip-path="url(#CLIPL)"><rect x="120" y="148" width="100" height="80" fill="#8F959A"/></g>`,over:arrow(222,130,196,148,'air–fluid level','end')},
+  effSmall:{under:OV.eff('small',168),over:arrow(222,150,196,182,'blunted angle','end')},
+  effMod:{under:OV.eff('mod',168),over:arrow(222,100,198,122,'meniscus','end')},
+  effLarge:{under:OV.eff('large',168),over:''},
+  effHemi:{shift:-12,trach:-6,under:OV.eff('hemi',168),over:arrow(60,200,96,170,'shift away')},
+  effBil:{under:OV.eff('small',168)+mir(OV.eff('small',168),'R')},
+  consRUL:{under:OV.cons('RUL',1)},consRML:{under:OV.cons('RML',0),over:arrow(40,196,94,150,'R heart border lost')},
+  consRLL:{under:OV.cons('RLL',0),over:arrow(40,206,60,176,'R dome lost')},consLUL:{under:OV.cons('LUL',1)},
+  consLingula:{under:OV.cons('Lingula',0),over:arrow(210,200,166,156,'L heart border lost','end')},consLLL:{under:OV.cons('LLL',0),over:arrow(222,206,186,184,'L dome lost','end')},
+  airbronch:{under:OV.cons('RUL',1),over:arrow(30,20,72,60,'air bronchograms','start')},
+  cavit:{under:`<circle cx="162" cy="72" r="15" fill="none" stroke="#A9AEB3" stroke-width="5"/><g clip-path="url(#CLIPL)"><rect x="146" y="74" width="34" height="14" fill="#A3A8AD"/></g>`,over:arrow(222,40,176,64,'cavity, air–fluid level','end')},
+  atelPlate:{under:`<path d="M150 150 Q170 145 192 152 M146 160 Q168 156 186 162" stroke="#A9AEB3" stroke-width="2.6" fill="none"/>`,over:arrow(222,130,180,150,'plate-like','end')},
+  atelLobar:{shift:-5,trach:-6,under:`<g clip-path="url(#CLIPR)"><path d="M108 30 C88 30 66 40 54 60 Q82 74 108 80 Z" fill="#A3A8AD"/></g>`,over:arrow(30,100,72,72,'collapsed lobe, fissure pulled up','start')},
+  atelWhole:{shift:16,trach:10,under:`<g clip-path="url(#CLIPL)"><rect x="120" y="0" width="120" height="230" fill="#A3A8AD"/></g>`,over:arrow(60,200,124,170,'shift toward')},
+  edemaInt:{under:OV.kerley()+mir(OV.kerley(),'R'),ceph:1,over:arrow(222,120,194,146,'Kerley B lines','end')},
+  edemaAlv:{heart:'big',under:OV.bat(),over:label(120,206,'perihilar (batwing)')},
+  kerley:{under:OV.kerley(),over:arrow(222,120,194,146,'Kerley B','end')},
+  ceph:{ceph:1,over:arrow(222,40,176,56,'upper vessels larger','end')},
+  ildRet:{under:OV.reticular(),over:label(120,206,'reticular, lower zones')},
+  ildNod:{under:OV.nodular(),over:label(120,206,'many small nodules')},
+  nodule:{under:`<circle cx="164" cy="78" r="6" fill="#B0B5BA"/>`,over:arrow(222,40,170,72,'nodule','end')},
+  mass:{under:`<path d="M156 62 q14 -10 24 4 q10 12 -2 24 q-12 10 -24 0 q-10 -14 2 -28 Z" fill="#AEB3B8"/>`,over:arrow(222,30,178,58,'mass ≥3 cm','end')},
+  spic:{under:`<circle cx="164" cy="78" r="8" fill="#B0B5BA"/><g stroke="#B0B5BA" stroke-width="1">${[0,40,80,120,160,200,240,280,320].map(a=>{const r=a*Math.PI/180;return `<line x1="${164+8*Math.cos(r)}" y1="${78+8*Math.sin(r)}" x2="${164+15*Math.cos(r)}" y2="${78+15*Math.sin(r)}"/>`}).join('')}</g>`,over:arrow(222,40,178,70,'spiculated','end')},
+  calc:{under:`<circle cx="164" cy="78" r="6" fill="${K.bone}"/>`,over:arrow(222,40,170,72,'dense calcium','end')},
+  multiple:{under:[[164,78,6],[78,70,5],[60,132,7],[176,140,5],[90,160,4]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#B0B5BA"/>`).join(''),over:label(120,206,'multiple nodules')},
+  hyper:{yR:176,yL:178,flat:1,heart:'narrow',over:arrow(40,214,70,200,'flat, low domes','start')},
+  heartNormal:{over:`<path d="M96 150 H172" stroke="${K.ann}" stroke-width="1.4"/><path d="M42 186 H198" stroke="${K.ann}" stroke-width="1.4" stroke-dasharray="3 2"/>`+label(134,146,'heart')+label(120,200,'chest: CTR < 50%')},
+  heartBig:{heart:'big',over:`<path d="M84 154 H190" stroke="${K.ann}" stroke-width="1.4"/><path d="M42 186 H198" stroke="${K.ann}" stroke-width="1.4" stroke-dasharray="3 2"/>`+label(138,150,'heart')+label(120,200,'CTR > 50%')},
+  water:{heart:'water',over:label(120,206,'globular "water bottle" heart')},
+  medWide:{med:'wide',knob:1,over:arrow(200,24,156,52,'wide mediastinum','end')},
+  medMass:{over:`<path d="M106 40 q-16 4 -14 20 q2 16 16 14 Z" fill="#A9AEB3"/>`+arrow(30,30,92,54,'mediastinal mass','start')},
+  knob:{knob:1,over:arrow(210,40,156,70,'enlarged knob','end')},
+  knobCalc:{knobCalc:1,over:arrow(210,40,150,64,'calcified knob','end')},
+  tortuous:{knob:1,over:`<path d="M146 82 Q160 120 150 170" stroke="${K.soft}" stroke-width="8" fill="none"/>`+arrow(214,120,158,120,'tortuous aorta','end')},
+  hila:{over:`<circle cx="98" cy="108" r="11" fill="#A9AEB3"/><circle cx="90" cy="118" r="7" fill="#A9AEB3"/><circle cx="142" cy="108" r="10" fill="#A9AEB3"/><circle cx="150" cy="118" r="6" fill="#A9AEB3"/>`+label(120,206,'lobulated hila (adenopathy)')},
+  pneumomed:{over:`<path d="M104 32 L102 104 M100 106 C88 114 86 142 94 168 M136 30 L138 64 M160 108 C176 124 182 150 174 174" stroke="${K.air}" stroke-width="2" fill="none"/><path d="M96 172 L172 176" stroke="${K.air}" stroke-width="2.5"/>`+arrow(40,206,100,176,'continuous diaphragm','start')},
+  pneumoperi:{over:`<path d="M108 106 C94 112 90 140 96 168 L170 174 C182 160 180 126 160 108" stroke="${K.air}" stroke-width="3" fill="none"/>`+label(120,206,'air around heart, not above great vessels')},
+  elevR:{yR:136,over:arrow(30,120,56,148,'elevated R','start')},
+  elevL:{yL:146,over:arrow(222,120,186,156,'elevated L','end')},
+  flat:{yR:176,yL:178,flat:1,over:arrow(40,214,70,200,'flattened','start')},
+  freeair:{over:`<path d="M48 190 C64 172 90 168 106 172 C92 176 66 182 48 190 Z" fill="${K.air}"/>`+arrow(28,212,64,184,'free air under R dome','start')},
+  stomach:{bigStomach:1,over:arrow(222,212,190,198,'distended stomach','end')},
+  ngOk:{over:wire('M127 0 L127 104 Q129 160 148 188 Q160 200 176 198',2)+label(200,214,'tip in stomach')},
+  ngShort:{over:wire('M127 0 L127 104 Q129 160 140 180',2)+label(170,214,'side hole at GE junction')},
+  ngEso:{over:wire('M127 0 L127 96 c 10 4 10 16 0 18 c -10 2 -10 -14 0 -12',2)+label(170,100,'coiled in esophagus','start')},
+  ngAirway:{over:wire('M120 0 L120 86 L106 108 L80 150',2)+label(60,170,'in R lower lobe bronchus')},
+  dobPost:{over:wire('M127 0 L127 104 Q129 160 150 190 Q140 206 110 204 Q96 202 92 196',1.4)+label(80,214,'past pylorus')},
+  cvcOk:{over:wire('M96 0 Q100 28 106 44 L106 80',1.8)+label(70,84,'tip in SVC')},
+  cvcRA:{over:wire('M96 0 Q100 28 106 44 L104 128',1.8)+label(66,134,'tip in R atrium')},
+  cvcIJ:{over:wire('M40 46 Q80 40 104 50 Q104 28 98 0',1.8)+label(60,30,'up the IJ')},
+  cvcContra:{over:wire('M40 46 Q80 40 106 50 L150 52',1.8)+label(170,40,'crosses midline')},
+  piccOk:{over:wire('M14 56 Q60 46 104 50 L106 84',1.1)+label(70,92,'PICC tip in SVC')},
+  swanOk:{over:wire('M96 0 Q100 28 106 44 L106 96 Q104 128 118 140 Q134 150 140 128 Q142 112 126 104 L104 102',1.6)+label(60,112,'tip near R hilum')},
+  swanPeriph:{over:wire('M96 0 Q100 28 106 44 L106 96 Q104 128 118 140 Q134 150 140 128 Q142 112 126 104 L104 102 L74 128',1.6)+label(60,146,'too peripheral')},
+  hdOk:{over:wire('M96 0 Q100 28 106 44 L106 106',3.2)+label(70,116,'tips SVC/RA')},
+  ctOk:{over:tube('M214 176 L190 156 Q170 120 166 66',4)+label(200,214,'tip apex, side hole inside')},
+  ctFissure:{over:tube('M214 150 L150 126',4)+label(196,110,'along fissure')},
+  ctOut:{over:tube('M224 176 L190 156 Q176 132 172 110',4)+`<circle cx="214" cy="170" r="6" fill="none" stroke="${K.ann}" stroke-width="1.4"/>`+label(230,206,'side hole outside chest','end')},
+  ppm:{over:`<rect x="168" y="36" width="20" height="14" rx="3" fill="${K.dev}"/>`+wire('M172 46 Q150 40 132 46 L108 58 L106 100 Q104 116 112 122 M106 104 Q128 156 158 164')+label(184,180,'RA + RV leads')},
+  aicd:{over:`<rect x="166" y="34" width="24" height="18" rx="4" fill="${K.dev}"/>`+wire('M170 46 Q150 40 132 46 L108 58 L106 104 Q128 156 158 164')+`<path d="M118 132 Q134 154 156 162" stroke="${K.dev}" stroke-width="4" fill="none"/>`+label(180,184,'thick shocking coil')},
+  iabpOk:{over:`<rect x="136" y="86" width="3" height="8" fill="${K.dev}"/>`+arrow(200,100,142,90,'marker below arch','end')},
+  iabpHigh:{over:`<rect x="136" y="58" width="3" height="8" fill="${K.dev}"/>`+arrow(200,40,142,62,'above arch','end')},
+  sternotomy:{over:[70,88,106,124,142].map(y=>`<ellipse cx="120" cy="${y}" rx="3" ry="2" stroke="${K.dev}" stroke-width="1.4" fill="none"/>`).join('')+label(170,214,'sternal wires')},
+  valve:{over:`<ellipse cx="128" cy="140" rx="9" ry="6" stroke="${K.dev}" stroke-width="2.4" fill="none"/>`+label(176,214,'prosthetic valve')},
+  ribfx:{over:`<path d="M124 102 C144 96 170 100 184 112" stroke="${K.bone}" stroke-width="3" fill="none" opacity=".75"/><path d="M186 113 C192 118 196 122 200 128" stroke="${K.bone}" stroke-width="3" fill="none" opacity=".75"/><circle cx="186" cy="114" r="7" fill="none" stroke="${K.ann}" stroke-width="1.4"/>`+label(186,96,'break and step-off')},
+  subq:{over:OV.sub()+mir(OV.sub(),'R')+label(120,206,'streaky air in the chest wall')},
+};
+function filmSVG(key){const d=DX[key];if(!d)return'';return chest(Object.assign({},d,{under:d.under||'',over:d.over||''}))}
+
+/* ===================== Content ===================== */
+const SIDE=[['R','Right'],['L','Left'],['B','Bilateral']];
+const SIDE1=[['R','Right'],['L','Left']];
+const LOBES=[['RUL','RUL','Right upper lobe. Silhouettes the ascending aorta / right upper mediastinum; inferior edge sharp against the minor fissure.','consRUL'],['RML','RML','Right middle lobe. Erases the right heart border.','consRML'],['RLL','RLL','Right lower lobe. Erases the right hemidiaphragm; right heart border stays visible.','consRLL'],['LUL','LUL','Left upper lobe. Can blur the aortic knob.','consLUL'],['Lingula','Lingula','Lingula. Erases the left heart border.','consLingula'],['LLL','LLL','Left lower lobe. Erases the left hemidiaphragm and descending aorta; look behind the heart.','consLLL']];
+const LOBENAME={RUL:'right upper lobe',RML:'right middle lobe',RLL:'right lower lobe',LUL:'left upper lobe',Lingula:'lingula',LLL:'left lower lobe'};
+const STEPS=[
+ {id:'film',n:'Film',t:'Film check',cue:'Before ABCDE, decide whether the film is good enough to trust. Projection, penetration, inspiration, rotation, and a prior to compare with.'},
+ {id:'A',n:'A',t:'Airway',cue:'Trachea midline, carina, main bronchi. Check any airway tube against the carina.'},
+ {id:'B',n:'B',t:'Breathing',cue:'Lungs and pleura. Compare side to side, zone by zone, from apex to costophrenic angle. Then go back and look behind the heart and at the apices.'},
+ {id:'C',n:'C',t:'Cardiac',cue:'Heart size and borders, mediastinum, aorta and hila. Use the silhouette sign: a border you cannot see points to the lobe next to it.'},
+ {id:'D',n:'D',t:'Diaphragm',cue:'Both hemidiaphragms (right usually slightly higher), costophrenic angles, and the space just below for free air.'},
+ {id:'E',n:'E',t:'Everything else',cue:'Lines, tubes and devices, then bones and soft tissues. Every device gets a position; check for a pneumothorax after any line.'}
+];
+// option tuple: [value, label, tip, diagramKey]
+const F={
+ indication:{label:'Indication',type:'num',text:true,ph:'e.g. dyspnea, fever'},
+ proj:{label:'Projection',type:'chips',opts:[
+  ['pa_lat','PA and lateral','The standard upright study. PA keeps the heart close to the film, so its size is true.'],
+  ['pa','PA only','Upright PA without a lateral.'],
+  ['ap_up','AP upright portable','AP magnifies the heart. Judge cardiomegaly only if it is clearly enlarged.'],
+  ['ap_semi','AP semi-upright','Partly reclined: effusions and air layer in between upright and supine patterns.'],
+  ['ap_sup','AP supine','Effusions layer posteriorly as haze, pneumothorax collects anteriorly and basally (deep sulcus), the mediastinum looks wider and the upper vessels look prominent.']],
+  tip:'AP portable films magnify the heart and widen the mediastinum. Name the projection so the reader can weigh those findings.',ref:'Herring ch. 2, 13'},
+ pen:{label:'Penetration',type:'chips',normal:'ok',opts:[
+  ['ok','Adequate','You can see the thoracic spine through the heart.','penOk'],
+  ['under','Underpenetrated','Too white: the spine disappears behind the heart and the left base can look falsely opaque. A lateral helps.','penUnder'],
+  ['over','Overpenetrated','Too black: markings fade, which can mimic emphysema or pneumothorax and hide nodules.','penOver']],ref:'Herring ch. 2'},
+ ribs:{label:'Posterior ribs above the R hemidiaphragm',type:'num',unit:'ribs',tip:'Count posterior ribs (horizontal, attached to the spine) down to the dome of the right hemidiaphragm. 8 to 9 or more is an adequate inspiration. Fewer crowds the bases and enlarges the heart; more than 10 suggests hyperinflation.',ex:'ribs',ref:'Herring ch. 2'},
+ rot:{label:'Rotation',type:'chips',normal:'none',opts:[
+  ['none','Not rotated','The spinous process sits halfway between the medial ends of the clavicles.','rotOk'],
+  ['rot','Rotated','Unequal distances. Rotation distorts the mediastinum and hila and can make one hemithorax look more lucent.','rotBad']],ref:'Herring ch. 2'},
+ angle:{label:'Angulation',type:'chips',normal:'ok',opts:[
+  ['ok','Not angled','Clavicle is S-shaped and its medial end overlaps the 3rd or 4th anterior rib (or the 1st on a well-centered PA).'],
+  ['lord','Apical lordotic','Clavicles project above the apices and the heart looks foreshortened. Common on portable films.','lordotic']],ref:'Herring ch. 2'},
+ cmp:{label:'Comparison',type:'chips',opts:[['none','No prior available'],['same','Prior available, no change'],['changed','Prior available, changed']],tip:'A finding that is old and stable means something very different from one that is new.'},
+ priorDate:{label:'Prior date',type:'num',text:true,ph:'e.g. 9/14/2026',when:()=>S.cmp==='same'||S.cmp==='changed'},
+
+ trach:{label:'Trachea',type:'chips',normal:'mid',opts:[
+  ['mid','Midline','Centered over the spinous processes.','trachMid'],
+  ['devR','Deviated right','Pulled toward volume loss (atelectasis, pneumonectomy) or pushed away from a tension pneumothorax, massive effusion or mass. A goiter deviates it above the aortic knob.','trachDevR'],
+  ['devL','Deviated left','Same reasoning: toward collapse, away from tension or a large effusion.','trachDevL']],ref:'Herring ch. 6, 12'},
+ ett:{label:'Endotracheal tube',type:'chips',opts:[
+  ['none','None'],
+  ['ok','Tip 3–5 cm above carina','The right position with the head neutral. Flexing the neck moves the tip down, extending moves it up.','ettOk'],
+  ['high','Too high','Tip in the neck or near the clavicles; risks vocal cord injury and extubation.','ettHigh'],
+  ['low','Too low (near carina)','Under about 2 cm from the carina. Advance any further and it enters a bronchus.','ettLow'],
+  ['rmain','Right mainstem','The most common malposition. Left lung under-ventilated, may collapse.','ettRmain'],
+  ['eso','Esophageal','Tube outside the tracheal air column. Re-intubate.','ettEso']],tip:'Find the carina first, where the trachea splits into the main bronchi. The cuff may fill but should not bulge the tracheal wall.',ref:'Herring ch. 11'},
+ ettCm:{label:'Tip above carina',type:'num',unit:'cm',when:()=>S.ett&&S.ett!=='none'&&S.ett!=='eso'},
+ ettCuff:{label:'Cuff',type:'chips',when:()=>S.ett&&S.ett!=='none',opts:[['ok','Not distending the trachea'],['over','Distends the tracheal wall','Overinflated cuff: risk of tracheal injury and later stenosis.']]},
+ tt:{label:'Tracheostomy tube',type:'chips',opts:[['none','None'],['ok','Tip midway, stoma to carina','Correct: tip about halfway between the stoma and the carina.','tt'],['low','Tip near carina']],ref:'Herring ch. 11'},
+
+ ptx:{label:'Pneumothorax',type:'find',neg:'pneumothorax',tip:'You must see the thin white visceral pleural line, usually convex and parallel to the chest wall, with no markings beyond it. On a supine film look for the deep sulcus sign. Mimics: skin folds (extend beyond the chest), bullae (concave inner margin), scapula edge.',ex:'ptx',ref:'Herring ch. 10',kids:['ptxSide','ptxSize','ptxQ']},
+ ptxSide:{label:'Side',type:'chips',opts:SIDE},
+ ptxSize:{label:'Size at the apex',type:'chips',opts:[['small','Small (under 2 cm)','Under 2 cm from lung edge to chest wall at the apex usually does not need a chest tube.','ptx'],['large','Large (2 cm or more)','2 cm or more usually needs drainage. Clinical status decides, not the film.','ptxLarge']]},
+ ptxQ:{label:'Also',type:'multi',opts:[['tension','Mediastinal shift away (tension)','Heart and trachea pushed away from the pneumothorax, with a depressed hemidiaphragm. A clinical emergency.','tension'],['deep','Deep sulcus sign (supine)','Air collects anteriorly and inferiorly on a supine patient, deepening the costophrenic angle.','deepSulcus'],['hydro','Air–fluid level','A straight horizontal fluid line in the pleural space means air and fluid together (hydropneumothorax).','hydro']]},
+
+ eff:{label:'Pleural effusion',type:'find',neg:'pleural effusion',tip:'About 75 mL blunts the posterior angle on the lateral; about 200–300 mL blunts the lateral angle on the frontal. Larger effusions form a meniscus, higher laterally. Massive ones push the mediastinum away. Supine: diffuse haze with visible vessels.',ex:'effMod',ref:'Herring ch. 8',kids:['effSide','effSize','effQ']},
+ effSide:{label:'Side',type:'chips',opts:SIDE},
+ effSize:{label:'Size',type:'chips',opts:[['small','Small (blunted angle)','Blunting of the costophrenic angle only.','effSmall'],['mod','Moderate (meniscus)','Meniscus curving up the lateral chest wall, below mid-lung.','effMod'],['large','Large (above mid-lung)','Fluid reaching above the hilum.','effLarge'],['hemi','Opacified hemithorax','White-out. Shift away means effusion; shift toward means collapse; no shift suggests consolidation or tumor with both.','effHemi']]},
+ effQ:{label:'Also',type:'multi',opts:[['subpulm','Subpulmonic','Fluid under the lung mimics a high hemidiaphragm whose peak sits too far lateral; on the left, the gap to the stomach bubble widens.'],['loc','Loculated','Does not move freely; can sit in a fissure and mimic a mass (pseudotumor).'],['layer','Layering (supine)','Haze over the lower hemithorax with vessels still seen through it.']]},
+
+ cons:{label:'Consolidation (airspace opacity)',type:'find',neg:'focal consolidation',tip:'Airspace disease is fluffy, confluent and ill-defined, except where it meets a fissure. Air bronchograms and the silhouette sign localize it. Pick the lobes; the borders it erases tell you which.',ex:'consRML',ref:'Herring ch. 5, 9',kids:['consLobes','consSil','consQ']},
+ consLobes:{label:'Lobes',type:'multi',opts:LOBES},
+ consSil:{label:'Borders no longer seen',type:'multi',opts:[['ascAo','Ascending aorta','→ right upper lobe'],['rhb','Right heart border','→ right middle lobe','consRML'],['rhd','Right hemidiaphragm','→ right lower lobe','consRLL'],['descAo','Descending aorta','→ left upper or lower lobe'],['lhb','Left heart border','→ lingula','consLingula'],['lhd','Left hemidiaphragm','→ left lower lobe','consLLL']],tip:'Silhouette sign: two structures of the same density that touch lose their border. The border that disappears names the lobe next to it.',ref:'Herring ch. 9 (Table 9-4)'},
+ consQ:{label:'Also',type:'multi',opts:[['airb','Air bronchograms','Dark branching airways inside a white lobe: the airspaces are filled, the bronchi are not. Favors pneumonia.','airbronch'],['patchy','Patchy, multifocal','Bronchopneumonia pattern: patchy segments, often several at once, usually without air bronchograms.','multiple'],['cavit','Cavitation','Lucency with a wall inside the opacity. Think TB, staph, anaerobes, Klebsiella or squamous carcinoma.','cavit'],['round','Round','Round pneumonia, mostly in children; can mimic a mass.']]},
+
+ atel:{label:'Atelectasis',type:'find',neg:'atelectasis',tip:'Volume loss: fissures displaced toward the collapse, structures shifted toward it, overinflation of the rest. Plate-like atelectasis at the bases comes from splinting and clears in days.',ex:'atelPlate',ref:'Herring ch. 7',kids:['atelType','atelSide','atelLobes','atelQ']},
+ atelType:{label:'Type',type:'chips',opts:[['plate','Subsegmental (plate-like)','Thin horizontal lines at the bases from shallow breathing; no shift.','atelPlate'],['lobar','Lobar collapse','A lobe loses volume: dense, wedge-shaped, with fissure displacement toward it.','atelLobar'],['whole','Whole lung','Opacified hemithorax with heart and trachea shifted toward it. Look for an obstructing plug or tumor.','atelWhole']]},
+ atelSide:{label:'Side',type:'chips',opts:SIDE},
+ atelLobes:{label:'Lobe',type:'multi',when:()=>S.atel==='yes'&&S.atelType==='lobar',opts:LOBES.map(l=>[l[0],l[1]])},
+ atelQ:{label:'Volume loss signs',type:'multi',when:()=>S.atel==='yes'&&S.atelType&&S.atelType!=='plate',opts:[['fissure','Fissure displaced'],['shift','Shift toward'],['elev','Elevated hemidiaphragm']]},
+
+ edema:{label:'Pulmonary edema',type:'find',neg:'pulmonary edema',tip:'Interstitial edema: Kerley B lines, peribronchial cuffing, fluid in the fissures, effusions. Alveolar edema: fluffy perihilar batwing opacities sparing the outer third. Cardiogenic edema favors effusions, Kerley lines and a big heart.',ex:'edemaInt',ref:'Herring ch. 13',kids:['edemaType','edemaQ']},
+ edemaType:{label:'Stage',type:'chips',opts:[['int','Interstitial','Fluid in the interstitium; lungs still aerated.','edemaInt'],['alv','Alveolar','Fluffy airspace opacities, often perihilar (batwing).','edemaAlv']]},
+ edemaQ:{label:'Signs',type:'multi',opts:[['kerley','Kerley B lines','Short (1–2 cm) horizontal lines touching the pleura at the bases: thickened interlobular septa.','kerley'],['cuff','Peribronchial cuffing','Bronchi seen end-on near the hila with thick, fuzzy walls.'],['fissure','Fluid in the fissures','Fissures look thick.'],['ceph','Cephalization','Upper-lobe vessels larger than lower. Only meaningful on an upright film.','ceph'],['bat','Batwing distribution','Perihilar, sparing the periphery.','edemaAlv']]},
+
+ ild:{label:'Interstitial pattern',type:'find',neg:'',tip:'Interstitial disease is reticular (lines), nodular (dots) or both, in discrete packets with normal lung between them and sharp margins, usually without air bronchograms.',ex:'ildRet',ref:'Herring ch. 5',kids:['ildPat','ildDist']},
+ ildPat:{label:'Pattern',type:'chips',opts:[['ret','Reticular','Net of fine lines. Interstitial edema, UIP/fibrosis, scleroderma, sarcoid.','ildRet'],['nod','Nodular','Many small discrete nodules. Miliary TB, metastases, silicosis, sarcoid.','ildNod'],['rn','Reticulonodular','Both.']]},
+ ildDist:{label:'Distribution',type:'chips',opts:[['upper','Upper-zone'],['lower','Lower-zone'],['diffuse','Diffuse']]},
+
+ nod:{label:'Nodule or mass',type:'find',neg:'suspicious nodule or mass',tip:'Under 3 cm is a nodule, 3 cm or more a mass. Dense central, laminated or diffuse calcification is benign; spiculation or lobulation suggests cancer. Compare with old films for growth.',ex:'nodule',ref:'Herring ch. 12',kids:['nodSize','nodSide','nodZone','nodQ']},
+ nodSize:{label:'Size',type:'chips',opts:[['nodule','Nodule (under 3 cm)','','nodule'],['mass','Mass (3 cm or more)','Over 5 cm is malignant about 95% of the time.','mass']]},
+ nodSide:{label:'Side',type:'chips',opts:SIDE},
+ nodZone:{label:'Zone',type:'chips',opts:[['upper','Upper'],['mid','Mid'],['lower','Lower']]},
+ nodQ:{label:'Features',type:'multi',opts:[['calc','Calcified','Usually a granuloma: benign.','calc'],['spic','Spiculated or lobulated','Suggests malignancy.','spic'],['cav','Cavitating','Thick irregular wall: squamous carcinoma. Thin wall: infection.','cavit'],['multi','Multiple','Think metastases (cannonballs), septic emboli, granulomatous disease.','multiple']]},
+
+ emph:{label:'Hyperinflation / emphysema',type:'find',neg:'',tip:'The most reliable sign is hyperinflation with flat hemidiaphragms, best seen on the lateral. Also a large retrosternal clear space, hyperlucent lungs with fewer markings, bullae, and large central pulmonary arteries.',ex:'hyper',ref:'Herring ch. 12',kids:['emphQ']},
+ emphQ:{label:'Signs',type:'multi',opts:[['flat','Flattened hemidiaphragms','','hyper'],['retro','Large retrosternal clear space (lateral)'],['lucent','Hyperlucent lungs, sparse markings'],['bullae','Bullae','Thin-walled air spaces over 1 cm. Their concave inner wall separates them from a pneumothorax.']]},
+
+ heart:{label:'Heart size',type:'chips',normal:'normal',opts:[
+  ['normal','Normal','Cardiothoracic ratio under 50% on a PA film.','heartNormal'],
+  ['border','Borderline','On an AP film a borderline heart is probably normal.'],
+  ['big','Enlarged','Over 50% on PA. On AP, call it enlarged when it is clearly big or nearly touches the left chest wall.','heartBig']],tip:'Cardiothoracic ratio: widest heart width ÷ widest inner rib width. Apparent enlargement: AP projection, poor inspiration, obesity or pregnancy, pectus excavatum.',ref:'Herring ch. 4, 13'},
+ heartW:{label:'Heart width',type:'num',unit:'cm'},
+ chestW:{label:'Chest width',type:'num',unit:'cm'},
+ heartQ:{label:'Shape',type:'multi',when:()=>S.heart==='big'||S.heart==='border',opts:[['water','Globular "water bottle"','Smooth symmetric enlargement in all directions. Consider pericardial effusion; echo it.','water']]},
+ med:{label:'Mediastinum',type:'chips',normal:'normal',opts:[
+  ['normal','Normal width'],
+  ['wide','Widened','Overcalled on AP supine films and present in only about a quarter of dissections. Use it to trigger CT, not to rule anything out.','medWide'],
+  ['mass','Mass','Anterior: thyroid, thymoma, teratoma, lymphoma. Middle: adenopathy. Posterior: neurogenic tumors. Only goiter routinely deviates the trachea.','medMass']],ref:'Herring ch. 12, 13'},
+ medComp:{label:'Compartment',type:'chips',when:()=>S.med==='mass',opts:[['ant','Anterior'],['mid','Middle'],['post','Posterior']]},
+ aorta:{label:'Aorta',type:'find',neg:'',noLabel:'Normal',yesLabel:'Abnormal',tip:'The knob sits left of the trachea at the top of the left mediastinal border. Hypertension and age unfold it; aneurysm enlarges it.',ex:'knob',ref:'Herring ch. 4, 13',kids:['aortaQ']},
+ aortaQ:{label:'Findings',type:'multi',opts:[['tort','Tortuous (unfolded)','','tortuous'],['knob','Enlarged knob','','knob'],['calc','Calcified','Atherosclerotic calcification in the knob.','knobCalc']]},
+ hila:{label:'Hilar enlargement',type:'find',neg:'hilar enlargement',tip:'The left hilum normally sits a little higher than the right. Lobulated hila suggest adenopathy (sarcoid, lymphoma, cancer); large smooth arteries suggest pulmonary hypertension.',ex:'hila',ref:'Herring ch. 3, 12',kids:['hilaSide','hilaQ']},
+ hilaSide:{label:'Side',type:'chips',opts:SIDE},
+ hilaQ:{label:'Looks like',type:'chips',opts:[['nodes','Lobulated (adenopathy)','','hila'],['pa','Enlarged pulmonary arteries','Large central arteries tapering quickly: pulmonary arterial hypertension.']]},
+ pmed:{label:'Pneumomediastinum',type:'find',neg:'pneumomediastinum',tip:'Thin lucent streaks outlining the mediastinum and great vessels, sometimes tracking into the neck. Air under the heart joining both hemidiaphragms is the continuous diaphragm sign.',ex:'pneumomed',ref:'Herring ch. 10',kids:['pmedQ']},
+ pmedQ:{label:'Also',type:'multi',opts:[['cds','Continuous diaphragm sign','','pneumomed'],['peri','Pneumopericardium','Air around the heart that stops at the roots of the great vessels; pneumomediastinum extends higher.','pneumoperi']]},
+
+ dia:{label:'Hemidiaphragms',type:'find',neg:'',noLabel:'Normal',yesLabel:'Abnormal',tip:'The right is usually about half an interspace higher than the left. An elevated side means volume loss, phrenic palsy, subpulmonic fluid or something below pushing up. Flat on both sides means hyperinflation.',ex:'elevR',ref:'Herring ch. 3, 7',kids:['diaQ']},
+ diaQ:{label:'Findings',type:'multi',opts:[['elevR','Right elevated','','elevR'],['elevL','Left elevated','','elevL'],['flat','Both flattened','','flat'],['obsR','Right not seen (silhouette)','Right lower lobe disease or effusion.','consRLL'],['obsL','Left not seen (silhouette)','Left lower lobe disease or effusion; look behind the heart.','consLLL']]},
+ cpa:{label:'Costophrenic angles',type:'find',neg:'',noLabel:'Sharp',yesLabel:'Blunted',tip:'Blunting means fluid (or old pleural scarring). Check the posterior angles on the lateral, which blunt first.',ex:'effSmall',ref:'Herring ch. 8',kids:['cpaSide']},
+ cpaSide:{label:'Side',type:'chips',opts:SIDE},
+ free:{label:'Free air under the diaphragm',type:'find',neg:'free air under the diaphragm',tip:'Lucent crescent between the hemidiaphragm and the liver on an upright film means pneumoperitoneum. On the left, don’t confuse it with the stomach bubble, which has rugal folds and sits lower.',ex:'freeair',ref:'Herring ch. 14, 17',kids:['freeSide']},
+ freeSide:{label:'Side',type:'chips',opts:SIDE},
+ abd:{label:'Upper abdomen',type:'find',neg:'',noLabel:'Unremarkable',yesLabel:'Abnormal',tip:'Look under the diaphragm at the stomach bubble and any visible bowel.',ex:'stomach',kids:['abdQ']},
+ abdQ:{label:'Findings',type:'multi',opts:[['stomach','Distended stomach','','stomach'],['bowel','Dilated bowel loops'],['calc','Calcifications (gallstones, etc.)']]},
+
+ dev:{label:'Lines, tubes and devices',type:'find',neg:'',noLabel:'None',yesLabel:'Present',tip:'Name every device and where its tip is. Check for a pneumothorax after any central line attempt, successful or not.',ref:'Herring ch. 11',kids:['devs','ng','dob','cvcSite','cvc','picc','swan','hd','ctSide','ct','ppm','iabp']},
+ devs:{label:'Which',type:'multi',opts:[['ng','NG/OG tube','','ngOk'],['dob','Feeding tube','','dobPost'],['cvc','Central line','','cvcOk'],['picc','PICC','','piccOk'],['swan','PA (Swan-Ganz) catheter','','swanOk'],['hd','Dialysis catheter','','hdOk'],['ct','Chest tube','','ctOk'],['ppm','Pacemaker','','ppm'],['aicd','AICD','','aicd'],['iabp','Balloon pump (IABP)','','iabpOk'],['stern','Sternotomy wires','','sternotomy'],['valve','Prosthetic valve','','valve']]},
+ ng:{label:'NG/OG tube',type:'chips',when:()=>has('devs','ng'),opts:[['ok','Tip in stomach','Tip and side hole well into the stomach, about 10 cm past the GE junction.','ngOk'],['short','Side hole at or above GE junction','Advance about 10 cm.','ngShort'],['eso','In the esophagus / coiled','The most common malposition. Reposition.','ngEso'],['airway','In the airway','Entered the trachea and a bronchus, more often the right. Remove before anything goes down it.','ngAirway']],ref:'Herring ch. 11'},
+ dob:{label:'Feeding tube',type:'chips',when:()=>has('devs','dob'),opts:[['stomach','Tip in stomach'],['post','Past the pylorus','Duodenal or jejunal position.','dobPost'],['eso','In the esophagus'],['airway','In the airway','Thin and easy to misplace in a bronchus; can cause pneumothorax. Never feed before confirming.','ngAirway']],ref:'Herring ch. 11'},
+ cvcSite:{label:'Central line access',type:'chips',when:()=>has('devs','cvc'),opts:[['rij','R IJ'],['lij','L IJ'],['rsc','R subclavian'],['lsc','L subclavian']]},
+ cvc:{label:'Central line tip',type:'chips',when:()=>has('devs','cvc'),opts:[['svc','SVC','The target. Bends should be smooth curves, not kinks.','cvcOk'],['caj','Cavoatrial junction'],['ra','Right atrium','Pull back into the SVC (arrhythmia risk).','cvcRA'],['ij','Up the IJ','Common with subclavian lines.','cvcIJ'],['contra','Contralateral vein','Crossed into the opposite brachiocephalic or subclavian vein.','cvcContra']],ref:'Herring ch. 11'},
+ picc:{label:'PICC tip',type:'chips',when:()=>has('devs','picc'),opts:[['svc','SVC','','piccOk'],['ra','Right atrium'],['ax','Axillary/subclavian'],['ij','Up the IJ']],tip:'PICCs are thin and easy to lose; follow them from the arm.',ref:'Herring ch. 11'},
+ swan:{label:'PA catheter tip',type:'chips',when:()=>has('devs','swan'),opts:[['ok','Within 2 cm of the hilum','Proximal right or left pulmonary artery.','swanOk'],['periph','Too peripheral','Risk of pulmonary infarction or artery rupture; pull back.','swanPeriph'],['coil','Coiled in RA/RV']],ref:'Herring ch. 11'},
+ hd:{label:'Dialysis catheter tips',type:'chips',when:()=>has('devs','hd'),opts:[['ok','SVC / right atrium','Temporary catheters sit in the SVC, tunneled ones may sit in the RA.','hdOk'],['other','Malpositioned']],ref:'Herring ch. 11'},
+ ctSide:{label:'Chest tube side',type:'chips',when:()=>has('devs','ct'),opts:SIDE},
+ ct:{label:'Chest tube position',type:'chips',when:()=>has('devs','ct'),opts:[['ok','Side hole inside the pleural space','Apical and anterior for air, basal and posterior for fluid.','ctOk'],['fissure','In a fissure','Tube runs along the line of a fissure; may drain poorly.','ctFissure'],['out','Side hole outside the chest','The break in the radiopaque stripe lies outside the ribs: air leak and poor drainage. Advance or replace.','ctOut']],ref:'Herring ch. 11'},
+ ppm:{label:'Pacemaker / AICD leads',type:'chips',when:()=>has('devs','ppm')||has('devs','aicd'),opts:[['ok','Leads in expected position','RA lead in the appendage, RV lead at the apex (left of the spine, anterior on the lateral).','ppm'],['mal','Lead malpositioned or dislodged'],['fx','Lead fracture']],ref:'Herring ch. 11'},
+ iabp:{label:'Balloon pump marker',type:'chips',when:()=>has('devs','iabp'),opts:[['ok','Just below the arch','About 2 cm below the top of the arch, past the left subclavian origin.','iabpOk'],['high','Too high','Can block the left subclavian or great vessels.','iabpHigh'],['low','Too low','Less effective; may compromise renal arteries.']],ref:'Herring ch. 11'},
+
+ bones:{label:'Bones',type:'find',neg:'acute osseous abnormality',tip:'Follow each rib around, then clavicles, scapulae, shoulders and spine. Rib fractures go with pneumothorax and contusion.',ex:'ribfx',kids:['bonesQ','bonesSide']},
+ bonesQ:{label:'Findings',type:'multi',opts:[['rib','Rib fracture(s)','','ribfx'],['clav','Clavicle fracture'],['spine','Vertebral compression'],['lesion','Lytic or blastic lesion'],['old','Old healed fracture(s)']]},
+ bonesSide:{label:'Side',type:'chips',opts:SIDE},
+ soft:{label:'Soft tissues',type:'find',neg:'',noLabel:'Normal',yesLabel:'Abnormal',tip:'Subcutaneous air shows as streaky lucency in the chest wall and neck. It can hide the lung behind it but is rarely dangerous on its own.',ex:'subq',ref:'Herring ch. 10',kids:['softQ','softSide']},
+ softQ:{label:'Findings',type:'multi',opts:[['subq','Subcutaneous emphysema','','subq'],['mast','Mastectomy'],['mass','Soft-tissue mass or swelling']]},
+ softSide:{label:'Side',type:'chips',opts:SIDE}
+};
+// finding rows become Absent/Present chip fields
+Object.entries(F).forEach(([k,f])=>{if(f.type==='find'){f.opts=[['no',f.noLabel||'Absent'],['yes',f.yesLabel||'Present',f.tip,f.ex]];f.normal='no';f.kids.forEach(c=>{if(!F[c].when)F[c].when=()=>S[k]==='yes'})}});
+const LAYOUT={
+ film:['indication','proj','pen','ribs','rot','angle','cmp','priorDate'],
+ A:['trach','ett','ettCm','ettCuff','tt'],
+ B:['ptx','eff','cons','atel','edema','ild','nod','emph'],
+ C:['heart','heartQ','med','medComp','aorta','hila','pmed'],
+ D:['dia','cpa','free','abd'],
+ E:['dev','bones','soft']
+};
+
+/* ===================== State ===================== */
+let S={};let cur=0;
+const num=k=>{const v=parseFloat(S[k]);return isFinite(v)?v:null};
+const has=(k,v)=>(S[k]||[]).includes(v);
+
+/* ===================== Build UI ===================== */
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hasInfo=f=>f.tip||(f.opts&&f.opts.some(o=>o[2]||o[3]));
+const infoBtn=k=>`<button class="info" type="button" data-info="${k}" aria-label="Help for ${esc(F[k].label)}">i</button>`;
+function chipsHTML(k){const f=F[k];return `<div class="chips">${f.opts.map(o=>`<button type="button" class="chip" data-k="${k}" data-v="${o[0]}" aria-pressed="false"${(o[2]||o[3])?` data-tip="${k}:${o[0]}"`:''}>${esc(o[1])}</button>`).join('')}</div>`}
+function numHTML(k){const f=F[k];return `<div class="num" data-f="${k}"><label for="f-${k}">${esc(f.label)} ${f.tip?infoBtn(k):''}</label><div class="box"><input id="f-${k}" data-k="${k}" ${f.text?`type="text" placeholder="${esc(f.ph||'')}"`:'type="number" inputmode="decimal" min="0" step="any"'} autocomplete="off">${f.unit?`<span class="u">${f.unit}</span>`:''}</div></div>`}
+function fieldHTML(k){
+  const f=F[k];
+  if(f.type==='num')return numHTML(k);
+  if(f.type==='find')return `<div class="find" data-f="${k}"><div class="frow"><div class="fname">${esc(f.label)} ${infoBtn(k)}</div><div class="yn">
+    <button type="button" class="chip no" data-k="${k}" data-v="no" aria-pressed="false">${esc(f.opts[0][1])}</button><button type="button" class="chip yes" data-k="${k}" data-v="yes" aria-pressed="false"${f.ex?` data-tip="${k}:yes"`:''}>${esc(f.opts[1][1])}</button></div></div>
+    <div class="fkids" data-kids="${k}" hidden>${f.kids.map(fieldHTML).join('')}</div></div>`;
+  return `<div class="field" data-f="${k}"><div class="flab"><span>${esc(f.label)}</span>${hasInfo(f)?infoBtn(k):''}</div>${chipsHTML(k)}<p class="hint" id="hint-${k}" hidden></p></div>`;
+}
+const PANES={
+ film:()=>`${numHTML('indication')}${fieldHTML('proj')}<div class="sep"></div>${fieldHTML('pen')}<div class="field"><div class="row">${numHTML('ribs')}</div><p class="calcout" id="ribsOut" hidden></p></div>${fieldHTML('rot')}${fieldHTML('angle')}<div class="sep"></div>${fieldHTML('cmp')}<div class="row">${numHTML('priorDate')}</div>`,
+ A:()=>`${fieldHTML('trach')}<div class="sep"></div>${fieldHTML('ett')}<div class="row">${numHTML('ettCm')}</div><p class="hint" id="hint-ettCm" hidden></p>${fieldHTML('ettCuff')}<div class="sep"></div>${fieldHTML('tt')}`,
+ B:()=>`<div class="finds">${LAYOUT.B.map(fieldHTML).join('')}</div><p class="hint" id="hint-B" hidden></p>`,
+ C:()=>`${fieldHTML('heart')}<div class="field"><div class="row">${numHTML('heartW')}${numHTML('chestW')}</div><p class="calcout" id="ctrOut" hidden></p></div>${fieldHTML('heartQ')}<div class="sep"></div>${fieldHTML('med')}${fieldHTML('medComp')}<div class="sep"></div><div class="finds">${['aorta','hila','pmed'].map(fieldHTML).join('')}</div>`,
+ D:()=>`<div class="finds">${LAYOUT.D.map(fieldHTML).join('')}</div>`,
+ E:()=>`<div class="finds">${LAYOUT.E.map(fieldHTML).join('')}</div><p class="hint" id="hint-E" hidden></p>`
+};
+function build(){
+  document.getElementById('steps').innerHTML=STEPS.map((s,i)=>`<button type="button" class="stepbtn" data-step="${i}"><span class="n${s.n.length>1?' sm':''}">${s.n}</span><span class="t">${s.t}</span><span class="dot"></span></button>`).join('');
+  document.getElementById('panes').innerHTML=STEPS.map((s,i)=>`<section class="pane" data-pane="${i}" ${i?'hidden':''} aria-labelledby="h-${s.id}">
+    <div class="ph"><span class="eb">${s.n.length>1?'Before you start':'Step '+s.n}</span><h2 id="h-${s.id}">${s.n.length>1?s.t:s.n+' · '+s.t}</h2><p class="cue">${s.cue}</p>
+    ${s.id!=='film'?`<div class="act"><button type="button" class="btn small" data-normal="${s.id}">Mark the rest normal</button></div>`:`<div class="act"><button type="button" class="btn small" data-normal="film">Good film</button></div>`}</div>
+    ${PANES[s.id]()}
+    <div class="pfoot"><button type="button" class="btn" data-go="${i-1}" ${i?'':'disabled style="visibility:hidden"'}>Back</button>${i<STEPS.length-1?`<button type="button" class="btn primary" data-go="${i+1}">Next: ${STEPS[i+1].n.length>1?'':STEPS[i+1].n+' · '}${STEPS[i+1].t}</button>`:''}</div>
+  </section>`).join('');
+}
+
+/* ===================== Report logic ===================== */
+const joinW=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const joinOr=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' or '+a[a.length-1];
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const sideAdj=s=>({R:'right',L:'left',B:'bilateral'}[s]||'');
+const isYes=k=>S[k]==='yes', isNo=k=>S[k]==='no';
+function ctr(){const h=num('heartW'),c=num('chestW');return h&&c?h/c:null}
+function ettAuto(){const cm=num('ettCm');if(S.ett&&S.ett!=='none')return S.ett;if(cm===null)return null;return cm<2?'low':cm>7?'high':'ok'}
+
+function compute(){
+  const A=[],B=[],C=[],D=[],E=[],imp=[],crit=new Set(),limits=[];
+  const P=(arr,txt,impTxt,critical)=>{arr.push(txt);if(impTxt!==false){const t=impTxt||txt;imp.push(t);if(critical)crit.add(t)}};
+  const supine=S.proj==='ap_sup', ap=['ap_up','ap_semi','ap_sup'].includes(S.proj);
+  // technique
+  const projT={pa_lat:'PA and lateral views of the chest',pa:'Single PA view of the chest',ap_up:'Single AP upright portable view of the chest',ap_semi:'Single AP semi-upright portable view of the chest',ap_sup:'Single AP supine view of the chest'}[S.proj];
+  const ribs=num('ribs');
+  if(S.pen==='under')limits.push('underpenetration');if(S.pen==='over')limits.push('overpenetration');
+  if(ribs!==null&&ribs<8)limits.push(`low lung volumes (${ribs} posterior ribs)`);
+  if(S.rot==='rot')limits.push('patient rotation');if(S.angle==='lord')limits.push('apical lordotic positioning');
+  const tech=[];if(projT)tech.push(projT+'.');
+  if(limits.length)tech.push('Limited by '+joinW(limits)+'.');
+  else if(S.pen==='ok'||ribs!==null||S.rot==='none'){const g=[];if(ribs!==null&&ribs>=8)g.push(`adequate inspiration (${ribs} posterior ribs)`);if(S.pen==='ok')g.push('adequate penetration');if(S.rot==='none')g.push('no rotation');if(g.length)tech.push(cap(joinW(g))+'.')}
+  if(ribs!==null&&ribs>10)tech.push(`Hyperexpanded lungs (${ribs} posterior ribs).`);
+  const cmpT=S.cmp?{none:'None available.',same:`${S.priorDate?S.priorDate.trim():'Prior study'}.`,changed:`${S.priorDate?S.priorDate.trim():'Prior study'}.`}[S.cmp]:null;
+
+  /* A */
+  const tr={mid:'The trachea is midline.',devR:'The trachea is deviated to the right.',devL:'The trachea is deviated to the left.'}[S.trach];
+  if(tr){if(S.trach==='mid')A.push(tr);else P(A,tr,'Tracheal deviation to the '+(S.trach==='devR'?'right':'left'))}
+  const ett=ettAuto(),cm=num('ettCm'),cmT=cm!==null?`approximately ${cm} cm above the carina`:'';
+  if(ett&&ett!=='none'){
+    const m={ok:`Endotracheal tube tip ${cmT||'3–5 cm above the carina'}, in appropriate position.`,high:`Endotracheal tube tip is high${cmT?', '+cmT:''}; recommend advancing.`,low:`Endotracheal tube tip is low${cmT?', '+cmT:', near the carina'}; recommend withdrawing about 2 cm.`,rmain:'Endotracheal tube tip in the right mainstem bronchus; recommend withdrawing into the trachea.',eso:'Endotracheal tube projects outside the tracheal air column, concerning for esophageal intubation.'}[ett];
+    if(ett==='ok')A.push(m);else P(A,m,m,['rmain','eso'].includes(ett));
+    if(S.ettCuff==='over')P(A,'The cuff distends the tracheal lumen.','Overdistended endotracheal tube cuff');
+  }
+  if(S.tt==='ok')A.push('Tracheostomy tube in good position.');if(S.tt==='low')P(A,'Tracheostomy tube tip near the carina.');
+
+  /* B */
+  const negB=[];
+  if(isYes('ptx')){const sd=sideAdj(S.ptxSide),q=S.ptxQ||[];
+    let t=`${S.ptxSize==='small'?'Small':S.ptxSize==='large'?'Large':''} ${sd} pneumothorax`.trim();t=cap(t.replace(/^bilateral pneumothorax|Bilateral pneumothorax/,'Bilateral pneumothoraces').replace('bilateral pneumothorax','bilateral pneumothoraces'));
+    if(S.ptxSize)t+=S.ptxSize==='small'?' (under 2 cm at the apex)':' (2 cm or more at the apex)';
+    const ex=[];if(q.includes('deep'))ex.push('deep sulcus sign');if(q.includes('hydro'))ex.push('air–fluid level (hydropneumothorax)');
+    if(ex.length)t+=' with '+joinW(ex);
+    if(q.includes('tension')){t+=', with contralateral mediastinal shift concerning for tension physiology';P(B,t+'.',cap(t.replace(', with contralateral','; contralateral'))+'. Immediate decompression if clinically consistent',true)}
+    else P(B,t+'.',t,true);
+  } else if(isNo('ptx'))negB.push('pneumothorax');
+  if(isYes('eff')){const sd=S.effSide,q=S.effQ||[];
+    const sz={small:'small',mod:'moderate',large:'large',hemi:'large'}[S.effSize]||'';
+    let t=sd==='B'?`${sz?cap(sz)+' bilateral':'Bilateral'} pleural effusions`:cap(`${sz} ${sideAdj(sd)} pleural effusion`.trim().replace(/^\s+/,''));
+    if(S.effSize==='hemi')t+=' opacifying the hemithorax';
+    const ex=[];if(q.includes('subpulm'))ex.push('subpulmonic');if(q.includes('loc'))ex.push('loculated');if(q.includes('layer'))ex.push('layering');
+    if(ex.length)t+=` (${ex.join(', ')})`;
+    P(B,t+'.',t);
+  } else if(isNo('eff'))negB.push(supine?'large pleural effusion':'pleural effusion');
+  if(isYes('cons')){const lobes=(S.consLobes||[]),q=S.consQ||[],sil=S.consSil||[];
+    const silN={ascAo:'ascending aorta',rhb:'right heart border',rhd:'right hemidiaphragm',descAo:'descending aorta',lhb:'left heart border',lhd:'left hemidiaphragm'};
+    const silL={ascAo:'RUL',rhb:'RML',rhd:'RLL',lhb:'Lingula',lhd:'LLL'};
+    const all=[...new Set([...lobes,...sil.map(s=>silL[s]).filter(Boolean)])];
+    const ord=LOBES.map(l=>l[0]).filter(l=>all.includes(l));
+    let loc=ord.length?' in the '+joinW(ord.map(l=>LOBENAME[l])):'';
+    let t=(q.includes('patchy')?'Patchy airspace opacities':'Airspace consolidation')+loc;
+    const ex=[];if(q.includes('airb'))ex.push('air bronchograms');if(q.includes('cavit'))ex.push('cavitation');if(ex.length)t+=' with '+joinW(ex);
+    if(sil.length)t+=`, obscuring the ${joinW(sil.map(s=>silN[s]))}`;
+    if(q.includes('round'))t+=', round configuration';
+    P(B,t+'.',t.replace(/, obscuring.*$/,'')+(q.includes('cavit')?', concerning for cavitary pneumonia':', concerning for pneumonia in the right clinical setting'));
+  } else if(isNo('cons'))negB.push('focal consolidation');
+  if(isYes('atel')){const sd=sideAdj(S.atelSide),ty=S.atelType,q=S.atelQ||[];let t;
+    if(ty==='plate')t=`Subsegmental (plate-like) atelectasis at the ${S.atelSide==='B'?'lung bases':sd+' base'}`;
+    else if(ty==='whole')t=`Complete collapse of the ${sd||''} lung`.replace('  ',' ');
+    else if(ty==='lobar'){const l=(S.atelLobes||[]);t=`${l.length?cap(joinW(l.map(x=>LOBENAME[x]))):cap(sd+' lobar')} collapse`}
+    else t=cap(`${sd} atelectasis`.trim());
+    const vl={fissure:'fissural displacement',shift:'mediastinal shift toward the collapse',elev:'elevation of the hemidiaphragm'};
+    if(ty!=='plate'&&q.length)t+=` with volume loss (${q.map(x=>vl[x]).join(', ')})`;
+    const ip=ty==='whole'||ty==='lobar'?t+'; consider an obstructing lesion or mucus plug':t;
+    P(B,t+'.',ip);
+  } else if(isNo('atel'))negB.push('atelectasis');
+  if(isYes('edema')){const q=S.edemaQ||[];const nm={kerley:'Kerley B lines',cuff:'peribronchial cuffing',fissure:'fluid in the fissures',ceph:'cephalization',bat:'perihilar batwing distribution'};
+    let t=S.edemaType==='alv'?'Alveolar pulmonary edema':S.edemaType==='int'?'Interstitial pulmonary edema':'Pulmonary edema';
+    const s=q.filter(x=>!(x==='ceph'&&supine)).map(x=>nm[x]);if(s.length)t+=` (${s.join(', ')})`;
+    P(B,t+'.',t.replace(/ \(.*\)/,''));
+  } else if(isNo('edema'))negB.push('pulmonary edema');
+  if(isYes('ild')){const p={ret:'reticular',nod:'nodular',rn:'reticulonodular'}[S.ildPat]||'';const d={upper:', upper-zone predominant',lower:', lower-zone predominant',diffuse:', diffuse'}[S.ildDist]||'';
+    const t=cap(`${p} interstitial opacities${d}`.trim());P(B,t+'.',t)}
+  if(isYes('nod')){const q=S.nodQ||[];const z={upper:'upper',mid:'mid',lower:'lower'}[S.nodZone]||'';const sd=S.nodSide;
+    const what=q.includes('multi')?(S.nodSize==='mass'?'masses':'nodules'):(S.nodSize==='mass'?'mass':'nodule');
+    const feat=[];if(q.includes('calc'))feat.push('calcified');if(q.includes('spic'))feat.push('spiculated');if(q.includes('cav'))feat.push('cavitating');
+    let where=sd==='B'?` in both ${z?z+' ':''}lungs`:sd?` in the ${sideAdj(sd)} ${z?z+' ':''}lung`:z?` in the ${z} lung`:'';
+    let t=cap(`${q.includes('multi')?'Multiple ':''}${feat.length?feat.join(', ')+' ':''}${what}${S.nodSize==='mass'?' (3 cm or more)':''}${where}`.trim());
+    const ip=q.includes('calc')&&!q.includes('spic')?t+', likely granuloma':t+(q.includes('multi')?'; consider metastatic or granulomatous disease':'; recommend CT chest for characterization');
+    P(B,t+'.',ip);
+  } else if(isNo('nod'))negB.push('suspicious nodule or mass');
+  if(isYes('emph')){const q=S.emphQ||[];const nm={flat:'flattened hemidiaphragms',retro:'enlarged retrosternal clear space',lucent:'hyperlucent lungs',bullae:'bullae'};
+    const t='Hyperinflation'+(q.length?' with '+joinW(q.map(x=>nm[x])):'');P(B,t+', consistent with emphysema/COPD.',t+', consistent with COPD')}
+  if(negB.length)B.push('No '+joinOr(negB)+'.');
+  if(!B.length&&(S.ptx||S.eff||S.cons))B.push('Lungs are clear.');
+
+  /* C */
+  const r=ctr();const rT=r?` (cardiothoracic ratio ${r.toFixed(2)})`:'';
+  if(S.heart==='normal')C.push(`Heart size is normal${rT}.`);
+  else if(S.heart==='border')C.push(`Heart size is borderline${rT}${ap?', likely accentuated by AP technique':''}.`);
+  else if(S.heart==='big'){let t=`Cardiomegaly${rT}`;if(has('heartQ','water'))t+=' with a globular configuration';const ip=has('heartQ','water')?t+'; consider pericardial effusion (echocardiogram)':t+(ap?', though AP technique magnifies the heart':'');P(C,t+'.',ip)}
+  else if(r){C.push(r<.5?`Cardiothoracic ratio ${r.toFixed(2)}.`:`Cardiothoracic ratio ${r.toFixed(2)}.`)}
+  if(S.med==='normal')C.push('Mediastinal contours are within normal limits.');
+  if(S.med==='wide'){const t=`Widened mediastinum${supine||ap?' (AP technique may exaggerate this)':''}`;P(C,t+'.','Widened mediastinum: correlate clinically; CT angiography if aortic injury or dissection is a concern',true)}
+  if(S.med==='mass'){const c={ant:'Anterior',mid:'Middle',post:'Posterior'}[S.medComp];const t=c?`${c} mediastinal mass`:'Mediastinal mass';P(C,t+'.',t+'; recommend CT chest')}
+  if(isYes('aorta')){const q=S.aortaQ||[];const nm={tort:'tortuous (unfolded) thoracic aorta',knob:'enlarged aortic knob',calc:'aortic calcification'};if(q.length){const t=cap(joinW(q.map(x=>nm[x])));P(C,t+'.',q.includes('knob')?t:false)}}
+  const negC=[];
+  if(isYes('hila')){const sd=S.hilaSide;const t=sd==='B'?'Bilateral hilar enlargement':`Enlarged ${sideAdj(sd)} hilum`.replace('Enlarged  hilum','Hilar enlargement');const q={nodes:', lobulated, suggesting adenopathy',pa:', from enlarged pulmonary arteries'}[S.hilaQ]||'';P(C,t+q+'.',t+q+(S.hilaQ==='pa'?' (pulmonary hypertension?)':''))}
+  else if(isNo('hila'))negC.push('hilar enlargement');
+  if(isYes('pmed')){const q=S.pmedQ||[];let t='Pneumomediastinum'+(q.includes('cds')?' with continuous diaphragm sign':'');P(C,t+'.',t,true);if(q.includes('peri'))P(C,'Pneumopericardium.','Pneumopericardium',true)}
+  else if(isNo('pmed'))negC.push('pneumomediastinum');
+  if(isNo('aorta'))C.push('The aorta is normal in contour.');
+  if(negC.length)C.push('No '+joinOr(negC)+'.');
+
+  /* D */
+  if(isNo('dia'))D.push('Hemidiaphragms are normal in position and contour.');
+  if(isYes('dia')){const q=S.diaQ||[];const nm={elevR:'elevated right hemidiaphragm',elevL:'elevated left hemidiaphragm',flat:'flattened hemidiaphragms',obsR:'right hemidiaphragm obscured',obsL:'left hemidiaphragm obscured'};if(q.length){const t=cap(joinW(q.map(x=>nm[x])));P(D,t+'.',(q.includes('flat')&&isYes('emph'))?false:t)}}
+  if(isNo('cpa'))D.push('Costophrenic angles are sharp.');
+  if(isYes('cpa')){const sd=S.cpaSide;const t=sd==='B'?'Blunting of both costophrenic angles':`Blunting of the ${sideAdj(sd)} costophrenic angle`.replace('the  costo','a costo');
+    const effCovers=isYes('eff')&&(S.effSide===sd||S.effSide==='B');P(D,t+'.',effCovers?false:t+': small effusion or pleural thickening')}
+  if(isYes('free')){const sd=S.freeSide;const t=`Free air under the ${sd==='B'?'both hemidiaphragms':sideAdj(sd)+' hemidiaphragm'}`.replace('the both','both').replace('the  hemi','the hemi');P(D,t+', consistent with pneumoperitoneum.',t+' (pneumoperitoneum)',true)}
+  else if(isNo('free'))D.push('No free air under the diaphragm.');
+  if(isYes('abd')){const q=S.abdQ||[];const nm={stomach:'distended stomach',bowel:'dilated bowel loops in the upper abdomen',calc:'upper abdominal calcifications'};if(q.length){const t=cap(joinW(q.map(x=>nm[x])));P(D,t+'.',t)}}
+  if(isNo('abd'))D.push('Visualized upper abdomen is unremarkable.');
+
+  /* E */
+  if(isNo('dev')&&!(ett&&ett!=='none')&&!(S.tt&&S.tt!=='none'))E.push('No lines, tubes or devices.');
+  if(isYes('dev')){const d=S.devs||[];
+    if(d.includes('ng')){const m={ok:['Enteric tube tip in the stomach.',false],short:['Enteric tube side hole at or above the GE junction; advance about 10 cm.',1],eso:['Enteric tube coiled in the esophagus; reposition.',1],airway:['Enteric tube in the airway; remove.',2]}[S.ng]||['Enteric tube present.',false];P(E,m[0],m[1]?m[0].replace(/\.$/,''):false,m[1]===2)}
+    if(d.includes('dob')){const m={stomach:['Feeding tube tip in the stomach.',0],post:['Feeding tube tip beyond the pylorus.',0],eso:['Feeding tube tip in the esophagus; advance.',1],airway:['Feeding tube in the airway; remove before use.',2]}[S.dob]||['Feeding tube present.',0];P(E,m[0],m[1]?m[0].replace(/\.$/,''):false,m[1]===2)}
+    if(d.includes('cvc')){const site={rij:'Right internal jugular',lij:'Left internal jugular',rsc:'Right subclavian',lsc:'Left subclavian'}[S.cvcSite]||'Central venous';
+      const m={svc:['tip in the SVC',0],caj:['tip at the cavoatrial junction',0],ra:['tip in the right atrium; recommend withdrawing into the SVC',1],ij:['directed cephalad into the internal jugular vein; reposition',1],contra:['crosses into the contralateral venous system; reposition',1]}[S.cvc]||['in place',0];
+      const t=`${site} central venous catheter ${m[0]}`;P(E,t+'.',m[1]?t:false)}
+    if(d.includes('picc')){const m={svc:['PICC tip in the SVC',0],ra:['PICC tip in the right atrium; withdraw',1],ax:['PICC tip in the axillary/subclavian vein',1],ij:['PICC directed into the internal jugular vein; reposition',1]}[S.picc]||['PICC in place',0];P(E,m[0]+'.',m[1]?m[0]:false)}
+    if(d.includes('swan')){const m={ok:['Pulmonary artery catheter tip within 2 cm of the hilum',0],periph:['Pulmonary artery catheter tip too peripheral; withdraw',1],coil:['Pulmonary artery catheter coiled in the right heart',1]}[S.swan]||['Pulmonary artery catheter in place',0];P(E,m[0]+'.',m[1]?m[0]:false)}
+    if(d.includes('hd')){const m={ok:['Dialysis catheter tips in the SVC/right atrium',0],other:['Dialysis catheter malpositioned',1]}[S.hd]||['Dialysis catheter in place',0];P(E,m[0]+'.',m[1]?m[0]:false)}
+    if(d.includes('ct')){const sd=sideAdj(S.ctSide);const m={ok:['in appropriate position',0],fissure:['within a fissure',1],out:['with its side hole outside the chest wall; advance or replace',1]}[S.ct]||['in place',0];const t=cap(`${sd} chest tube ${m[0]}`.trim());P(E,t+'.',m[1]?t:false)}
+    const pp=d.includes('ppm')?'Pacemaker':d.includes('aicd')?'AICD':null;
+    if(pp){const both=d.includes('ppm')&&d.includes('aicd')?'Pacemaker/AICD':pp;const m={ok:['leads in expected position',0],mal:['lead malpositioned or dislodged',1],fx:['lead fracture',1]}[S.ppm]||['in place',0];const t=`${both} ${m[0]}`;P(E,t+'.',m[1]?t:false)}
+    if(d.includes('iabp')){const m={ok:['Intra-aortic balloon pump marker just below the aortic arch',0],high:['Intra-aortic balloon pump marker too high; withdraw',1],low:['Intra-aortic balloon pump marker too low; advance',1]}[S.iabp]||['Intra-aortic balloon pump in place',0];P(E,m[0]+'.',m[1]?m[0]:false)}
+    if(d.includes('stern'))E.push('Median sternotomy wires.');
+    if(d.includes('valve'))E.push('Prosthetic cardiac valve.');
+  }
+  if(isYes('bones')){const q=S.bonesQ||[];const sd=S.bonesSide;const sdT=sd==='B'?'bilateral ':sd?sideAdj(sd)+' ':'';
+    const nm={rib:`${sdT}rib fracture(s)`,clav:`${sdT}clavicle fracture`,spine:'vertebral compression deformity',lesion:'lytic or blastic osseous lesion',old:`old healed ${sdT}fracture(s)`};
+    if(q.length){const acute=q.filter(x=>x!=='old');const t=cap(joinW(q.map(x=>nm[x])));P(E,t+'.',acute.length?cap(joinW(acute.map(x=>nm[x]))):false)}
+  } else if(isNo('bones'))E.push('No acute osseous abnormality.');
+  if(isYes('soft')){const q=S.softQ||[];const sd=S.softSide;const nm={subq:`subcutaneous emphysema${sd?' ('+(sd==='B'?'bilateral':sideAdj(sd)+' chest wall')+')':''}`,mast:`${sd?sideAdj(sd)+' ':''}mastectomy`,mass:'soft-tissue mass or swelling'};if(q.length){const t=cap(joinW(q.map(x=>nm[x])));P(E,t+'.',q.filter(x=>x!=='mast').length?cap(joinW(q.filter(x=>x!=='mast').map(x=>nm[x]))):false)}}
+  else if(isNo('soft'))E.push('Soft tissues are unremarkable.');
+
+  // order impression: critical first
+  const ordered=[...imp.filter(x=>crit.has(x)),...imp.filter(x=>!crit.has(x))];
+  const anyAnswered=['ptx','eff','cons','heart','med'].some(k=>S[k]);
+  if(!ordered.length&&anyAnswered)ordered.push('No acute cardiopulmonary process.');
+  if(limits.length&&ordered.length)ordered.push(cap(`study limited by ${joinW(limits.map(l=>l.replace(/ \(.*\)/,'')))}`));
+  if(S.cmp==='same')ordered.push(`No significant change from prior${S.priorDate?' ('+S.priorDate.trim()+')':''}`);
+  if(S.cmp==='changed')ordered.push(`Changed from prior${S.priorDate?' ('+S.priorDate.trim()+')':''}`);
+  return {tech,cmpT,A,B,C,D,E,imp:ordered.map(x=>x.replace(/\.$/,'')),crit:new Set([...crit].map(x=>x.replace(/\.$/,'')))};
+}
+
+/* ===================== Render ===================== */
+function setPressed(){document.querySelectorAll('.chip[data-k]').forEach(b=>{const k=b.dataset.k,v=b.dataset.v,f=F[k];b.setAttribute('aria-pressed',(f.type==='multi'?has(k,v):S[k]===v)?'true':'false')})}
+function show(id,html){const el=document.getElementById(id);if(!el)return;if(html){el.innerHTML=html;el.hidden=false}else{el.hidden=true;el.innerHTML=''}}
+function update(){
+  setPressed();
+  document.querySelectorAll('[data-f]').forEach(el=>{const f=F[el.dataset.f];if(f&&f.when)el.hidden=!f.when()});
+  document.querySelectorAll('[data-kids]').forEach(el=>el.hidden=S[el.dataset.kids]!=='yes');
+  const ribs=num('ribs');
+  show('ribsOut',ribs===null?'':ribs<8?`<b>${ribs}</b> posterior ribs: low lung volumes. Bases crowd and the heart looks larger.`:ribs>10?`<b>${ribs}</b> posterior ribs: hyperexpanded. Look for COPD.`:`<b>${ribs}</b> posterior ribs: adequate inspiration.`);
+  const cm=num('ettCm');let eh='';
+  if(cm!==null){if(cm<2)eh=`${cm} cm is too close to the carina. Withdraw about 2 cm.`;else if(cm>7)eh=`${cm} cm is high. Advance.`;else if(cm<3||cm>5)eh=`${cm} cm is acceptable; 3–5 cm is ideal with the head neutral.`;
+    if(!S.ett)eh+=' Position will be filled from the distance.';}
+  show('hint-ettCm',eh);
+  const r=ctr();show('ctrOut',r?`Cardiothoracic ratio <b>${r.toFixed(2)}</b> · ${r<.5?'under 50%':'over 50%'}${['ap_up','ap_semi','ap_sup'].includes(S.proj)?' on an AP film, which magnifies the heart':''}`:'');
+  // silhouette helper
+  const sil=S.consSil||[];const silL={ascAo:'right upper lobe',rhb:'right middle lobe',rhd:'right lower lobe',descAo:'left upper or lower lobe',lhb:'lingula',lhd:'left lower lobe'};
+  show('hint-consSil',sil.length?'Points to: '+[...new Set(sil.map(s=>silL[s]))].join(', ')+'. These are added to the location.':'');
+  const bh=[];
+  if(isYes('ptx')&&has('ptxQ','tension'))bh.push('Tension pneumothorax is a clinical diagnosis. Treat the patient, not the film.');
+  if(isYes('eff')&&S.effSize==='hemi')bh.push('Opacified hemithorax: shift away means effusion, shift toward means collapse, no shift suggests pneumonia or tumor with both.');
+  if(isYes('edema')&&has('edemaQ','ceph')&&S.proj==='ap_sup')bh.push('Cephalization is not reliable on a supine film and will be left out.');
+  show('hint-B',bh.join(' '));
+  const ehs=[];
+  if(isYes('dev')&&(has('devs','cvc')||has('devs','picc')||has('devs','swan')||has('devs','hd'))&&!S.ptx)ehs.push('After any central line, check for a pneumothorax (Step B).');
+  if(isYes('dev')&&!(S.devs||[]).length)ehs.push('Choose which devices are present.');
+  show('hint-E',ehs.join(' '));
+  // step dots
+  document.querySelectorAll('.stepbtn').forEach((b,i)=>{const keys=LAYOUT[STEPS[i].id];b.classList.toggle('done',keys.some(k=>{const x=S[k];return Array.isArray(x)?x.length:x!==undefined&&x!==''}));b.setAttribute('aria-current',i===cur?'step':'false')});
+  // output
+  const o=compute();
+  document.getElementById('impWrap').innerHTML=o.imp.length?`<ol class="imp">${o.imp.map(x=>`<li${o.crit.has(x)?' class="crit"':''}>${esc(x)}</li>`).join('')}</ol>`:'<p class="empty">The impression builds as you work through the steps. Hover any choice, or tap ⓘ, for a diagram and what to look for.</p>';
+  const secs=[];
+  if(S.indication&&S.indication.trim())secs.push('INDICATION: '+S.indication.trim());
+  if(o.tech.length)secs.push('TECHNIQUE: '+o.tech.join(' '));
+  if(o.cmpT)secs.push('COMPARISON: '+o.cmpT);
+  const fl=[['Airway',o.A],['Lungs and pleura',o.B],['Heart and mediastinum',o.C],['Diaphragm',o.D],['Lines, bones and soft tissues',o.E]].filter(x=>x[1].length).map(x=>`${x[0]}: ${x[1].join(' ')}`);
+  if(fl.length)secs.push('FINDINGS:\n'+fl.join('\n'));
+  if(o.imp.length)secs.push('IMPRESSION:\n'+o.imp.map((x,i)=>`${i+1}. ${x}.`).join('\n'));
+  const dict=secs.length?'CHEST RADIOGRAPH\n'+secs.join('\n\n'):'';
+  document.getElementById('dict').textContent=dict||'Nothing entered yet.';
+  window.__out={imp:o.imp.map((x,i)=>`${i+1}. ${x}.`).join('\n'),all:dict};
+}
+
+/* ===================== Popovers ===================== */
+const pop=document.getElementById('pop');let hoverT=null,pinned=false;const fcache={};
+const film=k=>{if(!k)return'';if(!(k in fcache))fcache[k]=filmSVG(k);return fcache[k]};
+const NOTE='<span class="note">Schematic drawing, patient’s right on the viewer’s left.</span>';
+function silTable(){return `<table><tr><th>Border lost</th><th>Lobe</th></tr><tr><td>Ascending aorta</td><td>Right upper lobe</td></tr><tr><td>Right heart border</td><td>Right middle lobe</td></tr><tr><td>Right hemidiaphragm</td><td>Right lower lobe</td></tr><tr><td>Descending aorta</td><td>Left upper or lower lobe</td></tr><tr><td>Left heart border</td><td>Lingula</td></tr><tr><td>Left hemidiaphragm</td><td>Left lower lobe</td></tr></table>`}
+function optTip(k,v){const f=F[k];const o=f.opts.find(x=>x[0]===v);const title=f.type==='find'?f.label:o[1];
+  return `<div class="pt"><span>${esc(title)}</span>${f.ref?`<span class="pg">${esc(f.ref)}</span>`:''}</div>${film(o[3])}${o[2]?`<p>${esc(o[2])}</p>`:''}${o[3]?NOTE:''}`}
+function fieldTip(k){
+  const f=F[k];let h=`<div class="pt"><span>${esc(f.label)}</span><button class="close" type="button" aria-label="Close">×</button></div>`;
+  if(f.ref)h+=`<span class="pg">${esc(f.ref)}</span>`;
+  if(f.ex)h+=film(f.ex);
+  if(f.tip)h+=`<p>${esc(f.tip)}</p>`;
+  if(k==='consSil'||k==='cons')h+=silTable();
+  const kidOpts=(f.type==='find'?f.kids.map(c=>F[c]).filter(c=>c.opts):[f]).flatMap(c=>(c.type==='find'?[]:(c.opts||[])).filter(o=>o[3]&&o[3]!==f.ex).map(o=>({o,c})));
+  const seen=new Set();const items=kidOpts.filter(({o})=>!seen.has(o[3])&&seen.add(o[3]));
+  if(f.type!=='find'&&f.opts)f.opts.filter(o=>o[2]&&!o[3]).forEach(o=>{h+=`<div class="exitem"><b>${esc(o[1])}</b><p>${esc(o[2])}</p></div>`});
+  if(items.length){h+=`<div class="grid2">${items.map(({o})=>`<div class="exitem"><b>${esc(o[1])}</b>${film(o[3])}${o[2]?`<p>${esc(o[2])}</p>`:''}</div>`).join('')}</div>`}
+  if(f.ex||items.length)h+=NOTE;
+  return h;
+}
+function place(el){if(innerWidth<=640){pop.style.left='';pop.style.top='';return}
+  const r=el.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;let x=Math.min(Math.max(12,r.left),innerWidth-pw-12),y=r.bottom+8;if(y+ph>innerHeight-12)y=Math.max(12,r.top-ph-8);pop.style.left=x+'px';pop.style.top=y+'px'}
+function openPop(html,el,pin){pinned=!!pin;pop.innerHTML=html;pop.classList.toggle('pinned',pinned);pop.hidden=false;place(el)}
+function closePop(){pop.hidden=true;pinned=false;pop.dataset.for=''}
+document.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse'||pinned)return;const c=e.target.closest('[data-tip]');if(!c)return;clearTimeout(hoverT);hoverT=setTimeout(()=>{const [k,v]=c.dataset.tip.split(':');openPop(optTip(k,v),c,false)},220)});
+document.addEventListener('pointerout',e=>{if(e.pointerType!=='mouse'||pinned)return;const c=e.target.closest('[data-tip]');if(!c)return;if(e.relatedTarget&&c.contains(e.relatedTarget))return;clearTimeout(hoverT);closePop()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop()});
+
+/* ===================== Events ===================== */
+function goto(i){cur=Math.max(0,Math.min(STEPS.length-1,i));document.querySelectorAll('.pane').forEach(p=>p.hidden=+p.dataset.pane!==cur);closePop();update();
+  const top=document.getElementById('steps').getBoundingClientRect().top+scrollY-8;if(scrollY>top)scrollTo({top,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+function markNormal(step){
+  if(step==='film'){if(!S.pen)S.pen='ok';if(!S.rot)S.rot='none';if(!S.angle)S.angle='ok';update();return}
+  const keys=LAYOUT[step];keys.forEach(k=>{const f=F[k];if(f.when&&!f.when())return;if(S[k]===undefined&&f.normal)S[k]=f.normal});
+  if(step==='A'){if(!S.ett)S.ett='none';if(!S.tt)S.tt='none'}
+  update();
+}
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('.close')){closePop();return}
+  const info=t.closest('[data-info]');
+  if(info){e.preventDefault();if(pinned&&pop.dataset.for===info.dataset.info){closePop();return}openPop(fieldTip(info.dataset.info),info,true);pop.dataset.for=info.dataset.info;return}
+  if(pinned&&!t.closest('#pop'))closePop();
+  const sb=t.closest('[data-step]');if(sb){goto(+sb.dataset.step);return}
+  const go=t.closest('[data-go]');if(go){goto(+go.dataset.go);return}
+  const nm=t.closest('[data-normal]');if(nm){markNormal(nm.dataset.normal);toast(nm.dataset.normal==='film'?'Film marked adequate.':'Unanswered items marked normal.');return}
+  const ch=t.closest('.chip[data-k]');
+  if(ch){const k=ch.dataset.k,v=ch.dataset.v,f=F[k];
+    if(f.type==='multi'){const a=new Set(S[k]||[]);a.has(v)?a.delete(v):a.add(v);S[k]=[...a]}
+    else S[k]=S[k]===v?undefined:v;
+    update();return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.k){S[t.dataset.k]=t.value;update()}});
+addEventListener('resize',()=>{if(!pop.hidden&&innerWidth<=640){pop.style.left='';pop.style.top=''}});
+document.getElementById('reset').addEventListener('click',()=>{S={};document.querySelectorAll('input').forEach(i=>i.value='');goto(0);toast('Cleared for a new film.')});
+function toast(m){const t=document.getElementById('toast');t.textContent=m;clearTimeout(toast.t);toast.t=setTimeout(()=>t.textContent='',2200)}
+async function copy(txt,label){if(!txt){toast('Nothing to copy yet.');return}
+  try{await navigator.clipboard.writeText(txt);toast(label+' copied.')}
+  catch(_){const d=document.getElementById('dict');const r=document.createRange();r.selectNodeContents(d);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Copy blocked here. The full report is selected; press Ctrl/⌘ C.')}}
+document.getElementById('copyImp').addEventListener('click',()=>copy(window.__out&&window.__out.imp,'Impression'));
+document.getElementById('copyAll').addEventListener('click',()=>copy(window.__out&&window.__out.all,'Full report'));
+
+build();update();
+</script>
+</body>
+</html>

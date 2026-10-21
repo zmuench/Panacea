@@ -7,6 +7,7 @@ Clinical documentation and residency planning tools.
 | Hx | `/hx/` | HPI builder: chief complaint → pertinent positives/negatives → HPI |
 | Px | `/px/` | Exam builder: focused exams by complaint, plus ICU, comprehensive neuro and NIHSS |
 | Tracing | `/tracing/` | EKG dictation through Dubin’s five steps (rate, rhythm, axis, hypertrophy, infarction) with hover example strips; writes the full read and impression |
+| Silhouette | `/silhouette/` | Chest X-ray read: film check, then ABCDE with an absent/present prompt for each finding and schematic hover diagrams (after Herring’s Learning Radiology); writes the report and impression |
 | Dispo | `/dispo/` | ED MDM and discharge instructions |
 | Consult | `/consult/` | Consult call prep by service: what they'll ask, call script, note line |
 | ICU Rounder | `/icu-rounder/` | Daily ICU rounds and problem-based A/P, with CPOT, RASS and CAM-ICU calculators |
