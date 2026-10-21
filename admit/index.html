@@ -563,7 +563,16 @@ function dataKeys(){
 const PANES={
  pt:()=>`<div class="row">${inp('pt.bed','Bed',{w:'s',ph:'e.g. 12'})}${inp('pt.age','Age',{w:'s',num:1})}<div class="in s"><span>Sex</span>${seg('pt.sex',['M','F'])}</div>${inp('pt.height','Height',{w:'s',num:1,ph:'in'})}<div class="in s"><span>Unit</span>${seg('pt.hUnit',['in','cm'])}</div>${inp('pt.admit','Admit date',{type:'date',w:'s'})}</div>
   <div class="field"><div class="flab">Level of care</div>${seg('pt.level',['ICU','Stepdown','Floor'])}</div>
-  <div class="row">${inp('pt.service','Service',{ph:'e.g. MICU, Hospital Medicine'})}${inp('pt.source','Admitted from',{ph:'ED / transfer / OR / floor'})}${inp('pt.allergies','Allergies',{ph:'NKDA'})}</div>
+  <div class="row">${inp('pt.service','Service',{ph:'e.g. MICU, Hospital Medicine'})}${inp('pt.allergies','Allergies',{ph:'NKDA'})}</div>
+  <div class="field"><div class="flab">Admitted from</div>${seg('pt.source',['ED','Floor transfer','Outside hospital','OR / PACU','Direct admit'])}</div>
+  ${S.pt.source==='Floor transfer'?`<div class="pcard"><div class="pcb">
+    <div class="row">${inp('pt.hospAdmit','Hospital admit date',{type:'date',w:'s'})}${inp('pt.fromUnit','From unit',{ph:'e.g. 6 West, Hospital Medicine'})}</div>
+    ${hdText()?`<p class="calcout">${esc(hdText())}</p>`:''}
+    <div class="field"><div class="flab">Reason for transfer</div>${seg('pt.xferWhy',['Rapid response','Hypotension / shock','Respiratory failure','Altered mental status','Arrhythmia','Bleeding','Needs ICU-level monitoring'])}</div>
+    ${inp('pt.xferDetail','Transfer details',{ta:1,rows:2,ph:'e.g. RRT called for SBP 70s and lactate 4.2 after 3 L; started norepinephrine'})}
+    ${inp('pt.course','Hospital course to date',{ta:1,rows:4,ph:'Admitted *** for ***. Course notable for ***.'})}
+  </div></div>`:''}
+  ${S.pt.source==='Outside hospital'?inp('pt.osh','Transferring hospital / reason',{ph:'e.g. *** Hospital, for higher level of care'}):''}
   <div class="field"><div class="flab">Code status</div>${seg('pt.code',['Full code','DNR','DNR/DNI','Comfort care'])}</div>
   ${inp('pt.hcpoa','Decision-maker / HCPOA',{ph:'e.g. wife ***'})}
   ${inp('pt.cc','Chief complaint',{ph:'e.g. shortness of breath'})}
@@ -650,11 +659,15 @@ function renderPane(keepScroll){
    Note
    ========================================================= */
 const htIn=()=>{const h=parseFloat(S.pt.height);if(!h)return null;return S.pt.hUnit==='cm'?h/2.54:h};
+const isXfer=()=>S.pt.source==='Floor transfer';
+function hospDay(){const a=S.pt.hospAdmit,b=S.pt.admit;if(!a||!b)return null;const d=Math.round((new Date(b)-new Date(a))/864e5)+1;return d>0?d:null}
+function hdText(){if(!S.pt.hospAdmit)return '';const d=hospDay();return d?`Transfer on hospital day ${d}.`:''}
 function pmhList(){const a=S.pmh.map(k=>PMH.find(p=>p[0]===k)[1]);const o=(get('hx.pmhOther')||'').split(/\n|;|,/).map(s=>s.trim()).filter(Boolean);return a.concat(o)}
 function oneLiner(){
   if(S.pt.oneLiner&&S.pt.oneLiner.trim())return S.pt.oneLiner.trim();
   const p=S.pt,a=p.age?p.age+(p.sex||''):'',pm=pmhList();
   if(!a&&!p.cc&&!pm.length)return '';
+  if(isXfer()){const why=(p.xferWhy||'***').toLowerCase(),d=hospDay();return `${a||'***'} with ${pm.length?pm.join(', '):'***'}, admitted ${p.hospAdmit||'***'} for ${p.cc||'***'}, transferred from ${p.fromUnit||'the floor'} to ${p.level||'ICU'}${d?' on hospital day '+d:''} for ${why}${S.probs.length?'; now with '+S.probs.filter(x=>!(LIB[x.key]&&LIB[x.key].sys==='chronic')&&!['ckd','esrd'].includes(x.key)).slice(0,2).map(x=>x.name.charAt(0).toLowerCase()+x.name.slice(1)).join(' and '):''}.`}
   return `${a||'***'} with ${pm.length?pm.join(', '):'***'} presenting with ${p.cc||'***'}, admitted to ${p.level||'***'} for ${(()=>{const a=S.probs.filter(x=>!(LIB[x.key]&&LIB[x.key].sys==='chronic')&&!['ckd','esrd'].includes(x.key));return a.length?a.slice(0,2).map(x=>x.name.charAt(0).toLowerCase()+x.name.slice(1)).join(' and '):'***'})()}.`;
 }
 function probPlan(p){return p.items.filter(i=>i.on).map(i=>i.t.replace(/^\?/,'Consider: ')).concat((p.extra||'').split('\n').map(s=>s.trim()).filter(Boolean))}
@@ -677,11 +690,14 @@ function apText(){
 }
 function noteText(){
   const p=S.pt,sec=[];
-  const head=[`ADMISSION H&P — ${p.level||'***'}${p.service?' · '+p.service:''}`];
-  if(p.admit)head.push('Date: '+p.admit);if(p.bed)head.push('Bed: '+p.bed);if(p.source)head.push('Admitted from: '+p.source);
+  const head=[`${isXfer()?(p.level==='Floor'?'TRANSFER':((p.level||'ICU').toUpperCase()+' TRANSFER'))+' NOTE':'ADMISSION H&P'} — ${p.level||'***'}${p.service?' · '+p.service:''}`];
+  if(p.admit)head.push((isXfer()?'Transfer date: ':'Date: ')+p.admit);if(p.bed)head.push('Bed: '+p.bed);
+  if(isXfer()){const d=hospDay();head.push(`Transferred from: ${p.fromUnit||'floor'}${p.hospAdmit?' (hospital admission '+p.hospAdmit+(d?', hospital day '+d:'')+')':''}`);if(p.xferWhy)head.push('Reason for transfer: '+p.xferWhy)}
+  else if(p.source)head.push('Admitted from: '+p.source+(p.source==='Outside hospital'&&p.osh?' — '+p.osh:''));
   sec.push(head.join('\n'));
   if(p.cc)sec.push('CHIEF COMPLAINT: '+p.cc);
-  if(p.hpi)sec.push('HPI:\n'+p.hpi.trim());
+  if(isXfer()&&(p.course||p.xferDetail)){const c=[];if(p.course)c.push(p.course.trim());if(p.xferDetail)c.push('Events leading to transfer: '+p.xferDetail.trim());sec.push('HOSPITAL COURSE:\n'+c.join('\n'))}
+  if(p.hpi)sec.push((isXfer()?'HPI (on admission):\n':'HPI:\n')+p.hpi.trim());
   const pm=pmhList();if(pm.length)sec.push('PAST MEDICAL HISTORY:\n'+pm.map(x=>'- '+x).join('\n'));
   if(get('hx.psh'))sec.push('PAST SURGICAL HISTORY:\n'+get('hx.psh').trim());
   if(get('hx.meds'))sec.push('HOME MEDICATIONS:\n'+get('hx.meds').split('\n').map(s=>s.trim()).filter(Boolean).map(x=>'- '+x).join('\n'));
