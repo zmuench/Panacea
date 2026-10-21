@@ -727,12 +727,13 @@ function addProb(key){const L=LIB[key];if(!L)return;if(S.probs.some(p=>p.key===k
   const isChronic=k=>(LIB[k]&&LIB[k].sys==='chronic')||k==='ckd'||k==='esrd';
   if(isChronic(key))S.probs.push(np);else{const i=S.probs.findIndex(p=>isChronic(p.key));if(i<0)S.probs.push(np);else S.probs.splice(i,0,np)}}
 const PMH2PROB={htn:'c_htn',hld:'c_hld',cad:'c_cad',hfref:'c_hf',hfpef:'c_hf',afib:'c_afib',copd:'c_copd',dm2:'c_dm',hypothyroid:'c_hypothy',gerd:'c_gerd',depression:'c_dep',osa:'c_osa',bph:'c_bph',ckd:'ckd',esrd:'esrd'};
-const pop=document.getElementById('pop');
-function openPop(html,el){pop.innerHTML=html;pop.hidden=false;if(innerWidth>640){const r=el.getBoundingClientRect();pop.style.left=Math.min(Math.max(12,r.left-200),innerWidth-pop.offsetWidth-12)+'px';let y=r.bottom+8;if(y+pop.offsetHeight>innerHeight-12)y=Math.max(12,r.top-pop.offsetHeight-8);pop.style.top=y+'px'}}
+const pop=document.getElementById('pop');let pinned=false;
+function closePop(){pop.hidden=true;pinned=false}
+function openPop(html,el){pinned=lastPT!=='mouse';pop.innerHTML=html;pop.hidden=false;if(innerWidth>640){const r=el.getBoundingClientRect();pop.style.left=Math.min(Math.max(12,r.left-200),innerWidth-pop.offsetWidth-12)+'px';let y=r.bottom+8;if(y+pop.offsetHeight>innerHeight-12)y=Math.max(12,r.top-pop.offsetHeight-8);pop.style.top=y+'px'}}
 document.addEventListener('click',e=>{
   const t=e.target;
-  if(t.closest('.close')){pop.hidden=true;return}
-  if(!pop.hidden&&!t.closest('#pop')&&!t.closest('[data-tipk]'))pop.hidden=true;
+  if(t.closest('.close')){closePop();return}
+  if(!pop.hidden&&!t.closest('#pop')&&!t.closest('[data-tipk]'))closePop();
   const st=t.closest('[data-step]');if(st){goto(+st.dataset.step);return}
   const go=t.closest('[data-go]');if(go){goto(+go.dataset.go);return}
   const sg=t.closest('[data-seg]');if(sg){const p=sg.dataset.seg,v=sg.dataset.v;set(p,get(p)===v?undefined:v);renderPane(true);return}
@@ -791,6 +792,22 @@ function sendToRounder(){
   const h=document.getElementById('hint-send');if(h){h.textContent=m;h.hidden=false}
   toast(m+' <a href="../icu-rounder/">Open ICU Rounder</a>',true);
 }
+
+
+/* ---------- hover help: with a mouse, popovers close once the pointer leaves both the trigger and the popover ---------- */
+let lastPT='mouse',anchor=null,closeT=null,infoT=null;
+document.addEventListener('pointerdown',e=>{lastPT=e.pointerType||'mouse'},true);
+{const _op=openPop;openPop=function(h,el,pin){anchor=el;clearTimeout(closeT);closeT=null;_op(h,el,pin)}}
+const overPop=t=>!!(t&&t.closest&&(t.closest('#pop')||(anchor&&anchor.contains(t))));
+document.addEventListener('pointermove',e=>{
+  if(e.pointerType!=='mouse'||pop.hidden||pinned)return;
+  if(overPop(e.target)){clearTimeout(closeT);closeT=null}
+  else if(!closeT)closeT=setTimeout(()=>{closeT=null;if(!pinned)closePop()},160);
+},{passive:true});
+document.documentElement.addEventListener('mouseleave',()=>{if(!pinned)closePop()});
+addEventListener('blur',()=>{if(!pinned)closePop()});
+addEventListener('scroll',()=>{if(!pinned&&!pop.hidden&&!pop.matches(':hover'))closePop()},{passive:true});
+document.addEventListener('pointerover',e=>{if(e.pointerType!=='mouse'||pinned)return;const b=e.target.closest('[data-tipk]');if(!b)return;clearTimeout(infoT);infoT=setTimeout(()=>{if(b.matches(':hover')&&!pinned&&(pop.hidden||anchor!==b))b.click()},200)});
 
 build();
 </script>
