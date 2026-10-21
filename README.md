@@ -10,6 +10,7 @@ Clinical documentation and residency planning tools.
 | Silhouette | `/silhouette/` | Chest X-ray read: film check, then ABCDE with an absent/present prompt for each finding and schematic hover diagrams (after Herring’s Learning Radiology); writes the report and impression |
 | Dispo | `/dispo/` | ED MDM and discharge instructions |
 | Consult | `/consult/` | Consult call prep by service: what they'll ask, call script, note line |
+| Admit | `/admit/` | ICU and floor H&P: problem library with default plans, pertinent-data prompts, antibiotic selector by source, FAST HUGS BID / floor checklist; sends the patient to ICU Rounder |
 | ICU Rounder | `/icu-rounder/` | Daily ICU rounds and problem-based A/P, with CPOT, RASS and CAM-ICU calculators |
 | Spectrum | `/spectrum/` | ID consults: HPI, cultures and antimicrobial days, daily ID note, bugs and drugs reference |
 | Sweep | `/sweep/` | Morning ICU considerations, system by system |
