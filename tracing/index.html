@@ -778,13 +778,12 @@ function fieldTip(k){
   if(f.opts)f.opts.filter(o=>o[2]).forEach(o=>{h+=`<div class="exitem"><b>${esc(o[1])}${o[4]?` <span class="pg">${o[4]}</span>`:''}</b>${exC(o[3])}<p>${esc(o[2])}</p></div>`});
   return h;
 }
-function place(el){
-  if(innerWidth<=640){pop.style.left='';pop.style.top='';return}
-  const r=el.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;
-  let x=Math.min(Math.max(12,r.left),innerWidth-pw-12),y=r.bottom+8;
-  if(y+ph>innerHeight-12)y=Math.max(12,r.top-ph-8);
-  pop.style.left=x+'px';pop.style.top=y+'px';
-}
+function place(el){if(innerWidth<=640){pop.style.left='';pop.style.top='';pop.style.maxHeight='';return}
+  const r=el.getBoundingClientRect(),pw=pop.offsetWidth,need=pop.scrollHeight;
+  const below=innerHeight-r.bottom-20,above=r.top-20,useBelow=below>=Math.min(need,320)||below>=above;
+  const room=Math.max(140,useBelow?below:above);pop.style.maxHeight=room+'px';const ph=Math.min(need,room);
+  const x=Math.min(Math.max(12,r.left),innerWidth-pw-12),y=useBelow?r.bottom+8:r.top-8-ph;
+  pop.style.left=x+'px';pop.style.top=Math.max(8,y)+'px'}
 function openPop(html,el,pin){pinned=!!pin;pop.innerHTML=html;pop.classList.toggle('pinned',pinned);pop.hidden=false;place(el)}
 function closePop(){pop.hidden=true;pinned=false}
 document.addEventListener('pointerover',e=>{
@@ -844,7 +843,7 @@ document.getElementById('copyAll').addEventListener('click',()=>copy(window.__ou
 /* ---------- hover help: with a mouse, popovers close once the pointer leaves both the trigger and the popover ---------- */
 let lastPT='mouse',anchor=null,closeT=null,infoT=null;
 document.addEventListener('pointerdown',e=>{lastPT=e.pointerType||'mouse'},true);
-{const _op=openPop;openPop=function(h,el,pin){anchor=el;clearTimeout(closeT);closeT=null;_op(h,el,pin)}}
+{const _op=openPop;openPop=function(h,el,pin){anchor=el;clearTimeout(closeT);closeT=null;pop.style.pointerEvents=(!pin&&el.matches('[data-tip]'))?'none':'';_op(h,el,pin)}}
 const overPop=t=>!!(t&&t.closest&&(t.closest('#pop')||(anchor&&anchor.contains(t))));
 document.addEventListener('pointermove',e=>{
   if(e.pointerType!=='mouse'||pop.hidden||pinned)return;

@@ -729,7 +729,13 @@ function addProb(key){const L=LIB[key];if(!L)return;if(S.probs.some(p=>p.key===k
 const PMH2PROB={htn:'c_htn',hld:'c_hld',cad:'c_cad',hfref:'c_hf',hfpef:'c_hf',afib:'c_afib',copd:'c_copd',dm2:'c_dm',hypothyroid:'c_hypothy',gerd:'c_gerd',depression:'c_dep',osa:'c_osa',bph:'c_bph',ckd:'ckd',esrd:'esrd'};
 const pop=document.getElementById('pop');let pinned=false;
 function closePop(){pop.hidden=true;pinned=false}
-function openPop(html,el){pinned=lastPT!=='mouse';pop.innerHTML=html;pop.hidden=false;if(innerWidth>640){const r=el.getBoundingClientRect();pop.style.left=Math.min(Math.max(12,r.left-200),innerWidth-pop.offsetWidth-12)+'px';let y=r.bottom+8;if(y+pop.offsetHeight>innerHeight-12)y=Math.max(12,r.top-pop.offsetHeight-8);pop.style.top=y+'px'}}
+function place(el){if(innerWidth<=640){pop.style.left='';pop.style.top='';pop.style.maxHeight='';return}
+  const r=el.getBoundingClientRect(),pw=pop.offsetWidth,need=pop.scrollHeight;
+  const below=innerHeight-r.bottom-20,above=r.top-20,useBelow=below>=Math.min(need,320)||below>=above;
+  const room=Math.max(140,useBelow?below:above);pop.style.maxHeight=room+'px';const ph=Math.min(need,room);
+  const x=Math.min(Math.max(12,r.left-200),innerWidth-pw-12),y=useBelow?r.bottom+8:r.top-8-ph;
+  pop.style.left=x+'px';pop.style.top=Math.max(8,y)+'px'}
+function openPop(html,el){pinned=lastPT!=='mouse';pop.innerHTML=html;pop.hidden=false;place(el)}
 document.addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('.close')){closePop();return}
