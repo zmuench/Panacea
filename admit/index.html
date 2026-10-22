@@ -101,6 +101,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .pi:hover{background:var(--sunk)}
 .dest{font-weight:400;color:var(--muted);font-size:.78rem}
 .pdata{margin:0 6px;font-size:.84rem;color:var(--muted)}
+.comb{display:block;width:100%;border:0;border-bottom:1px dashed var(--line);background:none;color:var(--accent);font:inherit;font-size:.8rem;font-weight:700;padding:5px 10px;text-align:left;cursor:pointer}
+.comb:hover{background:var(--accent-soft)}
+.pcard.grouped{border-color:var(--accent)}
+.pcard.grouped .pch+.pch{border-top:0}
+.pi.merged .tx{text-decoration:line-through;text-decoration-color:#9AA7B4}
+.pi .why{text-decoration:none;display:inline;font-size:.78rem;color:var(--muted);font-style:italic}
+.conf{margin:0 6px;font-size:.84rem;color:#9A3412;font-weight:700}
+.btn.sug{margin:0 0 8px 0;text-align:left}
 .medgrp{border-top:1px dashed var(--line);padding-top:6px;margin-top:2px}
 .mlab{margin:0 0 2px 6px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pi .bx{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid #9AA7B4;margin-top:1px;display:grid;place-items:center}
@@ -165,7 +173,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
    Content
    ========================================================= */
 // PMH quick picks: [key, label, data prompts it triggers]
-const PMH=[['htn','HTN'],['hld','HLD'],['dm2','DM2',['a1c','insulin']],['dm1','DM1',['a1c','insulin']],['cad','CAD',['cath','echo']],['hfref','HFrEF',['echo','dryWt']],['hfpef','HFpEF',['echo','dryWt']],['afib','Atrial fibrillation',['anticoag']],['copd','COPD',['homeO2','pft']],['asthma','Asthma',['pft']],['osa','OSA',['cpap']],['ckd','CKD',['baseCr']],['esrd','ESRD on HD',['dialysis']],['cirrhosis','Cirrhosis',['liver']],['cva','Prior CVA',['baseFx']],['vte','Prior DVT/PE',['anticoag']],['cancer','Active cancer',['onc']],['immuno','Immunosuppressed',['immuno']],['etoh','Alcohol use disorder',['etohHx']],['dementia','Dementia',['baseFx']],['hypothyroid','Hypothyroidism'],['gerd','GERD'],['depression','Depression/anxiety'],['bph','BPH']];
+const PMH=[['htn','HTN'],['hld','HLD'],['dm2','DM2',['a1c','insulin']],['dm1','DM1',['a1c','insulin']],['cad','CAD / prior MI',['cath','echo']],['hfref','HFrEF',['echo','dryWt']],['hfpef','HFpEF',['echo','dryWt']],['afib','Atrial fibrillation',['anticoag']],['copd','COPD',['homeO2','pft']],['asthma','Asthma',['pft']],['osa','OSA',['cpap']],['ckd','CKD',['baseCr']],['esrd','ESRD on HD',['dialysis']],['cirrhosis','Cirrhosis',['liver']],['cva','Prior CVA',['baseFx']],['vte','Prior DVT/PE',['anticoag']],['cancer','Active cancer',['onc']],['immuno','Immunosuppressed',['immuno']],['etoh','Alcohol use disorder',['etohHx']],['dementia','Dementia',['baseFx']],['hypothyroid','Hypothyroidism'],['gerd','GERD'],['depression','Depression/anxiety'],['bph','BPH']];
 // Pertinent data prompts
 const DATA={
  echo:['Last echo','date ***, EF ***%, RV ***, valves ***, PASP ***'],
@@ -260,7 +268,7 @@ const LIB={
  // Chronic, stable
  c_htn:{sys:'chronic',name:'Hypertension',a:'Home regimen ***.',items:[]},
  c_hld:{sys:'chronic',name:'Hyperlipidemia',a:'',items:[]},
- c_cad:{sys:'chronic',name:'CAD',a:'Last cath ***.',data:['cath'],items:[]},
+ c_cad:{sys:'chronic',name:'CAD',a:'S/p MI ***; PCI/stents *** (DAPT through ***); CABG ***; last cath ***; EF ***%.',data:['cath','echo'],items:[]},
  c_hf:{sys:'chronic',name:'Chronic HF, compensated',a:'EF ***%; dry weight ***.',data:['echo','dryWt'],items:['Daily weights, strict I/O']},
  c_afib:{sys:'chronic',name:'Paroxysmal / permanent AF',a:'Rate controlled; CHA₂DS₂-VASc ***.',data:['anticoag'],items:['Telemetry']},
  c_copd:{sys:'chronic',name:'COPD, stable',a:'Home O2 ***.',data:['homeO2'],items:['Albuterol PRN; SpO2 88–92%']},
@@ -630,7 +638,7 @@ const MEDS={
  // Chronic, stable
  c_htn:['!nolowbp Continue PTA antihypertensives *** with hold parameters (SBP <***, HR <***)','!lowbp Hold PTA antihypertensives while hypotensive, on vasopressors, or bleeding; resume as BP allows'],
  c_hld:['Continue PTA statin ***'],
- c_cad:['!nobleed Continue PTA aspirin ***','!bleed Hold PTA aspirin / antiplatelet *** (bleeding)','Continue PTA statin ***','!nolowbp Continue PTA beta blocker *** (hold for HR <55, SBP <100)','!lowbp Hold PTA beta blocker while hypotensive or bleeding'],
+ c_cad:['!nobleed Continue PTA aspirin ***','!bleed Hold PTA aspirin / antiplatelet *** (bleeding)','Continue PTA statin ***','?Continue PTA P2Y12 inhibitor *** (recent stent: do not stop without cardiology)','!nolowbp Continue PTA beta blocker *** (hold for HR <55, SBP <100)','!lowbp Hold PTA beta blocker while hypotensive or bleeding'],
  c_hf:['!nolowbp,noaki Continue PTA GDMT: beta blocker ***, ACEi/ARB/ARNI ***, MRA ***, SGLT2 inhibitor *** as BP, K and Cr allow','!aki,nolowbp Hold PTA ACEi/ARB/ARNI, MRA and SGLT2 inhibitor during AKI; continue beta blocker if perfusing','!lowbp Hold PTA GDMT (beta blocker, ACEi/ARB/ARNI, MRA, SGLT2 inhibitor) while hypotensive or bleeding; restart one at a time once stable','!nolowbp,noaki Continue PTA diuretic *** (hold if hypovolemic)','!lowbp Hold PTA diuretic','!aki,nolowbp Hold PTA diuretic unless volume overloaded'],
  c_afib:['!nolowbp Continue PTA rate control *** (hold for SBP <***, HR <***)','!lowbp Hold PTA rate control while hypotensive / on vasopressors','!nobleed Continue PTA anticoagulant *** (renally dose)','!bleed Hold PTA anticoagulant ***; restart timing per ***','?Hold PTA anticoagulant for procedure ***'],
  c_vte:['!nobleed Continue PTA anticoagulant *** (renally dose; hold for procedures ***)','!bleed Hold PTA anticoagulant ***; restart timing per ***','?Bridge with heparin infusion if NPO or procedure pending'],
@@ -652,7 +660,7 @@ const STEPS=[
  {id:'pt',n:'1',t:'Patient',cue:'Who, where, and why. Use a bed number, not a name, MRN or date of birth. Hx can write the HPI.'},
  {id:'hx',n:'2',t:'History',cue:'PMH picks also add the right data prompts and chronic problems. List home meds here; holds and continues are set per problem on A/P.'},
  {id:'data',n:'3',t:'Data',cue:'Prompts appear for the problems and history you have chosen. Fill what you have; leave *** for what you still need to look up.'},
- {id:'ap',n:'4',t:'A/P',cue:'Pick problems by system (or from the suggestions for this presentation). Each comes with a checklist plan you can trim, plus the home meds to hold or continue for that problem (shock, AKI and bleeding change the defaults); *** marks blanks to fill. Reorder with the arrows; ⓘ shows key points and the ICU Protocols chapter.'},
+ {id:'ap',n:'4',t:'A/P',cue:'Pick problems by system (or from the suggestions for this presentation). Each comes with a checklist plan you can trim, plus the home meds to hold or continue for that problem (shock, AKI and bleeding change the defaults); *** marks blanks to fill. Reorder with the arrows; “Combine with above” stacks problems that share a plan; ⓘ shows key points and the ICU Protocols chapter.'},
  {id:'abx',n:'5',t:'Antibiotics',cue:'Choose the source, setting and risks. Add the regimen to the plan as its own problem.'},
  {id:'bundle',n:'6',t:'Bundle',cue:'FAST HUGS BID for ICU patients; an admission checklist for the floor. Both print at the end of the plan.'},
  {id:'note',n:'7',t:'Note',cue:'Review the H&P, copy it into the chart, and send the patient to ICU Rounder.'}
@@ -724,17 +732,21 @@ function apPane(){
   return `${sug.length?`<div class="sys" style="display:flex;flex-direction:column;gap:6px"><p class="gt" style="color:var(--accent)">Suggested for ${esc(S.cx.map(c=>COMPLAINTS.find(x=>x[0]===c)[1].toLowerCase()).join(', '))}</p><div class="chips">${sug.map(chip).join('')}</div></div><div class="sep"></div>`:''}<div class="lib">${SYS.map(([s,l])=>`<div class="sys"><p class="gt">${l}</p><div class="chips">${Object.entries(LIB).filter(([,v])=>v.sys===s).map(([k,v])=>`<button type="button" class="chip" data-prob="${k}" aria-pressed="${chosen.has(k)}">${esc(v.name.replace(/ \*\*\*$/,'').replace(', source',''))}</button>`).join('')}</div></div>`).join('')}
   <div class="row"><label class="in"><span>Custom problem</span><input id="custom" placeholder="e.g. Hyperkalemia 2/2 ***" autocomplete="off"></label><div style="align-self:flex-end"><button type="button" class="btn" data-act="addCustom">Add</button></div></div></div>
   <div class="sep"></div><p class="gt">Problem list (${S.probs.length})</p>
-  <div class="pcards" id="pcards">${S.probs.length?S.probs.map(pcard).join(''):'<p class="empty">No problems yet. Pick from the library above.</p>'}</div>`;
+  ${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-cluster="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>p.name.replace(/,? compensated|, controlled|, stable/,'')).join(', '))}</button>`).join('')}
+  <div class="pcards" id="pcards">${S.probs.length?units().map(ucard).join(''):'<p class="empty">No problems yet. Pick from the library above.</p>'}</div>`;
 }
-function pcard(p,i){
-  const L=LIB[p.key]||{};
-  return `<div class="pcard" data-pid="${p.id}"><div class="pch"><span class="hash">#</span><input data-pp="${p.id}.name" value="${esc(p.name)}" aria-label="Problem name">
-    <button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<S.probs.length-1?'':'disabled'}>↓</button>
-    ${L.tip||L.ref?`<button type="button" class="info" data-tipk="${p.key}" aria-label="Key points and reference">i</button>`:''}<button type="button" class="mv" data-del="${p.id}" aria-label="Remove problem">×</button></div>
-    <div class="pcb"><label class="in"><span>Assessment</span><textarea data-pp="${p.id}.a" rows="2">${esc(p.a)}</textarea></label>${(()=>{const pd=probData(p);return pd.length?`<p class="pdata">From Data: ${esc(pd.join('; '))}</p>`:''})()}
-    ${(()=>{const btn=([it,j])=>`<button type="button" class="pi" data-item="${p.id}" data-j="${j}" aria-pressed="${it.on}"><span class="bx"></span><span class="tx">${esc(it.t)}</span></button>`;const all=p.items.map((it,j)=>[it,j]),pl=all.filter(([it])=>!it.med),md=all.filter(([it])=>it.med);
-      return (pl.length?`<div class="items">${pl.map(btn).join('')}</div>`:'')+(md.length?`<div class="medgrp"><p class="mlab">Home meds (PTA)</p><div class="items">${md.map(btn).join('')}</div></div>`:'')})()}
-    <label class="in"><span>More plan</span><textarea data-pp="${p.id}.extra" rows="2" placeholder="One item per line">${esc(p.extra||'')}</textarea></label></div></div>`;
+function ucard(u,i,all){
+  const multi=u.length>1,m=mergeUnit(u),btn=(p,j)=>{const it=p.items[j];const l=[...m.why.keys()].find(x=>x.p===p&&x.j===j);return `<button type="button" class="pi${l?' merged':''}" data-item="${p.id}" data-j="${j}" aria-pressed="${it.on}"><span class="bx"></span><span class="tx">${esc(it.t)}${l?`<span class="why"> · ${esc(m.why.get(l))}</span>`:''}</span></button>`};
+  const head=u.map((p,k)=>{const L=LIB[p.key]||{};return `<div class="pch"><span class="hash">#</span><input data-pp="${p.id}.name" value="${esc(p.name)}" aria-label="Problem name">
+    ${k===0?`<button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<all.length-1?'':'disabled'}>↓</button>`:''}
+    ${L.tip||L.ref?`<button type="button" class="info" data-tipk="${p.key}" aria-label="Key points and reference">i</button>`:''}${multi?`<button type="button" class="mv" data-split="${p.id}" aria-label="Split ${esc(p.name)} out" title="Split out">⤓</button>`:''}<button type="button" class="mv" data-del="${p.id}" aria-label="Remove problem">×</button></div>`}).join('');
+  const body=u.map(p=>{const idx=p.items.map((it,j)=>j),pl=idx.filter(j=>!p.items[j].med);return `${multi?`<p class="mlab">${esc(p.name)}</p>`:''}<label class="in"><span>Assessment</span><textarea data-pp="${p.id}.a" rows="2">${esc(p.a)}</textarea></label>${pl.length?`<div class="items">${pl.map(j=>btn(p,j)).join('')}</div>`:''}`}).join('');
+  const pd=unitData(u),meds=u.flatMap(p=>p.items.map((it,j)=>[p,j]).filter(([p,j])=>p.items[j].med));
+  return `<div class="pcard${multi?' grouped':''}" data-pid="${u[0].id}">${i?`<button type="button" class="comb" data-comb="${u[0].id}">Combine with above</button>`:''}${head}
+    <div class="pcb">${body}${pd.length?`<p class="pdata">From Data: ${esc(pd.join('; '))}</p>`:''}
+    ${meds.length?`<div class="medgrp"><p class="mlab">Home meds (PTA)${multi?' · merged by drug class':''}</p><div class="items">${meds.map(([p,j])=>btn(p,j)).join('')}</div></div>`:''}
+    ${m.conf.length?`<p class="conf">Check: ${esc(m.conf.join('; '))}</p>`:''}
+    <label class="in"><span>More plan</span><textarea data-pp="${u[0].id}.extra" rows="2" placeholder="One item per line">${esc(u.map(p=>p.extra||'').filter(Boolean).join('\n'))}</textarea></label></div></div>`;
 }
 function abxPane(){
   const A=S.abx;
@@ -786,6 +798,41 @@ function oneLiner(){
   if(isXfer()){const why=(p.xferWhy||'***').toLowerCase(),d=hospDay();return `${a||'***'} with ${pm.length?pm.join(', '):'***'}, admitted ${p.hospAdmit||'***'} for ${p.cc||'***'}, transferred from ${p.fromUnit||'the floor'} to ${p.level||'ICU'}${d?' on hospital day '+d:''} for ${why}${S.probs.length?'; now with '+S.probs.filter(x=>!(LIB[x.key]&&LIB[x.key].sys==='chronic')&&!['ckd','esrd'].includes(x.key)).slice(0,2).map(x=>x.name.charAt(0).toLowerCase()+x.name.slice(1)).join(' and '):''}.`}
   return `${a||'***'} with ${pm.length?pm.join(', '):'***'} presenting with ${p.cc||'***'}, admitted to ${p.level||'***'} for ${(()=>{const a=S.probs.filter(x=>!(LIB[x.key]&&LIB[x.key].sys==='chronic')&&!['ckd','esrd'].includes(x.key));return a.length?a.slice(0,2).map(x=>x.name.charAt(0).toLowerCase()+x.name.slice(1)).join(' and '):'***'})()}.`;
 }
+// ===== Combined problems =====
+// p.g ties problems into one A/P entry: stacked headers, one assessment block, one flat plan.
+const gid=p=>p.g||p.id;
+function normGroups(){const out=[],seen=new Set();S.probs.forEach(p=>{const g=gid(p);if(seen.has(g))return;seen.add(g);S.probs.forEach(q=>{if(gid(q)===g)out.push(q)})});S.probs=out}
+function units(){const u=[];S.probs.forEach(p=>{const last=u[u.length-1];if(last&&gid(last[0])===gid(p))last.push(p);else u.push([p])});return u}
+// Home-med lines are classed by drug group so a combined plan keeps one line per class.
+const MEDCLS=[['bb',/beta blocker|antihypertensives|GDMT/i],['raas',/ACEi|\bARB\b|ARNI|antihypertensives|GDMT/i],['ccb',/\bCCB\b|antihypertensives/i],['mra',/\bMRA\b|GDMT/i],['sglt2',/SGLT2|GDMT/i],['diur',/diuretic/i],['statin',/statin/i],['aspirin',/aspirin|antiplatelet/i],['p2y12',/P2Y12|antiplatelet/i],['anticoag',/anticoagulant|DOAC/i],['rate',/rate control/i],['metformin',/metformin|oral agents/i],['basal',/basal insulin/i],['inh',/inhalers|\bICS\b|LABA|LAMA/i],['ppi',/\bPPI\b/i],['levo',/levothyroxine/i],['alpha',/tamsulosin|alpha blocker/i]];
+const medCls=t=>MEDCLS.filter(([,r])=>r.test(t)).map(([k])=>k);
+const medAct=t=>/^Hold/i.test(t)?'hold':/^(Continue|Resume)/i.test(t)?'cont':'';
+const norm=t=>t.toLowerCase().replace(/\s+/g,' ').trim();
+// For one unit: which lines print, which merge away, and any hold/continue conflicts.
+function mergeUnit(u){
+  const lines=[];u.forEach(p=>p.items.forEach((it,j)=>{if(it.on)lines.push({p,j,it,t:it.t.replace(/^\?/,'Consider: '),med:!!it.med,cls:it.med?medCls(it.t):[],act:it.med?medAct(it.t):''})}));
+  const multi=u.length>1,why=new Map(),conf=[];
+  if(multi){
+    const held=new Set(lines.filter(l=>l.act==='hold').flatMap(l=>l.cls));
+    const seenTxt=new Map();
+    lines.forEach(l=>{const k=norm(l.t);if(seenTxt.has(k))why.set(l,'same line under '+seenTxt.get(k).p.name);else seenTxt.set(k,l)});
+    lines.forEach(l=>{if(why.has(l)||!l.act||!l.cls.length)return;
+      const hc=l.act==='cont'?l.cls.filter(c=>held.has(c)):[];
+      if(l.act==='cont'&&hc.length===l.cls.length){const h=lines.find(m=>m.act==='hold'&&m.cls.some(c=>l.cls.includes(c)));why.set(l,'held under '+h.p.name);return}
+      if(hc.length)conf.push(`${l.p.name} continues and another problem holds: ${hc.join(', ')}`);
+      const sup=lines.find(m=>m!==l&&!why.has(m)&&m.p!==l.p&&m.act===l.act&&l.cls.every(c=>m.cls.includes(c))&&(m.cls.length>l.cls.length||(m.cls.length===l.cls.length&&lines.indexOf(m)<lines.indexOf(l))));
+      if(sup)why.set(l,'covered by '+sup.p.name)});
+  }
+  const show=lines.filter(l=>!why.has(l));
+  const plan=show.filter(l=>!l.med).map(l=>l.t).concat(show.filter(l=>l.med).map(l=>l.t)).concat(u.flatMap(p=>(p.extra||'').split('\n').map(x=>x.trim()).filter(Boolean)));
+  return {plan:[...new Set(plan)],why,conf};
+}
+function unitData(u){return [...new Set(u.flatMap(probData))]}
+function unitName(u){return u.map(p=>p.name).join(' / ')}
+// Familiar clusters offered for combining (never applied automatically).
+const CLUSTERS=[['Cardiac history',['c_hf','c_cad','c_htn','c_hld','c_afib']],['Lung history',['c_copd','c_osa','c_tob']],['Liver',['cirrhosis','hepenc','hrs']],['Diabetes and kidney',['c_dm','c_dm1','ckd']]];
+function clusterSugs(){return CLUSTERS.map(([n,ks])=>{const ps=S.probs.filter(p=>ks.includes(p.key));return ps.length>=2&&new Set(ps.map(gid)).size>1?{n,ps}:null}).filter(Boolean)}
+function combine(ps){const g=gid(ps[0]);const ids=new Set(ps.map(gid));S.probs.forEach(p=>{if(ids.has(gid(p)))p.g=g});normGroups()}
 // Data tab values print under the problems that asked for them; anything no problem claims goes to Labs.
 function probKeys(p){const L=LIB[p.key];return (L&&L.data||[]).concat(p.key==='abx'?['cultures','micro']:[])}
 function probData(p){return [...new Set(probKeys(p))].filter(k=>DATA[k]&&S.data[k]&&S.data[k].trim()).map(k=>`${DATA[k][0]}: ${S.data[k].trim()}`)}
@@ -800,7 +847,8 @@ function bundleLines(){
 function apText(){
   const out=[];
   const ol=oneLiner();if(ol)out.push('ASSESSMENT: '+ol);
-  S.probs.forEach(p=>{const pl=probPlan(p),pd=probData(p);out.push(`# ${p.name}${p.a?'\n'+p.a:''}${pd.length?'\n'+pd.join('; '):''}${pl.length?'\n'+pl.map(x=>'- '+x).join('\n'):''}`)});
+  units().forEach(u=>{const m=mergeUnit(u),pd=unitData(u),as=u.map(p=>{const a=(p.a||'').trim();return a&&u.length>1?p.name.replace(/,? (compensated|controlled|stable)$/,'')+': '+(/^[A-Z][a-z]/.test(a)?a.charAt(0).toLowerCase()+a.slice(1):a):a}).filter(Boolean);
+    out.push(u.map(p=>'# '+p.name).join('\n')+(as.length?'\n'+as.join('\n'):'')+(pd.length?'\n'+pd.join('; '):'')+(m.plan.length?'\n'+m.plan.map(x=>'- '+x).join('\n'):''))});
   const b=bundleLines();
   if(b.length)out.push(`# ${S.pt.level==='ICU'?'ICU bundle (FAST HUGS BID)':'Prophylaxis, nutrition, dispo'}\n`+b.map(x=>'- '+x).join('\n'));
   const fen=[];if(S.pt.code)fen.push('Code status: '+S.pt.code+(S.pt.hcpoa?' (HCPOA: '+S.pt.hcpoa+')':''));
@@ -842,7 +890,7 @@ function goto(i){cur=Math.max(0,Math.min(STEPS.length-1,i));renderPane();const t
 function addProb(key){const L=LIB[key];if(!L)return;if(S.probs.some(p=>p.key===key))return;
   const np={id:uid(),key,name:L.name,a:L.a||'',items:L.items.map(t=>({t:t.replace(/^\?/,''),on:!t.startsWith('?'),opt:t.startsWith('?')})).concat((MEDS[key]||[]).map(medItem)),extra:''};
   const isChronic=k=>(LIB[k]&&LIB[k].sys==='chronic')||k==='ckd'||k==='esrd';
-  if(isChronic(key))S.probs.push(np);else{const i=S.probs.findIndex(p=>isChronic(p.key));if(i<0)S.probs.push(np);else S.probs.splice(i,0,np)}recalcMeds()}
+  if(isChronic(key))S.probs.push(np);else{const i=S.probs.findIndex(p=>isChronic(p.key));if(i<0)S.probs.push(np);else S.probs.splice(i,0,np)}normGroups();recalcMeds()}
 const PMH2PROB={htn:'c_htn',hld:'c_hld',cad:'c_cad',hfref:'c_hf',hfpef:'c_hf',afib:'c_afib',copd:'c_copd',dm2:'c_dm',hypothyroid:'c_hypothy',gerd:'c_gerd',depression:'c_dep',osa:'c_osa',bph:'c_bph',ckd:'ckd',esrd:'esrd',dm1:'c_dm1',vte:'c_vte',cva:'c_cva'};
 const pop=document.getElementById('pop');let pinned=false;
 function closePop(){pop.hidden=true;pinned=false}
@@ -863,10 +911,13 @@ document.addEventListener('click',e=>{
   const sg=t.closest('[data-seg]');if(sg){const p=sg.dataset.seg,v=sg.dataset.v;set(p,get(p)===v?undefined:v);renderPane(true);return}
   const cx=t.closest('[data-cx]');if(cx){const k=cx.dataset.cx;S.cx=S.cx.includes(k)?S.cx.filter(x=>x!==k):S.cx.concat(k);renderPane(true);return}
   const pm=t.closest('[data-pmh]');if(pm){const k=pm.dataset.pmh;if(S.pmh.includes(k))S.pmh=S.pmh.filter(x=>x!==k);else{S.pmh.push(k);const pk=PMH2PROB[k];if(pk&&!S.probs.some(p=>p.key===pk))addProb(pk)}renderPane(true);return}
-  const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);renderPane(true);return}
+  const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){const p=S.probs.find(x=>x.key===k),rest=S.probs.filter(x=>x!==p&&gid(x)===p.id);if(rest.length)rest.forEach(x=>x.g=rest[0].id);S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);renderPane(true);return}
   const it=t.closest('[data-item]');if(it){const p=S.probs.find(x=>x.id===it.dataset.item);const x=p.items[+it.dataset.j];x.on=!x.on;x.touched=true;it.setAttribute('aria-pressed',x.on);update();return}
-  const mv=t.closest('[data-move]');if(mv){const i=S.probs.findIndex(x=>x.id===mv.dataset.move),j=i+(+mv.dataset.d);if(j>=0&&j<S.probs.length){[S.probs[i],S.probs[j]]=[S.probs[j],S.probs[i]]}renderPane(true);return}
-  const dl=t.closest('[data-del]');if(dl){S.probs=S.probs.filter(x=>x.id!==dl.dataset.del);recalcMeds();renderPane(true);return}
+  const mv=t.closest('[data-move]');if(mv){const U=units(),i=U.findIndex(u=>u.some(x=>x.id===mv.dataset.move)),j=i+(+mv.dataset.d);if(i>=0&&j>=0&&j<U.length){[U[i],U[j]]=[U[j],U[i]];S.probs=U.flat()}renderPane(true);return}
+  const cb=t.closest('[data-comb]');if(cb){const U=units(),i=U.findIndex(u=>u[0].id===cb.dataset.comb);if(i>0)combine([U[i-1][0],U[i][0]]);renderPane(true);return}
+  const sp=t.closest('[data-split]');if(sp){const p=S.probs.find(x=>x.id===sp.dataset.split);if(p){const g=gid(p),rest=S.probs.filter(x=>x!==p&&gid(x)===g);if(p.id===g&&rest.length)rest.forEach(x=>x.g=rest[0].id);p.g=null;S.probs.splice(S.probs.indexOf(p),1);const last=S.probs.map(gid).lastIndexOf(rest.length?gid(rest[0]):g);S.probs.splice(last+1,0,p);normGroups()}renderPane(true);return}
+  const cl=t.closest('[data-cluster]');if(cl){const c=clusterSugs().find(x=>x.n===cl.dataset.cluster);if(c)combine(c.ps);renderPane(true);return}
+  const dl=t.closest('[data-del]');if(dl){{const p=S.probs.find(x=>x.id===dl.dataset.del),rest=S.probs.filter(x=>x!==p&&gid(x)===p.id);if(rest.length)rest.forEach(x=>x.g=rest[0].id)}S.probs=S.probs.filter(x=>x.id!==dl.dataset.del);recalcMeds();renderPane(true);return}
   const tk=t.closest('[data-tipk]');if(tk){const L=LIB[tk.dataset.tipk];openPop(`<div class="pt"><span>${esc(L.name)}</span><button class="close" type="button" aria-label="Close">×</button></div>${L.tip?`<p>${esc(L.tip)}</p>`:''}${L.ref?`<p style="color:var(--muted);font-size:.8rem">${esc(L.ref)}</p>`:''}`,tk);return}
   const ab=t.closest('[data-abx]');if(ab){const k=ab.dataset.abx,v=ab.dataset.v;if(k==='mods'){S.abx.mods=S.abx.mods.includes(v)?S.abx.mods.filter(x=>x!==v):S.abx.mods.concat(v)}else S.abx[k]=k==='src'&&S.abx.src===v?null:v;renderPane(true);return}
   const b=t.closest('[data-b]');if(b){const st=S[b.dataset.b],k=b.dataset.k,v=b.dataset.v;const a=new Set(st[k]||[]);a.has(v)?a.delete(v):a.add(v);st[k]=[...a];b.setAttribute('aria-pressed',a.has(v));update();return}
@@ -909,7 +960,7 @@ function sendToRounder(){
   const admit=S.pt.admit||today();
   const np={id:uid(),status:'active',days:[],draft:null,bed,age:String(S.pt.age||'').trim(),sex:S.pt.sex||'',height:String(S.pt.height||'').trim(),hUnit:S.pt.hUnit||'in',admit,
     oneLiner:oneLiner(),pmh:pmhList().join(', '),code:S.pt.code||'Full code',allergies:String(S.pt.allergies||'').trim(),
-    problems:S.probs.map(p=>({id:uid(),name:p.name,plan:probPlan(p).map(t=>({id:uid(),text:t,started:admit}))})),_mod:Date.now(),from:'admit'};
+    problems:units().map(u=>({id:uid(),name:unitName(u),plan:mergeUnit(u).plan.map(t=>({id:uid(),text:t,started:admit}))})),_mod:Date.now(),from:'admit'};
   R.patients.push(np);
   try{localStorage.setItem('icu-rounds-v1',JSON.stringify(R))}catch(e){say('Could not save to ICU Rounder on this device (storage blocked or full).');return}
   const m=`Sent to ICU Rounder as bed ${bed}${clash?' (another active patient already has this bed)':''}.`;
