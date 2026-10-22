@@ -99,6 +99,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .items{display:flex;flex-direction:column;gap:2px}
 .pi{display:flex;align-items:flex-start;gap:9px;padding:6px 6px;border-radius:8px;cursor:pointer;border:0;background:none;text-align:left;width:100%;font-size:.9rem;line-height:1.35}
 .pi:hover{background:var(--sunk)}
+.dest{font-weight:400;color:var(--muted);font-size:.78rem}
+.pdata{margin:0 6px;font-size:.84rem;color:var(--muted)}
 .medgrp{border-top:1px dashed var(--line);padding-top:6px;margin-top:2px}
 .mlab{margin:0 0 2px 6px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pi .bx{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid #9AA7B4;margin-top:1px;display:grid;place-items:center}
@@ -704,8 +706,8 @@ const PANES={
   <div class="field"><div class="flab">Social</div><div class="row"><div class="in"><span>Tobacco</span>${seg('hx.tob',['Never','Former','Current'])}</div><div class="in"><span>Alcohol</span>${seg('hx.etoh',['None','Social','Heavy'])}</div><div class="in"><span>Drugs</span>${seg('hx.drugs',['None','Cannabis','Other'])}</div></div></div>
   ${inp('hx.social','Social details',{ta:1,rows:2,ph:'Lives with ***, works as ***, baseline ***'})}
   ${inp('hx.fam','Family history',{ta:1,rows:2,ph:'Noncontributory'})}`,
- data:()=>`<div class="field">${dataKeys().map(k=>`<label class="in"><span>${esc(DATA[k][0])}</span><input data-p="data.${k}" value="${esc(S.data[k]||'')}" placeholder="${esc(DATA[k][1])}" autocomplete="off"></label>`).join('')}</div>
-  <p class="calcout">More prompts appear as you add problems (A/P) and history.</p>
+ data:()=>`<div class="field">${dataKeys().map(k=>`<label class="in"><span>${esc(DATA[k][0])} <span class="dest">→ ${esc((()=>{const ps=S.probs.filter(p=>probKeys(p).includes(k));return ps.length?ps.map(p=>p.name.replace(/ \*\*\*$/,'').replace(', source','')).join(', '):'Labs'})())}</span></span><input data-p="data.${k}" value="${esc(S.data[k]||'')}" placeholder="${esc(DATA[k][1])}" autocomplete="off"></label>`).join('')}</div>
+  <p class="calcout">More prompts appear as you add problems (A/P) and history. Each value prints under the problem shown beside it; anything not tied to a problem prints with the labs.</p>
   ${inp('ex.exam','Exam',{ta:1,rows:5,ph:'Paste from Px'})}
   ${inp('ex.labs','Other labs / micro',{ta:1,rows:3})}
   ${inp('ex.imaging','Imaging / EKG',{ta:1,rows:3})}`,
@@ -729,7 +731,7 @@ function pcard(p,i){
   return `<div class="pcard" data-pid="${p.id}"><div class="pch"><span class="hash">#</span><input data-pp="${p.id}.name" value="${esc(p.name)}" aria-label="Problem name">
     <button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<S.probs.length-1?'':'disabled'}>↓</button>
     ${L.tip||L.ref?`<button type="button" class="info" data-tipk="${p.key}" aria-label="Key points and reference">i</button>`:''}<button type="button" class="mv" data-del="${p.id}" aria-label="Remove problem">×</button></div>
-    <div class="pcb"><label class="in"><span>Assessment</span><textarea data-pp="${p.id}.a" rows="2">${esc(p.a)}</textarea></label>
+    <div class="pcb"><label class="in"><span>Assessment</span><textarea data-pp="${p.id}.a" rows="2">${esc(p.a)}</textarea></label>${(()=>{const pd=probData(p);return pd.length?`<p class="pdata">From Data: ${esc(pd.join('; '))}</p>`:''})()}
     ${(()=>{const btn=([it,j])=>`<button type="button" class="pi" data-item="${p.id}" data-j="${j}" aria-pressed="${it.on}"><span class="bx"></span><span class="tx">${esc(it.t)}</span></button>`;const all=p.items.map((it,j)=>[it,j]),pl=all.filter(([it])=>!it.med),md=all.filter(([it])=>it.med);
       return (pl.length?`<div class="items">${pl.map(btn).join('')}</div>`:'')+(md.length?`<div class="medgrp"><p class="mlab">Home meds (PTA)</p><div class="items">${md.map(btn).join('')}</div></div>`:'')})()}
     <label class="in"><span>More plan</span><textarea data-pp="${p.id}.extra" rows="2" placeholder="One item per line">${esc(p.extra||'')}</textarea></label></div></div>`;
@@ -784,6 +786,10 @@ function oneLiner(){
   if(isXfer()){const why=(p.xferWhy||'***').toLowerCase(),d=hospDay();return `${a||'***'} with ${pm.length?pm.join(', '):'***'}, admitted ${p.hospAdmit||'***'} for ${p.cc||'***'}, transferred from ${p.fromUnit||'the floor'} to ${p.level||'ICU'}${d?' on hospital day '+d:''} for ${why}${S.probs.length?'; now with '+S.probs.filter(x=>!(LIB[x.key]&&LIB[x.key].sys==='chronic')&&!['ckd','esrd'].includes(x.key)).slice(0,2).map(x=>x.name.charAt(0).toLowerCase()+x.name.slice(1)).join(' and '):''}.`}
   return `${a||'***'} with ${pm.length?pm.join(', '):'***'} presenting with ${p.cc||'***'}, admitted to ${p.level||'***'} for ${(()=>{const a=S.probs.filter(x=>!(LIB[x.key]&&LIB[x.key].sys==='chronic')&&!['ckd','esrd'].includes(x.key));return a.length?a.slice(0,2).map(x=>x.name.charAt(0).toLowerCase()+x.name.slice(1)).join(' and '):'***'})()}.`;
 }
+// Data tab values print under the problems that asked for them; anything no problem claims goes to Labs.
+function probKeys(p){const L=LIB[p.key];return (L&&L.data||[]).concat(p.key==='abx'?['cultures','micro']:[])}
+function probData(p){return [...new Set(probKeys(p))].filter(k=>DATA[k]&&S.data[k]&&S.data[k].trim()).map(k=>`${DATA[k][0]}: ${S.data[k].trim()}`)}
+function orphanData(){const used=new Set(S.probs.flatMap(probKeys));return dataKeys().filter(k=>!used.has(k)&&S.data[k]&&S.data[k].trim()).map(k=>`${DATA[k][0]}: ${S.data[k].trim()}`)}
 function probPlan(p){return p.items.filter(i=>i.on).map(i=>i.t.replace(/^\?/,'Consider: ')).concat((p.extra||'').split('\n').map(s=>s.trim()).filter(Boolean))}
 function bundleLines(){
   const L=[];const icu=S.pt.level==='ICU';
@@ -794,7 +800,7 @@ function bundleLines(){
 function apText(){
   const out=[];
   const ol=oneLiner();if(ol)out.push('ASSESSMENT: '+ol);
-  S.probs.forEach(p=>{const pl=probPlan(p);out.push(`# ${p.name}${p.a?'\n'+p.a:''}${pl.length?'\n'+pl.map(x=>'- '+x).join('\n'):''}`)});
+  S.probs.forEach(p=>{const pl=probPlan(p),pd=probData(p);out.push(`# ${p.name}${p.a?'\n'+p.a:''}${pd.length?'\n'+pd.join('; '):''}${pl.length?'\n'+pl.map(x=>'- '+x).join('\n'):''}`)});
   const b=bundleLines();
   if(b.length)out.push(`# ${S.pt.level==='ICU'?'ICU bundle (FAST HUGS BID)':'Prophylaxis, nutrition, dispo'}\n`+b.map(x=>'- '+x).join('\n'));
   const fen=[];if(S.pt.code)fen.push('Code status: '+S.pt.code+(S.pt.hcpoa?' (HCPOA: '+S.pt.hcpoa+')':''));
@@ -818,9 +824,7 @@ function noteText(){
   const soc=[];const h=S.hx||{};if(h.tob)soc.push('Tobacco: '+h.tob);if(h.etoh)soc.push('Alcohol: '+h.etoh);if(h.drugs)soc.push('Drugs: '+h.drugs);if(h.social)soc.push(h.social.trim());
   if(soc.length)sec.push('SOCIAL HISTORY: '+soc.join('. ')+'.');
   if(h.fam)sec.push('FAMILY HISTORY: '+h.fam.trim());
-  const dk=dataKeys().filter(k=>S.data[k]&&S.data[k].trim());
-  if(dk.length)sec.push('PERTINENT DATA:\n'+dk.map(k=>`- ${DATA[k][0]}: ${S.data[k].trim()}`).join('\n'));
-  const ex=S.ex||{};if(ex.exam)sec.push('PHYSICAL EXAM:\n'+ex.exam.trim());if(ex.labs)sec.push('LABS / MICRO:\n'+ex.labs.trim());if(ex.imaging)sec.push('IMAGING / EKG:\n'+ex.imaging.trim());
+  const ex=S.ex||{};if(ex.exam)sec.push('PHYSICAL EXAM:\n'+ex.exam.trim());{const od=orphanData(),lb=[od.join('\n'),(ex.labs||'').trim()].filter(Boolean);if(lb.length)sec.push('LABS / MICRO:\n'+lb.join('\n'))}if(ex.imaging)sec.push('IMAGING / EKG:\n'+ex.imaging.trim());
   const ap=apText();if(ap)sec.push('ASSESSMENT AND PLAN:\n'+ap.replace(/^ASSESSMENT: /,''));
   return sec.join('\n\n');
 }
