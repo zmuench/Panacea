@@ -78,6 +78,10 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .pearls{margin:0 0 10px;padding:9px 11px 9px 28px;border-radius:10px;background:var(--amb-soft);color:var(--amb);font-size:.9rem;line-height:1.4}
 .pearls li+li{margin-top:4px}
 .tgt textarea{min-height:44px}
+.recrow{border-bottom:1px solid var(--line)}.recrow:last-child{border-bottom:0}.recrow .chk{border:0}
+.recrow input{margin:0 0 10px 34px;width:calc(100% - 34px)}
+.draft{white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.92rem;line-height:1.45;margin:0 0 8px}
+.abxr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 10px;padding:8px 0;border-bottom:1px solid var(--line)}.abxr:last-child{border-bottom:0}
 .pcx{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0 8px}
 .empty{text-align:center;color:var(--muted);padding:24px 10px}
 .foot{color:var(--muted);font-size:.8rem;text-align:center;margin-top:24px}
@@ -744,8 +748,8 @@ function syncCard(){
 
 function newPt(){return{id:uid(),bed:'',age:'',sex:'',team:'',pmh:'',created:today(),off:false,
   reason:'',q:'',story:'',pert:{},exp:{},expD:'',imm:[],prior:[],recent:'',allergy:'',devices:'',vacc:'',concern:'',inclMicro:true,
-  abx:[],cx:[],clear:'',sc:'',scTxt:'',bnd:{},days:{},oneliner:'',opat:{on:false,line:'',labs:'',fu:'',stop:''},tgt:{},crv:{},pcx:[]}}
-function norm(p){if(p){if(!p.tgt)p.tgt={};if(!p.crv)p.crv={};if(!Array.isArray(p.pcx))p.pcx=[]}return p}
+  abx:[],cx:[],clear:'',sc:'',scTxt:'',bnd:{},days:{},oneliner:'',opat:{on:false,line:'',labs:'',fu:'',stop:''},tgt:{},crv:{},pcx:[],rec:{},recEd:{},abxRec:{},summ:'',dxTxt:'',impTxt:'',recTxt:'',disc:'',close:'follow'}}
+function norm(p){if(p){for(const k of['rec','recEd','abxRec'])if(!p[k])p[k]={};for(const k of['summ','dxTxt','impTxt','recTxt','disc'])if(p[k]==null)p[k]='';if(!p.close)p.close='follow';if(!p.tgt)p.tgt={};if(!p.crv)p.crv={};if(!Array.isArray(p.pcx))p.pcx=[]}return p}
 const P=id=>norm(S.pts.find(p=>p.id===id));
 
 /* ================= CLINICAL LOGIC ================= */
@@ -891,7 +895,7 @@ function noteText(pt,ref){
   L.push('');L.push('Antimicrobials:');
   if(pt.abx.length)pt.abx.forEach(a=>L.push('• '+abxLine(pt,a,ref)));else L.push('• None');
   L.push('');L.push('Assessment and plan:');
-  L.push(pt.oneliner.trim()?sent(pt.oneliner):`${pt.age||'***'} y/o ${pt.sex||'***'} with ${r?r.pf:'***'}.`);
+  L.push(pt.oneliner.trim()?sent(pt.oneliner):(String(pt.summ||'').trim()||summaryText(pt)));
   act.forEach(a=>{const i=abxInfo(pt,a,ref);L.push(`• Continue ${lc1(DR[a.d].n)}${i.dur&&i.an?` (day ${i.dOf} of ${i.dur}${a.anch&&a.anch!=='start'?' from '+ANCH[a.anch]:''}; projected last dose ${md(i.endD)})`:''}.`)});
   posCultures(pt).forEach(c=>{const v=coverage(pt,c);if(!v||!act.length)return;
     if(v.best==='n')L.push(`• ${v.bug.n} is not covered by the current regimen. First line: ${v.bug.first}.`);
@@ -950,14 +954,160 @@ function renderPt(pt,tab){
   const r=RS[pt.reason];
   document.title=(pt.bed?'Bed '+pt.bed:'Consult')+' · Spectrum';
   hd.innerHTML=`${HOME}<button class="back" data-a="home" aria-label="All patients">‹</button><h1>${esc(pt.bed?'Bed '+pt.bed:'New consult')}<small>${esc(r?r.n:'')}</small></h1><a class="refbtn" href="#ref">Bugs &amp; drugs</a>`;
-  tabsEl.innerHTML=`<nav class="tabs">${[['hpi','Consult HPI'],['micro','Micro + abx'],['note','Progress note']].map(([k,n])=>`<a href="#p/${pt.id}/${k}" ${tab===k?'aria-current="page"':''}>${n}</a>`).join('')}</nav>`;
-  app.innerHTML=tab==='micro'?vMicro(pt):tab==='note'?vNote(pt):vHpi(pt);
+  tabsEl.innerHTML=`<nav class="tabs">${[['hpi','Consult HPI'],['recs','Recs'],['micro','Micro + abx'],['note','Progress note']].map(([k,n])=>`<a href="#p/${pt.id}/${k}" ${tab===k?'aria-current="page"':''}>${n}</a>`).join('')}</nav>`;
+  app.innerHTML=tab==='micro'?vMicro(pt):tab==='note'?vNote(pt):tab==='recs'?vRecs(pt):vHpi(pt);
 }
 const tri=(set,key,v,label)=>`<button type="button" class="chip${v?' '+v:''}" data-a="tri" data-s="${set}" data-k="${esc(key)}">${esc(label||key)}</button>`;
 const multi=(path,arr,list)=>`<div class="chips">${list.map(x=>`<button type="button" class="chip${arr.includes(x)?' on':''}" data-a="multi" data-p="${path}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
 const fld=(label,path,val,attrs='')=>`<label class="fld"><span>${label}</span><input data-p="${path}" value="${esc(val)}" ${attrs}></label>`;
 const area=(label,path,val,rows=2,ph='')=>`<label class="fld"><span>${label}</span><textarea data-p="${path}" rows="${rows}" placeholder="${esc(ph)}">${esc(val)}</textarea></label>`;
 const LEG=`<p class="legend">Tap once for <b class="p">present</b>, twice for <b class="n">denied</b>, three times to clear.</p>`;
+
+/* ================= ASSESSMENT + RECOMMENDATIONS BY CONSULT REASON =================
+   imp = impression bullets; dx = diagnostics; tx = antimicrobials; sc = source control and consults; mo = monitoring and other.
+   *** marks a blank to fill in. */
+const REC_GROUPS=[['dx','Diagnostics'],['tx','Antimicrobials'],['sc','Source control and consults'],['mo','Monitoring and other']];
+const REC_COMMON={mo:['Follow up pending cultures and susceptibilities','OPAT: PICC once blood cultures negative ≥ 48–72 hours; weekly labs faxed to ID clinic','ID clinic follow-up in *** weeks']};
+const RECS={
+ sab:{imp:['Uncomplicated S. aureus bacteremia if cultures clear, echo is negative, and there are no metastatic foci','Complicated S. aureus bacteremia (***)','Source likely the central line','Source likely skin and soft tissue','Source likely injection drug use','No clear source, which raises concern for endocarditis','Concern for metastatic infection (***)'],
+  dx:['Repeat blood cultures every 24–48 hours until negative','TTE','TEE (high risk: IDU, prosthetic valve or device, persistent bacteremia, or no clear source)','MRI spine with and without contrast for back pain','Imaging of *** for a possible metastatic focus','HIV, hepatitis B, and hepatitis C screening'],
+  tx:['MSSA: switch to cefazolin 2 g IV q8h (or nafcillin/oxacillin) and stop vancomycin','MRSA: vancomycin dosed to AUC 400–600, or daptomycin 8–10 mg/kg daily','Duration at least 14 days from first negative blood culture if uncomplicated','Duration 4–6 weeks from first negative blood culture if complicated','Oral step-down may be considered in selected uncomplicated cases after initial IV therapy'],
+  sc:['Remove the central line; no new line until blood cultures negative ≥ 48–72 hours','Drainage of *** abscess','Orthopedics to evaluate hardware','Cardiothoracic surgery if endocarditis is confirmed','Addiction medicine consult; offer medications for opioid use disorder'],
+  mo:['Weekly CBC and BMP (and CK on daptomycin)']},
+ gnb:{imp:['Gram-negative bacteremia, likely urinary source','Likely biliary or intra-abdominal source','Likely line source','Source not yet identified','Risk factors for a resistant organism (***)'],
+  dx:['Follow susceptibilities','Urinalysis and urine culture','Imaging of the urinary tract for obstruction','CT abdomen/pelvis to look for a source','Repeat blood cultures only for persistent fever, a retained line, or no source control'],
+  tx:['Narrow to *** based on susceptibilities','ESBL: carbapenem (meropenem, or ertapenem once stable)','Oral step-down to *** once afebrile, stable, and source controlled','Total duration 7 days if uncomplicated with source control','Longer course (*** days) given ***'],
+  sc:['Urology for decompression of obstruction','GI or IR for biliary drainage','Remove or exchange the line'],mo:[]},
+ ie:{imp:['Definite infective endocarditis by Duke-ISCVID criteria','Possible infective endocarditis by Duke-ISCVID criteria','Endocarditis felt unlikely; continue to treat the bacteremia','Native valve endocarditis','Prosthetic valve endocarditis','Right-sided endocarditis in the setting of injection drug use','Septic emboli to ***'],
+  dx:['Three sets of blood cultures, then repeat every 24–48 hours until negative','TTE','TEE','Brain MRI for neurologic symptoms or before cardiac surgery','Dilated eye exam','CT chest for septic pulmonary emboli','HIV, hepatitis B, and hepatitis C screening','Bartonella and Coxiella serologies if cultures remain negative'],
+  tx:['Empiric vancomycin plus ceftriaxone or cefepime pending culture data','Targeted therapy: *** per organism and susceptibilities','Duration 4–6 weeks from first negative blood culture (per organism and valve)','Prosthetic valve staphylococcal endocarditis: add rifampin (6 weeks) and gentamicin (first 2 weeks)','Partial oral therapy may be considered once stable and cleared'],
+  sc:['Cardiothoracic surgery consult (heart failure, abscess, large vegetation, persistent bacteremia, emboli, or resistant organism)','Dental evaluation and treatment of dental sources','Device extraction if a pacemaker or ICD is involved','Addiction medicine consult; offer medications for opioid use disorder'],
+  mo:['Weekly CBC and BMP','If active IDU, discuss alternatives to OPAT (inpatient completion, oral step-down, or a long-acting lipoglycopeptide)']},
+ clabsi:{imp:['Catheter-related bloodstream infection','Possible catheter-related infection; differential time to positivity supports a line source','Contaminant or colonization more likely','Exit-site or tunnel infection'],
+  dx:['Paired cultures from the line and a peripheral site','Culture the catheter tip if removed','Repeat blood cultures after line removal','Echocardiogram if S. aureus or persistent bacteremia'],
+  tx:['Empiric vancomycin plus gram-negative coverage if septic or neutropenic','Narrow to *** per susceptibilities','Duration *** days from line removal or first negative culture','Antibiotic lock therapy with systemic antibiotics if salvaging a long-term catheter'],
+  sc:['Remove the catheter','Line holiday; replace only after cultures are negative ≥ 48–72 hours','Do not exchange over a guidewire for S. aureus, Pseudomonas, or Candida'],mo:[]},
+ dfo:{imp:['Diabetic foot infection with osteomyelitis of ***','Diabetic foot infection without osteomyelitis','Infection severity: *** (IWGDF/IDSA)','Osteomyelitis possible; MRI or bone biopsy needed','Peripheral arterial disease limiting healing'],
+  dx:['MRI foot with and without contrast','Bone biopsy for culture and pathology','ESR and CRP baseline','ABI and toe pressures'],
+  tx:['Hold antibiotics pending bone biopsy if clinically stable','Empiric *** (MRSA coverage if prior MRSA; anti-pseudomonal only with risk factors)','Targeted therapy per bone culture','Duration 6 weeks if osteomyelitis is treated without resection','After resection: 2–5 days if all infected bone removed; about 3 weeks if residual infected bone'],
+  sc:['Podiatry or surgery for debridement or resection','Vascular surgery for revascularization','Offloading'],
+  mo:['Glycemic control','Weekly CBC, BMP, ESR, and CRP']},
+ pji:{imp:['Prosthetic joint infection of the *** (early / delayed / late)','Meets criteria for PJI','PJI possible; awaiting aspiration','Superficial wound infection without joint involvement'],
+  dx:['Joint aspiration before antibiotics: cell count, differential, culture, crystals','ESR and CRP','3–5 intraoperative tissue cultures with extended incubation','Blood cultures'],
+  tx:['Hold antibiotics until aspiration and operative cultures if stable','After cultures: *** IV','Add rifampin for staphylococcal PJI with retained hardware (DAIR or one-stage exchange)','Duration: DAIR about 3 months (hip) to 6 months (knee); two-stage exchange 4–6 weeks','Chronic suppression after the course: ***'],
+  sc:['Orthopedics for DAIR vs one- or two-stage exchange'],mo:['Weekly CBC, BMP, ESR, and CRP']},
+ vo:{imp:['Vertebral osteomyelitis/discitis at ***','Spinal epidural abscess at ***','Neurologically intact','New neurologic deficit'],
+  dx:['MRI whole spine with and without contrast','Blood cultures × 2','CT-guided biopsy for culture and pathology if blood cultures are negative','Echocardiogram given ***','Brucella, fungal, or TB testing if risk factors'],
+  tx:['Hold antibiotics pending biopsy if neurologically intact and stable','Empiric vancomycin plus ceftriaxone or cefepime if unstable or with neurologic deficit','Targeted therapy: ***','Duration 6 weeks; longer if undrained abscess or hardware'],
+  sc:['Spine surgery for abscess, instability, or deficits','IR drainage of paraspinal or psoas abscess'],
+  mo:['Serial neurologic exams; urgent MRI and surgery call for any new deficit','Weekly CBC, BMP, ESR, and CRP']},
+ ssti:{imp:['Nonpurulent cellulitis, likely streptococcal','Purulent infection or abscess, likely S. aureus','Concern for necrotizing soft tissue infection','Cellulitis mimic more likely (stasis dermatitis, DVT, gout)'],
+  dx:['Wound or abscess culture','Ultrasound for abscess','CT if deep infection is suspected (do not delay surgery)','Blood cultures if systemically ill'],
+  tx:['Nonpurulent: cefazolin IV or cephalexin PO','Purulent: MRSA coverage (vancomycin IV; doxycycline or TMP-SMX PO)','Necrotizing: vancomycin, piperacillin-tazobactam, and clindamycin','Bite: ampicillin-sulbactam IV or amoxicillin-clavulanate PO','Saltwater exposure: add doxycycline for Vibrio','Total duration 5–7 days; longer if slow to improve'],
+  sc:['Incision and drainage','Emergent surgical exploration for suspected necrotizing infection'],
+  mo:['Elevation and compression for edema','Treat tinea pedis']},
+ pna:{imp:['Community-acquired pneumonia','Hospital-acquired pneumonia','Ventilator-associated pneumonia','Aspiration pneumonitis more likely than pneumonia','Risk factors for MRSA or Pseudomonas: ***'],
+  dx:['Blood and sputum cultures','MRSA nares PCR','Legionella and pneumococcal urine antigens','Respiratory viral panel','CT chest for nonresolving pneumonia or possible empyema'],
+  tx:['CAP: ceftriaxone plus azithromycin (or doxycycline)','HAP/VAP: anti-pseudomonal beta-lactam (***); add vancomycin or linezolid if MRSA risk','Stop vancomycin if MRSA nares PCR is negative','Narrow to *** per cultures','Duration 5 days for CAP once clinically stable; 7 days for HAP/VAP','No added anaerobic coverage for aspiration unless abscess or empyema'],
+  sc:['Thoracentesis or chest tube for a parapneumonic effusion or empyema'],mo:[]},
+ uti:{imp:['Complicated UTI (***)','Pyelonephritis','Catheter-associated UTI','Asymptomatic bacteriuria; does not need treatment','Prostatitis'],
+  dx:['Urinalysis and urine culture (from a new catheter if chronically catheterized)','Renal ultrasound or CT for obstruction or abscess','Blood cultures if febrile'],
+  tx:['Empiric *** based on prior cultures','Narrow to *** per susceptibilities','Oral step-down to *** once afebrile 24–48 hours','Duration 7 days with prompt response (5–7 days with a fluoroquinolone)','Prostatitis: 4–6 weeks of a fluoroquinolone or TMP-SMX','Do not treat asymptomatic bacteriuria'],
+  sc:['Remove or exchange the urinary catheter','Urology for decompression of obstruction','Stent exchange'],mo:[]},
+ iai:{imp:['Complicated intra-abdominal infection (***)','Spontaneous bacterial peritonitis','Secondary peritonitis','Adequate source control achieved','Source control not yet achieved'],
+  dx:['CT abdomen/pelvis with contrast','Culture drained fluid (not drain output after the first day)','Diagnostic paracentesis: cell count and culture in blood culture bottles'],
+  tx:['Piperacillin-tazobactam (or ceftriaxone plus metronidazole if community-acquired and not severe)','Antifungal only if Candida grows from sterile fluid with risk factors','SBP: ceftriaxone, plus albumin 1.5 g/kg on day 1 and 1 g/kg on day 3','Duration about 4 days after adequate source control','SBP: 5–7 days, then secondary prophylaxis'],
+  sc:['IR drainage of the collection','Surgery for source control'],mo:[]},
+ cdi:{imp:['C. difficile infection, non-severe','Severe C. difficile infection (WBC ≥ 15k or Cr > 1.5)','Fulminant C. difficile infection (hypotension, ileus, or megacolon)','First recurrence','Multiple recurrences','Colonization more likely (laxatives or formed stool)'],
+  dx:['Test only with ≥ 3 unformed stools in 24 hours off laxatives','No test of cure','CT abdomen/pelvis if fulminant'],
+  tx:['Fidaxomicin 200 mg PO BID for 10 days (preferred)','Oral vancomycin 125 mg PO QID for 10 days','Fulminant: vancomycin 500 mg PO/NG QID plus IV metronidazole; rectal vancomycin if ileus','Recurrence: fidaxomicin, or a vancomycin taper and pulse','Multiple recurrences: fecal microbiota therapy','Stop unnecessary antibiotics and PPIs'],
+  sc:['Surgery consult for fulminant infection'],mo:['Contact precautions; soap-and-water hand hygiene']},
+ cns:{imp:['Bacterial meningitis','Viral meningitis more likely','HSV encephalitis possible','Healthcare-associated ventriculitis or meningitis','CNS infection less likely; alternative diagnosis ***'],
+  dx:['Blood cultures','LP: opening pressure, cell count, glucose, protein, Gram stain, culture, meningitis/encephalitis panel, HSV PCR','Head CT before LP if indicated','MRI brain','Cryptococcal antigen and HIV if immunocompromised','Arboviral serologies in season'],
+  tx:['Vancomycin plus ceftriaxone 2 g IV q12h','Add ampicillin if older than 50, immunocompromised, or pregnant','Dexamethasone 0.15 mg/kg q6h for 4 days, started with the first antibiotic dose','Acyclovir 10 mg/kg IV q8h until HSV PCR is negative','Post-neurosurgical: vancomycin plus cefepime or meropenem','Narrow per CSF culture; duration ***'],
+  sc:['Neurosurgery for shunt removal or external drain'],
+  mo:['Droplet precautions for the first 24 hours of effective therapy','Chemoprophylaxis for close contacts if meningococcal']},
+ fn:{imp:['Febrile neutropenia, high risk','Febrile neutropenia, low risk (MASCC ≥ 21)','No source identified','Source: ***','Persistent fever despite broad-spectrum antibiotics'],
+  dx:['Blood cultures from each lumen and a peripheral site','Urinalysis, urine culture, and chest imaging','CT chest and serum galactomannan if fever persists 4–7 days','Respiratory viral panel'],
+  tx:['Cefepime (or piperacillin-tazobactam or meropenem)','Vancomycin only for line infection, skin infection, pneumonia, instability, or MRSA colonization; stop at 48–72 hours if cultures negative','Empiric antifungal (***) for persistent fever','Continue until afebrile ≥ 48 hours with ANC recovering, or treat a documented infection for its usual duration','Resume prophylaxis after treatment'],
+  sc:['Remove the line if implicated'],mo:[]},
+ fuo:{imp:['Meets criteria for fever of unknown origin','Infection remains possible (***)','Malignancy concern (***)','Noninfectious inflammatory disease concern (***)','Drug fever possible (***)'],
+  dx:['Blood cultures × 3 off antibiotics','HIV, IGRA, syphilis, CMV and EBV serologies','ESR, CRP, ferritin, LDH, ANA, RF, SPEP, CK','CT chest/abdomen/pelvis with contrast','PET-CT','Biopsy of abnormal tissue (***)','Bone marrow biopsy if cytopenias'],
+  tx:['Hold empiric antibiotics while stable','Stop nonessential medications that can cause drug fever'],sc:[],mo:['Document the fever curve off antipyretics']},
+ hiv:{imp:['HIV, newly diagnosed','HIV, not on ART','Advanced HIV (CD4 < 200)','Opportunistic infection: ***','Possible immune reconstitution inflammatory syndrome'],
+  dx:['CD4, HIV viral load, and genotype','HLA-B*5701 if abacavir is considered','Hepatitis A, B, and C serologies; syphilis; gonorrhea and chlamydia','IGRA','Cryptococcal antigen if CD4 < 100','Toxoplasma IgG','Pregnancy test if applicable'],
+  tx:['Start ART: *** (rapid start unless cryptococcal or TB meningitis)','PJP prophylaxis with TMP-SMX if CD4 < 200','Toxoplasma prophylaxis if CD4 < 100 and IgG positive','Treatment for ***'],
+  sc:[],mo:['Social work for insurance, ADAP, and housing','HIV clinic follow-up within 2–4 weeks','Partner notification and testing']},
+ tx:{imp:['Infection in a *** transplant recipient, *** months after transplant','Opportunistic infection concern (***)','Donor-derived infection possible','Drug toxicity or rejection as an alternative explanation'],
+  dx:['Blood cultures','CMV PCR','Respiratory viral panel; CT chest','Beta-D-glucan and galactomannan','PJP PCR if hypoxemic','BK PCR (kidney transplant)'],
+  tx:['Empiric ***','Check interactions with tacrolimus or cyclosporine before azoles, macrolides, or rifamycins','Discuss reducing immunosuppression with the transplant team','Resume or adjust prophylaxis: ***'],
+  sc:[],mo:['Immunosuppressant levels during antimicrobial therapy']},
+ fung:{imp:['Candidemia (species ***)','Line-associated candidemia','Concern for ocular or endovascular involvement','Candida from a non-sterile site, likely colonization'],
+  dx:['Repeat blood cultures daily or every other day until negative','Dilated eye exam','Echocardiogram (TEE if candidemia persists)','Species identification and susceptibilities'],
+  tx:['Echinocandin (micafungin 100 mg IV daily)','Step down to fluconazole once stable, cleared, and susceptible (usually after 5–7 days)','Duration 14 days after first negative blood culture if uncomplicated','C. auris: echinocandin and contact precautions'],
+  sc:['Remove central lines'],mo:['Weekly LFTs and QTc on azoles']}
+};
+const GEN_RECS={imp:[],dx:['Blood cultures × 2','Follow up pending cultures'],tx:['Empiric ***'],sc:[],mo:[]};
+function recList(pt){const r=RS[pt.reason];const base=(r&&RECS[r.id])||GEN_RECS;const o={};
+  ['imp','dx','tx','sc','mo'].forEach(g=>o[g]=[...(base[g]||[]),...(REC_COMMON[g]||[])]);return o}
+const recKey=(pt,g,x)=>`${pt.reason||'gen'}|${g}|${x}`;
+const dName=d=>{const m=d.n.match(/^(.*) \((IV|PO)\)$/);return m?m[2]+' '+lc1(m[1]):lc1(d.n)};
+function fillBlank(x,ed){ed=String(ed||'').trim();if(!ed)return x;const n=(x.match(/\*\*\*/g)||[]).length;const parts=n>1?ed.split(';').map(t=>t.trim()):[ed];let i=0;return x.replace(/\*\*\*/g,m=>i<parts.length&&parts[i]?parts[i++]:(i++,m))}
+const hkey=s=>{let h=5381;for(const ch of s)h=((h<<5)+h+ch.charCodeAt(0))|0;return'k'+(h>>>0).toString(36)};
+function shortOrg(c){const b=BG[c.org];if(b){const m=b.n.match(/\((MSSA|MRSA)\)/);return m?m[1]:b.n.replace(/ \((Group [AB]|bovis|diphtheroids)\)$/,'')}return String(c.orgTxt||'').trim()}
+function findings(pt){const seen={},out=[];
+  pt.cx.filter(c=>c.st==='pos').slice().sort((a,b)=>(a.date||'')<(b.date||'')?-1:1).forEach(c=>{
+    const org=shortOrg(c);const site=(c.site||'culture').toLowerCase();const k=site+'|'+(org||c.stain);if(seen[k])return;seen[k]=1;
+    const when=[c.sets?c.sets+' sets':'',c.date?md(c.date):''].filter(Boolean).join(', ');const w=when?` (${when})`:'';
+    if(!org){if(c.stain)out.push(`${stainText(c.stain)} in ${site}${w}, identification pending`);return}
+    const yeast=BG[c.org]&&BG[c.org].s==='yeast';
+    out.push(c.site==='Blood'?`${org} ${yeast?'fungemia':'bacteremia'}${w}`:`${site} culture growing ${org}${w}`)});
+  return out}
+function summaryText(pt){
+  const r=RS[pt.reason];const m=r?(pt.pert[r.id]||{}):{};const[He]=pron(pt);
+  const pmh=[...new Set([...String(pt.pmh||'').split(',').map(s=>s.trim()).filter(Boolean),...pt.imm])].slice(0,3);
+  const rf=r?r.rf.filter(x=>m[x]==='p'):[];if(pt.exp['injection drug use']==='p'&&!rf.includes('injection drug use'))rf.unshift('injection drug use');
+  const hist=[...new Set([...pmh,...rf.slice(0,3)])];
+  const pres=r?r.sx.filter(x=>m[x]==='p').slice(0,4):[];
+  const f=findings(pt);
+  const dxT=String(pt.dxTxt||'').trim().replace(/\.$/,'');
+  let s=`${String(pt.age||'').trim()||'***'} y/o ${pt.sex||'***'}`;
+  if(hist.length)s+=` with a history of ${andL(hist)}`;
+  if(pres.length)s+=` who presented with ${andL(pres)}`;
+  if(f.length)s+=`${hist.length||pres.length?',':''} found to have ${andL(f)}`;
+  if(dxT)s+=`, most consistent with ${dxT}`;else if(!f.length&&r)s+=`, concerning for ${r.pf.replace(/^possible /,'')}`;
+  const out=[sent(s)];
+  const act=active(pt);if(act.length)out.push(`${He} is currently on ${andL(act.map(a=>`${dName(DR[a.d])} (day ${abxInfo(pt,a).day??'***'})`))}.`);
+  return out.join(' ')}
+function narrowOpts(pt){const out=[],seen={};
+  posCultures(pt).forEach(c=>{const b=BG[c.org];if(!b||!b.first)return;const v=coverage(pt,c);const t=`${v&&v.best==='n'?'Change':'Narrow'} to ${lc1(b.first)} for ${shortOrg(c)}`;if(seen[t])return;seen[t]=1;out.push(t)});return out}
+function monRecs(pt){const L=[];active(pt).filter(a=>(pt.abxRec[a.id]||'cont')!=='stop').forEach(a=>{const d=DR[a.d];(d.mon||[]).forEach(m=>L.push(`${d.n}: ${lc1(m)}`))});return L}
+function recLines(pt){
+  const L=recList(pt);const pick=(g,x)=>{const h=hkey(recKey(pt,g,x));if(!pt.rec[h])return null;return fillBlank(x,pt.recEd[h])};
+  const G={};REC_GROUPS.forEach(([g])=>G[g]=L[g].map(x=>pick(g,x)).filter(Boolean));
+  const ab=[];
+  active(pt).forEach(a=>{const d=pt.abxRec[a.id]||'cont';if(d==='omit')return;const i=abxInfo(pt,a);const n=dName(DR[a.d]);
+    if(d==='stop'){ab.push(`Stop ${n}`);return}
+    ab.push(`Continue ${n}${a.dose?' '+a.dose:''} (day ${i.day??'***'}${i.dur&&i.an?` of ${i.dur}${a.anch&&a.anch!=='start'?' from '+ANCH[a.anch]:''}; projected last dose ${md(i.endD)}`:''})`)});
+  narrowOpts(pt).forEach(t=>{if(pt.rec[hkey('auto|'+t)])ab.push(t)});
+  G.tx=[...ab,...G.tx];
+  const mon=monRecs(pt);if(mon.length&&pt.rec[hkey('auto|mon')])G.mo.unshift('Monitoring: '+mon.join('; '));
+  const other=String(pt.recTxt||'').split('\n').map(x=>x.trim().replace(/^[•\-\d.]+\s*/,'')).filter(Boolean);
+  return{G,other}}
+function impLines(pt){const L=recList(pt);return[...L.imp.map(x=>{const h=hkey(recKey(pt,'imp',x));if(!pt.rec[h])return null;return fillBlank(x,pt.recEd[h])}).filter(Boolean),
+  ...String(pt.impTxt||'').split('\n').map(x=>x.trim().replace(/^[•\-]\s*/,'')).filter(Boolean)]}
+function recsText(pt){
+  const out=['ASSESSMENT',String(pt.summ||'').trim()||summaryText(pt)];
+  const imp=impLines(pt);if(imp.length){out.push('');imp.forEach(x=>out.push('• '+sent(x)))}
+  out.push('');out.push('RECOMMENDATIONS');
+  const{G,other}=recLines(pt);let n=0;
+  REC_GROUPS.forEach(([g,name])=>{if(!G[g].length)return;out.push(name+':');G[g].forEach(x=>out.push(`${++n}. ${sent(x)}`))});
+  if(other.length){out.push('Other:');other.forEach(x=>out.push(`${++n}. ${sent(x)}`))}
+  if(!n)out.push('***');
+  out.push('');
+  if(String(pt.disc||'').trim())out.push(sent('Recommendations discussed with '+pt.disc.trim()));
+  out.push(pt.close==='off'?'ID will sign off at this time. Please call with questions or if the clinical picture changes.':'Thank you for this consult. ID will continue to follow.');
+  return out.join('\n')}
 
 function vHpi(pt){
   const r=RS[pt.reason];const m=r?(pt.pert[r.id]||{}):{};
@@ -1003,10 +1153,42 @@ function vHpi(pt){
   <div class="card">${fld('Chief concern','concern',pt.concern,'placeholder="back pain"')}
     <button type="button" class="chk${pt.inclMicro?' on':''}" data-a="incl" style="border:0"><span class="bx">${CHECK}</span><span>Include cultures and antimicrobials from the Micro + abx tab</span></button></div>
   <h2>HPI</h2><pre class="out" id="out">${esc(hpiText(pt))}</pre>
-  <div class="btnrow"><button class="btn primary" data-a="copy" data-v="hpi">Copy HPI</button><a class="btn" style="text-decoration:none" href="#p/${pt.id}/micro">Cultures and antibiotics ›</a></div>
+  <div class="btnrow"><button class="btn primary" data-a="copy" data-v="hpi">Copy HPI</button><a class="btn" style="text-decoration:none" href="#p/${pt.id}/recs">Assessment + recs ›</a></div>
   ${ptFooter(pt)}`;
   return h;
 }
+function recRow(pt,key,text){const h=hkey(key);const on=!!pt.rec[h];
+  return`<div class="recrow"><button type="button" class="chk${on?' on':''}" data-a="rec" data-v="${h}"><span class="bx">${CHECK}</span><span>${esc(text)}</span></button>${on&&text.includes('***')?`<input data-p="recEd.${h}" value="${esc(pt.recEd[h]||'')}" placeholder="${esc((text.match(/\*\*\*/g)||[]).length>1?'Fill the blanks, separated by semicolons':'Fill in the ***')}" aria-label="Fill in the blank">`:''}</div>`}
+function vRecs(pt){
+  const r=RS[pt.reason];const L=recList(pt);const act=active(pt);
+  let h='';
+  if(!r)h+=`<p class="flag amb">Pick a reason for consult on the HPI tab to get complaint-specific impressions and recommendations.</p>`;
+  h+=`<div class="card"><h3>Summary statement</h3>
+    ${String(pt.summ||'').trim()?`<textarea data-p="summ" rows="4" style="width:100%">${esc(pt.summ)}</textarea><button class="linkbtn" data-a="sumreset">Go back to the automatic draft</button>`
+      :`<p class="draft" id="sumdraft">${esc(summaryText(pt))}</p><button class="btn sm" data-a="sumedit">Edit this draft</button>`}
+    ${fld('Most consistent with (working diagnosis)','dxTxt',pt.dxTxt,`placeholder="${esc(r?r.pf.replace(/^possible /,'')+' complicated by ***':'MSSA bacteremia complicated by L4-5 discitis')}"`)}
+    <p class="hint">Built from the HPI tab (PMHx, positive risk factors and symptoms) and positive cultures and active antimicrobials on the Micro tab.</p></div>`;
+  h+=`<div class="card"><h3>Impression</h3>${L.imp.map(x=>recRow(pt,recKey(pt,'imp',x),x)).join('')||'<p class="hint">Type your impression below.</p>'}
+    ${area('Other impression points (one per line)','impTxt',pt.impTxt,2,'')}</div>`;
+  h+=`<h2>Recommendations</h2>`;
+  REC_GROUPS.forEach(([g,name])=>{
+    let inner='';
+    if(g==='tx'){
+      if(act.length)inner+=`<div style="margin-bottom:6px">${act.map(a=>{const d=pt.abxRec[a.id]||'cont';return`<div class="abxr"><span><b>${esc(DR[a.d].n)}</b> <span class="x">D${abxInfo(pt,a).day??'?'}</span></span><div class="seg">${[['cont','Continue'],['stop','Stop'],['omit','Leave out']].map(([k,n])=>`<button type="button" data-a="abxrec" data-v="${a.id}|${k}" aria-pressed="${d===k}">${n}</button>`).join('')}</div></div>`}).join('')}</div>`;
+      else inner+=`<p class="hint" style="margin:0 0 6px">Active antimicrobials from the Micro tab appear here.</p>`;
+      inner+=narrowOpts(pt).map(t=>recRow(pt,'auto|'+t,t)).join('');
+    }
+    if(g==='mo'){const mon=monRecs(pt);if(mon.length)inner+=recRow(pt,'auto|mon','Monitoring for current drugs: '+mon.join('; '))}
+    inner+=L[g].map(x=>recRow(pt,recKey(pt,g,x),x)).join('');
+    if(inner)h+=`<div class="card"><h3>${name}</h3>${inner}</div>`});
+  h+=`<div class="card">${area('Other recommendations (one per line)','recTxt',pt.recTxt,3,'Will discuss TEE timing with cardiology')}
+    ${fld('Discussed with','disc',pt.disc,'placeholder="Dr. *** (ID attending) and the primary team"')}
+    <div class="fld"><span>Closing</span><div class="seg">${[['follow','ID will follow'],['off','ID signing off']].map(([k,n])=>`<button type="button" data-a="close" data-v="${k}" aria-pressed="${(pt.close||'follow')===k}">${n}</button>`).join('')}</div></div>
+    <p class="hint">Tap an item to include it. Items with *** open a box for the blank; anything left empty stays as *** in the note.</p></div>`;
+  h+=`<h2>Assessment and recommendations</h2><pre class="out" id="out">${esc(recsText(pt))}</pre>
+  <div class="btnrow"><button class="btn primary" data-a="copy" data-v="recs">Copy assessment + recs</button><button class="btn" data-a="copy" data-v="full">Copy HPI + recs</button></div>
+  ${ptFooter(pt)}`;
+  return h}
 function ptFooter(pt){return`<div class="btnrow" style="justify-content:center;margin-top:22px"><button class="btn" data-a="print">Print for rounds</button></div><div class="btnrow" style="justify-content:center;margin-top:22px;gap:18px"><button class="linkbtn" data-a="signoff">${pt.off?'Move back to active':'Sign off'}</button><button class="linkbtn danger" data-a="delpt">Delete patient</button></div>
   <p class="foot">${SY?'Synced to your private GitHub repo.':'Saved only on this device.'} Bed numbers only: no names, MRNs, or dates of birth.</p>`}
 
@@ -1178,7 +1360,7 @@ function sheet(pt,T){
   let h=`<section class="sheet"><div class="ph"><div><div class="pb">${e(pt.bed?'Bed '+pt.bed:'Bed ___')}</div>
     <div class="pm">${e([pt.age?pt.age+' y/o':'',pt.sex,pt.team?pt.team+' team':''].filter(Boolean).join(' · '))}</div></div>
     <div class="pr"><b>${e(r?r.n:'ID consult')}</b><br>${e(longDate)}${pt.created?` · consulted ${md(pt.created)} (day ${diff(pt.created,T)+1})`:''}</div></div>`;
-  h+=`<p class="one">${e(pt.oneliner.trim()||(pt.q.trim()?'Question: '+pt.q.trim():(r?r.q:'')))}</p>`;
+  h+=`<p class="one">${e(pt.oneliner.trim()||String(pt.summ||'').trim()||summaryText(pt))}</p>`;
   // alerts
   const al=[];
   posCultures(pt).forEach(c=>{const v=coverage(pt,c);if(!v)return;if(!act.length)al.push(`${v.bug.n}: no active antimicrobial`);else if(v.best==='n')al.push(`${v.bug.n} NOT covered by current regimen (first line: ${v.bug.first})`);else if(v.best==='v')al.push(`${v.bug.n}: coverage depends on susceptibilities`);else if(v.best==='p')al.push(`${v.bug.n}: ${v.by.p.join(', ')} active but not preferred (${v.bug.first})`)});
@@ -1218,6 +1400,7 @@ function sheet(pt,T){
   if(pt.recent.trim())hi.push(['Recent abx',pt.recent.trim()]);
   if(pt.opat.on){const o=pt.opat;hi.push(['OPAT',[o.line,o.labs,o.stop?'stop '+md(o.stop):'',o.fu].filter(Boolean).join(' · ')||'planning'])}
   if(hi.length)R+=`<h4>Background</h4><dl class="bg">${hi.map(([k,v])=>`<dt>${e(k)}</dt><dd>${e(v)}</dd>`).join('')}</dl>`;
+  {const{G,other}=recLines(pt);const all=[...REC_GROUPS.flatMap(([g])=>G[g]),...other];if(all.length)R+=`<h4>Recommendations</h4><ul class="ck">${all.map(x=>`<li>☐ ${e(x)}</li>`).join('')}</ul>`}
   const plan=String((pt.days[T]||{}).plan||'').trim();
   if(plan)R+=`<h4>Plan items</h4><ul class="ck">${plan.split('\n').filter(x=>x.trim()).map(x=>`<li>☐ ${e(x.replace(/^[•\-]\s*/,''))}</li>`).join('')}</ul>`;
   if(L||R)h+=`<div class="cols"><div>${L}</div><div>${R}</div></div>`;
@@ -1240,7 +1423,7 @@ function curPtId(){const h=parseHash();return h[0]==='p'?h[1]:null}
 function curPt(){const h=parseHash();return h[0]==='p'?P(h[1]):null}
 function setPath(o,path,v){const k=path.split('.');let x=o;for(let i=0;i<k.length-1;i++){if(x[k[i]]==null)x[k[i]]={};x=x[k[i]]}x[k[k.length-1]]=v}
 function getPath(o,path){return path.split('.').reduce((x,k)=>x==null?x:x[k],o)}
-function refreshOut(){const pt=curPt();if(!pt)return;const o=document.getElementById('out');if(!o)return;const tab=parseHash()[2]||'hpi';o.textContent=tab==='note'?noteText(pt,noteDate[pt.id]||today()):hpiText(pt)}
+function refreshOut(){const pt=curPt();if(!pt)return;const o=document.getElementById('out');if(!o)return;const tab=parseHash()[2]||'hpi';o.textContent=tab==='note'?noteText(pt,noteDate[pt.id]||today()):tab==='recs'?recsText(pt):hpiText(pt);const sd=document.getElementById('sumdraft');if(sd)sd.textContent=summaryText(pt)}
 
 app.addEventListener('input',e=>{
   const t=e.target;
@@ -1261,7 +1444,7 @@ app.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.rr&&c
 app.addEventListener('click',async e=>{
   const pt=curPt();
   const segb=e.target.closest('.seg button');
-  if(segb&&pt){const k=segb.parentElement.dataset.seg,v=segb.dataset.v;
+  if(segb&&pt&&segb.parentElement.dataset.seg){const k=segb.parentElement.dataset.seg,v=segb.dataset.v;
     if(k.startsWith('sus.')){const[,i,id]=k.split('.');const c=pt.cx[+i];c.susc=c.susc||{};if(c.susc[id]===v)delete c.susc[id];else c.susc[id]=v}
     else{const cur=getPath(pt,k);setPath(pt,k,cur===v?'':v);
       if(/^cx\.\d+\.stain$/.test(k)){const c=pt.cx[+k.split('.')[1]];if(c.org&&BG[c.org]&&BG[c.org].s!==c.stain)c.org=''}}
@@ -1288,6 +1471,11 @@ app.addEventListener('click',async e=>{
   if(a==='addcx'){pt.cx.push({id:uid(),site:'Blood',date:today(),sets:'',st:'pend',stain:'',org:'',orgTxt:'',susc:{}});save();render(true);return}
   if(a==='rmcx'){if(confirm('Remove this culture?')){pt.cx.splice(+b.dataset.i,1);save();render(true)}return}
   if(a==='useclear'){pt.clear=v;save();render(true);return}
+  if(a==='rec'){pt.rec[v]=!pt.rec[v];if(!pt.rec[v])delete pt.rec[v];save();render(true);return}
+  if(a==='abxrec'){const[id,d]=v.split('|');pt.abxRec[id]=d;save();render(true);return}
+  if(a==='close'){pt.close=v;save();render(true);return}
+  if(a==='sumedit'){pt.summ=summaryText(pt);save();render(true);const t=app.querySelector('[data-p="summ"]');if(t)t.focus();return}
+  if(a==='sumreset'){pt.summ='';save();render(true);return}
   if(a==='crv'){pt.crv[v]=!pt.crv[v];if(!pt.crv[v])delete pt.crv[v];save();render(true);return}
   if(a==='addpcx'){const r=RS[pt.reason];pt.pcx.push({id:uid(),date:'',site:(r&&r.site)||'Blood',org:'',res:''});save();render(true);return}
   if(a==='rmpcx'){pt.pcx.splice(+b.dataset.i,1);save();render(true);return}
@@ -1297,7 +1485,7 @@ app.addEventListener('click',async e=>{
   if(a==='opat'){pt.opat.on=!pt.opat.on;save();render(true);return}
   if(a==='opatlabs'){pt.opat.labs=opatLabs(pt);save();render(true);return}
   if(a==='opatstop'){pt.opat.stop=v;save();render(true);return}
-  if(a==='copy'){const t=v==='note'?noteText(pt,noteDate[pt.id]||today()):hpiText(pt);const ok=await copyText(t);toast(ok?(v==='note'?'Note copied.':'HPI copied.'):'Couldn’t copy on this device.');return}
+  if(a==='copy'){const t=v==='note'?noteText(pt,noteDate[pt.id]||today()):v==='recs'?recsText(pt):v==='full'?'HISTORY OF PRESENT ILLNESS\n'+hpiText(pt)+'\n\n'+recsText(pt):hpiText(pt);const ok=await copyText(t);toast(ok?({note:'Note copied.',recs:'Assessment and recs copied.',full:'HPI, assessment, and recs copied.'}[v]||'HPI copied.'):'Couldn’t copy on this device.');return}
   if(a==='signoff'){pt.off=!pt.off;save();toast(pt.off?'Signed off.':'Moved back to active.');location.hash='';return}
   if(a==='print'){printPts([pt]);return}
   if(a==='delpt'){if(confirm('Delete this patient and everything entered for them?')){S.pts=S.pts.filter(p=>p.id!==pt.id);save();location.hash=''}return}

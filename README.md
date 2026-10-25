@@ -12,7 +12,7 @@ Clinical documentation and residency planning tools.
 | Consult | `/consult/` | Consult call prep by service: what they'll ask, call script, note line |
 | Admit | `/admit/` | ICU and floor H&P: 100+ problems with checklist plans (built from ICU Protocols, updated to current guidance), presentation-based suggestions, pertinent-data prompts, antibiotic selector by source, FAST HUGS BID / floor checklist; sends the patient to ICU Rounder |
 | ICU Rounder | `/icu-rounder/` | Daily ICU rounds and problem-based A/P, with CPOT, RASS and CAM-ICU calculators |
-| Spectrum | `/spectrum/` | ID consults: HPI with complaint-specific questions, chart review and prior cultures; cultures and antimicrobial days; daily ID note with a rounding checklist by consult reason; bugs and drugs reference |
+| Spectrum | `/spectrum/` | ID consults: HPI with complaint-specific questions, chart review and prior cultures; drafted summary statement with impression and recommendation menus by consult reason; cultures and antimicrobial days; daily ID note with a rounding checklist by consult reason; bugs and drugs reference |
 | Sweep | `/sweep/` | Morning ICU considerations, system by system |
 | Ether | `/ether/` | Anesthesia pre-op: chart review with structured ECG, echo, cath, device, PFT studies; ASA/RCRI/STOP-BANG/Apfel, anesthetic plan, landscape two-column OR card, pre-op note |
 | Primer | `/primer/` | Daily ICU curriculum: one lesson a day with readings, orders, evidence and a self-check |
