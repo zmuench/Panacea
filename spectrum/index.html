@@ -75,6 +75,10 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .legend{font-size:.8rem;color:var(--muted);margin:2px 0 0}
 .legend b.p{color:var(--pos)}.legend b.n{color:var(--neg)}
 .hint{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.pearls{margin:0 0 10px;padding:9px 11px 9px 28px;border-radius:10px;background:var(--amb-soft);color:var(--amb);font-size:.9rem;line-height:1.4}
+.pearls li+li{margin-top:4px}
+.tgt textarea{min-height:44px}
+.pcx{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0 8px}
 .empty{text-align:center;color:var(--muted);padding:24px 10px}
 .foot{color:var(--muted);font-size:.8rem;text-align:center;margin-top:24px}
 pre.out{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.95rem;line-height:1.5;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px;margin:0 0 10px}
@@ -443,6 +447,161 @@ const REASONS=[
   rf:['a central venous catheter','total parenteral nutrition','prolonged broad-spectrum antibiotics','recent abdominal surgery','neutropenia','a prolonged ICU stay']}
 ];
 
+/* ================= TARGETED HELP BY CONSULT REASON =================
+   tg  = targeted history prompts {k, l (prompt), s (short label for HPI and print), ph}
+   ck  = chart review: what to pull before seeing the patient
+   pr  = pearls: why the targeted questions matter
+   site/pcx = default site and hint for prior cultures
+   bn  = rounding checklist (an organism bundle, or the reason's own r_ bundle) */
+const IDU_TG={k:'idu',s:'Substance use',l:'Injection drug use: substances, last use, sharing or reusing needles, licking needles, injection sites',ph:'injects fentanyl daily, last use 10/7, reuses needles, R antecubital'};
+const TARGET={
+ sab:{site:'Blood',pcx:'Prior blood and wound cultures; MRSA or MSSA, and when',bn:'sab',
+  tg:[{k:'src',s:'Suspected source',l:'Suspected source',ph:'R IJ CVC placed 10/2; R forearm abscess'},IDU_TG,
+   {k:'hw',s:'Valves, devices, and hardware',l:'Valves, devices, and hardware (type, location, year)',ph:'bioprosthetic AVR 2019, L TKA 2015'},
+   {k:'echo',s:'Prior echocardiography',l:'Prior echocardiograms',ph:'TTE 3/2024: EF 55%, no valve disease'}],
+  ck:['Time of first positive culture and number of sets positive','Prior S. aureus isolates (MRSA vs MSSA) and MRSA nares PCR','Line and device insertion dates','Prior echocardiograms','Back, joint, or new neurologic complaints that need imaging','Antibiotics given before cultures were drawn'],
+  pr:['S. aureus in blood is never a contaminant: treat it and repeat cultures.','IDU, devices, and back pain each change the workup and the duration.']},
+ gnb:{site:'Blood',pcx:'Prior blood and urine cultures with susceptibilities (ESBL, CRE, Pseudomonas)',bn:'gnb',
+  tg:[{k:'src',s:'Suspected source',l:'Suspected source',ph:'pyelonephritis with an obstructing stone'},
+   {k:'uro',s:'Urologic history',l:'Urologic history (catheters, stents, recent procedures)',ph:'Foley since 9/30; cystoscopy 9/15'},
+   {k:'bil',s:'Biliary and GI history',l:'Biliary or GI history',ph:'ERCP with biliary stent 8/2026'},
+   {k:'abroad',s:'Travel and healthcare abroad',l:'Travel or healthcare abroad in the last 12 months',ph:'hospitalized in India 5/2026'}],
+  ck:['Prior gram-negative isolates and resistance (ESBL, CRE, Pseudomonas)','Antibiotics in the last 90 days','Rapid blood culture ID panel and resistance genes','Urine culture and imaging for obstruction','Lines and devices'],
+  pr:['Prior resistant isolates and recent antibiotics are the best predictors of resistance now.','Most uncomplicated cases with source control need about 7 days.']},
+ ie:{site:'Blood',pcx:'Prior blood cultures and organisms from any prior endocarditis',bn:'r_ie',
+  tg:[{k:'idu',s:'Substance use',l:'Injection drug use: substances, route, last use, sharing or reusing needles or cookers, licking needles, injection sites',ph:'injects fentanyl and methamphetamine, last use 10/6, shares cookers, licks needles'},
+   {k:'dental',s:'Dental history',l:'Dental work or poor dentition (procedure, date, prophylaxis)',ph:'tooth extraction 9/20 without prophylaxis; poor dentition'},
+   {k:'valve',s:'Valve history',l:'Valve history (native disease, prosthesis type and year, prior endocarditis)',ph:'mechanical MVR 2018 on warfarin'},
+   {k:'echo',s:'Prior echocardiography',l:'Prior echocardiograms',ph:'TTE 2023: mild MR, no vegetation'},
+   {k:'emb',s:'Embolic and immunologic findings',l:'Embolic or immunologic signs (stroke symptoms, splinters, Janeway lesions, Osler nodes, vision changes)',ph:'new L hand weakness 10/5; splinter hemorrhages'}],
+  ck:['Number of blood culture sets and time to positivity','Prior echocardiograms for comparison','Prior endocarditis episodes and organisms','HIV, hepatitis B, and hepatitis C testing','Brain imaging if any neurologic symptoms','Recent dental notes or imaging'],
+  pr:['IDU: S. aureus (including MRSA), streptococci, Pseudomonas, and Candida; often right-sided.','Recent dental work or poor dentition: viridans group streptococci.','Prosthetic valve or device: low threshold for TEE and early surgical input.']},
+ clabsi:{site:'Blood',pcx:'Prior line-associated cultures and line tips',bn:'r_clabsi',
+  tg:[{k:'line',s:'Line',l:'Line type, site, and insertion date',ph:'R IJ tunneled HD catheter placed 6/2026'},
+   {k:'use',s:'Line use',l:'What the line is used for',ph:'TPN for short gut; HD MWF'},
+   {k:'access',s:'Vascular access',l:'Remaining vascular access options',ph:'limited: bilateral subclavian stenosis'},
+   {k:'prev',s:'Prior line infections',l:'Prior line infections (organism, date, whether the line was exchanged)',ph:'MSSA 2025, line exchanged over wire'}],
+  ck:['Paired line and peripheral cultures (differential time to positivity)','Line insertion and exchange dates','Prior line infections and organisms','TPN or lipid use (Candida, Malassezia)','Exit site or tunnel findings in nursing notes'],
+  pr:['Remove the line for S. aureus, Pseudomonas, Candida, mycobacteria, tunnel or pocket infection, or sepsis.','Ask what access remains before recommending removal.']},
+ dfo:{site:'Bone',pcx:'Prior wound and bone cultures (deep tissue or bone, not swabs)',bn:'r_dfo',
+  tg:[{k:'wound',s:'Wound',l:'Wound history (location, duration, depth, probe to bone)',ph:'R 1st MTP ulcer for 3 months, probes to bone'},
+   {k:'vasc',s:'Vascular status',l:'Vascular status (pulses, ABI, prior revascularization)',ph:'ABI 0.6; R SFA stent 2024'},
+   {k:'dm',s:'Diabetes control',l:'Diabetes control (A1c, regimen)',ph:'A1c 10.2% on insulin glargine'},
+   {k:'surg',s:'Prior foot surgery',l:'Prior foot procedures or amputations',ph:'R 2nd toe amputation 2024'},
+   {k:'preabx',s:'Antibiotics before bone sampling',l:'Antibiotics before any bone sample',ph:'doxycycline for 2 weeks before admission'}],
+  ck:['Prior wound and bone cultures (deep vs superficial)','Foot X-rays and MRI','ESR and CRP','ABI or toe pressures','Podiatry and vascular surgery notes'],
+  pr:['Positive probe to bone with ESR > 70 makes osteomyelitis likely.','Superficial swabs mislead: bone or deep tissue culture should guide therapy.']},
+ pji:{site:'Joint fluid',pcx:'Prior joint aspirations and operative cultures',bn:'r_pji',
+  tg:[{k:'joint',s:'Prosthesis',l:'Joint, prosthesis type, and implant date',ph:'R TKA 3/2024'},
+   {k:'timing',s:'Timing',l:'Onset relative to surgery (early < 3 months, delayed 3–12, late > 12) and symptom duration',ph:'late: 2 years after implant, symptoms for 5 days'},
+   {k:'jhx',s:'Joint history',l:'Revisions and prior infections of this joint',ph:'one revision 2025 for loosening'},
+   {k:'preabx',s:'Antibiotics before aspiration',l:'Antibiotics before aspiration',ph:'none'}],
+  ck:['Prior joint aspirations and operative cultures','Operative notes (components, retained hardware)','ESR and CRP trend','Recent bacteremia or remote infection (dental, urinary, skin)','Imaging for loosening'],
+  pr:['Symptoms under 3 weeks with a well-fixed implant may allow DAIR.','If the patient is stable, hold antibiotics until the joint is aspirated.']},
+ vo:{site:'Blood',pcx:'Prior blood cultures and any spine biopsy cultures',bn:'r_vo',
+  tg:[{k:'neuro',s:'Neurologic history',l:'Neurologic symptoms and timeline',ph:'progressive bilateral leg weakness since 10/6, urinary retention today'},IDU_TG,
+   {k:'proc',s:'Recent spinal procedures',l:'Recent spinal procedures or injections',ph:'L4-5 epidural steroid injection 9/1'},
+   {k:'bact',s:'Recent bacteremia',l:'Recent bacteremia or endocarditis',ph:'MSSA bacteremia 8/2026'}],
+  ck:['MRI spine findings (whole spine if abscess)','Blood cultures before antibiotics','Prior spine surgery or hardware','Recent bacteremias and organisms','Serial neurologic exam documentation'],
+  pr:['New deficits with an epidural abscess need urgent surgical evaluation.','Blood cultures negative: biopsy, ideally before antibiotics.']},
+ ssti:{site:'Wound',pcx:'Prior wound cultures and MRSA history',bn:'r_ssti',
+  tg:[{k:'course',s:'Course',l:'Onset, rate of spread, and treatment so far',ph:'started 10/5 on L shin, spread despite cephalexin for 3 days'},
+   {k:'entry',s:'Portal of entry',l:'Portal of entry (trauma, bite, injection, tinea, surgery)',ph:'cat bite to R hand 10/6'},
+   {k:'water',s:'Water and animal exposure',l:'Water or animal exposure',ph:'cleaned fish, saltwater exposure'},
+   {k:'prev',s:'Prior skin infections',l:'Prior skin infections and MRSA history',ph:'recurrent MRSA abscesses'}],
+  ck:['Prior MRSA (wound cultures or nares)','Prior skin infections and what worked','Imaging for abscess or gas','CK, lactate, and sodium if necrotizing infection is a concern','Outpatient antibiotics already tried'],
+  pr:['Purulent: think S. aureus. Nonpurulent: think streptococci.','Pain out of proportion, crepitus, or bullae: rule out necrotizing infection.','Cat or dog bite: Pasteurella. Saltwater: Vibrio. Freshwater: Aeromonas.']},
+ pna:{site:'Sputum',pcx:'Respiratory cultures in the last year (MRSA, Pseudomonas)',bn:'r_pna',
+  tg:[{k:'setting',s:'Setting',l:'Setting (community, hospital-onset, ventilator-associated)',ph:'hospital day 6, intubated 10/4'},
+   {k:'asp',s:'Aspiration risk',l:'Aspiration risk (dysphagia, sedation, vomiting, seizure)',ph:'witnessed aspiration after seizure 10/5'},
+   {k:'lung',s:'Lung history',l:'Structural lung disease and prior respiratory isolates',ph:'bronchiectasis; Pseudomonas in sputum 2025'},
+   {k:'vir',s:'Viral and vaccine history',l:'Viral exposures and vaccinations (influenza, COVID, RSV, pneumococcal)',ph:'sick child at home; influenza vaccine 9/2026'}],
+  ck:['Respiratory cultures in the last year (MRSA, Pseudomonas)','IV antibiotics and hospitalizations in the last 90 days','MRSA nares PCR','Chest imaging and progression','Viral testing'],
+  pr:['Prior MRSA or Pseudomonas in respiratory cultures is the strongest reason to cover them now.','A negative MRSA nares PCR supports stopping vancomycin.']},
+ uti:{site:'Urine',pcx:'Urine cultures from the last 12 months with susceptibilities',bn:'r_uti',
+  tg:[{k:'gu',s:'Urologic history',l:'GU anatomy and history (stones, BPH, stents, neurogenic bladder, transplant)',ph:'R ureteral stent 8/2026 for an obstructing stone'},
+   {k:'cath',s:'Catheter',l:'Catheter type and last change',ph:'chronic Foley, last changed 9/1'},
+   {k:'recur',s:'Recurrent UTIs',l:'Number of UTIs in the past year and how they were treated',ph:'3 UTIs in 2026, treated with nitrofurantoin and ciprofloxacin'},
+   {k:'base',s:'Baseline',l:'Neurologic or functional baseline (when symptoms are hard to assess)',ph:'nonverbal at baseline; new confusion and fever'}],
+  ck:['Urine cultures in the last 12 months with susceptibilities','Antibiotics in the last 90 days (fluoroquinolones, cephalosporins)','Urinalysis: pyuria present? (growth without pyuria suggests colonization)','Imaging for obstruction or abscess','Catheter placement and change dates','Creatinine clearance (nitrofurantoin, dosing)'],
+  pr:['Prior urine isolates and recent antibiotics are the best guide to empiric choice.','Bacteriuria without symptoms is usually not treated (except in pregnancy or before urologic procedures).','Obstruction, stents, catheters, or transplant make it complicated.']},
+ iai:{site:'Abscess',pcx:'Prior abscess, drain, or peritoneal fluid cultures',bn:'r_iai',
+  tg:[{k:'surg',s:'Recent surgery',l:'Recent surgery or procedures',ph:'sigmoid colectomy 10/1 with anastomotic leak'},
+   {k:'sc',s:'Source control',l:'Source control status (drains, planned operations)',ph:'IR drain placed 10/8, output 200 mL/day'},
+   {k:'liver',s:'Liver history',l:'Liver disease and ascites (prior SBP, prophylaxis)',ph:'cirrhosis with ascites, SBP 2025, on prophylaxis'}],
+  ck:['CT findings and interval change','Operative and IR notes','Peritoneal, abscess, or drain cultures','Prior resistant organisms and recent antibiotics','Paracentesis results (cell count, PMN)'],
+  pr:['Source control matters more than the antibiotic.','After adequate source control, about 4 days of antibiotics is usually enough.']},
+ cdi:{site:'Stool',pcx:'Prior C. difficile tests and results',bn:'cdiff',
+  tg:[{k:'stools',s:'Stool history',l:'Stool frequency and character, and baseline bowel habit',ph:'8 watery stools/day since 10/4; baseline 1/day'},
+   {k:'inc',s:'Inciting antibiotics',l:'Inciting antibiotics (drug and dates)',ph:'clindamycin 9/20–9/27 for a dental infection'},
+   {k:'prior',s:'Prior episodes',l:'Prior C. difficile episodes and treatment',ph:'first episode 3/2026, oral vancomycin'},
+   {k:'other',s:'Other causes',l:'Laxatives, tube feeds, or other causes of diarrhea',ph:'lactulose stopped 10/3'}],
+  ck:['Laxatives in the last 48 hours (positive test may be colonization)','Prior C. difficile tests and treatments','PPIs and current antibiotics','WBC and creatinine (severity)','Abdominal imaging if distension or ileus'],
+  pr:['Do not test patients on laxatives or with formed stool.','First recurrence: fidaxomicin, or a vancomycin taper and pulse. Multiple recurrences: fecal microbiota therapy.']},
+ cns:{site:'CSF',pcx:'Prior CSF studies and cultures',bn:'r_cns',
+  tg:[{k:'onset',s:'Onset',l:'Onset and tempo (hours, days, or weeks)',ph:'headache and fever since 10/7, confused today'},
+   {k:'ms',s:'Mental status',l:'Mental status and seizures (collateral history)',ph:'per wife, confused since this morning; one seizure'},
+   {k:'nsg',s:'Neurosurgical history',l:'Neurosurgical history (shunt, recent surgery, CSF leak)',ph:'VP shunt 2019'},
+   {k:'exp',s:'Exposures',l:'Exposures (sick contacts, ticks, mosquitoes, travel, sexual history)',ph:'camping in northern Wisconsin, tick bite 9/25'}],
+  ck:['LP results (opening pressure, cells, glucose, protein, Gram stain)','Head imaging','Time of first antibiotic dose relative to LP','Immune status and vaccinations (pneumococcal, meningococcal)','HIV test'],
+  pr:['Do not delay antibiotics for imaging or LP.','Older than 50 or immunocompromised: add ampicillin for Listeria.','Possible encephalitis: acyclovir until HSV PCR is negative.']},
+ fn:{site:'Blood',pcx:'Prior blood cultures and resistant organisms during prior neutropenia',bn:'r_fn',
+  tg:[{k:'onc',s:'Oncologic history',l:'Malignancy and chemotherapy (regimen, last dose, expected nadir)',ph:'AML, 7+3 started 10/1'},
+   {k:'anc',s:'Neutropenia',l:'ANC trend and expected recovery',ph:'ANC 0 since 10/9, recovery expected ~10/25'},
+   {k:'proph',s:'Prophylaxis',l:'Prophylaxis (antibacterial, antifungal, antiviral)',ph:'levofloxacin, posaconazole, acyclovir'},
+   {k:'focus',s:'Possible focus',l:'Possible focus (line, mucositis, perianal, skin, lungs)',ph:'grade 3 mucositis; port site tender'}],
+  ck:['Prior blood cultures and resistant organisms','Line type and insertion date','Prophylactic agents (and what they miss)','Prior fungal infections or chest imaging','CT chest if fever persists'],
+  pr:['Fluoroquinolone prophylaxis raises the risk of resistant gram-negatives.','Fever persisting past 4–7 days: look for mold.']},
+ fuo:{site:'Blood',pcx:'All prior blood cultures and any tissue cultures',bn:'r_fuo',
+  tg:[{k:'pattern',s:'Fever pattern',l:'Fever pattern and documented maximum',ph:'daily evening fevers to 39.2 °C for 4 weeks'},
+   {k:'meds',s:'Medication changes',l:'Medication changes',ph:'started phenytoin 9/2026'},
+   {k:'prior',s:'Prior workup',l:'Prior workup',ph:'CT C/A/P 10/1 unremarkable; blood cultures × 3 negative'},
+   {k:'exp',s:'Detailed exposures',l:'Travel, animal, and occupational exposures (detailed)',ph:'goat farm; raw milk; Mexico 6/2026'}],
+  ck:['All prior imaging and cultures','Medication list for drug fever (beta-lactams, anticonvulsants, sulfonamides)','Family history (periodic fevers, malignancy)','Pathology from prior biopsies','Weight trend'],
+  pr:['Think in categories: infection, malignancy, inflammatory disease, and miscellaneous (drugs, thrombosis).','Avoid empiric antibiotics in a stable patient: they hide the answer.']},
+ hiv:{site:'Blood',pcx:'Prior HIV genotypes, OI cultures, and TB testing',bn:'r_hiv',
+  tg:[{k:'dx',s:'HIV history',l:'Diagnosis date and how it was diagnosed',ph:'diagnosed 2021 on routine screening'},
+   {k:'art',s:'ART history',l:'ART history and adherence',ph:'bictegravir/FTC/TAF, stopped 2024'},
+   {k:'labs',s:'Last CD4 and viral load',l:'Last CD4 and viral load',ph:'CD4 45, VL 250,000 (10/2026)'},
+   {k:'oi',s:'Prior OIs and prophylaxis',l:'Prior opportunistic infections and prophylaxis',ph:'PJP 2022; no current prophylaxis'},
+   {k:'soc',s:'Social history',l:'Social context (housing, insurance, support)',ph:'unstably housed; no insurance'}],
+  ck:['CD4 nadir and viral load history','Prior genotypes','Hepatitis B status (affects ART choice)','Prior TB testing','Prior opportunistic infections'],
+  pr:['Hepatitis B coinfection: ART must include tenofovir with lamivudine or emtricitabine.','Start ART within 2 weeks for most OIs; delay for cryptococcal and TB meningitis.']},
+ tx:{site:'Blood',pcx:'Prior CMV, BK, EBV, and fungal results after transplant',bn:'r_tx',
+  tg:[{k:'txh',s:'Transplant history',l:'Transplant type, date, and complications',ph:'deceased-donor kidney 3/2025; rejection 8/2026'},
+   {k:'is',s:'Immunosuppression',l:'Immunosuppressants (current regimen and recent changes)',ph:'tacrolimus, mycophenolate, prednisone 5 mg; thymoglobulin 8/2026'},
+   {k:'proph',s:'Prophylaxis',l:'Prophylaxis (PJP, CMV, antifungal) and adherence',ph:'TMP-SMX; valganciclovir stopped 9/2025'},
+   {k:'sero',s:'Serostatus',l:'Donor and recipient serostatus (CMV, EBV)',ph:'CMV D+/R−'}],
+  ck:['Transplant date and induction therapy','Prior CMV, BK, or EBV viremia','Prior fungal infections','Immunosuppressant levels','Prophylaxis stop dates'],
+  pr:['First month: surgical and hospital infections. Months 1–6: opportunistic (CMV, PJP, fungi). After 6 months: community infections unless heavily immunosuppressed.','CMV D+/R− carries the highest risk.']},
+ fung:{site:'Blood',pcx:'Prior Candida isolates, species, and susceptibilities',bn:'cand',
+  tg:[{k:'risk',s:'Risk factors',l:'Risk factors (lines, TPN, abdominal surgery, broad-spectrum antibiotics)',ph:'TPN via PICC; s/p Whipple 9/2026'},
+   {k:'line',s:'Lines',l:'Central lines and dates',ph:'R arm PICC placed 9/28'},
+   {k:'eye',s:'Visual symptoms',l:'Visual symptoms',ph:'denies floaters or blurry vision'},
+   {k:'prior',s:'Prior antifungals',l:'Prior antifungal exposure',ph:'fluconazole prophylaxis since 9/2026'}],
+  ck:['Species and susceptibilities (C. glabrata, C. krusei, C. auris)','Prior Candida isolates and antifungal exposure','Line dates','Echocardiogram and eye exam status','Repeat blood cultures'],
+  pr:['Candida in blood is never a contaminant.','Recent azole exposure: start an echinocandin.','Candida in sputum is almost always colonization.']}
+};
+REASONS.forEach(r=>Object.assign(r,TARGET[r.id]||{}));
+
+/* Rounding checklists by consult reason (reasons without an organism bundle). Shared state with organism bundles via pt.bnd. */
+Object.assign(BUNDLES,{
+ r_ie:{n:'Endocarditis',i:['Three sets of blood cultures (before antibiotics if not started)','TTE; TEE if nondiagnostic, prosthetic valve, or high suspicion','modified Duke (Duke-ISCVID) criteria documented','Cardiac surgery consulted (heart failure, abscess, persistent bacteremia, large vegetation, or emboli)','Embolic workup as indicated (brain MRI, ophthalmology)','Dental evaluation','HIV, hepatitis B, and hepatitis C screening','Addiction medicine consulted if IDU','Duration set from first negative culture (often 4–6 weeks)']},
+ r_clabsi:{n:'Line infection',i:['Line necessity reviewed','Paired line and peripheral cultures drawn','Line removed if S. aureus, Pseudomonas, Candida, mycobacteria, tunnel/pocket infection, or sepsis','Line tip cultured if removed','Lock therapy considered if salvaging a tunneled line','New line placed after cultures clear when feasible','Duration set from line removal or first negative culture']},
+ r_dfo:{n:'Osteomyelitis / diabetic foot',i:['Probe to bone documented','Foot X-ray; MRI if nondiagnostic','Bone biopsy or deep culture obtained','Vascular assessment (ABI/toe pressures; vascular surgery if ischemic)','Podiatry or surgery for debridement or resection','Offloading and glycemic control','Duration set from residual bone after resection']},
+ r_pji:{n:'Prosthetic joint infection',i:['Joint aspirated (cell count, differential, cultures, crystals)','Orthopedics consulted (DAIR vs one- or two-stage exchange)','3–5 intraoperative tissue cultures obtained','Baseline ESR and CRP','Rifampin considered for staphylococci with retained hardware','Duration and suppression plan set']},
+ r_vo:{n:'Vertebral osteomyelitis / epidural abscess',i:['MRI spine with and without contrast (whole spine if abscess)','Blood cultures × 2','Image-guided biopsy if blood cultures negative','Spine surgery consulted for abscess or deficits','Serial neurologic exams','Echocardiogram if S. aureus or other endocarditis-associated organism','Baseline ESR and CRP','Duration set (6 weeks typical; longer if undrained abscess)']},
+ r_ssti:{n:'Skin and soft tissue infection',i:['Border marked to track spread','Necrotizing infection excluded','Abscess drained and cultured if present','MRSA coverage only if purulent, IDU, prior MRSA, or systemically ill','Predisposing factors addressed (edema, tinea, venous insufficiency)','Elevation','Duration set (5–7 days often enough)']},
+ r_pna:{n:'Pneumonia',i:['Blood and sputum cultures if severe or MRSA/Pseudomonas risk','MRSA nares PCR (de-escalate if negative)','Urine Legionella and pneumococcal antigens if severe','Respiratory viral testing','De-escalated to culture data','Duration set (5 days for CAP if stable; 7 days for HAP/VAP)']},
+ r_uti:{n:'Complicated UTI',i:['Urinalysis and urine culture before antibiotics','Prior urine cultures and susceptibilities reviewed','Catheter removed or exchanged','Obstruction excluded (imaging if stones, sepsis, or no improvement at 48–72 h)','Asymptomatic bacteriuria excluded','Narrowed to susceptibilities; oral step-down when improving','Duration set (often 7 days with prompt response; 5–7 with a fluoroquinolone)']},
+ r_iai:{n:'Intra-abdominal infection',i:['CT reviewed','Source control: drainage or surgery','Peritoneal, abscess, or drain fluid cultured','If SBP: diagnostic paracentesis (PMN ≥ 250), albumin on days 1 and 3','Narrowed to cultures','Duration set (about 4 days after adequate source control)']},
+ r_cns:{n:'Meningitis / encephalitis',i:['Blood cultures before antibiotics','Empiric therapy not delayed for imaging or LP','Head CT before LP if focal deficit, papilledema, seizure, altered mental status, or immunocompromise','LP: opening pressure, cells, glucose, protein, Gram stain, culture, ME panel, HSV PCR','Dexamethasone with or before first antibiotic dose if bacterial suspected','Acyclovir if encephalitis possible','Droplet precautions until meningococcus excluded','Close contacts given prophylaxis if meningococcal']},
+ r_fn:{n:'Febrile neutropenia',i:['Blood cultures from a peripheral site and each line lumen','Anti-pseudomonal beta-lactam within 1 hour','MASCC risk documented','Vancomycin only for specific indications (line, skin, pneumonia, instability, MRSA)','Persistent fever at 4–7 days: CT chest, galactomannan, empiric antifungal considered','Duration set (afebrile and ANC recovering, or treat a documented infection)']},
+ r_fuo:{n:'Fever of unknown origin',i:['Fevers ≥ 38.3 °C documented','Medications reviewed for drug fever','Blood cultures × 3 off antibiotics','HIV, IGRA, CMV/EBV serologies','ESR, CRP, ferritin, LDH, ANA, RF, SPEP','CT chest/abdomen/pelvis; PET-CT if unrevealing','Temporal artery evaluation if > 50 with headache or jaw claudication','Empiric antibiotics avoided if stable']},
+ r_hiv:{n:'HIV / opportunistic infection',i:['CD4 count and HIV viral load','Genotype resistance testing','Hepatitis B serologies and hepatitis C antibody','Syphilis, gonorrhea, and chlamydia testing','TB screening (IGRA)','Cryptococcal antigen if CD4 < 100','Toxoplasma IgG','OI prophylaxis (PJP if CD4 < 200; toxoplasma if CD4 < 100 and IgG+)','ART timing decided','Social work and linkage to HIV care']},
+ r_tx:{n:'Immunocompromised host',i:['Transplant type, date, and net immunosuppression documented','Time since transplant considered (< 1, 1–6, > 6 months)','Prophylaxis reviewed (PJP, CMV, antifungal)','CMV PCR','Donor and recipient serologies reviewed','Drug interactions with immunosuppressants checked (azoles, macrolides, rifampin)','Transplant team updated']}
+});
+
 /* Shared ID history: exposures (tri-state) */
 const EXPOSURES=['recent travel','animal exposure','tick or insect bites','sick contacts','injection drug use','incarceration','unstable housing','freshwater or saltwater exposure','raw or undercooked food','TB exposure','occupational exposures','new sexual partners'];
 const IMMUNE=['diabetes','HIV','solid organ transplant','stem cell transplant','active chemotherapy','chronic steroids','biologic therapy','asplenia','cirrhosis','ESRD'];
@@ -473,7 +632,7 @@ const andL=a=>a.length<2?(a[0]||''):a.length===2?a.join(' and '):a.slice(0,-1).j
 const orL=a=>a.length<2?(a[0]||''):a.length===2?a.join(' or '):a.slice(0,-1).join(', ')+', or '+a[a.length-1];
 const noArt=s=>s.replace(/^(a|an|the) /,'');
 const sent=s=>{s=String(s||'').trim();if(!s)return'';s=s[0].toUpperCase()+s.slice(1);return/[.!?]$/.test(s)?s:s+'.'};
-const lc1=s=>s?s[0].toLowerCase()+s.slice(1):s;
+const lc1=s=>s&&!/^[A-Z][A-Z0-9]/.test(s)?s[0].toLowerCase()+s.slice(1):s;
 const HOME=`<a class="homebtn" href="../#clinical" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>`;
 const CHECK=`<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 const GO=`<svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
@@ -585,8 +744,9 @@ function syncCard(){
 
 function newPt(){return{id:uid(),bed:'',age:'',sex:'',team:'',pmh:'',created:today(),off:false,
   reason:'',q:'',story:'',pert:{},exp:{},expD:'',imm:[],prior:[],recent:'',allergy:'',devices:'',vacc:'',concern:'',inclMicro:true,
-  abx:[],cx:[],clear:'',sc:'',scTxt:'',bnd:{},days:{},oneliner:'',opat:{on:false,line:'',labs:'',fu:'',stop:''}}}
-const P=id=>S.pts.find(p=>p.id===id);
+  abx:[],cx:[],clear:'',sc:'',scTxt:'',bnd:{},days:{},oneliner:'',opat:{on:false,line:'',labs:'',fu:'',stop:''},tgt:{},crv:{},pcx:[]}}
+function norm(p){if(p){if(!p.tgt)p.tgt={};if(!p.crv)p.crv={};if(!Array.isArray(p.pcx))p.pcx=[]}return p}
+const P=id=>norm(S.pts.find(p=>p.id===id));
 
 /* ================= CLINICAL LOGIC ================= */
 function lvl(did,bug,susc){
@@ -617,6 +777,7 @@ function coverage(pt,c){
 function posCultures(pt){return pt.cx.filter(c=>c.st==='pos')}
 function bundles(pt){
   const out=[];const seen={};
+  const rb=RS[pt.reason]&&RS[pt.reason].bn;if(rb&&BUNDLES[rb]){seen[rb]=1;out.push(rb)}
   posCultures(pt).forEach(c=>{const b=BG[c.org];if(!b||!b.b)return;if(b.bo&&c.site!=='Blood')return;if(seen[b.b])return;seen[b.b]=1;out.push(b.b)});
   return out;
 }
@@ -666,6 +827,9 @@ function opatLabs(pt){
 }
 
 /* ================= TEXT OUTPUTS ================= */
+function tgLines(pt){const r=RS[pt.reason];if(!r||!r.tg)return[];const t=norm(pt).tgt[r.id]||{};
+  return r.tg.map(f=>[f.s,String(t[f.k]||'').trim().replace(/\.$/,'')]).filter(([,v])=>v)}
+function pcxText(pt){return(norm(pt).pcx||[]).filter(c=>String(c.org||'').trim()).map(c=>`${lc1(c.site||'culture')}${String(c.date||'').trim()?' ('+c.date.trim()+')':''} grew ${c.org.trim()}${String(c.res||'').trim()?' ('+c.res.trim().replace(/\.$/,'')+')':''}`).join('; ')}
 function pron(pt){return pt.sex==='male'?['He','his']:pt.sex==='female'?['She','her']:['The patient','their']}
 function hpiText(pt){
   const[He]=pron(pt);const r=RS[pt.reason];const out=[];
@@ -684,12 +848,14 @@ function hpiText(pt){
     const rn=r.rf.filter(x=>m[x]==='n');
     if(rfPos.length)out.push(`History is notable for ${andL(rfPos)}.`);
     if(rn.length)out.push(`${He} has no history of ${orL(rn.map(noArt))}.`);
+    tgLines(pt).forEach(([k,v])=>out.push(sent(`${k}: ${v}`)));
   }
   const ep=EXPOSURES.filter(x=>pt.exp[x]==='p'),en=EXPOSURES.filter(x=>pt.exp[x]==='n');
   if(ep.length)out.push(`Exposure history is notable for ${andL(ep)}.`);
   if(en.length)out.push(`${He} denies ${orL(en)}.`);
   if(pt.expD.trim())out.push(sent(pt.expD));
   if(pt.prior.length)out.push(`Prior cultures have grown ${andL(pt.prior)}.`);
+  const pc=pcxText(pt);if(pc)out.push(sent('Prior culture data: '+pc));
   if(pt.recent.trim())out.push(sent(`Antibiotics in the last 90 days: ${pt.recent.trim()}`));
   if(pt.allergy.trim())out.push(/^(none|nkda|no known)/i.test(pt.allergy.trim())?`${He} has no known antimicrobial allergies.`:sent(`Antimicrobial allergies: ${pt.allergy.trim()}`));
   if(pt.devices.trim())out.push(sent(`Indwelling devices and hardware: ${pt.devices.trim()}`));
@@ -808,12 +974,26 @@ function vHpi(pt){
   if(r){
     h+=`<div class="card"><h3>Symptoms</h3>${LEG}<div class="chips">${r.sx.map(x=>tri(r.id,x,m[x])).join('')}</div></div>
     <div class="card"><h3>History and risk factors</h3><div class="chips">${r.rf.map(x=>tri(r.id,x,m[x],noArt(x))).join('')}</div></div>`;
+    if(r.tg){const t=pt.tgt[r.id]||{};
+      h+=`<div class="card tgt"><h3>Ask specifically: ${esc(r.n)}</h3>
+      ${r.pr&&r.pr.length?`<ul class="pearls">${r.pr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+      ${r.tg.map(f=>`<label class="fld"><span>${esc(f.l)}</span><textarea data-p="tgt.${r.id}.${f.k}" rows="1" placeholder="${esc(f.ph||'')}">${esc(t[f.k]||'')}</textarea></label>`).join('')}
+      <p class="hint">Anything entered here is added to the HPI.</p></div>`}
+    if(r.ck){const n=r.ck.filter((x,i)=>pt.crv[r.id+'|'+i]).length;
+      h+=`<div class="card"><h3>Chart review before you see them <span class="x">${n} of ${r.ck.length}</span></h3>${r.ck.map((x,i)=>`<button type="button" class="chk${pt.crv[r.id+'|'+i]?' on':''}" data-a="crv" data-v="${r.id}|${i}"><span class="bx">${CHECK}</span><span>${esc(x)}</span></button>`).join('')}</div>`}
   }else h+=`<div class="empty" style="padding:10px">Pick a reason to see the pertinent positives and negatives.</div>`;
   h+=`<div class="card"><h3>ID history</h3>
     <div class="fld"><span>Immune status (added to PMHx)</span>${multi('imm',pt.imm,IMMUNE)}</div>
     ${fld('Antimicrobial allergies and reaction','allergy',pt.allergy,'placeholder="penicillin (hives as a child), or none"')}
     <div class="chips" style="margin-top:-2px">${['None known','Penicillin','Cephalosporin','Sulfa','Vancomycin (infusion reaction)','Fluoroquinolone'].map(x=>`<button type="button" class="chip" data-a="allergy" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
     <div class="fld" style="margin-top:12px"><span>Prior resistant organisms</span>${multi('prior',pt.prior,PRIOR_ORGS)}</div>
+    <div class="fld" style="margin-top:12px"><span>Prior cultures${r&&r.pcx?`: ${esc(lc1(r.pcx))}`:''}</span>
+      ${pt.pcx.map((c,i)=>`<div class="pcx"><div class="row"><label class="fld s"><span>When</span><input data-p="pcx.${i}.date" value="${esc(c.date||'')}" placeholder="3/2026"></label>
+        <label class="fld"><span>Site</span><select data-p="pcx.${i}.site">${SITES.map(x=>`<option ${c.site===x?'selected':''}>${x}</option>`).join('')}</select></label></div>
+        ${fld('Organism',`pcx.${i}.org`,c.org||'','placeholder="E. coli"')}
+        ${fld('Resistance or notable susceptibilities',`pcx.${i}.res`,c.res||'','placeholder="ESBL; R ciprofloxacin, S nitrofurantoin"')}
+        <button type="button" class="linkbtn danger" data-a="rmpcx" data-i="${i}">Remove</button></div>`).join('')}
+      <button type="button" class="btn sm" data-a="addpcx">Add prior culture</button></div>
     ${fld('Antibiotics in the last 90 days','recent',pt.recent,'placeholder="cephalexin for cellulitis in August"')}
     ${fld('Lines, devices, hardware','devices',pt.devices,'placeholder="R IJ CVC (10/8), L TKA 2019"')}
     <div class="fld" style="margin-top:12px"><span>Exposures</span><div class="chips">${EXPOSURES.map(x=>tri('exp',x,pt.exp[x])).join('')}</div></div>
@@ -931,6 +1111,8 @@ function vNote(pt){
   const mon=monitoring(pt);
   const gaps=posCultures(pt).map(c=>coverage(pt,c)).filter(v=>v&&active(pt).length&&v.best==='n');
   if(gaps.length)h+=gaps.map(v=>`<p class="flag warn"><b>${esc(v.bug.n)}</b> is not covered by the current regimen.</p>`).join('');
+  bundles(pt).forEach(k=>{const b=BUNDLES[k];const n=b.i.filter((x,i)=>pt.bnd[k+'|'+i]).length;
+    h+=`<div class="card"><h3>Rounding checklist: ${esc(b.n)} <span class="x">${n} of ${b.i.length}</span></h3>${b.i.map((x,i)=>`<button type="button" class="chk${pt.bnd[k+'|'+i]?' on':''}" data-a="bnd" data-v="${k}|${i}"><span class="bx">${CHECK}</span><span>${esc(x)}</span></button>`).join('')}</div>`});
   if(mon.length)h+=`<div class="card"><h3>Monitoring for current drugs</h3><ul class="tips" style="margin:0;padding-left:18px;font-size:.92rem">${mon.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`;
   h+=`<h2>Progress note</h2><pre class="out" id="out">${esc(noteText(pt,ref))}</pre>
   <div class="btnrow"><button class="btn primary" data-a="copy" data-v="note">Copy note</button></div>${ptFooter(pt)}`;
@@ -1030,6 +1212,8 @@ function sheet(pt,T){
   if(pt.devices.trim())hi.push(['Lines/devices',pt.devices.trim()]);
   const pmh=[...pt.imm,...String(pt.pmh||'').split(',').map(s=>s.trim()).filter(Boolean)];if(pmh.length)hi.push(['PMHx',[...new Set(pmh)].join(', ')]);
   if(pt.prior.length)hi.push(['Prior organisms',pt.prior.join(', ')]);
+  const pc=pcxText(pt);if(pc)hi.push(['Prior cultures',pc]);
+  tgLines(pt).forEach(([k,v])=>hi.push([k,v]));
   const ep=EXPOSURES.filter(x=>pt.exp[x]==='p');if(ep.length||pt.expD.trim())hi.push(['Exposures',[ep.join(', '),pt.expD.trim()].filter(Boolean).join('. ')]);
   if(pt.recent.trim())hi.push(['Recent abx',pt.recent.trim()]);
   if(pt.opat.on){const o=pt.opat;hi.push(['OPAT',[o.line,o.labs,o.stop?'stop '+md(o.stop):'',o.fu].filter(Boolean).join(' · ')||'planning'])}
@@ -1041,6 +1225,7 @@ function sheet(pt,T){
   return h;
 }
 function printPts(list){
+  list.forEach(norm);
   if(!list.length){toast('No active patients to print.');return}
   const T=today();const el=document.getElementById('print');
   el.innerHTML=list.map(p=>sheet(p,T)).join('');
@@ -1103,6 +1288,9 @@ app.addEventListener('click',async e=>{
   if(a==='addcx'){pt.cx.push({id:uid(),site:'Blood',date:today(),sets:'',st:'pend',stain:'',org:'',orgTxt:'',susc:{}});save();render(true);return}
   if(a==='rmcx'){if(confirm('Remove this culture?')){pt.cx.splice(+b.dataset.i,1);save();render(true)}return}
   if(a==='useclear'){pt.clear=v;save();render(true);return}
+  if(a==='crv'){pt.crv[v]=!pt.crv[v];if(!pt.crv[v])delete pt.crv[v];save();render(true);return}
+  if(a==='addpcx'){const r=RS[pt.reason];pt.pcx.push({id:uid(),date:'',site:(r&&r.site)||'Blood',org:'',res:''});save();render(true);return}
+  if(a==='rmpcx'){pt.pcx.splice(+b.dataset.i,1);save();render(true);return}
   if(a==='bnd'){pt.bnd[v]=!pt.bnd[v];if(!pt.bnd[v])delete pt.bnd[v];save();render(true);return}
   if(a==='nday'){noteDate[pt.id]=addDays(noteDate[pt.id]||today(),+v);render(true);return}
   if(a==='ntoday'){delete noteDate[pt.id];render(true);return}
