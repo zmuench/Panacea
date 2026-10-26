@@ -41,6 +41,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;backgroun
 .refbtn{font:inherit;font-size:.88rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:0;border-radius:999px;padding:7px 12px;cursor:pointer;white-space:nowrap;text-decoration:none}
 .tabs{display:flex;gap:4px;padding-bottom:8px}
 .tabs a{flex:1;text-align:center;font-size:.9rem;font-weight:700;color:var(--muted);text-decoration:none;padding:8px 4px;border-radius:10px;border:1px solid transparent}
+.tabs .ts{display:none}@media (max-width:540px){.tabs .tl{display:none}.tabs .ts{display:inline}}
 .tabs a[aria-current="page"]{background:var(--surface);color:var(--accent);border-color:var(--line)}
 h2{font-size:1.05rem;margin:22px 0 8px;letter-spacing:.01em}
 h2.sec{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:22px 0 8px}
@@ -748,8 +749,8 @@ function syncCard(){
 
 function newPt(){return{id:uid(),bed:'',age:'',sex:'',team:'',pmh:'',created:today(),off:false,
   reason:'',q:'',story:'',pert:{},exp:{},expD:'',imm:[],prior:[],recent:'',allergy:'',devices:'',vacc:'',concern:'',inclMicro:true,
-  abx:[],cx:[],clear:'',sc:'',scTxt:'',bnd:{},days:{},oneliner:'',opat:{on:false,line:'',labs:'',fu:'',stop:''},tgt:{},crv:{},pcx:[],rec:{},recEd:{},abxRec:{},summ:'',dxTxt:'',impTxt:'',recTxt:'',disc:'',close:'follow'}}
-function norm(p){if(p){for(const k of['rec','recEd','abxRec'])if(!p[k])p[k]={};for(const k of['summ','dxTxt','impTxt','recTxt','disc'])if(p[k]==null)p[k]='';if(!p.close)p.close='follow';if(!p.tgt)p.tgt={};if(!p.crv)p.crv={};if(!Array.isArray(p.pcx))p.pcx=[]}return p}
+  abx:[],cx:[],clear:'',sc:'',scTxt:'',bnd:{},days:{},oneliner:'',opat:{on:false,line:'',labs:'',fu:'',stop:''},tgt:{},crv:{},pcx:[],dev:[],rec:{},recEd:{},abxRec:{},summ:'',dxTxt:'',impTxt:'',recTxt:'',disc:'',close:'follow'}}
+function norm(p){if(p){for(const k of['rec','recEd','abxRec'])if(!p[k])p[k]={};for(const k of['summ','dxTxt','impTxt','recTxt','disc'])if(p[k]==null)p[k]='';if(!p.close)p.close='follow';if(!p.tgt)p.tgt={};if(!p.crv)p.crv={};if(!Array.isArray(p.pcx))p.pcx=[];if(!Array.isArray(p.dev))p.dev=[]}return p}
 const P=id=>norm(S.pts.find(p=>p.id===id));
 
 /* ================= CLINICAL LOGIC ================= */
@@ -862,7 +863,7 @@ function hpiText(pt){
   const pc=pcxText(pt);if(pc)out.push(sent('Prior culture data: '+pc));
   if(pt.recent.trim())out.push(sent(`Antibiotics in the last 90 days: ${pt.recent.trim()}`));
   if(pt.allergy.trim())out.push(/^(none|nkda|no known)/i.test(pt.allergy.trim())?`${He} has no known antimicrobial allergies.`:sent(`Antimicrobial allergies: ${pt.allergy.trim()}`));
-  if(pt.devices.trim())out.push(sent(`Indwelling devices and hardware: ${pt.devices.trim()}`));
+  {const dv=[...devSummary(pt),...(pt.devices.trim()?[pt.devices.trim().replace(/\.$/,'')]:[])];if(dv.length)out.push(sent(`Indwelling devices and hardware: ${dv.join('; ')}`))}
   if(pt.vacc.trim())out.push(sent(`Vaccinations: ${pt.vacc.trim()}`));
   if(pt.inclMicro){
     const cx=pt.cx.filter(c=>c.st&&c.st!=='');
@@ -888,7 +889,7 @@ function noteText(pt,ref){
   const obs=[['tmax','Tmax'],['wbc','WBC'],['cr','Cr'],['crp','CRP'],['esr','ESR']].map(([k,n])=>{const t=trend(pt,k,ref);return t?`${n} ${t}`:''}).filter(Boolean);
   L.push(obs.length?obs.join(' | '):'Vitals and labs: ***');
   if(String(d.exam||'').trim())L.push('Exam: '+d.exam.trim());
-  if(pt.devices.trim())L.push('Lines/devices: '+pt.devices.trim());
+  {const dv=devIn(pt);if(dv.length||pt.devices.trim()){L.push('Lines/devices:');dv.forEach(x=>L.push('• '+sent(devLine(x,ref))));if(pt.devices.trim())L.push('• '+sent(pt.devices))}}
   L.push('');L.push('Microbiology:');
   if(pt.cx.length)pt.cx.slice().sort((a,b)=>(a.date||'')<(b.date||'')?-1:1).forEach(c=>L.push('• '+cxLine(c)));else L.push('• None sent');
   if(pt.clear)L.push(`First negative blood culture: ${md(pt.clear)} (day ${diff(pt.clear,ref)+1} of clearance).`);
@@ -902,6 +903,8 @@ function noteText(pt,ref){
     else if(v.best==='v')L.push(`• ${v.bug.n}: coverage depends on susceptibilities (${v.by.v.join(', ')}).`);});
   bundles(pt).forEach(k=>{const b=BUNDLES[k];const done=b.i.filter((x,i)=>pt.bnd[k+'|'+i]),open=b.i.filter((x,i)=>!pt.bnd[k+'|'+i]);
     L.push(`• ${b.n} checklist. `+[done.length?'Done: '+done.map(lc1).join('; ')+'.':'',open.length?'Pending: '+open.map(lc1).join('; ')+'.':''].filter(Boolean).join(' '));});
+  devRecs(pt).forEach(x=>L.push('• '+sent(x)));
+  devAlerts(pt).filter(a=>a.l==='warn').forEach(a=>L.push('• '+a.x));
   if(pt.sc||pt.scTxt.trim())L.push(`• Source control: ${pt.scTxt.trim()||'achieved'}${pt.sc?' ('+md(pt.sc)+')':''}.`);
   const mon=monitoring(pt);if(mon.length)L.push('• Monitoring: '+mon.join('; ')+'.');
   if(pt.opat.on){const o=pt.opat;L.push(`• OPAT: ${[o.line?'access: '+o.line:'',o.labs?'labs: '+o.labs:'',o.stop?'stop date '+md(o.stop):'',o.fu?'follow-up: '+o.fu:''].filter(Boolean).join('; ')||'planning in progress'}.`)}
@@ -928,7 +931,8 @@ function ptSummary(pt){
   const r=RS[pt.reason];const act=active(pt);
   const tags=act.map(a=>`<span class="tag">${esc(DR[a.d].n.split(/[ (/]/)[0])} D${abxInfo(pt,a).day??'?'}</span>`).join('');
   const gaps=posCultures(pt).map(c=>coverage(pt,c)).filter(v=>v&&act.length&&v.best==='n').length;
-  return{r,tags:tags+(gaps?`<span class="tag warn">${gaps} not covered</span>`:'')};
+  const dw=devAlerts(pt).filter(a=>a.l==='warn').length;
+  return{r,tags:tags+(gaps?`<span class="tag warn">${gaps} not covered</span>`:'')+(dw?`<span class="tag warn">device ${dw>1?'alerts':'alert'}</span>`:'')};
 }
 function renderHome(){
   document.title='Spectrum';
@@ -954,8 +958,8 @@ function renderPt(pt,tab){
   const r=RS[pt.reason];
   document.title=(pt.bed?'Bed '+pt.bed:'Consult')+' · Spectrum';
   hd.innerHTML=`${HOME}<button class="back" data-a="home" aria-label="All patients">‹</button><h1>${esc(pt.bed?'Bed '+pt.bed:'New consult')}<small>${esc(r?r.n:'')}</small></h1><a class="refbtn" href="#ref">Bugs &amp; drugs</a>`;
-  tabsEl.innerHTML=`<nav class="tabs">${[['hpi','Consult HPI'],['recs','Recs'],['micro','Micro + abx'],['note','Progress note']].map(([k,n])=>`<a href="#p/${pt.id}/${k}" ${tab===k?'aria-current="page"':''}>${n}</a>`).join('')}</nav>`;
-  app.innerHTML=tab==='micro'?vMicro(pt):tab==='note'?vNote(pt):tab==='recs'?vRecs(pt):vHpi(pt);
+  tabsEl.innerHTML=`<nav class="tabs">${[['hpi','Consult HPI','HPI'],['recs','Recs','Recs'],['micro','Micro + abx','Micro'],['dev','Lines + hardware','Devices'],['note','Progress note','Note']].map(([k,n,sn])=>`<a href="#p/${pt.id}/${k}" ${tab===k?'aria-current="page"':''}><span class="tl">${n}</span><span class="ts">${sn}</span></a>`).join('')}</nav>`;
+  app.innerHTML=tab==='micro'?vMicro(pt):tab==='note'?vNote(pt):tab==='recs'?vRecs(pt):tab==='dev'?vDev(pt):vHpi(pt);
 }
 const tri=(set,key,v,label)=>`<button type="button" class="chip${v?' '+v:''}" data-a="tri" data-s="${set}" data-k="${esc(key)}">${esc(label||key)}</button>`;
 const multi=(path,arr,list)=>`<div class="chips">${list.map(x=>`<button type="button" class="chip${arr.includes(x)?' on':''}" data-a="multi" data-p="${path}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
@@ -1091,6 +1095,7 @@ function recLines(pt){
     ab.push(`Continue ${n}${a.dose?' '+a.dose:''} (day ${i.day??'***'}${i.dur&&i.an?` of ${i.dur}${a.anch&&a.anch!=='start'?' from '+ANCH[a.anch]:''}; projected last dose ${md(i.endD)}`:''})`)});
   narrowOpts(pt).forEach(t=>{if(pt.rec[hkey('auto|'+t)])ab.push(t)});
   G.tx=[...ab,...G.tx];
+  G.sc=[...devRecs(pt),...G.sc];
   const mon=monRecs(pt);if(mon.length&&pt.rec[hkey('auto|mon')])G.mo.unshift('Monitoring: '+mon.join('; '));
   const other=String(pt.recTxt||'').split('\n').map(x=>x.trim().replace(/^[•\-\d.]+\s*/,'')).filter(Boolean);
   return{G,other}}
@@ -1108,6 +1113,154 @@ function recsText(pt){
   if(String(pt.disc||'').trim())out.push(sent('Recommendations discussed with '+pt.disc.trim()));
   out.push(pt.close==='off'?'ID will sign off at this time. Please call with questions or if the clinical picture changes.':'Thank you for this consult. ID will continue to follow.');
   return out.join('\n')}
+
+/* ================= LINES, CATHETERS, AND HARDWARE =================
+   g = group; s = short name for text; bsi = intravascular catheter (counts for bacteremia rules);
+   dt = 'date' (device days counted) or 'text' (implant year is enough); ph = site placeholder; dp = details placeholder;
+   ck = review items added to the common ones; pr = pearls; sf = extra site findings. */
+const DEV_GROUPS=[['vasc','Vascular access'],['uro','Urinary'],['tube','Drains and tubes'],['card','Cardiac and vascular'],['ortho','Orthopedic'],['other','Other']];
+const DEV_SF=['clean','erythema','tenderness','warmth','purulence','induration or fluctuance'];
+const DEV_SRC=[['unl','Unlikely'],['pos','Possible'],['lik','Likely'],['conf','Confirmed']];
+const DEV_PLAN=[['keep','Keep'],['remove','Remove'],['exchange','Exchange'],['out','Out']];
+const DEV_CK=['Indication still present (or it can come out)','Site examined today','Considered as the source of this infection'];
+const DEVS=[
+ {id:'piv',g:'vasc',n:'Peripheral IV',s:'peripheral IV',bsi:1,dt:'date',ph:'L forearm',dp:'20 g',
+  ck:['Phlebitis checked (cord, streaking, tenderness)'],
+  pr:['Replace when clinically indicated rather than on a fixed schedule','Suppurative thrombophlebitis: remove, culture, and image; consider excision if bacteremia persists']},
+ {id:'mid',g:'vasc',n:'Midline',s:'midline',bsi:1,dt:'date',ph:'R upper arm',dp:'single lumen',
+  ck:['Arm checked for swelling or tenderness (DVT)'],
+  pr:['Not a central line, but still a possible source of bacteremia','Not for vesicants or courses longer than about 4 weeks']},
+ {id:'picc',g:'vasc',n:'PICC',s:'PICC',bsi:1,dt:'date',ph:'R basilic',dp:'double lumen',
+  ck:['Arm checked for swelling or tenderness (catheter-associated DVT)','Lumens match what is still needed'],
+  pr:['Septic thrombophlebitis around the line can keep cultures positive','For OPAT, place a new line only after blood cultures are negative ≥ 48–72 hours']},
+ {id:'cvc',g:'vasc',n:'Central line (non-tunneled)',s:'CVC',bsi:1,dt:'date',ph:'R IJ',dp:'triple lumen',
+  ck:['Lumens match what is still needed','Femoral site moved or removed when feasible'],
+  pr:['Remove for S. aureus, Pseudomonas, Candida, or mycobacterial bacteremia; tunnel infection; septic thrombophlebitis; endocarditis; or bacteremia > 72 hours on appropriate therapy','Do not exchange over a guidewire when the line is the suspected source','Paired line and peripheral cultures: line positive ≥ 2 hours earlier supports a line source']},
+ {id:'tcvc',g:'vasc',n:'Tunneled central line',s:'tunneled catheter',bsi:1,dt:'date',ph:'R chest Hickman',dp:'double lumen',sf:['tunnel tracking'],
+  ck:['Exit site and tunnel tract examined','Hard to replace (salvage worth discussing)'],
+  pr:['Tunnel infection requires removal','Salvage with lock therapy plus systemic antibiotics is an option for uncomplicated CoNS, enterococcal, or susceptible gram-negative infection','Remove for S. aureus, Pseudomonas, Candida, or mycobacteria, or if bacteremia persists > 72 hours']},
+ {id:'port',g:'vasc',n:'Implanted port',s:'port',bsi:1,dt:'date',ph:'R chest',dp:'single lumen',sf:['pocket tracking','erosion'],
+  ck:['Pocket examined','Hard to replace (salvage worth discussing)'],
+  pr:['Pocket infection requires removal','Same removal rules as other long-term catheters; lock therapy for salvage in selected organisms']},
+ {id:'hd',g:'vasc',n:'Dialysis catheter',s:'dialysis catheter',bsi:1,dt:'date',ph:'R IJ tunneled',dp:'tunneled',sf:['tunnel tracking'],
+  ck:['Exit site and tunnel examined','Nephrology aware (access plan, vein preservation)'],
+  pr:['Remove for S. aureus, Pseudomonas, or Candida, or tunnel infection','Otherwise, guidewire exchange or lock therapy is acceptable when access sites are limited','Blood cultures can be drawn from the dialysis circuit to preserve veins']},
+ {id:'art',g:'vasc',n:'Arterial line',s:'arterial line',bsi:1,dt:'date',ph:'L radial',dp:'',
+  ck:['Still needed for continuous BP or frequent draws'],
+  pr:['Lower infection risk than a CVC; femoral arterial lines carry more risk']},
+ {id:'foley',g:'uro',n:'Foley catheter',s:'Foley catheter',dt:'date',ph:'urethral',dp:'16 Fr',
+  ck:['Meets an indication (retention, strict output in critical illness, sacral wound, comfort care)'],
+  pr:['CAUTI requires symptoms; bacteriuria and pyuria are expected with a catheter','If in > 2 weeks and still needed, replace it and culture urine from the new catheter','Removing the catheter is part of treatment']},
+ {id:'spc',g:'uro',n:'Suprapubic catheter',s:'suprapubic catheter',dt:'date',ph:'suprapubic',dp:'chronic',
+  ck:['Last exchange date known'],
+  pr:['Chronically colonized; culture only with symptoms','Replace before culturing if in > 2 weeks']},
+ {id:'neph',g:'uro',n:'Nephrostomy tube',s:'nephrostomy tube',dt:'date',ph:'L',dp:'',
+  ck:['Draining well, no leak at the skin'],
+  pr:['Culture urine from the tube, not the bag','Obstruction or dislodgement: IR exchange']},
+ {id:'stent',g:'uro',n:'Ureteral stent',s:'ureteral stent',dt:'date',ph:'R',dp:'',
+  ck:['Exchange date known (overdue stents encrust)'],
+  pr:['A colonized stent can seed recurrent UTI; plan exchange or removal']},
+ {id:'drain',g:'tube',n:'Surgical or IR drain',s:'drain',dt:'date',ph:'RLQ abscess',dp:'10 Fr pigtail',
+  ck:['Output volume and character trended'],
+  pr:['Culture fluid at placement; later drain output reflects colonization','If output stops while fever persists, re-image for an undrained collection']},
+ {id:'ct',g:'tube',n:'Chest tube',s:'chest tube',dt:'date',ph:'R',dp:'14 Fr',
+  ck:['Output trended; still needed'],
+  pr:['Pleural fluid at placement: pH, glucose, LDH, Gram stain, culture','Persistent fever: CT for loculations; consider intrapleural tPA and DNase']},
+ {id:'peg',g:'tube',n:'Gastrostomy tube',s:'G-tube',dt:'date',ph:'LUQ',dp:'PEG',
+  ck:['Stoma examined (cellulitis versus leak)'],
+  pr:['Early dislodgement (tract < 4 weeks old) can cause peritonitis']},
+ {id:'bil',g:'tube',n:'Biliary drain or stent',s:'biliary drain',dt:'date',ph:'percutaneous',dp:'internal/external',
+  ck:['Draining; LFTs trended'],
+  pr:['Cholangitis with a stent: blood cultures and ERCP or IR for exchange','Consider enterococcal coverage after biliary instrumentation']},
+ {id:'cns',g:'tube',n:'EVD or VP shunt',s:'CSF shunt',dt:'date',ph:'R frontal',dp:'VP shunt',
+  ck:['CSF cell count, glucose, protein, and culture trended'],
+  pr:['Sample CSF from the device or reservoir, not by LP','Shunt infection: remove, place an external drain, treat, and reimplant once CSF clears','Ask the lab to hold cultures for C. acnes']},
+ {id:'pd',g:'tube',n:'Peritoneal dialysis catheter',s:'PD catheter',dt:'date',ph:'',dp:'',sf:['tunnel tracking'],
+  ck:['Exit site and tunnel examined'],
+  pr:['Peritonitis: effluent WBC > 100/µL with > 50% neutrophils','Intraperitoneal antibiotics preferred','Remove for fungal or refractory peritonitis (no clearing by day 5) or tunnel infection with peritonitis']},
+ {id:'air',g:'tube',n:'Endotracheal tube or trach',s:'airway',dt:'date',ph:'',dp:'ETT',
+  ck:['Daily sedation interruption and SBT'],
+  pr:['The airway is colonized; diagnose VAP only with a new infiltrate plus clinical signs']},
+ {id:'cied',g:'card',n:'Pacemaker or ICD',s:'CIED',dt:'text',ph:'L chest',dp:'dual-chamber pacemaker',sf:['erosion','fluctuance at pocket'],
+  ck:['Pocket examined (erythema, warmth, fluctuance, erosion)','Device, leads, and implant date known; EP aware'],
+  pr:['Any confirmed device infection, including pocket-only, needs complete removal of the generator and all leads','S. aureus bacteremia with a CIED: TEE; device infection is common even with a normal-appearing pocket','Do not aspirate the pocket','Reimplant once blood cultures are negative ≥ 72 hours']},
+ {id:'valve',g:'card',n:'Prosthetic valve',s:'prosthetic valve',dt:'text',ph:'aortic',dp:'bioprosthetic',
+  ck:['Valve type, position, and implant date known'],
+  pr:['TEE for S. aureus, enterococcal, streptococcal, or candidal bacteremia, or any persistent bacteremia','Staphylococcal prosthetic valve endocarditis: add rifampin and gentamicin']},
+ {id:'lvad',g:'card',n:'LVAD',s:'LVAD',dt:'text',ph:'',dp:'HeartMate 3',sf:['driveline drainage'],
+  ck:['Driveline exit site examined','VAD team aware'],
+  pr:['Classify as VAD-specific (driveline, pocket, pump), VAD-related, or non-VAD infection','Ultrasound or CT along the driveline for a deeper collection','Driveline infections often need long-term suppression']},
+ {id:'graft',g:'card',n:'Vascular graft or endograft',s:'vascular graft',dt:'text',ph:'aortic',dp:'EVAR',
+  ck:['Imaging reviewed (perigraft fluid or gas)'],
+  pr:['CT angiography first; PET-CT if unclear','Usually needs excision or replacement; lifelong suppression if the graft stays']},
+ {id:'pj',g:'ortho',n:'Prosthetic joint',s:'prosthetic joint',dt:'text',ph:'L knee',dp:'TKA',sf:['sinus tract','effusion','wound dehiscence'],
+  ck:['Joint examined (pain, effusion, wound, sinus tract)','Implant date known (early < 3 months, delayed 3–12, late > 12)','Orthopedics aware'],
+  pr:['A sinus tract to the prosthesis is diagnostic of PJI','Aspirate before antibiotics if stable','S. aureus bacteremia: examine every prosthetic joint and aspirate any symptomatic one','DAIR is an option with a stable implant and symptoms < 3 weeks (or implant < 30 days)']},
+ {id:'fx',g:'ortho',n:'Fracture fixation',s:'fracture hardware',dt:'text',ph:'R tibia',dp:'IM nail',sf:['sinus tract','exposed hardware','wound dehiscence'],
+  ck:['Wound and hardware exposure checked','Union status on imaging'],
+  pr:['Before union, stable hardware can often stay with debridement and suppression until the fracture heals','After union, remove the hardware','Operative cultures with extended incubation for C. acnes']},
+ {id:'spine',g:'ortho',n:'Spinal hardware',s:'spinal hardware',dt:'text',ph:'L4–S1',dp:'posterior fusion',sf:['drainage','wound dehiscence'],
+  ck:['Wound and neuro exam','Time since surgery known'],
+  pr:['Early infection (< 3 months): debridement with hardware retention often works','Late infection with a solid fusion: remove the hardware']},
+ {id:'exfix',g:'ortho',n:'External fixator pins',s:'external fixator',dt:'date',ph:'L tibia',dp:'',
+  ck:['Pin sites examined'],
+  pr:['Pin-site infection usually responds to local care and oral therapy','Loose pins or osteomyelitis: pin removal and debridement']},
+ {id:'oth',g:'other',n:'Other device or implant',s:'device',dt:'text',ph:'',dp:'breast implant, hernia mesh, cochlear implant',
+  ck:[],pr:['Biofilm-forming implants rarely clear with antibiotics alone; ask the surgical team about removal']}
+];
+const DV=Object.fromEntries(DEVS.map(d=>[d.id,d]));
+const devIn=pt=>(pt.dev||[]).filter(d=>d.plan!=='out');
+const devName=d=>{const t=DV[d.t];return[String(d.site||'').trim(),String(d.desc||'').trim(),t?t.s:'device'].filter(Boolean).join(' ')};
+function devDay(d,ref){const t=DV[d.t];if(!t||t.dt!=='date'||!d.ins)return null;const end=d.plan==='out'&&d.out&&d.out<ref?d.out:ref;return diff(d.ins,end)+1}
+const DEV_RM=['mssa','mrsa','psa','calb','cgla','caur','mtb'];
+const DEV_PV=['mssa','mrsa','efae','vre','vgs','sgal','calb','cgla','caur'];
+function devAlerts(pt){
+  const out=[];const bl=posCultures(pt).filter(c=>c.site==='Blood');
+  const orgs=[...new Set(bl.map(c=>c.org).filter(Boolean))];const anyBl=bl.length>0;
+  const nm=id=>BG[id]?shortOrg({org:id}):'';
+  devIn(pt).forEach(d=>{const t=DV[d.t];if(!t)return;const n=devName(d);const sf=d.sf||[];
+    if(t.bsi){
+      const hard=orgs.filter(o=>DEV_RM.includes(o));
+      if(hard.length&&d.plan!=='remove')out.push({l:'warn',d,x:`${andL(hard.map(nm))} in blood with the ${n} in place: remove it${d.plan==='exchange'?' rather than exchanging it over a guidewire':''}.`});
+      else if(anyBl&&!d.plan)out.push({l:'amb',d,x:`Bacteremia with the ${n} in place: paired line and peripheral cultures, examine the site, and decide whether it stays.`});
+      if(sf.some(x=>/purulence|tunnel|pocket|erosion/.test(x))&&d.plan!=='remove')out.push({l:'warn',d,x:`${sf.filter(x=>/purulence|tunnel|pocket|erosion/.test(x)).join(' and ')} at the ${n}: remove it.`});
+      if(/fem/i.test(d.site||'')&&d.t==='cvc')out.push({l:'amb',d,x:`Femoral ${t.s}: higher infection risk; move or remove when feasible.`});
+    }
+    if(d.t==='cied'){const sa=orgs.filter(o=>o==='mssa'||o==='mrsa');const gp=bl.some(c=>BG[c.org]&&/^gpc/.test(BG[c.org].s)||/^gpc/.test(c.stain||''));
+      if(sa.length)out.push({l:'warn',d,x:`S. aureus bacteremia with a CIED: TEE and EP evaluation for complete device and lead removal.`});
+      else if(gp)out.push({l:'amb',d,x:`Gram-positive bacteremia with a CIED: TEE to look for lead or valve vegetations.`});
+      if(sf.some(x=>x!=='clean'))out.push({l:'warn',d,x:`Pocket findings (${sf.filter(x=>x!=='clean').join(', ')}): treat as device infection until proven otherwise; EP for complete removal.`})}
+    if(d.t==='valve'){const v=orgs.filter(o=>DEV_PV.includes(o));if(v.length)out.push({l:'warn',d,x:`${andL(v.map(nm))} bacteremia with a ${n}: TEE.`});else if(anyBl)out.push({l:'amb',d,x:`Bacteremia with a ${n}: low threshold for TEE, especially if persistent.`})}
+    if(d.t==='lvad'&&anyBl)out.push({l:'warn',d,x:`Bacteremia with an LVAD: examine the driveline, image the pump and driveline, and involve the VAD team.`});
+    if(['pj','fx','spine'].includes(d.t)&&orgs.some(o=>o==='mssa'||o==='mrsa'))out.push({l:'amb',d,x:`S. aureus bacteremia with the ${n}: examine it, and aspirate or image if there is pain, effusion, or a wound change.`});
+    if(['pj','fx','spine'].includes(d.t)&&sf.some(x=>/sinus tract|exposed/.test(x)))out.push({l:'warn',d,x:`${sf.filter(x=>/sinus tract|exposed/.test(x)).join(' and ')} at the ${n}: deep hardware infection; orthopedics to evaluate.`});
+    if((d.t==='foley'||d.t==='spc')){const dd=devDay(d,today());if(dd>14&&(pt.reason==='uti'||pt.cx.some(c=>c.site==='Urine')))out.push({l:'amb',d,x:`${t.n} in place ${dd} days: replace it and send urine from the new catheter.`})}
+  });
+  return out}
+function devLine(d,ref){
+  const t=DV[d.t];const n=devName(d);const day=devDay(d,ref);const bits=[];
+  if(d.ins)bits.push(t&&t.dt==='date'?`placed ${md(d.ins)}`:`placed ${String(d.ins).trim()}`);
+  if(d.plan==='out')bits.push(`removed${d.out?' '+md(d.out):''}`);else if(day)bits.push(`day ${day}`);
+  let s=n+(bits.length?` (${bits.join(', ')})`:'');
+  if(d.plan==='out')return s;
+  const sf=d.sf||[];const P=[];
+  if(sf.length)P.push(sf.includes('clean')?'site clean':'site with '+andL(sf));
+  const src=DEV_SRC.find(([k])=>k===d.src);if(src)P.push(src[0]==='conf'?'confirmed source':lc1(src[1])+' source');
+  const pl=DEV_PLAN.find(([k])=>k===d.plan);if(pl)P.push('plan to '+lc1(pl[1]));
+  if(P.length)s+=': '+P.join('; ');
+  if(String(d.note||'').trim())s+='. '+String(d.note).trim().replace(/\.$/,'');
+  return s}
+function devSummary(pt){return devIn(pt).map(d=>{const t=DV[d.t];return devName(d)+(d.ins?(t&&t.dt==='date'?` (placed ${md(d.ins)})`:` (${String(d.ins).trim()})`):'')})}
+function devRecs(pt){const ref=today();return devIn(pt).filter(d=>d.plan==='remove'||d.plan==='exchange').map(d=>{const day=devDay(d,ref);return`${d.plan==='remove'?'Remove':'Exchange'} the ${devName(d)}${day?` (day ${day})`:''}`})}
+function devText(pt,ref){
+  ref=ref||today();const L=['LINES, CATHETERS, AND HARDWARE'];
+  const ins=devIn(pt),outs=(pt.dev||[]).filter(d=>d.plan==='out');
+  if(!ins.length&&!outs.length&&!String(pt.devices||'').trim())L.push('None documented.');
+  ins.forEach(d=>L.push('• '+sent(devLine(d,ref))));
+  if(String(pt.devices||'').trim())L.push('• '+sent(pt.devices));
+  if(outs.length){L.push('Removed:');outs.forEach(d=>L.push('• '+sent(devLine(d,ref))))}
+  const al=devAlerts(pt);if(al.length){L.push('');L.push('Considerations:');al.forEach(a=>L.push('• '+a.x))}
+  return L.join('\n')}
 
 function vHpi(pt){
   const r=RS[pt.reason];const m=r?(pt.pert[r.id]||{}):{};
@@ -1145,7 +1298,7 @@ function vHpi(pt){
         <button type="button" class="linkbtn danger" data-a="rmpcx" data-i="${i}">Remove</button></div>`).join('')}
       <button type="button" class="btn sm" data-a="addpcx">Add prior culture</button></div>
     ${fld('Antibiotics in the last 90 days','recent',pt.recent,'placeholder="cephalexin for cellulitis in August"')}
-    ${fld('Lines, devices, hardware','devices',pt.devices,'placeholder="R IJ CVC (10/8), L TKA 2019"')}
+    <div class="fld"><span>Lines, catheters, hardware</span>${devIn(pt).length?`<div>${devIn(pt).map(d=>`<span class="tag">${esc(devName(d))}${devDay(d,today())?' D'+devDay(d,today()):''}</span>`).join('')}</div>`:''}<a class="btn sm" style="text-decoration:none;align-self:flex-start" href="#p/${pt.id}/dev">${devIn(pt).length?'Review on the Devices tab ›':'Add on the Devices tab ›'}</a></div>
     <div class="fld" style="margin-top:12px"><span>Exposures</span><div class="chips">${EXPOSURES.map(x=>tri('exp',x,pt.exp[x])).join('')}</div></div>
     ${area('Exposure details','expD',pt.expD,2,'Traveled to Arizona in September; has two cats')}
     ${fld('Vaccinations','vacc',pt.vacc,'placeholder="pneumococcal up to date, no recent tetanus"')}
@@ -1178,6 +1331,7 @@ function vRecs(pt){
       else inner+=`<p class="hint" style="margin:0 0 6px">Active antimicrobials from the Micro tab appear here.</p>`;
       inner+=narrowOpts(pt).map(t=>recRow(pt,'auto|'+t,t)).join('');
     }
+    if(g==='sc'){const dr=devRecs(pt);if(dr.length)inner+=`<div class="cardsub" style="margin:0 0 6px">${dr.map(x=>'• '+esc(x)).join('<br>')}<br><a href="#p/${pt.id}/dev">From the Devices tab ›</a></div>`}
     if(g==='mo'){const mon=monRecs(pt);if(mon.length)inner+=recRow(pt,'auto|mon','Monitoring for current drugs: '+mon.join('; '))}
     inner+=L[g].map(x=>recRow(pt,recKey(pt,g,x),x)).join('');
     if(inner)h+=`<div class="card"><h3>${name}</h3>${inner}</div>`});
@@ -1281,7 +1435,7 @@ function vNote(pt){
     <div class="row">${[['crp','CRP','42'],['esr','ESR','65']].map(([k,n,ph])=>`<label class="fld s"><span>${n}</span><input data-p="${dp(k)}" value="${esc(d[k]||'')}" inputmode="decimal" placeholder="${ph}"></label>`).join('')}</div>
     ${[['tmax','Tmax'],['wbc','WBC'],['cr','Cr'],['crp','CRP']].map(([k,n])=>{const t=trend(pt,k,ref);return t&&t.includes('→')?`<div class="trend">${n}: ${esc(t)}</div>`:''}).join('')}
     <label class="fld"><span>Focused exam</span><textarea data-p="${dp('exam')}" rows="2" placeholder="No new murmur. Spine nontender. R IJ site clean.">${esc(d.exam||'')}</textarea></label>
-    ${fld('Lines and devices','devices',pt.devices,'placeholder="R IJ CVC removed 10/9; R arm PICC planned"')}
+    <div class="fld"><span>Lines and devices</span>${devIn(pt).length?`<ul class="tips" style="margin:2px 0 6px">${devIn(pt).map(d=>`<li>${esc(devLine(d,ref))}</li>`).join('')}</ul>`:''}<a class="btn sm" style="text-decoration:none;align-self:flex-start" href="#p/${pt.id}/dev">${devIn(pt).length?'Update on the Devices tab ›':'Add on the Devices tab ›'}</a></div>
   </div>
   <div class="card"><h3>Assessment</h3>${area('One-liner','oneliner',pt.oneliner,2,`${pt.age||'54'} y/o ${pt.sex||'male'} with MSSA bacteremia complicated by L4-5 vertebral osteomyelitis, source likely R IJ line`)}
     <label class="fld"><span>Additional plan items (one per line)</span><textarea data-p="${dp('plan')}" rows="3" placeholder="Follow up TEE&#10;Repeat blood cultures pending">${esc(d.plan||'')}</textarea></label></div>
@@ -1300,6 +1454,41 @@ function vNote(pt){
   <div class="btnrow"><button class="btn primary" data-a="copy" data-v="note">Copy note</button></div>${ptFooter(pt)}`;
   return h;
 }
+
+function vDev(pt){
+  const T=today();let h='';
+  const al=devAlerts(pt);
+  if(al.length)h+=al.map(a=>`<p class="flag ${a.l}">${esc(a.x)}</p>`).join('');
+  const list=pt.dev.map((d,i)=>[d,i]);const ins=list.filter(([d])=>d.plan!=='out'),outs=list.filter(([d])=>d.plan==='out');
+  h+=`<h2>In place</h2>`;
+  if(!ins.length)h+=`<p class="sub">Nothing entered yet. Add each line, catheter, drain, and piece of hardware below.</p>`;
+  ins.forEach(([d,i])=>{h+=devCard(pt,d,i,T)});
+  h+=`<div class="card"><h3>Add a line, catheter, or hardware</h3>${DEV_GROUPS.map(([g,gn])=>`<div class="fld"><span>${esc(gn)}</span><div class="chips">${DEVS.filter(x=>x.g===g).map(x=>`<button type="button" class="chip" data-a="adddev" data-v="${x.id}">${esc(x.n)}</button>`).join('')}</div></div>`).join('')}</div>`;
+  if(outs.length){h+=`<details class="dd"${outs.length<3?' open':''}><summary>Removed (${outs.length})</summary>`;outs.forEach(([d,i])=>{h+=devCard(pt,d,i,T)});h+='</details>'}
+  h+=`<div class="card">${fld('Anything else (free text)','devices',pt.devices,'placeholder="old R subclavian site healed; tattoo"')}</div>`;
+  h+=`<h2>Lines and hardware</h2><pre class="out" id="out">${esc(devText(pt,T))}</pre>
+  <div class="btnrow"><button class="btn primary" data-a="copy" data-v="dev">Copy</button></div>
+  <p class="hint">Devices in place go into the HPI and the daily note; Remove and Exchange plans go into the recommendations under source control.</p>${ptFooter(pt)}`;
+  return h}
+function devCard(pt,d,i,T){
+  const t=DV[d.t]||DV.oth;const day=devDay(d,T);const out=d.plan==='out';
+  const ck=[...DEV_CK,...(t.ck||[])];const nck=ck.filter((x,k)=>(d.ck||{})[k]).length;
+  const sfl=[...DEV_SF,...(t.sf||[])];const sf=d.sf||[];
+  let h=`<div class="card"><div class="ab-h"><div class="nm">${esc(t.n)}<small>${esc(DEV_GROUPS.find(([g])=>g===t.g)[1])}${out&&d.out?' · removed '+md(d.out):''}</small></div>
+    ${day!=null?`<div class="day${out?' off':''}"><small>Day</small>${day}</div>`:''}</div>
+    <div class="row">${fld('Site',`dev.${i}.site`,d.site||'',`placeholder="${esc(t.ph||'')}"`)}${fld('Details',`dev.${i}.desc`,d.desc||'',`placeholder="${esc(t.dp||'')}"`)}</div>
+    <div class="row">${t.dt==='date'?fld('Placed',`dev.${i}.ins`,d.ins||'','type="date" data-rr="1"'):fld('Placed',`dev.${i}.ins`,d.ins||'','placeholder="2019"')}${out?fld('Removed',`dev.${i}.out`,d.out||'','type="date" data-rr="1"'):''}</div>`;
+  if(!out){
+    h+=`<div class="fld"><span>Site exam</span><div class="chips">${sfl.map(x=>`<button type="button" class="chip${sf.includes(x)?' on':''}" data-a="devsf" data-i="${i}" data-v="${esc(x)}">${esc(x[0].toUpperCase()+x.slice(1))}</button>`).join('')}</div></div>
+    <div class="fld"><span>Source of this infection?</span><div class="seg" data-seg="dev.${i}.src">${DEV_SRC.map(([k,n])=>`<button type="button" data-v="${k}" aria-pressed="${d.src===k}">${n}</button>`).join('')}</div></div>
+    <details class="dd"><summary>Review checklist (${nck} of ${ck.length})</summary>${ck.map((x,k)=>`<button type="button" class="chk${(d.ck||{})[k]?' on':''}" data-a="devck" data-v="${i}|${k}"><span class="bx">${CHECK}</span><span>${esc(x)}</span></button>`).join('')}</details>
+    ${t.pr&&t.pr.length?`<ul class="pearls" style="margin-top:10px">${t.pr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}`;
+  }
+  h+=`<div class="fld"><span>Plan</span><div class="seg" data-seg="dev.${i}.plan">${DEV_PLAN.map(([k,n])=>`<button type="button" data-v="${k}" aria-pressed="${d.plan===k}">${n}</button>`).join('')}</div></div>
+    ${area('Notes','x',d.note||'',1,out?'tip sent for culture':'DTP 3 h; team wants to keep for TPN').replace('data-p="x"',`data-p="dev.${i}.note"`)}
+    ${out&&t.bsi&&d.out&&!pt.sc?`<button class="linkbtn" data-a="devsc" data-i="${i}">Use removal on ${md(d.out)} as the source control date</button>`:''}
+    <div class="btnrow" style="margin-top:8px;justify-content:flex-end"><button class="linkbtn danger" data-a="rmdev" data-i="${i}">Remove from list</button></div></div>`;
+  return h}
 
 /* ---------- reference ---------- */
 function lvRows(map,linkFn){
@@ -1365,6 +1554,7 @@ function sheet(pt,T){
   const al=[];
   posCultures(pt).forEach(c=>{const v=coverage(pt,c);if(!v)return;if(!act.length)al.push(`${v.bug.n}: no active antimicrobial`);else if(v.best==='n')al.push(`${v.bug.n} NOT covered by current regimen (first line: ${v.bug.first})`);else if(v.best==='v')al.push(`${v.bug.n}: coverage depends on susceptibilities`);else if(v.best==='p')al.push(`${v.bug.n}: ${v.by.p.join(', ')} active but not preferred (${v.bug.first})`)});
   bundles(pt).forEach(k=>{const b=BUNDLES[k];const n=b.i.filter((x,i)=>!pt.bnd[k+'|'+i]).length;if(n)al.push(`${b.n}: ${n} checklist item${n>1?'s':''} open`)});
+  devAlerts(pt).filter(a=>a.l==='warn').forEach(a=>al.push(a.x.replace(/\.$/,'')));
   if(al.length)h+=`<div class="al">${al.map(x=>`<div>▲ ${e(x)}</div>`).join('')}</div>`;
   // antimicrobials
   h+=`<h4>Antimicrobials</h4>`;
@@ -1391,7 +1581,7 @@ function sheet(pt,T){
   const mon=monitoring(pt);if(mon.length)L+=`<h4>Monitoring</h4><ul class="ck">${mon.map(x=>`<li>☐ ${e(x)}</li>`).join('')}</ul>`;
   const hi=[];
   if(pt.allergy.trim())hi.push(['Allergies',pt.allergy.trim()]);
-  if(pt.devices.trim())hi.push(['Lines/devices',pt.devices.trim()]);
+  {const dv=[...devIn(pt).map(d=>devLine(d,T)),...(pt.devices.trim()?[pt.devices.trim()]:[])];if(dv.length)hi.push(['Lines/devices',dv.join(' · ')])}
   const pmh=[...pt.imm,...String(pt.pmh||'').split(',').map(s=>s.trim()).filter(Boolean)];if(pmh.length)hi.push(['PMHx',[...new Set(pmh)].join(', ')]);
   if(pt.prior.length)hi.push(['Prior organisms',pt.prior.join(', ')]);
   const pc=pcxText(pt);if(pc)hi.push(['Prior cultures',pc]);
@@ -1423,7 +1613,7 @@ function curPtId(){const h=parseHash();return h[0]==='p'?h[1]:null}
 function curPt(){const h=parseHash();return h[0]==='p'?P(h[1]):null}
 function setPath(o,path,v){const k=path.split('.');let x=o;for(let i=0;i<k.length-1;i++){if(x[k[i]]==null)x[k[i]]={};x=x[k[i]]}x[k[k.length-1]]=v}
 function getPath(o,path){return path.split('.').reduce((x,k)=>x==null?x:x[k],o)}
-function refreshOut(){const pt=curPt();if(!pt)return;const o=document.getElementById('out');if(!o)return;const tab=parseHash()[2]||'hpi';o.textContent=tab==='note'?noteText(pt,noteDate[pt.id]||today()):tab==='recs'?recsText(pt):hpiText(pt);const sd=document.getElementById('sumdraft');if(sd)sd.textContent=summaryText(pt)}
+function refreshOut(){const pt=curPt();if(!pt)return;const o=document.getElementById('out');if(!o)return;const tab=parseHash()[2]||'hpi';o.textContent=tab==='note'?noteText(pt,noteDate[pt.id]||today()):tab==='recs'?recsText(pt):tab==='dev'?devText(pt):hpiText(pt);const sd=document.getElementById('sumdraft');if(sd)sd.textContent=summaryText(pt)}
 
 app.addEventListener('input',e=>{
   const t=e.target;
@@ -1447,6 +1637,7 @@ app.addEventListener('click',async e=>{
   if(segb&&pt&&segb.parentElement.dataset.seg){const k=segb.parentElement.dataset.seg,v=segb.dataset.v;
     if(k.startsWith('sus.')){const[,i,id]=k.split('.');const c=pt.cx[+i];c.susc=c.susc||{};if(c.susc[id]===v)delete c.susc[id];else c.susc[id]=v}
     else{const cur=getPath(pt,k);setPath(pt,k,cur===v?'':v);
+      if(/^dev\.\d+\.plan$/.test(k)){const d=pt.dev[+k.split('.')[1]];if(d.plan==='out'&&!d.out)d.out=today()}
       if(/^cx\.\d+\.stain$/.test(k)){const c=pt.cx[+k.split('.')[1]];if(c.org&&BG[c.org]&&BG[c.org].s!==c.stain)c.org=''}}
     save();render(true);return}
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
@@ -1479,13 +1670,18 @@ app.addEventListener('click',async e=>{
   if(a==='crv'){pt.crv[v]=!pt.crv[v];if(!pt.crv[v])delete pt.crv[v];save();render(true);return}
   if(a==='addpcx'){const r=RS[pt.reason];pt.pcx.push({id:uid(),date:'',site:(r&&r.site)||'Blood',org:'',res:''});save();render(true);return}
   if(a==='rmpcx'){pt.pcx.splice(+b.dataset.i,1);save();render(true);return}
+  if(a==='adddev'){const t=DV[v];pt.dev.push({id:uid(),t:v,site:'',desc:'',ins:t.dt==='date'?'':'',sf:[],src:'',ck:{},plan:'',out:'',note:''});save();render(true);toast(t.n+' added.');return}
+  if(a==='rmdev'){if(confirm('Remove this from the list? (Use Plan › Out to keep it in the history.)')){pt.dev.splice(+b.dataset.i,1);save();render(true)}return}
+  if(a==='devsf'){const d=pt.dev[+b.dataset.i];let sf=d.sf||[];if(sf.includes(v))sf=sf.filter(x=>x!==v);else sf=v==='clean'?['clean']:[...sf.filter(x=>x!=='clean'),v];d.sf=sf;save();render(true);return}
+  if(a==='devck'){const[i,k]=v.split('|');const d=pt.dev[+i];d.ck=d.ck||{};d.ck[k]=!d.ck[k];if(!d.ck[k])delete d.ck[k];save();render(true);return}
+  if(a==='devsc'){const d=pt.dev[+b.dataset.i];pt.sc=d.out;if(!pt.scTxt.trim())pt.scTxt=devName(d)+' removed';save();render(true);toast('Source control date set.');return}
   if(a==='bnd'){pt.bnd[v]=!pt.bnd[v];if(!pt.bnd[v])delete pt.bnd[v];save();render(true);return}
   if(a==='nday'){noteDate[pt.id]=addDays(noteDate[pt.id]||today(),+v);render(true);return}
   if(a==='ntoday'){delete noteDate[pt.id];render(true);return}
   if(a==='opat'){pt.opat.on=!pt.opat.on;save();render(true);return}
   if(a==='opatlabs'){pt.opat.labs=opatLabs(pt);save();render(true);return}
   if(a==='opatstop'){pt.opat.stop=v;save();render(true);return}
-  if(a==='copy'){const t=v==='note'?noteText(pt,noteDate[pt.id]||today()):v==='recs'?recsText(pt):v==='full'?'HISTORY OF PRESENT ILLNESS\n'+hpiText(pt)+'\n\n'+recsText(pt):hpiText(pt);const ok=await copyText(t);toast(ok?({note:'Note copied.',recs:'Assessment and recs copied.',full:'HPI, assessment, and recs copied.'}[v]||'HPI copied.'):'Couldn’t copy on this device.');return}
+  if(a==='copy'){const t=v==='dev'?devText(pt):v==='note'?noteText(pt,noteDate[pt.id]||today()):v==='recs'?recsText(pt):v==='full'?'HISTORY OF PRESENT ILLNESS\n'+hpiText(pt)+'\n\n'+recsText(pt):hpiText(pt);const ok=await copyText(t);toast(ok?({dev:'Lines and hardware copied.',note:'Note copied.',recs:'Assessment and recs copied.',full:'HPI, assessment, and recs copied.'}[v]||'HPI copied.'):'Couldn’t copy on this device.');return}
   if(a==='signoff'){pt.off=!pt.off;save();toast(pt.off?'Signed off.':'Moved back to active.');location.hash='';return}
   if(a==='print'){printPts([pt]);return}
   if(a==='delpt'){if(confirm('Delete this patient and everything entered for them?')){S.pts=S.pts.filter(p=>p.id!==pt.id);save();location.hash=''}return}
