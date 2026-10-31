@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="A/P">
+<link rel="apple-touch-icon" href="../admit/icon.png">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>A/P</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+[hidden]{display:none!important}
+/* Layout: seven tabs on the left (patient → note), the live H&P pinned on the right; one column on phones.
+   Fixed light theme to match the rest of PANACEA. */
+html,body{margin:0}
+:root{
+  --bg:#EBEFF2; --surface:#FFFFFF; --sunk:#F4F6F8; --ink:#14233A; --muted:#5A6A7E; --line:#D2DAE1;
+  --accent:#1D4ED0; --accent-soft:#E1E9FB; --accent-ink:#FFFFFF;
+  --ok:#1D6E49; --ok-soft:#E1F2E9; --warn:#8A4300; --warn-soft:#FCEFDF; --alert:#A3122B; --alert-soft:#FBE6E9;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+html{background:var(--bg)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button,input,textarea,select{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(24px + env(safe-area-inset-top,0px)) calc(56px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn:hover{color:var(--ink);background:rgba(127,127,127,.12)}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.top h1{margin:0;font-size:1.7rem;letter-spacing:-.01em;line-height:1.15}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.95rem}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:700;font-size:.92rem;cursor:pointer;min-height:42px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{background:#1840AE;color:var(--accent-ink)}
+.btn.small{min-height:34px;padding:5px 11px;font-size:.84rem}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--alert)}
+.btn:focus-visible,.chip:focus-visible,.info:focus-visible,.stepbtn:focus-visible,input:focus-visible,textarea:focus-visible,.homebtn:focus-visible,.pi:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.steps{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0;position:relative}
+.stepbtn .n{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0}
+.stepbtn.done .dot{opacity:1}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepbtn[aria-current="step"] .n{color:var(--accent)}
+@media (max-width:760px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}.stepbtn{padding:6px 8px}.stepbtn .t{font-size:.8rem}}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:4px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.35rem;line-height:1.2;text-wrap:balance}
+.ph .cue{margin:2px 0 0;color:var(--muted);font-size:.93rem;max-width:66ch}
+.pfoot{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:16px}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.flab{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.93rem}
+.flab .sub{font-weight:400;color:var(--muted);font-size:.84rem}
+.info{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);font-weight:700;font-size:.74rem;font-style:italic;font-family:Georgia,serif;cursor:pointer;display:grid;place-items:center;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.88rem;cursor:pointer;min-height:36px;line-height:1.2;text-align:left}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.row{display:flex;flex-wrap:wrap;gap:12px}
+.row>.in{flex:1 1 140px}
+.in{display:flex;flex-direction:column;gap:4px;min-width:0}
+.in>span{font-size:.8rem;color:var(--muted);font-weight:700}
+.in input,.in textarea{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:9px 10px;width:100%;font-size:.95rem;outline:0}
+.in textarea{resize:vertical;min-height:64px;line-height:1.4}
+.in input:focus,.in textarea:focus{border-color:var(--accent)}
+.in.s{flex:0 1 110px}
+.hint{margin:0;font-size:.85rem;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:7px 10px}
+.calcout{margin:0;font-size:.9rem;background:var(--accent-soft);border-radius:8px;padding:8px 11px}
+.sep{height:1px;background:var(--line)}
+.gt{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+
+/* problem library & cards */
+.lib{display:flex;flex-direction:column;gap:12px}
+.lib .sys{display:flex;flex-direction:column;gap:6px}
+.pcards{display:flex;flex-direction:column;gap:12px}
+.pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pch{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--sunk);border-bottom:1px solid var(--line)}
+.pch .hash{font-weight:700;color:var(--accent)}
+.pch input{flex:1;min-width:0;border:0;background:transparent;font-weight:700;font-size:1rem;outline:0;padding:4px 2px}
+.pch input:focus{background:var(--surface);border-radius:6px}
+.pcb{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.pcb .in textarea{min-height:48px}
+.items{display:flex;flex-direction:column;gap:2px}
+.pi{display:flex;align-items:flex-start;gap:9px;padding:6px 6px;border-radius:8px;cursor:pointer;border:0;background:none;text-align:left;width:100%;font-size:.9rem;line-height:1.35}
+.pi:hover{background:var(--sunk)}
+.dest{font-weight:400;color:var(--muted);font-size:.78rem}
+.pdata{margin:0 6px;font-size:.84rem;color:var(--muted)}
+.comb{display:block;width:100%;border:0;border-bottom:1px dashed var(--line);background:none;color:var(--accent);font:inherit;font-size:.8rem;font-weight:700;padding:5px 10px;text-align:left;cursor:pointer}
+.comb:hover{background:var(--accent-soft)}
+.pcard.grouped{border-color:var(--accent)}
+.pcard.grouped .pch+.pch{border-top:0}
+.pi.merged .tx{text-decoration:line-through;text-decoration-color:#9AA7B4}
+.pi .why{text-decoration:none;display:inline;font-size:.78rem;color:var(--muted);font-style:italic}
+.conf{margin:0 6px;font-size:.84rem;color:#9A3412;font-weight:700}
+.btn.sug{margin:0 0 8px 0;text-align:left}
+.medgrp{border-top:1px dashed var(--line);padding-top:6px;margin-top:2px}
+.mlab{margin:0 0 2px 6px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pi .bx{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid #9AA7B4;margin-top:1px;display:grid;place-items:center}
+.pi[aria-pressed="true"] .bx{background:var(--accent);border-color:var(--accent)}
+.pi[aria-pressed="true"] .bx::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.pi[aria-pressed="false"] .tx{color:var(--muted)}
+.mv{border:0;background:none;color:var(--muted);cursor:pointer;width:30px;height:30px;border-radius:8px;font-size:1rem}
+.mv:hover{background:var(--surface);color:var(--ink)}
+.empty{margin:0;color:var(--muted);font-size:.92rem}
+.rec{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.rec h3{margin:0;font-size:1rem}
+.rec ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.rec .note{font-size:.82rem;color:var(--muted);margin:0}
+.rec .tag{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+.out{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 92px);overflow:auto}
+@media (max-width:980px){.out{position:static;max-height:none}}
+.out h3{margin:0;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dict{white-space:pre-wrap;font-size:.84rem;line-height:1.5;background:var(--bg);border-radius:10px;padding:12px;margin:0;font-family:var(--f-body);overflow-wrap:anywhere}
+.outbtns{display:flex;gap:8px;flex-wrap:wrap}
+.outbtns .btn{flex:1}
+.toast{font-size:.84rem;color:var(--accent);min-height:1.2em;margin:0}
+.toast a{color:var(--accent);font-weight:700}
+.pop{position:fixed;z-index:50;width:380px;max-width:calc(100vw - 24px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(20,35,58,.18);padding:12px 14px;display:flex;flex-direction:column;gap:8px;max-height:min(74vh,600px);overflow:auto}
+.pop .pt{font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.pop p,.pop li{margin:0;font-size:.88rem}
+.pop ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.pop .close{border:0;background:none;font-size:1.3rem;line-height:1;cursor:pointer;color:var(--muted);padding:0 2px}
+@media (max-width:640px){.pop{left:0!important;right:0;top:auto!important;bottom:0;width:auto;max-width:none;border-radius:16px 16px 0 0;max-height:72vh;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}}
+.privacy{font-size:.82rem;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* A/P writer */
+.wrap{max-width:1240px}
+.grid{grid-template-columns:minmax(0,1fr) 460px}
+#panes{display:flex;flex-direction:column;gap:18px;min-width:0}
+.flab .sub,.in .sub{font-weight:400;color:var(--muted);font-size:.8rem}
+.libd summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--accent);padding:4px 0}
+.libd .lib{margin-top:10px}
+.sect{margin:4px 0 0;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.gf{display:flex;flex-direction:column;gap:6px;padding:8px 0 10px;border-bottom:1px dashed var(--line)}
+.gfl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.gfl .num{flex:none;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.74rem;display:grid;place-items:center;align-self:center}
+.gfl .gft{font-weight:700;font-size:.92rem}
+.gfl .gfc{color:var(--muted);font-size:.82rem}
+.gf textarea{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:8px 10px;width:100%;font-size:.93rem;outline:0;resize:vertical;line-height:1.4;font-family:var(--f-body)}
+.gf textarea:focus{border-color:var(--accent)}
+.chips.sm{gap:5px}
+.chip.sm{min-height:30px;padding:4px 10px;font-size:.8rem;background:var(--sunk)}
+.chip.sm[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.pvw{margin:4px 0 2px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:.9rem;line-height:1.5}
+.muted{color:var(--muted)}
+.linkbtn{align-self:flex-start;border:0;background:none;color:var(--accent);font:inherit;font-size:.84rem;font-weight:700;padding:2px 0;cursor:pointer}
+mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 1px}
+.dict{white-space:normal;font-family:Arial,var(--f-body);font-size:.88rem;line-height:1.45;background:var(--surface);border:1px solid var(--line)}
+.dict p{margin:0}
+.dict .sumout{margin-bottom:12px}
+.dict .blk{margin-bottom:14px}
+.dict .blk:last-child{margin-bottom:0}
+.dict .ba.empty{color:var(--muted);font-style:italic}
+.dict ul{margin:2px 0 0;padding-left:20px}
+.dict li{margin:1px 0}
+.outh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tog{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:700;cursor:pointer;color:var(--muted)}
+.tog[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.privacy{font-size:.8rem;color:var(--muted);margin:0}
+.out{top:16px;max-height:calc(100vh - 32px)}
+@media (max-width:980px){.out{max-height:none}}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea" title="Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>A/P</h1></div>
+      <p>Assessment and plan writer: each problem as a header, an italic assessment built from what matters, and a bulleted plan.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <div class="grid">
+    <main id="panes"></main>
+    <aside class="out" aria-live="polite">
+      <div class="outh"><h3>Assessment and plan</h3><button type="button" class="tog" id="tc" aria-pressed="true" title="Capitalize problem headers">Title Case</button></div>
+      <div class="dict" id="dict"></div>
+      <div class="outbtns">
+        <button class="btn primary" id="copyRich" type="button">Copy A/P</button>
+        <button class="btn" id="copyPlain" type="button">Copy plain text</button>
+      </div>
+      <p class="toast" id="toast"></p>
+      <p class="privacy">Copy A/P keeps the italics and bullets when pasted into Epic or Word. Nothing is saved or sent anywhere. Do not enter names, MRNs or dates of birth.</p>
+    </aside>
+  </div>
+</div>
+<div class="pop" id="pop" hidden role="dialog"></div>
+<script>
+/* =========================================================
+   Content (problem library, data prompts and home-med templates copied from Admit)
+   ========================================================= */
+const PMH=[['htn','HTN'],['hld','HLD'],['dm2','DM2',['a1c','insulin']],['dm1','DM1',['a1c','insulin']],['cad','CAD / prior MI',['cath','echo']],['hfref','HFrEF',['echo','dryWt']],['hfpef','HFpEF',['echo','dryWt']],['afib','Atrial fibrillation',['anticoag']],['copd','COPD',['homeO2','pft']],['asthma','Asthma',['pft']],['osa','OSA',['cpap']],['ckd','CKD',['baseCr']],['esrd','ESRD on HD',['dialysis']],['cirrhosis','Cirrhosis',['liver']],['cva','Prior CVA',['baseFx']],['vte','Prior DVT/PE',['anticoag']],['cancer','Active cancer',['onc']],['immuno','Immunosuppressed',['immuno']],['etoh','Alcohol use disorder',['etohHx']],['dementia','Dementia',['baseFx']],['hypothyroid','Hypothyroidism'],['gerd','GERD'],['depression','Depression/anxiety'],['bph','BPH']];
+// Pertinent data prompts
+const DATA={
+ echo:['Last echo','date ***, EF ***%, RV ***, valves ***, PASP ***'],
+ cath:['Last cath / stress','date ***, findings ***, stents ***'],
+ ekg:['EKG today','rhythm ***, QTc ***, ischemic changes ***'],
+ trop:['Troponin / BNP','trop *** → ***, BNP ***'],
+ baseCr:['Baseline Cr','*** (date ***), eGFR ***'],
+ dialysis:['Dialysis','HD days ***, last session ***, access ***, dry weight ***, nephrologist ***'],
+ a1c:['A1c','*** (date ***)'],
+ insulin:['Home insulin / agents','***'],
+ homeO2:['Home O2','*** L, baseline SpO2 ***'],
+ pft:['PFTs','FEV1 *** L (***%), FEV1/FVC ***, date ***'],
+ intub:['Prior intubations / NIV','***'],
+ cpap:['Home CPAP/BiPAP','settings ***'],
+ liver:['Liver history','etiology ***, MELD-Na ***, last EGD/varices ***, last para ***, TIPS ***, transplant status ***'],
+ anticoag:['Anticoagulation','agent ***, indication ***, last dose ***'],
+ baseFx:['Baseline function','cognition ***, ambulation ***, ADLs ***, lives ***'],
+ onc:['Oncology','cancer ***, last chemo/IO ***, oncologist ***, ANC ***'],
+ immuno:['Immunosuppression','agents ***, transplant ***, PJP ppx ***'],
+ etohHx:['Alcohol history','drinks/day ***, last drink ***, prior withdrawal/seizures/DTs ***'],
+ dryWt:['Dry weight','*** kg; today ***kg'],
+ micro:['Prior micro','resistant organisms (MRSA/ESBL/Pseudomonas) ***, recent abx ***'],
+ cultures:['Cultures sent','blood ×2 ***, urine ***, sputum ***, other ***'],
+ lactate:['Lactate','*** → ***'],
+ abg:['ABG / VBG','pH/pCO2/pO2/HCO3 ***'],
+ vent:['Vent / O2','mode ***, Vt ***, RR ***, PEEP ***, FiO2 ***; plateau ***'],
+ lytes:['Key labs','Na ***, K ***, HCO3 ***, BUN/Cr ***/***, glucose ***'],
+ uLytes:['Urine studies','UA ***, UNa ***, UCr ***, FENa ***, Uosm ***'],
+ lfts:['LFTs','AST/ALT ***/***, ALP ***, Tbili ***, INR ***, albumin ***'],
+ cbc:['CBC','Hgb *** (baseline ***), plt ***, WBC ***'],
+ coag:['Coags / T&S','INR ***, PTT ***, fibrinogen ***, type & screen ***'],
+ imaging:['Key imaging','***'],
+ neuroImg:['Neuro imaging','CT/CTA ***, MRI ***, LKW ***, NIHSS ***'],
+ tox:['Tox','ingestion ***, time ***, APAP ***, salicylate ***, EtOH ***, UDS ***'],
+ wt:['Weight','*** kg']
+};
+const SYS=[['neuro','Neuro'],['pulm','Pulmonary'],['cv','Cardiovascular'],['renal','Renal & lytes'],['gi','GI & liver'],['id','Infectious'],['heme','Heme'],['endo','Endocrine'],['other','Other'],['chronic','Chronic, stable']];
+// Problem library: key -> {sys, name, a: assessment template, items: plan bullets ('?' prefix = off by default), data: prompt keys, tip}
+const LIB={
+ // Neuro
+ enceph:{sys:'neuro',name:'Acute toxic-metabolic encephalopathy',a:'Likely *** (infection / metabolic / medication / withdrawal); no focal deficits.',data:['baseFx','lytes'],items:['Workup: BMP, CBC, LFTs, glucose, UA/UCx, CXR, blood cultures if febrile','?Ammonia (only if liver disease), TSH, B12, VBG for CO2','?CT head if focal deficit, fall, or anticoagulated','Delirium precautions: reorient, glasses/hearing aids, day-night cycle, early mobility, family at bedside','CAM-ICU each shift; avoid restraints','?Antipsychotic (e.g., quetiapine ***) only for distressing agitation endangering safety','Aspiration precautions; SLP swallow evaluation before PO']},
+ etohw:{sys:'neuro',name:'Alcohol withdrawal',a:'Last drink ***; CIWA ***; history of seizures/DTs ***.',data:['etohHx','lfts'],items:['Symptom-triggered treatment per CIWA-Ar protocol (benzodiazepine or phenobarbital per institutional protocol)','Thiamine *** IV before glucose (high-dose, e.g., 500 mg IV TID ×3 days, if Wernicke concern), then 100 mg daily','Folate 1 mg daily, multivitamin','Replete Mg, Phos, K; check glucose','Seizure and fall precautions; aspiration precautions','?ICU if escalating requirements or DTs; consider phenobarbital load or dexmedetomidine adjunct','Addiction medicine / SW consult; discuss naltrexone or acamprosate before discharge']},
+ seizure:{sys:'neuro',name:'Seizure',a:'*** (first-time vs known epilepsy); trigger ***.',data:['neuroImg','lytes','tox'],items:['Seizure precautions; benzodiazepine (lorazepam 4 mg IV / midazolam 10 mg IM) for seizure >5 min','?Levetiracetam load 60 mg/kg IV (max 4,500 mg) if status, then ***','Levetiracetam *** mg BID maintenance / continue home AED; check levels ***','Workup: BMP, Mg, Ca, glucose, CK, utox, AED levels','?CT head; MRI brain','?EEG (continuous if not returning to baseline)','Neurology consult','Driving restriction counseling']},
+ stroke:{sys:'neuro',name:'Acute ischemic stroke / TIA',a:'LKW ***; NIHSS ***; territory ***; tPA/TNK ***; thrombectomy ***.',data:['neuroImg','anticoag','ekg'],items:['Neuro checks q*** h; NIHSS daily','BP goal: permissive up to 220/120 if no lytics; <180/105 for 24 h after lytics/thrombectomy','Antiplatelet: aspirin *** (hold 24 h after lytics) ± clopidogrel for minor stroke/TIA','High-intensity statin (atorvastatin 80 mg)','MRI brain, CTA head/neck, TTE with bubble, telemetry ≥24 h','Lipid panel, A1c','NPO until bedside swallow screen; SLP if fails','PT/OT/SLP; stroke education','Neurology consult']},
+ // Pulm
+ ahrf:{sys:'pulm',name:'Acute hypoxemic respiratory failure',a:'Likely 2/2 ***; on *** (NC / HFNC / NIV / ventilator).',data:['abg','vent','imaging'],items:['O2 to SpO2 92–96% (88–92% if CO2 retainer)','?HFNC; reassess for intubation if ↑work of breathing, worsening ROX, or mental status change','If intubated: lung-protective ventilation, Vt 6 mL/kg PBW, plateau <30, PEEP/FiO2 per ARDSnet table','ABG after vent changes; CXR daily while intubated','Conservative fluid strategy once off pressors; diurese as BP allows','Treat cause: ***','?Prone ≥16 h/day if P/F <150 on FiO2 ≥0.6 and PEEP ≥5','Daily SAT/SBT when criteria met']},
+ ards:{sys:'pulm',name:'ARDS',a:'Berlin ***; P/F ***; cause ***.',data:['abg','vent','imaging'],items:['Vt 6 mL/kg PBW (4–8), plateau ≤30, driving pressure <15','Higher PEEP/FiO2 table for moderate–severe','Prone positioning ≥16 h/day if P/F <150','?Neuromuscular blockade (cisatracurium) for severe dyssynchrony, early severe ARDS','Conservative fluids; diurese once off pressors','?Steroids (dexamethasone ***) per etiology','Daily SAT/SBT once improving']},
+ copd:{sys:'pulm',name:'COPD exacerbation',a:'Triggers ***; baseline O2 ***; on *** (NC / BiPAP).',data:['homeO2','pft','abg','intub'],items:['SpO2 goal 88–92%','BiPAP for pH <7.35 with hypercapnia; recheck VBG in 1–2 h','Ipratropium-albuterol nebs q4h + albuterol q2h PRN','Prednisone 40 mg daily ×5 days (or methylprednisolone IV if unable to take PO)','Antibiotics if ↑sputum purulence or ventilated: azithromycin 500 mg ×3 days or doxycycline 100 mg BID ×5 days','Viral panel; CXR','Smoking cessation; nicotine replacement','?Pulmonary rehab referral at discharge']},
+ asthma:{sys:'pulm',name:'Asthma exacerbation',a:'Severity ***; peak flow ***; triggers ***.',data:['abg','intub'],items:['Continuous or back-to-back albuterol + ipratropium for first hour','Methylprednisolone 40–60 mg IV or prednisone 40–50 mg','Magnesium sulfate 2 g IV ×1 for severe','?Epinephrine / ketamine / heliox if refractory; low threshold for ICU','Rising pCO2 or normal pCO2 while tachypneic is ominous','Controller therapy and action plan before discharge']},
+ pe:{sys:'pulm',name:'Pulmonary embolism',a:'*** risk (PESI ***); RV strain ***; troponin/BNP ***.',data:['echo','trop','anticoag','imaging'],items:['Anticoagulation: heparin infusion (if possible intervention or unstable) / enoxaparin 1 mg/kg q12h','Risk stratify: troponin, BNP, TTE or CT RV/LV ratio','?PERT consult for intermediate-high or high-risk PE','?Systemic thrombolysis if hypotensive (alteplase 100 mg over 2 h) unless contraindicated','LE duplex','Avoid excessive fluids; norepinephrine if hypotensive','Transition to DOAC when stable; duration by provoked vs unprovoked']},
+ effusion:{sys:'pulm',name:'Pleural effusion',a:'Side ***; size ***; likely transudate vs exudate ***.',data:['imaging','echo'],items:['Diagnostic ± therapeutic thoracentesis: pH, LDH, protein, glucose, cell count, Gram stain/culture, cytology','Serum LDH and protein for Light\'s criteria','?Chest tube if complicated parapneumonic (pH <7.2, glucose <60, positive Gram stain, pus)','Treat underlying cause (diurese if HF)']},
+ // CV
+ septic:{sys:'cv',name:'Septic shock',a:'Source ***; MAP ***; lactate ***; on norepinephrine *** mcg/kg/min.',data:['cultures','lactate','micro'],items:['Blood cultures ×2 before antibiotics; source cultures','Broad-spectrum antibiotics within 1 h (see antibiotic plan)','Balanced crystalloid resuscitation (initial ~30 mL/kg as tolerated); reassess with dynamic measures before more','MAP goal ~65 (60–65 if age ≥65)','Norepinephrine first line; add vasopressin when NE ~0.25–0.5 mcg/kg/min','Hydrocortisone 50 mg IV q6h if ongoing vasopressor requirement','Arterial line; central line for vasopressors','Trend lactate q2–4h until normal','Source control: ***','Extended-infusion beta-lactams after loading dose','Daily review for de-escalation once cultures result']},
+ cardshock:{sys:'cv',name:'Cardiogenic shock',a:'SCAI stage ***; etiology ***; lactate ***.',data:['echo','cath','trop','lactate'],items:['TTE now','Cardiology / advanced HF / shock team consult','Norepinephrine for MAP ≥65; inotrope (dobutamine or milrinone) for low output','?PA catheter for hemodynamics (CI, CPO, PCWP)','?Mechanical support evaluation (IABP / Impella / ECMO)','Cautious diuresis once perfusing; avoid large fluid boluses','Lactate, LFTs, Cr to track end-organ perfusion; strict I/O']},
+ hemshock:{sys:'cv',name:'Hemorrhagic shock',a:'Source ***; Hgb ***; transfused ***.',data:['cbc','coag'],items:['Two large-bore IVs; massive transfusion protocol if unstable','Balanced transfusion (1:1:1); TXA if trauma within 3 h','Reverse anticoagulation (***)','Calcium for transfusion; keep warm','Source control: surgery / IR / GI ***','Type and cross ***units; trend Hgb q4–6h']},
+ adhf:{sys:'cv',name:'Acute decompensated heart failure',a:'HF*** (EF ***%); trigger ***; warm/wet vs cold/wet ***.',data:['echo','dryWt','trop','ekg'],items:['IV furosemide *** mg BID (≈2–2.5× home oral dose); goal net −1 to −2 L/day','Strict I/O, daily standing weights, BMP and Mg BID','2 g sodium diet; fluid restriction 1.5–2 L','K >4, Mg >2','TTE if none in past year or clinical change','Identify trigger: ischemia, arrhythmia, nonadherence, infection, ***','?Cardiology consult','HF education; GDMT optimization before discharge']},
+ acs:{sys:'cv',name:'NSTEMI / ACS',a:'Troponin ***; EKG ***; TIMI/HEART ***.',data:['trop','ekg','cath','echo'],items:['Aspirin 325 mg ×1 then 81 mg daily','P2Y12 inhibitor per cardiology','Heparin infusion (ACS protocol)','Atorvastatin 80 mg','Metoprolol *** if no HF, shock, or bradycardia','Nitroglycerin PRN chest pain (avoid if RV infarct or PDE5 use)','Trend troponin; repeat EKG with pain','TTE; lipid panel, A1c','Cardiology consult re: timing of catheterization','Telemetry']},
+ afib:{sys:'cv',name:'Atrial fibrillation with RVR',a:'Onset ***; rate ***; CHA₂DS₂-VASc ***; HAS-BLED ***; trigger ***.',data:['anticoag','echo','ekg'],items:['Rate control: diltiazem *** (if EF preserved) / metoprolol ***; amiodarone if hypotensive or low EF','?Synchronized cardioversion if unstable','Anticoagulation per CHA₂DS₂-VASc (heparin infusion → DOAC) unless contraindicated','K >4, Mg >2; TSH','Treat trigger (sepsis, volume, pain, withdrawal, ***)','TTE if none recent','Telemetry']},
+ htnem:{sys:'cv',name:'Hypertensive emergency',a:'BP ***; end-organ injury ***.',data:['trop','lytes','neuroImg'],items:['Lower MAP by ≤25% in first hour, then to ~160/100 over 2–6 h (exceptions: aortic dissection, stroke, preeclampsia)','Nicardipine or clevidipine infusion; arterial line','End-organ workup: troponin, BMP, UA, EKG, ***','?CT head if neuro symptoms','Transition to oral regimen in 24–48 h']},
+ brady:{sys:'cv',name:'Symptomatic bradycardia / heart block',a:'Rhythm ***; HR ***; meds ***.',data:['ekg','lytes'],items:['Pads on; atropine 1 mg IV for symptomatic bradycardia','Transcutaneous pacing / dopamine or epinephrine infusion if unstable','Check K, Mg, TSH, digoxin level, troponin','Cardiology / EP consult for pacing']},
+ // Renal
+ aki:{sys:'renal',name:'Acute kidney injury',a:'Cr *** from baseline ***; KDIGO stage ***; likely prerenal / ATN / obstructive ***.',data:['baseCr','uLytes','lytes'],tip:'KDIGO: stage 1 Cr ≥1.5× baseline (or ≥0.3 in 48 h); stage 2 ≥2×; stage 3 ≥3×, Cr ≥4, or RRT. FENa <1% (or FEUrea <35% on diuretics) suggests prerenal.',items:['UA with microscopy; urine Na, Cr, urea, osm; FENa / FEUrea','Bladder scan / PVR; Foley if retention','Renal ultrasound if no clear cause or concern for obstruction','Assess volume status; isotonic fluids if hypovolemic, diuresis if overloaded','Avoid IV contrast and other nephrotoxins (aminoglycosides, ***) when possible','Renally dose all medications; pharmacy review','Avoid hypotension (MAP ≥65)','Strict I/O; daily weights; BMP daily (BID if K rising)','?Nephrology consult; RRT for refractory acidosis, K, overload, uremia, or toxins (AEIOU)']},
+ ckd:{sys:'renal',name:'CKD stage ***',a:'Baseline Cr ***, eGFR ***; etiology ***.',data:['baseCr'],items:['Renally dose medications; avoid nephrotoxins and IV contrast when possible','Monitor K, HCO3, Phos','Anemia: iron studies; ESA per nephrology','Preserve veins (no PICC in non-dominant arm)']},
+ esrd:{sys:'renal',name:'ESRD on hemodialysis',a:'HD *** (days); last session ***; access ***; dry weight ***.',data:['dialysis'],items:['Nephrology consult for inpatient HD','Renal diet: 2 g Na, 2 g K, phosphorus restriction, fluid restriction ***','No BP or sticks in access arm; check thrill/bruit','ESA per nephrology','Renally dose medications']},
+ hyperk:{sys:'renal',name:'Hyperkalemia',a:'K *** ; EKG changes ***; cause ***.',data:['lytes','ekg'],items:['EKG now; telemetry','Calcium gluconate 1–3 g IV if EKG changes (repeat if persistent)','Insulin regular 10 units IV + D50 (5 units if ESRD/AKI or hypoglycemia risk); glucose q1h ×4–6','Albuterol 10–20 mg nebulized','Potassium binder: sodium zirconium cyclosilicate 10 g TID','Loop diuretic if making urine and volume allows','?Urgent HD if refractory or anuric','Recheck K in 2 h, then q4–6h']},
+ hypona:{sys:'renal',name:'Hyponatremia',a:'Na ***; symptoms ***; volume status ***; likely ***.',data:['lytes','uLytes'],items:['Serum osm, urine osm, urine Na, TSH, AM cortisol','Correction goal: 4–6 mEq/L/24 h, maximum 8 (6 if high ODS risk: EtOH, malnutrition, hypoK, cirrhosis)','3% saline 100–150 mL bolus if severe symptoms (seizure, obtundation); may repeat ×2','Na q4h while correcting','Fluid restriction 1–1.2 L if SIADH; treat volume depletion with isotonic fluid','Watch for brisk aquaresis; DDAVP clamp/rescue if overcorrecting']},
+ hyperna:{sys:'renal',name:'Hypernatremia',a:'Na ***; free water deficit *** L.',data:['lytes'],items:['Free water deficit = 0.5 (F) or 0.6 (M) × weight × (Na/140 − 1)','D5W or enteral free water flushes ***','Lower Na ≤10–12 mEq/L per 24 h (faster OK if acute <48 h)','BMP q6h while correcting','Address losses (diuretics, diarrhea, DI)']},
+ dka:{sys:'renal',name:'DKA / HHS',a:'Glucose ***, AG ***, pH ***, BHB ***; trigger ***.',data:['lytes','a1c'],items:['DKA protocol: balanced crystalloid 1–1.5 L first hour, then by volume status','Do not start insulin until K ≥3.3; replete K to 4–5','Insulin infusion 0.1 units/kg/h (no bolus)','Add D5 when glucose <250; keep insulin running until AG closes','BMP q2–4h; glucose q1h; phos and Mg','Transition to SQ basal with 2 h overlap when AG closed and eating','Identify trigger: infection, missed insulin, MI, SGLT2i, ***','Diabetes education; endocrine consult if new or recurrent']},
+ // GI
+ ugib:{sys:'gi',name:'Upper GI bleed',a:'Hematemesis/melena ***; Hgb *** (baseline ***); Glasgow-Blatchford ***; on antithrombotics ***.',data:['cbc','coag','liver'],items:['Two large-bore IVs; type and cross ***','Transfuse to Hgb >7 (>8 if active cardiac ischemia)','IV pantoprazole 80 mg then 40 mg IV BID (high-dose)','GI consult for EGD within 24 h','Reverse anticoagulation if life-threatening (***)','If cirrhosis: octreotide 50 mcg bolus + 50 mcg/h, ceftriaxone 1 g daily ×7 days','NPO; Hgb q6h','?Intubation for airway protection if massive hematemesis or encephalopathy']},
+ lgib:{sys:'gi',name:'Lower GI bleed',a:'Hematochezia ***; Hgb ***; hemodynamics ***.',data:['cbc','coag'],items:['Two large-bore IVs; type and screen','Transfuse to Hgb >7','?CTA if hemodynamically unstable / active bleeding, then IR embolization','GI consult; bowel prep for colonoscopy when stable','Rule out brisk UGIB (BUN/Cr ratio; consider EGD)','Hgb q6–8h']},
+ cirrhosis:{sys:'gi',name:'Decompensated cirrhosis',a:'Etiology ***; MELD-Na ***; decompensation: ascites / HE / varices / ***.',data:['liver','lfts','coag'],items:['Diagnostic paracentesis: cell count, albumin, total protein, culture in blood culture bottles','SBP if PMN ≥250: ceftriaxone 2 g daily + albumin 1.5 g/kg day 1 and 1 g/kg day 3','If AKI: albumin 1 g/kg ×2 days; avoid nephrotoxins','Lactulose titrated to 2–3 soft BMs; rifaximin 550 mg BID for HE','Avoid sedatives; aspiration precautions','Na restriction 2 g; no fluid restriction unless Na <125','?Hepatology consult; transplant referral status','Trend INR, Tbili, Cr (MELD) daily']},
+ hepenc:{sys:'gi',name:'Hepatic encephalopathy',a:'West Haven grade ***; trigger ***.',data:['liver','lfts'],items:['Lactulose 20–30 g q1–2h until BM, then titrate to 2–3 soft BMs/day','Rifaximin 550 mg BID','Find trigger: infection (diagnostic para, UA, CXR, cultures), GI bleed, constipation, lytes, sedatives, ***','Aspiration precautions; ?airway protection if grade 3–4','Ammonia level does not guide therapy']},
+ lft:{sys:'gi',name:'Transaminitis / abnormal LFTs',a:'Pattern *** (hepatocellular / cholestatic / mixed; R ratio ***); AST/ALT ***/***, ALP ***, Tbili ***, INR ***.',data:['lfts','etohHx'],tip:'R = (ALT/ULN) ÷ (ALP/ULN). R >5 hepatocellular, <2 cholestatic, 2–5 mixed. ALT in the thousands: ischemic, toxic (APAP), or viral.',items:['Repeat hepatic panel, INR, CK','Acetaminophen level; ethanol level','Acute viral hepatitis panel (HAV IgM, HBsAg, HBcAb IgM, HCV Ab ± RNA)','RUQ ultrasound with Doppler','Medication review: acetaminophen, statins, antibiotics, antiepileptics, supplements','?Autoimmune (ANA, ASMA, IgG), ceruloplasmin if <40, iron studies','?Ischemic hepatitis if recent hypotension: optimize perfusion','If APAP or unknown with INR elevation: N-acetylcysteine and poison control','Trend LFTs daily; hepatology if INR >1.5 or encephalopathy (acute liver failure)']},
+ panc:{sys:'gi',name:'Acute pancreatitis',a:'Etiology *** (gallstone / EtOH / TG / ***); severity ***.',data:['lfts','lytes'],items:['Lactated Ringer\'s, moderate goal-directed (bolus 10 mL/kg if hypovolemic, then 1.5 mL/kg/h); reassess at 12, 24 and 48 h','Pain control: multimodal; opioids PRN','Early oral feeding as tolerated (within 24–72 h)','RUQ ultrasound; lipase, triglycerides, calcium','No prophylactic antibiotics','?ERCP within 24 h if cholangitis; cholecystectomy same admission if gallstone','EtOH cessation; withdrawal monitoring']},
+ sbo:{sys:'gi',name:'Small bowel obstruction',a:'Partial vs complete ***; prior surgery ***.',data:['imaging','lytes'],items:['NPO; NG tube to low intermittent suction','IV fluids; replete lytes (K, Mg)','General surgery consult','?Water-soluble contrast challenge','Serial abdominal exams; lactate','Avoid opioid excess']},
+ cdiff:{sys:'gi',name:'C. difficile infection',a:'Severity ***: WBC ***, Cr ***; fulminant features ***.',data:['cbc','lytes'],items:['Contact precautions; soap and water','Non-severe/severe: fidaxomicin 200 mg BID ×10 days (or vancomycin 125 mg PO QID ×10 days)','Fulminant: vancomycin 500 mg PO/NG QID + metronidazole 500 mg IV q8h (± rectal vancomycin if ileus); surgery consult','Stop unnecessary antibiotics','Avoid antimotility agents']},
+ // ID
+ sepsis:{sys:'id',name:'Sepsis, source ***',a:'Source ***; qSOFA/SOFA ***; lactate ***.',data:['cultures','lactate','micro'],items:['Blood cultures ×2, source cultures before antibiotics','Empiric antibiotics (see antibiotic plan)','IV fluids as indicated; reassess volume','Trend lactate if elevated','Source control ***','De-escalate by day 2–3 with cultures; set stop date']},
+ neutfever:{sys:'id',name:'Neutropenic fever',a:'ANC ***; last chemo ***; source ***.',data:['onc','cultures'],items:['Blood cultures ×2 (one from each lumen of any line)','Cefepime 2 g q8h within 60 min (see antibiotic plan)','Add vancomycin if line infection, SSTI, pneumonia, instability, or MRSA colonization','Neutropenic precautions; no rectal temps','Oncology consult; ?G-CSF per oncology','Consider antifungal if fever persists 4–7 days']},
+ // Heme
+ anemia:{sys:'heme',name:'Anemia',a:'Hgb *** (baseline ***); MCV ***; acute vs chronic ***.',data:['cbc'],items:['Retic count, iron studies, ferritin, B12, folate','?Hemolysis labs: LDH, haptoglobin, bilirubin, smear','Type and screen; transfuse Hgb <7 (<8 with active cardiac ischemia)','Guaiac / assess for bleeding','IV iron if iron deficient and not septic']},
+ thrombocyt:{sys:'heme',name:'Thrombocytopenia',a:'Plt *** (baseline ***); 4T score ***.',data:['cbc','coag'],items:['Peripheral smear','4T score; if intermediate/high: stop all heparin, PF4 antibody, start argatroban/bivalirudin','DIC panel: PT/INR, fibrinogen, D-dimer','Medication review (heparin, linezolid, beta-lactams, ***)','Transfuse plt <10K, or <50K with bleeding/procedure','Hold pharmacologic VTE ppx if plt <50K; SCDs']},
+ // Endo
+ hyperglyc:{sys:'endo',name:'Hyperglycemia / DM2',a:'A1c ***; home regimen ***.',data:['a1c','insulin'],items:['Basal insulin *** units (≈0.1–0.2 units/kg; reduce if NPO, elderly, renal failure) + correctional scale','Prandial insulin when eating reliably','Glucose goal 140–180','Hypoglycemia protocol','Diabetes educator if A1c >9 or new insulin']},
+ adrenal:{sys:'endo',name:'Adrenal insufficiency / chronic steroids',a:'Home steroid ***; stressor ***.',data:['lytes'],items:['Stress-dose hydrocortisone 50 mg IV q6h (or 100 mg q8h) while critically ill','Taper to home dose as stress resolves','?Random cortisol / ACTH stim if new suspected AI (draw before dexamethasone/hydrocortisone if feasible)','Monitor glucose and Na/K']},
+ // Other
+ tox:{sys:'other',name:'Intentional ingestion / overdose',a:'Agent ***; time ***; co-ingestants ***.',data:['tox','ekg','lytes'],items:['Poison control consult','APAP and salicylate levels (APAP at 4 h post-ingestion and repeat), EtOH, utox, CK, osm gap','EKG: QRS, QTc; repeat ***','Specific therapy: *** (NAC / bicarbonate / naloxone / ***)','1:1 sitter; suicide precautions','Psychiatry consult once medically stable','?Intubation for airway protection if declining']},
+ goc:{sys:'other',name:'Goals of care',a:'Code status ***; decision-maker ***; values ***.',data:['baseFx'],items:['Goals-of-care discussion with patient/HCPOA ***','Confirm code status and document','?Palliative care consult','?Chaplain / social work']},
+ decond:{sys:'other',name:'Deconditioning / fall risk',a:'Baseline function ***.',data:['baseFx'],items:['PT/OT evaluation','Fall precautions; bed alarm','Early mobility','Case management for dispo planning']},
+ malnut:{sys:'other',name:'Malnutrition risk',a:'BMI ***; intake ***; weight loss ***.',data:['wt'],items:['Dietitian consult','Start enteral nutrition within 24–48 h if unable to eat','Refeeding risk: check Phos, K, Mg daily ×3 days; thiamine before feeds','Calorie counts']},
+ // Chronic, stable
+ c_htn:{sys:'chronic',name:'Hypertension',a:'Home regimen ***.',items:[]},
+ c_hld:{sys:'chronic',name:'Hyperlipidemia',a:'',items:[]},
+ c_cad:{sys:'chronic',name:'CAD',a:'S/p MI ***; PCI/stents *** (DAPT through ***); CABG ***; last cath ***; EF ***%.',data:['cath','echo'],items:[]},
+ c_hf:{sys:'chronic',name:'Chronic HF, compensated',a:'EF ***%; dry weight ***.',data:['echo','dryWt'],items:['Daily weights, strict I/O']},
+ c_afib:{sys:'chronic',name:'Paroxysmal / permanent AF',a:'Rate controlled; CHA₂DS₂-VASc ***.',data:['anticoag'],items:['Telemetry']},
+ c_copd:{sys:'chronic',name:'COPD, stable',a:'Home O2 ***.',data:['homeO2'],items:['Albuterol PRN; SpO2 88–92%']},
+ c_dm:{sys:'chronic',name:'DM2, controlled',a:'A1c ***; home regimen ***.',data:['a1c','insulin'],items:['Glucose goal 140–180; correctional insulin; hypoglycemia protocol']},
+ c_dm1:{sys:'chronic',name:'DM1',a:'A1c ***; home regimen ***.',data:['a1c','insulin'],items:['Glucose goal 140–180; correctional insulin; hypoglycemia protocol','?Endocrine consult (pump, recurrent DKA, or labile glucose)']},
+ c_hypothy:{sys:'chronic',name:'Hypothyroidism',a:'',items:[]},
+ c_gerd:{sys:'chronic',name:'GERD',a:'',items:[]},
+ c_dep:{sys:'chronic',name:'Depression / anxiety',a:'',items:[]},
+ c_osa:{sys:'chronic',name:'OSA',a:'',data:['cpap'],items:['Home CPAP at night; avoid oversedation']},
+ c_bph:{sys:'chronic',name:'BPH',a:'',items:['Bladder scans PRN for retention']},
+ c_tob:{sys:'chronic',name:'Tobacco use',a:'*** pack-years.',items:['Nicotine patch *** mg daily ± gum/lozenge PRN','Cessation counseling']},
+ c_pain:{sys:'chronic',name:'Chronic pain / opioid use',a:'Home regimen ***; PDMP reviewed ***.',items:['Multimodal analgesia; bowel regimen','Naloxone at discharge']},
+ c_vte:{sys:'chronic',name:'Prior VTE on anticoagulation',a:'Event ***; date ***; provoked ***; agent ***.',data:['anticoag'],items:[]},
+ c_cva:{sys:'chronic',name:'Prior stroke',a:'Date ***; residual deficits ***.',data:['baseFx'],items:['Aspiration precautions; swallow screen before PO']}
+};
+// ===== Expanded from ICU Protocols: A Stepwise Approach (Chawla & Todi), updated to current practice =====
+Object.assign(DATA,{
+ arrest:['Arrest details','rhythm ***, witnessed ***, bystander CPR ***, time to ROSC ***, epi doses ***, shocks ***'],
+ nif:['Respiratory mechanics','FVC *** mL/kg, NIF ***, single-breath count ***, bulbar signs ***'],
+ revers:['Anticoagulant reversal','agent ***, last dose ***, reversal given ***'],
+ icpD:['Neuro status','GCS ***, pupils ***, ICP ***, CPP ***, herniation signs ***'],
+ burn:['Burn','TBSA ***%, depth ***, inhalation injury ***, time of burn ***, weight *** kg'],
+ trauma:['Trauma','mechanism ***, FAST ***, injuries ***, tetanus ***'],
+ iap:['Bladder pressure','*** mmHg'],
+ ob:['Obstetric','GA *** wk, G***P***, BP ***, proteinuria ***, HELLP labs ***, Mg level ***'],
+ temp:['Core temperature','*** °C (site ***)'],
+ ckU:['CK / uric acid / Ca / Phos','***'],
+ lines:['Lines and dates','CVC *** (day ***), arterial line ***, Foley ***, ETT *** cm at lips']
+});
+SYS.splice(SYS.findIndex(s=>s[0]==='other'),0,['onc','Oncologic emergencies'],['trauma','Trauma & environmental'],['ob','Obstetric & post-op']);
+const R_=n=>'ICU Protocols ch. '+n;
+Object.assign(LIB,{
+ // ---- Pulm
+ vent:{sys:'pulm',name:'Acute respiratory failure on mechanical ventilation',a:'Mode ***, Vt ***, RR ***, PEEP ***, FiO2 ***; plateau ***; ETT *** cm at lips.',ref:R_('4, 7'),data:['vent','abg','lines'],tip:'Daily: check ETT depth and cuff pressure (20–30 cm H2O), plateau and driving pressure, ABG after changes, and readiness to wean (cause improving, FiO2 ≤0.4–0.5, PEEP ≤8, hemodynamically stable, awake).',items:['Vt 6–8 mL/kg PBW; plateau <30; adjust RR to pH/PaCO2','ETT depth *** cm at lips; cuff pressure 20–30 cm H2O; CXR for position','ABG 30 min after changes','VAP prevention: HOB 30–45°, oral care, subglottic suctioning if available, daily SAT/SBT','Analgosedation to light target (RASS 0 to −1)','Daily screen for SBT; extubate to NIV/HFNC if high risk','?Tracheostomy discussion if prolonged ventilation expected']},
+ hemoptysis:{sys:'pulm',name:'Massive hemoptysis',a:'Volume *** mL/24 h; side ***; etiology *** (bronchiectasis / TB / malignancy / ***).',ref:R_(8),data:['cbc','coag','imaging','anticoag'],tip:'Massive: roughly >400–600 mL/24 h, or any amount compromising the airway. Death is from asphyxia, not blood loss.',items:['Bleeding side down (lateral decubitus); O2 to SpO2 >94%','Large-bore (≥8.0) single-lumen ETT if intubating, to allow bronchoscopy; ?selective mainstem intubation of the non-bleeding lung','Two large-bore IVs; type and cross; arterial line','CBC, coags, BMP, type and cross; hold and reverse anticoagulants/antiplatelets','CTA chest (localize; bronchial artery anatomy)','Interventional pulmonology for bronchoscopy (cold saline, epinephrine, balloon tamponade)','IR consult for bronchial artery embolization','?Tranexamic acid (nebulized or IV)','Cough suppression; avoid sedation-induced aspiration','Thoracic surgery if refractory or localized lesion']},
+ ptx:{sys:'pulm',name:'Pneumothorax',a:'Side ***; size *** (apex–cupola ***cm); spontaneous / traumatic / iatrogenic; tension ***.',ref:R_(12),data:['imaging'],items:['Tension: immediate needle decompression (4th–5th ICS anterior axillary line) then chest tube','Small, stable, first primary: observation with O2 and repeat CXR','Large or symptomatic: needle aspiration or small-bore chest tube','Secondary (underlying lung disease) or on positive pressure ventilation: chest tube','Chest tube to −20 cm H2O suction ***, then water seal; daily CXR','?Thoracic surgery if persistent air leak >3–5 days or recurrence']},
+ hypercap:{sys:'pulm',name:'Hypercapnic respiratory failure (OHS / OSA / neuromuscular)',a:'pH ***, PaCO2 ***, HCO3 ***; BMI ***.',ref:R_('3, 13'),data:['abg','cpap','nif'],items:['BiPAP with adequate EPAP for upper airway obstruction (e.g., IPAP 14–18 / EPAP 8–10, titrate)','VBG/ABG 1–2 h after starting NIV','SpO2 88–92%; avoid excess O2','Avoid sedatives and opioids','Evaluate for decompensated HF, hypothyroidism','Home NIV/CPAP titration and polysomnography before discharge']},
+ // ---- CV
+ rosc:{sys:'cv',name:'Post–cardiac arrest (ROSC)',a:'Arrest *** (rhythm ***); downtime ***; ROSC ***; GCS after ROSC ***.',ref:R_(19),data:['arrest','ekg','abg','lactate','neuroImg'],tip:'Neuroprognostication: wait at least 72 h after return to normothermia, using multiple modalities (exam, EEG, imaging, SSEPs, NSE). Avoid early withdrawal based on a single finding.',items:['12-lead EKG; emergent cath if STEMI (or high suspicion of coronary cause)','MAP ≥65 (higher if needed for urine output and mentation); avoid hypotension','SpO2 92–98%; PaCO2 35–45','Temperature control: prevent fever (≤37.5 °C) for at least 72 h; ?TTM 33–36 °C per institutional protocol','CT head (± CTA chest) if cause unclear','Continuous EEG if comatose; treat seizures','Glucose 140–180; check K, Mg, troponin, lactate, ABG','Find and treat cause (Hs and Ts)','Neuroprognostication no sooner than 72 h after normothermia','Family meeting; consider palliative care support']},
+ stemi:{sys:'cv',name:'STEMI',a:'Territory ***; symptom onset ***; door-to-balloon ***.',ref:R_(23),data:['ekg','trop','echo'],items:['Activate cath lab; primary PCI goal door-to-balloon ≤90 min','Fibrinolysis if PCI not available within 120 min and no contraindications','Aspirin 325 mg chewed, P2Y12 load per cardiology, heparin bolus','Atorvastatin 80 mg','Nitroglycerin for pain unless hypotensive, RV infarct, or PDE5 use; avoid morphine if possible','Beta blocker within 24 h if no HF, shock, or bradycardia','Watch for arrhythmia, mechanical complications (new murmur, shock), RV infarct (avoid preload reduction)','TTE; lipid panel, A1c; cardiac rehab referral']},
+ dissect:{sys:'cv',name:'Acute aortic dissection',a:'Stanford ***; extent ***; malperfusion ***; tamponade ***.',ref:R_(25),data:['imaging','ekg'],tip:'Aim for HR <60 first (beta blockade), then SBP 100–120 within 20 minutes. Vasodilators without beta blockade raise dP/dt.',items:['CTA chest/abdomen/pelvis (TEE if unstable)','Esmolol or labetalol infusion to HR <60, then nicardipine/clevidipine to SBP 100–120','Arterial line (right arm, or arm with higher pressure)','Pain control (opioids)','No antiplatelets, anticoagulants or thrombolytics','Type A: emergent cardiothoracic surgery','Type B: medical therapy; vascular surgery for complicated (malperfusion, rupture, refractory pain/HTN)','Type and cross; check bilateral arm BPs, pulses, neuro exam, lactate, Cr','Avoid pericardiocentesis for tamponade unless arresting']},
+ vt:{sys:'cv',name:'Ventricular tachycardia',a:'Monomorphic / polymorphic ***; stable ***; QTc ***; ischemia ***.',ref:R_(22),data:['ekg','lytes','echo'],items:['Unstable: synchronized cardioversion (pulseless: ACLS defibrillation)','Stable monomorphic: amiodarone 150 mg IV over 10 min then infusion (or procainamide if no HF/long QT)','Polymorphic with long QT (torsades): magnesium 2 g IV, stop QT-prolonging drugs, overdrive pacing or isoproterenol','K >4, Mg >2','Troponin; ischemia evaluation; TTE','Cardiology/EP consult; ?ICD evaluation','Telemetry; pads on']},
+ svt:{sys:'cv',name:'SVT (narrow-complex regular tachycardia)',a:'Rate ***; P waves ***; stable ***.',ref:R_(22),data:['ekg','lytes'],items:['Unstable: synchronized cardioversion','Vagal maneuvers (modified Valsalva)','Adenosine 6 mg rapid IV push, then 12 mg (record strip; may unmask flutter)','Diltiazem or metoprolol if recurrent','TSH, lytes; review stimulants','Cardiology/EP referral for ablation if recurrent']},
+ shock:{sys:'cv',name:'Undifferentiated shock',a:'MAP ***; lactate ***; POCUS ***.',ref:R_('16, 18, 78'),data:['lactate','echo','abg'],items:['POCUS (RUSH): LV/RV function, pericardial effusion, IVC, lungs, abdomen, aorta','Arterial line; lactate q2–4h','Fluid challenge with balanced crystalloid; check fluid responsiveness (passive leg raise, PPV/SVV)','Norepinephrine for MAP ≥65','Workup each type: cultures (septic), troponin/EKG/echo (cardiogenic), Hgb/source (hemorrhagic), obstructive (PE, tamponade, tension)','Stress-dose steroids if adrenal insufficiency suspected','Urine output monitoring (Foley)']},
+ // ---- Neuro
+ status:{sys:'neuro',name:'Status epilepticus',a:'Duration ***; convulsive / nonconvulsive; benzodiazepines given ***; cause ***.',ref:R_(28),data:['neuroImg','lytes','tox'],tip:'Status = seizure >5 min or recurrent seizures without return to baseline. Second-line agents are similarly effective (ESETT): levetiracetam, fosphenytoin, or valproate.',items:['ABCs; glucose; thiamine 100 mg IV before dextrose','Lorazepam 4 mg IV (0.1 mg/kg), repeat once in 5 min; or midazolam 10 mg IM if no IV','Second line: levetiracetam 60 mg/kg (max 4,500 mg) or fosphenytoin 20 PE/kg or valproate 40 mg/kg (max 3,000 mg)','Refractory: intubate; midazolam or propofol infusion; continuous EEG','Workup: BMP, Mg, Ca, Phos, CK, utox, AED levels, LFTs, ammonia; CT head; LP if infection possible','Treat cause (hypoglycemia, hyponatremia, withdrawal, infection, toxins)','Neurology consult; maintenance AED','Taper infusion after 24–48 h seizure-free on EEG']},
+ ich:{sys:'neuro',name:'Intracerebral hemorrhage',a:'Location ***; volume ***; IVH ***; ICH score ***; anticoagulant ***.',ref:R_(26),data:['neuroImg','revers','coag','icpD'],items:['BP: if SBP 150–220, lower to ~140 (avoid <130) within an hour; nicardipine/clevidipine or labetalol','Reverse anticoagulation now: 4F-PCC + vitamin K (warfarin); andexanet or 4F-PCC (factor Xa inhibitors); idarucizumab (dabigatran)','Platelet transfusion not routine for antiplatelet use unless going to surgery','Neurosurgery consult; repeat CT in 6–24 h for expansion','Neuro checks q1h; HOB 30°','No prophylactic antiseizure meds; treat clinical seizures','Glucose 140–180; normothermia','SCDs now; ?pharmacologic VTE prophylaxis after 24–48 h if stable','Swallow screen before PO']},
+ sah:{sys:'neuro',name:'Aneurysmal subarachnoid hemorrhage',a:'Hunt-Hess ***; WFNS ***; modified Fisher ***; aneurysm ***.',ref:R_(27),data:['neuroImg','icpD','lytes'],tip:'Delayed cerebral ischemia (vasospasm) peaks days 4–14. Hyponatremia is common (cerebral salt wasting); don’t fluid-restrict.',items:['Neurosurgery / neuro-IR: secure aneurysm early (coiling or clipping)','SBP <160 until secured; nicardipine or labetalol; avoid hypotension','Nimodipine 60 mg q4h ×21 days (hold/split dose for hypotension)','EVD for hydrocephalus','Euvolemia; Na q6–12h; treat salt wasting with NaCl/fludrocortisone, not restriction','Neuro checks q1h; TCDs for vasospasm','Analgesia (avoid NSAIDs), stool softeners, quiet room','EKG and troponin (stunned myocardium)','SCDs; VTE chemoprophylaxis after aneurysm secured']},
+ nmd:{sys:'neuro',name:'Neuromuscular respiratory weakness (GBS / myasthenic crisis)',a:'Diagnosis ***; FVC *** mL/kg; NIF ***; bulbar ***; autonomic ***.',ref:R_(29),data:['nif'],tip:'20/30/40 rule: FVC <20 mL/kg, NIF weaker than −30 cm H2O, or MEP <40 cm H2O predicts need for intubation. SpO2 and ABG fall late.',items:['FVC and NIF q4–6h (q2h if declining); single-breath count','Elective intubation for 20/30/40 rule, bulbar weakness with aspiration, or rising CO2','GBS: IVIG 0.4 g/kg/day ×5 days or plasma exchange; steroids not helpful','Myasthenic crisis: IVIG or plasma exchange; hold pyridostigmine while intubated; steroids per neurology','Avoid drugs that worsen MG (aminoglycosides, fluoroquinolones, magnesium, beta blockers, neuromuscular blockers)','Autonomic monitoring (GBS): telemetry, BP swings','LP (albuminocytologic dissociation), NCS/EMG; AChR/MuSK antibodies','DVT prophylaxis; pain control; SLP evaluation; neurology consult']},
+ icp:{sys:'neuro',name:'Elevated intracranial pressure',a:'Cause ***; GCS ***; pupils ***; ICP ***; CPP ***.',ref:R_(31),data:['icpD','neuroImg','lytes'],items:['HOB 30–45°, head midline, loosen ETT ties/collar','Normocapnia (PaCO2 35–40); brief hyperventilation only as a bridge to herniation therapy','Osmotherapy: mannitol 0.5–1 g/kg or hypertonic saline (23.4% 30 mL via central line or 3% 250 mL); Na and osm q6h','Sedation and analgesia; avoid hypotension and hypoxia','CPP 60–70 mm Hg','Normothermia; normoglycemia; treat seizures','Neurosurgery: EVD / ICP monitor if GCS ≤8 with abnormal CT, or decompression','Avoid hypotonic fluids']},
+ coma:{sys:'neuro',name:'Coma / unresponsiveness',a:'GCS ***; brainstem reflexes ***; likely structural vs toxic-metabolic ***.',ref:R_(30),data:['icpD','neuroImg','tox','lytes'],items:['Airway protection if GCS ≤8 or not protecting','Fingerstick glucose; thiamine before dextrose; naloxone if opioid toxidrome','CT head (± CTA); MRI if unrevealing','Labs: BMP, LFTs, ammonia, TSH, ABG, CK, tox screen, APAP/salicylate, cultures','EEG to exclude nonconvulsive status','LP if infection or SAH possible','Coma mimics: locked-in, catatonia, psychogenic unresponsiveness','Prognosis discussion with family once confounders cleared']},
+ menenc:{sys:'neuro',name:'Meningitis / encephalitis',a:'Onset ***; CSF ***; immune status ***.',ref:R_(32),data:['neuroImg','cultures','immuno'],items:['Blood cultures, then empiric antibiotics immediately (see antibiotic plan: bacterial meningitis)','Dexamethasone with or before first antibiotic dose','Acyclovir 10 mg/kg IV q8h until HSV PCR negative','CT head before LP only if focal deficit, papilledema, seizure, immunocompromised, or GCS ≤10','LP: opening pressure, cell count, glucose, protein, Gram stain, culture, HSV PCR, meningitis/encephalitis panel','Droplet precautions until N. meningitidis excluded','Seizure monitoring; EEG if altered','Noninfectious mimics: autoimmune encephalitis, NMS, serotonin syndrome, vasculitis']},
+ // ---- Renal
+ hypok:{sys:'renal',name:'Hypokalemia',a:'K ***; Mg ***; EKG ***; cause ***.',ref:R_(57),data:['lytes','ekg'],items:['Replete Mg first (Mg <2): magnesium sulfate 2 g IV','Oral KCl preferred if tolerating (40 mEq q4h ×***)','IV KCl 10 mEq/h peripheral, up to 20 mEq/h central with telemetry; ~10 mEq raises K ~0.1','Telemetry if K <3 or EKG changes','Recheck K after each 40–60 mEq','Find cause: GI losses, diuretics, insulin/beta agonists, urine K/Cr if unclear','Avoid dextrose-containing carriers for repletion']},
+ rrt:{sys:'renal',name:'Renal replacement therapy',a:'Indication ***; modality (CRRT / iHD / SLED) ***; access ***.',ref:R_('45, 46'),data:['baseCr','lytes'],tip:'AEIOU: refractory Acidosis, Electrolytes (K), Intoxication (lithium, toxic alcohols, salicylates), Overload, Uremia (pericarditis, encephalopathy, bleeding).',items:['Nephrology consult','Dialysis catheter (right IJ preferred) ***','CRRT if hemodynamically unstable; intermittent HD if stable','CRRT dose ~20–25 mL/kg/h effluent; anticoagulation (citrate / heparin / none) ***','Net UF goal *** mL/h','Pharmacy: redose antibiotics for CRRT clearance','Monitor Phos, K, Mg, iCa (citrate) q6–8h','Daily assessment for renal recovery']},
+ rhabdo:{sys:'renal',name:'Rhabdomyolysis',a:'CK ***; Cr ***; K ***; cause ***.',data:['ckU','lytes'],items:['Isotonic fluids to urine output 200–300 mL/h (watch for overload)','CK, BMP, Phos, Ca q6–12h','Treat hyperkalemia; avoid calcium for asymptomatic hypocalcemia','Compartment syndrome check; ortho/surgery if concern','Stop statins and other myotoxic drugs','?Nephrology for RRT if oliguric/hyperkalemic']},
+ // ---- GI
+ alf:{sys:'gi',name:'Acute liver failure',a:'Etiology ***; INR ***; encephalopathy grade ***; King’s College criteria ***.',ref:R_(41),data:['lfts','coag','tox','icpD'],tip:'ALF = INR ≥1.5 plus encephalopathy within 26 weeks in a patient without cirrhosis. King’s College (APAP): pH <7.3, or INR >6.5 + Cr >3.4 + grade 3–4 HE.',items:['Transplant center referral early','N-acetylcysteine for acetaminophen (and consider in early non-APAP ALF)','Glucose q1–2h; D10 infusion as needed','Labs: hepatic panel, INR, lactate, ammonia, ABG, APAP level, viral serologies (HAV, HBV, HEV, HSV), autoimmune markers, ceruloplasmin, pregnancy test, tox','Grade 3–4 HE: intubate; HOB 30°; Na goal 145–155 with hypertonic saline; avoid hypotension','Avoid sedatives; no lactulose benefit in ALF','Don’t correct INR unless bleeding or procedure','Surveillance cultures; low threshold for antibiotics and antifungals','PPI; RUQ Doppler ultrasound']},
+ hrs:{sys:'gi',name:'Hepatorenal syndrome (HRS-AKI)',a:'Cr *** from ***; urine Na ***; response to albumin ***.',ref:R_(42),data:['liver','lfts','uLytes'],items:['Albumin 1 g/kg/day (max 100 g) ×2 days','Rule out: shock, infection (diagnostic para), obstruction, nephrotoxins, intrinsic renal disease (UA, renal US)','If no response: terlipressin + albumin (or norepinephrine + albumin in ICU; midodrine/octreotide if neither available)','Hepatology / transplant evaluation','Avoid large-volume para without albumin (6–8 g per L removed)']},
+ iah:{sys:'gi',name:'Intra-abdominal hypertension / compartment syndrome',a:'IAP *** mm Hg; APP ***; new organ dysfunction ***.',ref:R_(39),data:['iap'],tip:'IAH: sustained IAP ≥12 mm Hg. Abdominal compartment syndrome: IAP >20 with new organ dysfunction. APP = MAP − IAP, goal ≥60.',items:['Bladder pressure q4–6h (supine, end-expiration, zeroed at midaxillary line)','Decompress: NG tube to suction, rectal tube, prokinetics','Optimize sedation/analgesia; ?neuromuscular blockade','Avoid positive fluid balance; diuresis or UF once stable','Percutaneous drainage of ascites or collections','Surgery for decompressive laparotomy if ACS refractory']},
+ ogilvie:{sys:'gi',name:'Colonic pseudo-obstruction (Ogilvie) / ileus',a:'Cecal diameter *** cm; peritonitis ***.',ref:R_(38),data:['imaging','lytes'],items:['NPO; NG tube to suction; rectal tube','Replete K, Mg, Phos; mobilize','Serial abdominal exams and KUB q12–24h','Neostigmine 2 mg IV over 3–5 min with atropine at bedside and telemetry if cecum >10–12 cm and no improvement in 24–48 h','Colonoscopic decompression if neostigmine fails or contraindicated','Surgery for perforation or ischemia']},
+ diarrhea:{sys:'gi',name:'Diarrhea (ICU)',a:'Stools/day ***; tube feeds ***; antibiotics ***.',ref:R_(37),items:['C. difficile testing only if ≥3 unformed stools in 24 h and not on laxatives','Review meds: laxatives, sorbitol-containing liquids, Mg, metoclopramide, antibiotics','Assess tube feed tolerance; consider fiber or peptide formula','Replace fluid and electrolyte losses','Fecal management system / skin care','Avoid antimotility agents until C. difficile excluded']},
+ // ---- ID
+ icufever:{sys:'id',name:'New fever in the ICU',a:'Tmax ***; day of stay ***; lines ***; recent procedures ***.',ref:R_(52),data:['cultures','lines'],tip:'Noninfectious causes: drugs (beta-lactams, antiepileptics), transfusion, PE/DVT, pancreatitis, acalculous cholecystitis, adrenal insufficiency, thyroid storm, NMS/serotonin syndrome, post-op (first 48 h).',items:['Blood cultures ×2 (one peripheral, one per CVC lumen if line infection suspected)','Examine every line site; remove suspicious CVC','UA/urine culture if catheterized (from sampling port)','Sputum/ETA culture and CXR if ventilated','C. difficile testing if diarrhea','Check wounds, sinuses (NG/NT tubes), decubiti, calves','Review drugs and transfusions for drug fever','Empiric antibiotics if unstable or neutropenic; otherwise target the source']},
+ candida:{sys:'id',name:'Candidemia / invasive candidiasis',a:'Species ***; source ***; CVC ***.',ref:R_(53),data:['cultures','lines'],items:['Echinocandin: micafungin 100 mg IV daily (step down to fluconazole if susceptible and clearing)','Remove central venous catheters','Repeat blood cultures daily until negative','Dilated ophthalmology exam','TTE (TEE if persistent candidemia)','Treat 14 days after first negative culture','ID consult']},
+ immuno_inf:{sys:'id',name:'Infection in the immunocompromised host',a:'Immune defect *** (neutropenia / transplant / HIV CD4 *** / steroids); source ***.',ref:R_(54),data:['immuno','onc','cultures'],items:['Broad empiric coverage per defect (see antibiotic plan; neutropenic fever regimen)','PJP: if CD4 <200 or high-dose steroids with hypoxia, TMP-SMX 15–20 mg/kg/day + prednisone if PaO2 <70','CMV PCR, fungal markers (beta-D-glucan, galactomannan) as indicated','CT chest if pulmonary infiltrates; early bronchoscopy','Reduce immunosuppression with the primary team','ID consult; transplant/oncology team involvement']},
+ // ---- Heme
+ dic:{sys:'heme',name:'Disseminated intravascular coagulation',a:'Plt ***; INR ***; fibrinogen ***; D-dimer ***; ISTH score ***; cause ***.',ref:R_(62),data:['coag','cbc'],items:['Treat the cause (sepsis, malignancy, obstetric, trauma)','ISTH DIC score','If bleeding: platelets for <50K, cryoprecipitate for fibrinogen <150, FFP for INR >1.5','Not bleeding: transfuse platelets only <10–20K','VTE prophylaxis unless bleeding or plt <30K','Trend CBC, PT/INR, fibrinogen q8–12h']},
+ hypoglyc:{sys:'endo',name:'Hypoglycemia',a:'Glucose ***; cause *** (insulin / sulfonylurea / sepsis / liver failure / adrenal / EtOH).',ref:R_(59),data:['lytes','lfts'],items:['D50 25 g IV (or glucose 15–20 g PO if alert)','Glucagon 1 mg IM/SQ if no IV access','Recheck glucose q15 min until >100, then q1h','D10 infusion if recurrent or long-acting agent','Octreotide 50 mcg SQ q6–12h for sulfonylurea ingestion','Thiamine if malnourished/EtOH','Find cause: review insulin/oral agents, renal function, cortisol, liver function, sepsis']},
+ // ---- Endo
+ thyroid:{sys:'endo',name:'Thyroid storm / myxedema coma',a:'Burch-Wartofsky ***; TSH ***, free T4 ***.',items:['Storm: propranolol, PTU (or methimazole), then iodine ≥1 h later, hydrocortisone; cooling','Myxedema: IV levothyroxine load (± liothyronine), hydrocortisone first until adrenal insufficiency excluded','Treat precipitant (infection, MI, surgery)','Endocrine consult']},
+ // ---- Onc
+ tls:{sys:'onc',name:'Tumor lysis syndrome',a:'K ***, Phos ***, uric acid ***, Ca ***, Cr ***; malignancy ***.',ref:R_(63),data:['ckU','lytes','onc'],items:['IV fluids 2–3 L/m²/day; urine output ≥80–100 mL/h','Rasburicase 0.1–0.2 mg/kg if uric acid high or high risk (check G6PD first); otherwise allopurinol','K, Phos, Ca, uric acid, Cr q6h','Treat hyperkalemia; treat hypocalcemia only if symptomatic','No urine alkalinization','Nephrology early for RRT if oliguric or refractory','Oncology consult']},
+ hypercalc:{sys:'onc',name:'Hypercalcemia',a:'Ca *** (corrected ***), iCa ***; symptoms ***; cause ***.',ref:R_(63),data:['ckU','lytes'],items:['Isotonic saline 200–300 mL/h, titrate to urine output 100–150 mL/h','Calcitonin 4 IU/kg SQ/IM q12h (effect fades in 48 h)','Zoledronic acid 4 mg IV (renally adjusted) for malignancy; denosumab if severe renal impairment','Loop diuretic only after volume repletion and if overloaded','PTH, PTHrP, 25- and 1,25-vitamin D, SPEP','HD if severe with renal failure or altered mental status']},
+ svc:{sys:'onc',name:'Superior vena cava syndrome',a:'Cause ***; airway or cerebral edema ***.',ref:R_(63),data:['imaging','onc'],items:['HOB elevated; O2','CT chest with contrast','Tissue diagnosis before steroids if possible (unless airway compromise)','IR for endovascular stenting if severe symptoms','Radiation / chemotherapy per oncology','Anticoagulate if catheter-associated thrombosis']},
+ cord:{sys:'onc',name:'Malignant spinal cord compression',a:'Level ***; motor ***; bladder/bowel ***.',ref:R_(63),data:['onc'],items:['Dexamethasone 10 mg IV then 4 mg q6h (or 16 mg/day)','MRI whole spine with contrast emergently','Neurosurgery and radiation oncology consults','Spine precautions; bladder scan / Foley for retention','Bowel regimen; VTE prophylaxis; pain control']},
+ // ---- Trauma & environmental
+ trauma:{sys:'trauma',name:'Polytrauma',a:'Mechanism ***; injuries ***; primary/secondary survey ***.',ref:R_(64),data:['trauma','cbc','coag'],items:['Primary survey (ABCDE) with c-spine protection; secondary survey; tertiary survey within 24 h','Massive transfusion protocol if hemorrhagic shock (1:1:1); TXA within 3 h of injury','FAST; CT imaging as indicated','Tetanus prophylaxis','Reverse anticoagulants','Trauma surgery, orthopedics, neurosurgery consults as indicated','Pain control; VTE prophylaxis once bleeding controlled']},
+ tbi:{sys:'trauma',name:'Traumatic brain injury',a:'GCS ***; CT ***; anticoagulant ***.',ref:R_(65),data:['icpD','neuroImg','revers'],items:['Avoid hypotension (SBP ≥100–110) and hypoxia (SpO2 >94%)','Neurosurgery consult; ICP monitoring if GCS ≤8 with abnormal CT','HOB 30°; normocapnia; normothermia; Na 140–150','Levetiracetam ×7 days for early seizure prophylaxis (severe TBI)','Reverse anticoagulation; platelets per protocol','No steroids','Repeat CT for neuro decline or at 6–24 h','VTE chemoprophylaxis 24–72 h after stable CT']},
+ sci:{sys:'trauma',name:'Acute spinal cord injury',a:'Level ***; ASIA ***; neurogenic shock ***.',ref:R_(65),data:['nif'],items:['Spine precautions; neurosurgery/orthopedic spine consult','MAP 85–90 for 3–7 days (fluids, then norepinephrine; atropine/pacing for bradycardia)','No high-dose steroids','High cervical: FVC/NIF monitoring; early intubation if declining','Foley / bladder protocol; bowel program','VTE prophylaxis within 72 h; pressure injury prevention']},
+ burns:{sys:'trauma',name:'Major burns',a:'TBSA ***% (rule of nines); depth ***; inhalation ***.',ref:R_(67),data:['burn'],items:['Early intubation if inhalation injury, stridor, facial burns with airway edema','Lactated Ringer’s 2 mL/kg/%TBSA in 24 h (half in first 8 h from burn time); titrate to UOP 0.5 mL/kg/h','CO-oximetry; hydroxocobalamin 5 g IV if cyanide suspected','Escharotomy for circumferential burns with compromise','Burn center transfer criteria','Tetanus; warm environment; early enteral nutrition','Pain control; wound care']},
+ heat:{sys:'trauma',name:'Hyperthermia (heat stroke / NMS / serotonin syndrome)',a:'Core temp ***; cause ***; CK ***.',ref:R_(72),data:['temp','ckU','lfts','coag'],items:['Heat stroke: rapid cooling (cold-water immersion or evaporative) to ~38.5–39 °C; antipyretics don’t work','NMS: stop antipsychotics; dantrolene ± bromocriptine; benzodiazepines','Serotonin syndrome: stop serotonergic drugs; benzodiazepines; cyproheptadine','Malignant hyperthermia: stop triggers; dantrolene 2.5 mg/kg IV','Labs: CK, BMP, LFTs, coags (DIC), lactate, UA (myoglobin)','Fluids for rhabdomyolysis; monitor for AKI, ALF']},
+ hypotherm:{sys:'trauma',name:'Accidental hypothermia',a:'Core temp ***; stage ***; pulse ***.',ref:R_(72),data:['temp','lytes'],items:['Core temperature (esophageal or bladder)','Mild: passive and active external rewarming; moderate–severe: warmed IV fluids, forced air, active internal rewarming','ECMO/bypass for severe hypothermia with instability or arrest','Handle gently (VF risk); avoid unnecessary movement','K, glucose, coags, CK; look for trauma, sepsis, hypothyroid, intoxication','Prolonged resuscitation in arrest until rewarmed']},
+ anaphylaxis:{sys:'trauma',name:'Anaphylaxis',a:'Trigger ***; epinephrine doses ***.',items:['Epinephrine 0.5 mg IM (1:1,000) anterolateral thigh, repeat q5–15 min','Epinephrine infusion if refractory; IV fluids','Airway assessment; early intubation if angioedema progressing','Adjuncts: H1 and H2 blockers, albuterol; steroids optional','Observe for biphasic reaction','Epinephrine autoinjector and allergy referral at discharge']},
+ opioid:{sys:'other',name:'Opioid overdose',a:'Agent ***; naloxone given ***; co-ingestants ***.',ref:R_('68–70'),data:['tox','ekg'],items:['Naloxone 0.04–0.4 mg IV titrated to respirations (not full arousal)','Naloxone infusion (≈2/3 of effective bolus dose per hour) for long-acting opioids','APAP and salicylate levels, EKG (QRS/QTc for co-ingestants)','Monitor for aspiration, rhabdomyolysis, compartment syndrome','Start buprenorphine/MOUD before discharge; naloxone kit','Psychiatry if intentional']},
+ // ---- OB & post-op
+ preeclampsia:{sys:'ob',name:'Severe preeclampsia / eclampsia',a:'GA ***; BP ***; HELLP ***; seizures ***.',ref:R_(75),data:['ob','lytes','lfts','cbc'],items:['Magnesium sulfate 4–6 g IV load then 1–2 g/h; check reflexes, RR, UOP; Mg levels if renal impairment','Calcium gluconate 1 g IV at bedside for Mg toxicity','BP goal <160/110: labetalol IV, hydralazine IV, or nifedipine PO','OB consult: delivery planning; fetal monitoring','HELLP labs: CBC, LFTs, LDH, Cr, uric acid, coags','Fluid restriction (~80 mL/h) to avoid pulmonary edema','Seizure precautions; neuro checks']},
+ postop:{sys:'ob',name:'Postoperative ICU care',a:'Procedure ***; EBL ***; fluids/blood ***; drains ***; intraop issues ***.',ref:R_('76, 77'),data:['lines','cbc','lytes'],items:['Handover from anesthesia/surgery: procedure, EBL, fluids, blood products, antibiotics timing, drains, lines','Warming to normothermia','Analgesia (multimodal); PONV prophylaxis','Drain output q1h ×***; Hgb, lytes, coags post-op','K 4–4.5, Mg >2','VTE prophylaxis timing per surgeon','Incentive spirometry; early mobility','Wound check; surgical team follow-up']}
+});
+// existing problems: references and extra checklist items from the book's steps
+const ADD=(k,ref,items,tip)=>{const L=LIB[k];if(!L)return;if(ref)L.ref=ref;if(items)L.items=L.items.concat(items);if(tip&&!L.tip)L.tip=tip};
+ADD('enceph',R_('30, 33'),['?EEG if fluctuating or unexplained (nonconvulsive status)']);
+ADD('etohw',R_(70));
+ADD('seizure',R_(28),null,'First unprovoked seizure in an adult: check glucose, Na, Ca, Mg, tox; imaging (MRI preferred) and EEG; driving counseling.');
+ADD('stroke',R_(26),['?Thrombectomy evaluation for large-vessel occlusion (up to 24 h in selected patients)','Glucose 140–180; normothermia','DVT prophylaxis (SCDs; heparin SQ when appropriate)']);
+ADD('ahrf',R_('2, 3, 14'),['?NIV for COPD exacerbation or cardiogenic pulmonary edema; avoid prolonged NIV trial if not improving in 1–2 h']);
+ADD('ards',R_(5),['?Recruitment maneuver for refractory hypoxemia','?ECMO referral if P/F <80 despite optimal care','Early mobility once stable']);
+ADD('copd',R_(6),['If ventilated: low RR (10–12), Vt 6–8 mL/kg, short inspiratory time, long expiratory time; check auto-PEEP']);
+ADD('asthma',R_(6),['If ventilated: permissive hypercapnia, low RR, long expiratory time; watch for auto-PEEP and barotrauma']);
+ADD('pe',R_(9),['?IVC filter only if anticoagulation contraindicated','Duration plan: 3 months if provoked; consider extended if unprovoked']);
+ADD('effusion',R_(12),['Remove chest tube when drainage <100–200 mL/day and lung expanded']);
+ADD('septic',R_(50),['Assess fluid responsiveness (passive leg raise, PPV/SVV, POCUS)','Glucose 140–180','?Add epinephrine for refractory shock; ?angiotensin II']);
+ADD('cardshock',R_(20),['Emergent revascularization if ACS-related (cath lab)']);
+ADD('adhf',R_(21),['?NIV for pulmonary edema with respiratory distress','?Nitroglycerin infusion for hypertensive pulmonary edema']);
+ADD('acs',R_(23));
+ADD('afib',R_(22));
+ADD('htnem',R_(24),null,'Exceptions: aortic dissection (SBP <120 within 20 min), ischemic stroke (permissive), ICH (SBP ~140), preeclampsia (<160/110).');
+ADD('brady',R_(22),['?Temporary transvenous pacing if unstable and not responding']);
+ADD('aki',R_(44),['Bladder scan before assuming oliguria is renal','?Furosemide stress test to predict progression','Correct metabolic abnormalities: acidosis, K, Phos']);
+ADD('ckd',R_(47));ADD('esrd',R_(46),['Hypotension on HD: reduce UF, cool dialysate, midodrine pre-HD']);
+ADD('hyperk',R_(57),null,'Membrane stabilization with calcium works in minutes and lasts 30–60 min; shifting agents (insulin, albuterol) last hours; only binders, diuresis, or dialysis remove K.');
+ADD('hypona',R_(55),null,'Severe symptoms (seizure, coma): 3% saline 100–150 mL bolus over 10–20 min, repeat up to twice for a 4–6 mEq/L rise. Then limit to ≤8 mEq/L in 24 h.');
+ADD('hyperna',R_(56));ADD('dka',R_(59));
+ADD('ugib',R_(35),['?Erythromycin 250 mg IV 30–120 min before EGD','?Balloon tamponade or TIPS for refractory variceal bleeding']);
+ADD('lgib',R_(36));ADD('cirrhosis',R_(42));ADD('hepenc',R_(42));
+ADD('panc',R_(40),['Assess severity: BISAP/Ranson, organ failure; CT only if diagnosis unclear or not improving after 48–72 h','Watch for abdominal compartment syndrome (bladder pressures)']);
+ADD('cdiff',R_(37));ADD('sepsis',R_('49, 50'));ADD('neutfever',R_(54));
+ADD('anemia',R_(61),['Restrictive transfusion threshold; one unit at a time, then reassess']);
+ADD('thrombocyt',R_(62));
+ADD('hyperglyc',R_(60),['Insulin infusion protocol if persistently >180 in the ICU; avoid glucose <70']);
+ADD('tox',R_('68–70'),['Identify toxidrome: anticholinergic, cholinergic, sympathomimetic, opioid, sedative-hypnotic, serotonin','Decontamination: activated charcoal 1 g/kg if within 1–2 h and airway protected','?Enhanced elimination: urinary alkalinization (salicylates), hemodialysis (lithium, toxic alcohols, salicylates, valproate)']);
+ADD('goc',R_(81),['Identify surrogate decision-maker','Family meeting with nursing; document discussion and decisions','Time-limited trial if appropriate','Comfort-focused order set if transitioning to comfort care']);
+ADD('malnut',R_(43),['Calories ~25 kcal/kg/day; protein 1.2–2 g/kg/day','Start trophic enteral feeds in 24–48 h; advance as tolerated','?PN after ~7 days if enteral not possible (earlier if severely malnourished)']);
+
+// presenting complaints → suggested problems
+const COMPLAINTS=[
+ ['dyspnea','Dyspnea / hypoxia',['ahrf','copd','asthma','adhf','pe','effusion','ptx','hypercap','vent']],
+ ['chestpain','Chest pain',['acs','stemi','dissect','pe','ptx']],
+ ['shock','Hypotension / shock',['shock','septic','cardshock','hemshock','anaphylaxis']],
+ ['fever','Fever / sepsis',['sepsis','septic','icufever','neutfever','menenc','immuno_inf']],
+ ['ams','Altered mental status',['enceph','coma','etohw','tox','opioid','stroke','ich','hepenc','hypoglyc','menenc','status']],
+ ['neuro','Focal deficit / weakness',['stroke','ich','sah','nmd','sci','cord','hypok']],
+ ['headache','Headache',['sah','ich','htnem','menenc','icp']],
+ ['seizure','Seizure',['status','seizure','hypona','etohw']],
+ ['arrest','Cardiac arrest',['rosc','vent','shock']],
+ ['palp','Arrhythmia',['afib','svt','vt','brady','hyperk']],
+ ['gib','GI bleeding',['ugib','lgib','cirrhosis','hemshock','anemia']],
+ ['abd','Abdominal pain / distension',['panc','sbo','ogilvie','iah','cdiff']],
+ ['liver','Jaundice / liver',['lft','alf','cirrhosis','hepenc','hrs']],
+ ['kidney','Kidney / electrolytes',['aki','hyperk','hypok','hypona','hyperna','rrt','rhabdo','hypercalc']],
+ ['glucose','Glucose emergency',['dka','hypoglyc','hyperglyc']],
+ ['tox','Overdose / ingestion',['tox','opioid','etohw','heat']],
+ ['hemopt','Hemoptysis',['hemoptysis','pe']],
+ ['onc','Cancer emergency',['neutfever','tls','hypercalc','svc','cord']],
+ ['trauma','Trauma / burns',['trauma','tbi','sci','burns','hemshock']],
+ ['env','Heat / cold exposure',['heat','hypotherm','rhabdo']],
+ ['ob','Pregnancy',['preeclampsia','pe','dic']],
+ ['postop','Post-op',['postop','ahrf','hemshock','aki']]
+];
+// ===== Home (PTA) medication templates, by problem =====
+// Shown under each problem as its own "Home meds" group and written into that problem's plan.
+// '?' = off by default. '!cond ' = on only when the condition holds; conditions are lowbp (shock or active GI bleed) / aki / bleed
+// (or nolowbp / noaki / nobleed), comma = all must hold. Untouched conditional lines re-check as problems are added or removed.
+const CTX={lowbp:['septic','cardshock','hemshock','shock','ugib','lgib'],aki:['aki','hrs','rhabdo'],bleed:['ugib','lgib','hemshock','ich','sah','hemoptysis','tbi','trauma']};
+const SHOCK_MEDS=['Hold PTA antihypertensives (beta blocker, ACEi/ARB/ARNI, CCB, nitrates, hydralazine)','Hold PTA diuretics','Hold PTA metformin and SGLT2 inhibitor','?Hold PTA alpha blocker (tamsulosin, terazosin, doxazosin)','?Taper rather than abruptly stop PTA clonidine (rebound)','?PTA chronic steroid → stress-dose hydrocortisone in its place'];
+const GDMT_HOLD='Hold PTA GDMT (beta blocker, ACEi/ARB/ARNI, MRA, SGLT2 inhibitor) while in shock; restart one at a time once off vasopressors';
+const MEDS={
+ // Neuro
+ enceph:['Hold PTA deliriogenic meds: *** (benzodiazepines, anticholinergics, sedating antihistamines, gabapentinoids, muscle relaxants)','?Continue PTA benzodiazepine at reduced dose if chronic daily use (avoid withdrawal)','?Reduce PTA opioid *** rather than stop if chronic use'],
+ etohw:['?Hold PTA sedatives outside the withdrawal protocol (avoid stacking)'],
+ seizure:['Continue PTA antiseizure medication *** (verify dose and adherence; levels ***)','?Hold PTA seizure-threshold-lowering meds (bupropion, tramadol, ***)'],
+ status:['Continue PTA antiseizure medication *** (IV if NPO; levels ***)','?Hold PTA seizure-threshold-lowering meds (bupropion, tramadol, ***)'],
+ stroke:['Hold PTA antihypertensives for permissive hypertension; resume at 24–48 h if neurologically stable','?Hold PTA anticoagulant ***; restart timing per neurology (infarct size)','Continue PTA statin (or intensify to atorvastatin 80 mg)'],
+ ich:['Hold PTA anticoagulant ***; reversal given ***','Hold PTA antiplatelet ***','?Resume PTA antihypertensives when taking PO (SBP goal ***)'],
+ sah:['Hold PTA anticoagulant and antiplatelets','?Hold PTA antihypertensives once aneurysm secured (avoid hypotension during DCI window)'],
+ tbi:['Hold PTA anticoagulant and antiplatelets; restart timing per neurosurgery'],
+ coma:['Hold PTA sedatives, opioids, gabapentinoids, ***'],
+ nmd:['?Hold PTA meds that worsen myasthenia (fluoroquinolones, aminoglycosides, magnesium, beta blockers, ***)','?Continue PTA pyridostigmine *** (hold if intubated per neurology)'],
+ // Pulm
+ copd:['Hold PTA LAMA (tiotropium/umeclidinium) while on scheduled ipratropium; resume when nebs stop','Continue PTA ICS/LABA (formulary substitution ***)','?Hold PTA nonselective beta blocker (propranolol, nadolol)'],
+ asthma:['Continue PTA ICS/controller','?Hold PTA nonselective beta blocker (propranolol, nadolol)'],
+ hypercap:['Hold PTA sedatives, opioids, gabapentinoids, ***'],
+ pe:['?Hold PTA antiplatelet unless strong indication (bleeding risk on anticoagulation)','?Hold PTA estrogen-containing contraceptive / HRT'],
+ hemoptysis:['Hold PTA anticoagulant and antiplatelets'],
+ // CV
+ septic:SHOCK_MEDS,
+ shock:SHOCK_MEDS,
+ hemshock:['Hold PTA anticoagulant *** and antiplatelets'].concat(SHOCK_MEDS.slice(0,3)),
+ cardshock:['Hold PTA beta blocker and non-DHP CCB (diltiazem, verapamil)',GDMT_HOLD,'Hold PTA diuretic until perfusing','Hold PTA vasodilators (nitrates, hydralazine, PDE5 inhibitor)','?Hold PTA antiarrhythmic *** per cardiology'],
+ rosc:['Hold PTA antihypertensives and diuretics while on vasopressors','Hold PTA sedatives and opioids (neuro exam)'],
+ adhf:['Hold PTA oral diuretic while on IV diuresis','Continue PTA beta blocker *** (hold if cold/low output, hypotensive, or bradycardic)','Continue PTA ACEi/ARB/ARNI *** and MRA *** as BP, K and Cr allow','Continue PTA SGLT2 inhibitor ***','?Hold PTA NSAIDs, non-DHP CCB, and TZDs (worsen HF)'],
+ acs:['Continue PTA statin → atorvastatin 80 mg','?Hold PTA DOAC while on heparin infusion','Hold PTA NSAIDs','?Hold PTA PDE5 inhibitor (no nitrates within 24–48 h of last dose)'],
+ stemi:['Continue PTA statin → atorvastatin 80 mg','?Hold PTA DOAC; anticoagulation per cath lab','Hold PTA NSAIDs','?Hold PTA PDE5 inhibitor (no nitrates within 24–48 h of last dose)'],
+ afib:['Continue PTA rate control *** (dose may need uptitration)','?Hold PTA DOAC while on heparin infusion','?Hold PTA QT-prolonging meds if starting amiodarone'],
+ htnem:['Resume PTA antihypertensives *** (verify adherence)','?Resume PTA clonidine (rebound hypertension if stopped)','?Hold PTA stimulants / decongestants'],
+ brady:['Hold PTA AV nodal blockers: *** (beta blocker, diltiazem/verapamil, digoxin, amiodarone)','?Hold PTA clonidine, donepezil, ***'],
+ vt:['Hold PTA QT-prolonging meds: ***','?Continue PTA beta blocker / antiarrhythmic *** per EP'],
+ svt:['?Continue PTA AV nodal blocker *** for recurrence prevention'],
+ dissect:['Hold PTA anticoagulant and antiplatelets pending surgical plan','Hold PTA vasodilators until beta blockade in place (reflex tachycardia)'],
+ // Renal
+ aki:['Hold PTA ACEi/ARB/ARNI','Hold PTA diuretics (unless volume overloaded)','Hold PTA NSAIDs','Hold PTA metformin','Hold PTA SGLT2 inhibitor','?Hold PTA MRA (spironolactone/eplerenone) if K rising','Renally dose continued PTA meds (DOAC, gabapentin, ***)'],
+ ckd:['Continue PTA phosphate binder / sodium bicarbonate / ***','?Hold PTA metformin if eGFR <30','Renally dose continued PTA meds'],
+ esrd:['Continue PTA binders, cinacalcet, ***','?Hold PTA antihypertensives the morning of HD if intradialytic hypotension','Renally dose continued PTA meds'],
+ hyperk:['Hold PTA ACEi/ARB/ARNI and MRA (spironolactone/eplerenone)','Hold PTA potassium supplements','?Hold PTA TMP-SMX, NSAIDs, nonselective beta blocker, ***'],
+ hypok:['?Hold PTA loop/thiazide diuretic until K repleted','?Continue PTA potassium supplement ***'],
+ hypona:['Hold PTA thiazide','?Hold PTA SSRI/SNRI, carbamazepine/oxcarbazepine, ***'],
+ hyperna:['?Hold PTA loop diuretic','?Hold PTA lithium (nephrogenic DI)'],
+ dka:['Hold PTA SGLT2 inhibitor (do not restart until resolved; discuss stopping if euglycemic DKA)','Hold PTA oral agents and home insulin while on infusion; transition to basal *** units with 2 h overlap'],
+ rhabdo:['Hold PTA statin','Hold PTA NSAIDs, ACEi/ARB, diuretics'],
+ tls:['Hold PTA ACEi/ARB, NSAIDs, potassium supplements'],
+ hypercalc:['Hold PTA thiazide, calcium, vitamin D, lithium'],
+ // GI
+ ugib:['Hold PTA anticoagulant ***; restart timing with GI','Hold PTA antiplatelet *** (?continue aspirin for secondary prevention per GI/cardiology)','Hold PTA NSAIDs','Hold PTA oral PPI while on IV PPI','Hold PTA antihypertensives while bleeding','?Hold PTA nonselective beta blocker while hypotensive (cirrhosis)'],
+ lgib:['Hold PTA anticoagulant ***; restart timing with GI','?Hold PTA antiplatelet *** (continue aspirin if secondary prevention)','Hold PTA NSAIDs','?Hold PTA antihypertensives while bleeding'],
+ cirrhosis:['?Hold PTA diuretics (spironolactone/furosemide) if AKI, Na <125, or encephalopathy','?Hold PTA nonselective beta blocker if SBP <90, AKI, or SBP (infection)','Continue PTA lactulose / rifaximin','Hold PTA NSAIDs, benzodiazepines, and sedating meds'],
+ hepenc:['Continue PTA lactulose / rifaximin','Hold PTA sedatives, opioids, gabapentinoids, anticholinergics'],
+ hrs:['Hold PTA diuretics','Hold PTA NSAIDs, ACEi/ARB','Hold PTA nonselective beta blocker (propranolol/nadolol/carvedilol)'],
+ lft:['?Hold PTA acetaminophen until APAP toxicity excluded','?Hold PTA hepatotoxic meds: *** (statin, antiepileptics, supplements)'],
+ alf:['Hold PTA acetaminophen and all hepatotoxic meds','Hold PTA sedatives'],
+ panc:['Hold PTA GLP-1 RA / DPP-4 inhibitor','?Hold PTA other implicated meds (azathioprine, valproate, thiazides, ***)'],
+ sbo:['Hold PTA oral meds while NPO with NG tube; IV substitutes for essential meds: ***','Hold PTA opioids and anticholinergics where possible'],
+ ogilvie:['Hold PTA opioids, anticholinergics, calcium channel blockers where possible'],
+ diarrhea:['Hold PTA laxatives / stool softeners','?Hold PTA metformin, magnesium, ***'],
+ cdiff:['Hold PTA PPI if no clear indication','Hold PTA laxatives and antimotility agents'],
+ // ID
+ sepsis:['?Hold PTA antihypertensives if soft BP','Hold PTA metformin','?Hold PTA immunosuppressants *** per prescribing team'],
+ neutfever:['?Hold PTA chemotherapy / immunosuppressants per oncology'],
+ immuno_inf:['?Hold or reduce PTA immunosuppressants *** per transplant/prescribing team','Continue PTA PJP / antiviral prophylaxis ***'],
+ // Heme
+ anemia:['?Hold PTA anticoagulant / antiplatelet if bleeding'],
+ thrombocyt:['?Hold PTA antiplatelet / anticoagulant if plt <50K'],
+ dic:['Hold PTA anticoagulant and antiplatelets if bleeding'],
+ // Endo
+ hyperglyc:['Hold PTA oral agents (metformin, SGLT2 inhibitor, sulfonylurea, DPP-4 inhibitor)','?Hold PTA weekly GLP-1 RA (gastric emptying; procedures)','?Basal insulin at ~80% of PTA dose *** units (50% if NPO)'],
+ hypoglyc:['Hold PTA sulfonylurea and insulin ***'],
+ adrenal:['Hold PTA oral steroid while on stress-dose hydrocortisone'],
+ thyroid:['?Storm: hold PTA levothyroxine; ?myxedema: PTA levothyroxine replaced by IV load'],
+ // Onc / trauma / other
+ cord:['?Hold PTA anticoagulant pending surgical plan'],
+ trauma:['Hold PTA anticoagulant and antiplatelets; reversal ***'],
+ heat:['Hold PTA anticholinergics, antipsychotics, serotonergic meds, diuretics, ***'],
+ anaphylaxis:['Stop culprit med ***','?Hold PTA beta blocker (blunts epinephrine; glucagon if refractory)','?Hold PTA ACEi if angioedema'],
+ tox:['Hold PTA psychiatric and sedating meds until medically cleared ***'],
+ opioid:['Hold PTA opioids, benzodiazepines, gabapentinoids','?Continue PTA buprenorphine / methadone *** (verify dose with prescriber or OTP)'],
+ decond:['?Hold PTA fall-risk meds (benzodiazepines, sedating antihistamines, ***)'],
+ postop:['Resume PTA meds per surgical team: ***','?Hold PTA anticoagulant until cleared by surgery ***','?Continue PTA beta blocker perioperatively (avoid withdrawal)'],
+ // Chronic, stable
+ c_htn:['!nolowbp Continue PTA antihypertensives *** with hold parameters (SBP <***, HR <***)','!lowbp Hold PTA antihypertensives while hypotensive, on vasopressors, or bleeding; resume as BP allows'],
+ c_hld:['Continue PTA statin ***'],
+ c_cad:['!nobleed Continue PTA aspirin ***','!bleed Hold PTA aspirin / antiplatelet *** (bleeding)','Continue PTA statin ***','?Continue PTA P2Y12 inhibitor *** (recent stent: do not stop without cardiology)','!nolowbp Continue PTA beta blocker *** (hold for HR <55, SBP <100)','!lowbp Hold PTA beta blocker while hypotensive or bleeding'],
+ c_hf:['!nolowbp,noaki Continue PTA GDMT: beta blocker ***, ACEi/ARB/ARNI ***, MRA ***, SGLT2 inhibitor *** as BP, K and Cr allow','!aki,nolowbp Hold PTA ACEi/ARB/ARNI, MRA and SGLT2 inhibitor during AKI; continue beta blocker if perfusing','!lowbp Hold PTA GDMT (beta blocker, ACEi/ARB/ARNI, MRA, SGLT2 inhibitor) while hypotensive or bleeding; restart one at a time once stable','!nolowbp,noaki Continue PTA diuretic *** (hold if hypovolemic)','!lowbp Hold PTA diuretic','!aki,nolowbp Hold PTA diuretic unless volume overloaded'],
+ c_afib:['!nolowbp Continue PTA rate control *** (hold for SBP <***, HR <***)','!lowbp Hold PTA rate control while hypotensive / on vasopressors','!nobleed Continue PTA anticoagulant *** (renally dose)','!bleed Hold PTA anticoagulant ***; restart timing per ***','?Hold PTA anticoagulant for procedure ***'],
+ c_vte:['!nobleed Continue PTA anticoagulant *** (renally dose; hold for procedures ***)','!bleed Hold PTA anticoagulant ***; restart timing per ***','?Bridge with heparin infusion if NPO or procedure pending'],
+ c_cva:['!nobleed Continue PTA antiplatelet ***','!bleed Hold PTA antiplatelet ***','Continue PTA statin ***'],
+ c_copd:['Continue PTA inhalers *** (formulary substitution ***)'],
+ c_dm:['Hold PTA oral agents (metformin, SGLT2 inhibitor, sulfonylurea, DPP-4 inhibitor)','?Hold PTA weekly GLP-1 RA','?Basal insulin at ~80% of PTA dose *** units (50% if NPO)'],
+ c_dm1:['Never hold basal insulin (DKA risk): basal *** units (~80% of PTA dose; do not stop if NPO)','?Hold PTA insulin pump; convert to SQ basal-bolus unless self-managing per policy'],
+ c_hypothy:['Continue PTA levothyroxine *** mcg (IV at ~75% of dose if NPO >5–7 days)'],
+ c_gerd:['Continue PTA PPI / H2 blocker'],
+ c_dep:['Continue PTA *** (check QTc and interactions)','?Hold PTA serotonergic meds if serotonin syndrome or QTc >500'],
+ c_osa:['?Hold PTA sedating meds at night'],
+ c_bph:['!nolowbp Continue PTA tamsulosin (hold if orthostatic)','!lowbp Hold PTA tamsulosin / alpha blocker while hypotensive','Continue PTA finasteride'],
+ c_pain:['Continue PTA opioid regimen *** (verify with PDMP)','?Hold PTA long-acting opioid if sedated, hypotensive, or AKI']
+};
+function medCond(c){return c.split(',').every(t=>{const neg=t.startsWith('no'),k=neg?t.slice(2):t,has=S.probs.some(p=>(CTX[k]||[]).includes(p.key));return neg?!has:has})}
+function medItem(x){let t=x,on=true,cond='';if(t.startsWith('?')){on=false;t=t.slice(1)}const m=t.match(/^!(\S+) /);if(m){cond=m[1];t=t.slice(m[0].length);on=medCond(cond)}return{t,on,opt:!on&&!cond,med:true,cond}}
+function recalcMeds(){S.probs.forEach(p=>p.items.forEach(i=>{if(i.cond&&!i.touched)i.on=medCond(i.cond)}))}
+
+// ===== Pertinent prompts for the assessment paragraph =====
+// Per problem, by field: p = presentation, h = pertinent history, e = findings (ED / OSH / floor), t = treatment so far, i = assessment.
+// 'Label|text inserted' (no '|' = the text is its own label). *** marks what still needs filling.
+const GEN={
+ p:['Onset|*** days of ***','Sudden onset|sudden onset of ***','Progressive|progressively worsening ***'],
+ h:['Home regimen|on *** at home','Prior episodes|prior episodes ***','Baseline|baseline ***'],
+ e:['Vitals|HR ***, BP ***/***, RR ***, SpO2 ***% on ***, T ***','Exam|exam notable for ***','Labs|labs notable for ***','Imaging|*** showing ***','EKG|EKG with ***'],
+ t:['IV fluids|*** L IV fluids','Response|with *** response','Consulted|*** consulted'],
+ i:['Likely etiology|likely 2/2 ***','Differential|differential includes ***','Severity|severity ***','Currently|currently ***','Improving|improving since arrival']
+};
+const GEN_CHRONIC={h:['Home regimen|on ***','Last study|last *** (date ***)','Followed by|followed by ***'],i:['Stable|stable','Controlled|well controlled','Not at goal|not at goal (***)']};
+const PERT={
+ // ---- Pulm
+ ahrf:{p:['Dyspnea|*** days of progressive dyspnea','Cough|cough productive of *** sputum','Fevers|fevers','Orthopnea / edema|orthopnea and leg swelling','Pleuritic pain|pleuritic chest pain'],
+  h:['Lung disease|*** (COPD / ILD / asthma)','Home O2|*** L home O2 (baseline SpO2 ***)','Heart failure|HF*** (EF ***%)','Smoking|*** pack-year smoking history','VTE risk|VTE risk factors: ***','Prior intubation|prior intubation ***'],
+  e:['SpO2 on arrival|SpO2 ***% on *** on arrival','Work of breathing|*** work of breathing, RR ***','Max O2|maximum O2 requirement *** (NC / HFNC *** L, ***% / BiPAP ***/***)','ABG / VBG|ABG ***/***/***/***','CXR|CXR with ***','CTA chest|CTA chest with ***','BNP / troponin|BNP ***, troponin ***','POCUS|POCUS with ***','Viral panel|respiratory viral panel ***'],
+  t:['Nebs|DuoNebs ×***','Steroids|methylprednisolone *** mg IV','Diuretic|furosemide *** mg IV','Antibiotics|*** (antibiotics)','BiPAP|BiPAP ***/***','HFNC|HFNC *** L, ***%','Intubation|intubation for ***'],
+  i:['Likely etiology|likely 2/2 ***','Currently on|currently on ***','Trajectory|*** (improving / stable / worsening) O2 requirement']},
+ ards:{p:['Dyspnea|*** days of progressive dyspnea','Inciting event|preceded by ***'],h:['Risk factor|ARDS risk factor: *** (pneumonia / aspiration / pancreatitis / sepsis / transfusion)','Lung disease|underlying ***'],
+  e:['P/F|P/F *** on PEEP ***','CXR / CT|bilateral opacities on ***','Echo|no evidence of cardiogenic edema (echo ***)','Vent|vent ***, plateau ***, driving pressure ***','ABG|ABG ***/***/***/***'],
+  t:['Intubation|intubation','Paralysis|neuromuscular blockade','Proning|proning','Antibiotics|***'],i:['Berlin|Berlin *** ARDS','Cause|2/2 ***']},
+ copd:{p:['Dyspnea|*** days of worsening dyspnea','Sputum|increased sputum volume and purulence','Wheeze|wheezing','URI|preceding URI symptoms'],
+  h:['COPD|COPD (GOLD ***), on ***','Home O2|*** L home O2','Exacerbations|*** exacerbations in the past year (last steroids ***)','Prior NIV / intubation|prior NIV / intubation ***','Smoking|*** pack-years, currently ***'],
+  e:['SpO2|SpO2 ***% on ***','Work of breathing|*** work of breathing, speaking ***','VBG|VBG pH ***, pCO2 ***','CXR|CXR without consolidation or pneumothorax','Viral panel|viral panel ***'],
+  t:['DuoNebs|DuoNebs ×***','Steroids|methylprednisolone *** mg / prednisone 40 mg','Antibiotics|azithromycin / doxycycline','Magnesium|magnesium 2 g IV','BiPAP|BiPAP ***/***'],
+  i:['Trigger|likely triggered by ***','Hypercapnia|*** hypercapnia','Currently on|currently on ***']},
+ asthma:{p:['Dyspnea and wheeze|*** of dyspnea and wheeze','Trigger|after ***'],h:['Asthma control|asthma on ***, controller adherence ***','Prior ICU|prior ICU admissions / intubations ***','Recent steroids|recent steroid courses ***'],
+  e:['Speech|speaking in ***','Peak flow|peak flow *** (***% predicted)','Wheeze|*** wheeze, accessory muscle use ***','VBG|VBG pH ***, pCO2 ***','CXR|CXR ***'],
+  t:['Albuterol|continuous albuterol','Ipratropium|ipratropium','Steroids|methylprednisolone *** mg','Magnesium|magnesium 2 g IV','Epinephrine|epinephrine ***'],i:['Severity|*** exacerbation','Trigger|triggered by ***']},
+ pe:{p:['Dyspnea|*** of dyspnea','Pleuritic pain|pleuritic chest pain','Syncope|syncope','Leg swelling|*** leg swelling'],
+  h:['VTE risk|VTE risk factors: *** (recent surgery / immobility / malignancy / estrogen)','Prior VTE|prior VTE ***','Anticoagulation|on *** (last dose ***)'],
+  e:['Hemodynamics|HR ***, BP ***/***, SpO2 ***% on ***','CTA|CTA with *** PE, RV/LV ratio ***','Troponin / BNP|troponin ***, BNP ***','POCUS RV|POCUS RV ***','LE duplex|LE duplex ***','sPESI|sPESI ***'],
+  t:['Heparin|heparin infusion','Enoxaparin|enoxaparin','Thrombolysis|alteplase ***','PERT|PERT consulted'],i:['Risk class|*** risk PE (*** RV strain, troponin ***)','Provoked|*** (provoked / unprovoked)']},
+ effusion:{p:['Dyspnea|*** of dyspnea'],h:['Cause|history of *** (HF / malignancy / cirrhosis / recent pneumonia)'],e:['Imaging|*** effusion on ***','POCUS|POCUS with *** (simple / septated)'],t:['Thoracentesis|thoracentesis (*** mL removed)','Chest tube|chest tube'],i:['Character|likely *** (transudate / exudate)']},
+ vent:{p:['Reason for intubation|intubated for ***'],h:['Lung disease|***','Difficult airway|*** airway (grade ***)'],e:['Vent|vent ***, Vt ***, RR ***, PEEP ***, FiO2 ***','Mechanics|plateau ***, driving pressure ***','ABG|post-intubation ABG ***/***/***/***','CXR|CXR with ETT *** cm above carina'],t:['Sedation|*** (sedation) / fentanyl ***','Induction|intubated with *** / ***'],i:['Indication|*** (hypoxemic / hypercapnic / airway protection)']},
+ hemoptysis:{p:['Volume|*** mL of hemoptysis over ***'],h:['Lung disease|*** (bronchiectasis / malignancy / TB / CF)','Anticoagulation|on ***'],e:['Hemodynamics|HR ***, BP ***, SpO2 ***% on ***','CTA|CTA chest with ***','Coags|Hgb ***, plt ***, INR ***'],t:['Positioning|bleeding side down','TXA|nebulized / IV TXA','Reversal|reversal with ***','Bronchoscopy / IR|*** (bronchoscopy / IR embolization)'],i:['Source|likely *** source']},
+ ptx:{p:['Pain / dyspnea|sudden *** chest pain and dyspnea'],h:['Lung disease|***','Trauma / procedure|after ***'],e:['Imaging|*** pneumothorax (*** cm) on ***','Hemodynamics|HR ***, BP ***, SpO2 ***%'],t:['Chest tube|*** Fr chest tube','Needle decompression|needle decompression'],i:['Type|*** (primary / secondary / traumatic / iatrogenic)']},
+ hypercap:{p:['Somnolence|increasing somnolence','Dyspnea|dyspnea'],h:['Cause|*** (OHS / OSA / neuromuscular / COPD)','Home NIV|home CPAP/BiPAP ***','Sedating meds|sedating meds: ***'],e:['VBG / ABG|VBG pH ***, pCO2 *** (baseline HCO3 ***)','Mental status|GCS ***','BMI|BMI ***'],t:['BiPAP|BiPAP ***/***','Naloxone|naloxone ***'],i:['Acuity|*** (acute / acute-on-chronic) hypercapnic respiratory failure']},
+ // ---- Cardiovascular
+ septic:{p:['Fever / rigors|fevers and rigors','Source symptoms|*** (source symptoms)','Weakness / AMS|generalized weakness and confusion'],
+  h:['Immunosuppression|immunosuppression: ***','Recent abx / hospital|recent antibiotics / hospitalization ***','Resistant organisms|prior *** (MRSA / ESBL / Pseudomonas)','Devices|indwelling *** (lines / catheters / hardware)'],
+  e:['Hemodynamics|T ***, HR ***, BP ***/*** (MAP ***)','Lactate|lactate *** → ***','WBC|WBC ***','UA|UA ***','CXR|CXR ***','Source imaging|*** showing ***','Cultures|blood cultures ×2 drawn ***'],
+  t:['Antibiotics|*** (antibiotics) at ***','Fluids|*** L balanced crystalloid','Norepinephrine|norepinephrine (up to *** mcg/kg/min)','Vasopressin|vasopressin 0.03 units/min','Lines|central line and arterial line','Response|with *** response'],
+  i:['Source|likely *** source','SOFA|SOFA ***','Current pressor|currently on norepinephrine *** mcg/kg/min']},
+ sepsis:{p:['Fevers|fevers','Source symptoms|*** (source symptoms)'],h:['Immunosuppression|immunosuppression: ***','Recent abx|recent antibiotics ***','Resistant organisms|prior *** isolate'],
+  e:['Vitals|T ***, HR ***, BP ***, RR ***','Lactate|lactate ***','WBC|WBC ***','UA|UA ***','CXR|CXR ***','Cultures|blood cultures ×2 drawn'],t:['Antibiotics|***','Fluids|*** L IV fluids'],i:['Source|likely *** source','qSOFA|qSOFA ***']},
+ cardshock:{p:['Dyspnea|dyspnea','Chest pain|chest pain','AMS / low UOP|confusion and decreased urine output'],h:['Cardiac history|HF*** (EF ***%), CAD ***','Devices|*** (ICD / LVAD / pacemaker)','GDMT|on ***'],
+  e:['Hemodynamics|MAP ***, cool extremities ***','Lactate|lactate ***','Troponin / BNP|troponin ***, BNP ***','EKG|EKG with ***','POCUS / echo|POCUS EF ***, RV ***, effusion ***','End-organ|Cr ***, AST/ALT ***/***'],
+  t:['Norepinephrine|norepinephrine ***','Inotrope|*** (dobutamine / milrinone)','Cath|emergent cath ***','MCS|*** (IABP / Impella / ECMO)'],i:['SCAI|SCAI stage ***','Etiology|2/2 ***']},
+ hemshock:{p:['Bleeding|*** (bleeding)','Syncope|lightheadedness / syncope'],h:['Antithrombotics|on ***','Liver disease|***'],e:['Hemodynamics|HR ***, BP ***/***','Hgb|Hgb *** (baseline ***)','Coags|INR ***, fibrinogen ***, plt ***','Source|source ***'],t:['Blood|*** u PRBC, *** FFP, *** plt (MTP ***)','TXA|TXA','Reversal|reversal with ***','Calcium|calcium'],i:['Source|from ***','Class|class *** hemorrhage']},
+ adhf:{p:['Dyspnea|*** of progressive dyspnea on exertion','Orthopnea / PND|orthopnea and PND','Weight gain|*** lb weight gain','Edema|*** leg swelling'],
+  h:['HF|HF*** (EF *** % on ***)','Home diuretic|home *** mg furosemide ***','Dry weight|dry weight *** kg','Adherence|*** (diet / medication adherence)','Recent changes|recent ***'],
+  e:['Exam|JVD ***, crackles ***, *** edema','Weight|weight *** kg (dry ***)','BNP|BNP *** (prior ***)','Troponin|troponin ***','CXR|CXR with ***','EKG|EKG ***','Cr / K|Cr ***, K ***'],
+  t:['IV furosemide|furosemide *** mg IV with *** mL UOP','BiPAP|BiPAP','Nitroglycerin|nitroglycerin ***'],i:['Profile|warm and wet','Trigger|likely triggered by ***']},
+ acs:{p:['Chest pain|*** chest pain starting ***, ***/10, radiating to ***','Associated|with diaphoresis / dyspnea / nausea','Exertional|exertional'],h:['CAD|CAD s/p ***','Risk factors|risk factors: ***','Antiplatelets|on ***'],
+  e:['EKG|EKG with ***','Troponin|troponin *** → ***','HEART|HEART score ***','Echo|echo ***'],t:['Aspirin|aspirin 324 mg','Heparin|heparin infusion','Nitro|nitroglycerin ***','Other|***'],i:['Type|*** (type 1 / type 2) NSTEMI','TIMI|TIMI ***']},
+ stemi:{p:['Chest pain|*** chest pain starting *** (door-to-balloon ***)'],h:['CAD|***'],e:['EKG|EKG with ST elevation in ***','Troponin|troponin ***','Echo|POCUS ***'],t:['Cath|emergent cath: ***','Antiplatelets|aspirin, ***','Heparin|heparin'],i:['Territory|*** STEMI','Complications|***']},
+ dissect:{p:['Pain|abrupt tearing *** pain'],h:['Risk|*** (HTN / connective tissue / bicuspid / cocaine / recent instrumentation)'],e:['BP|BP *** (R) / *** (L)','Pulses|pulse deficits ***','CTA|CTA with Stanford *** dissection, extent ***','Malperfusion|***'],t:['Esmolol|esmolol ***','Nicardipine|nicardipine ***','CT surgery|CT surgery / vascular consulted'],i:['Type|Stanford *** dissection']},
+ afib:{p:['Palpitations|*** of palpitations','Dyspnea|dyspnea','Chest pain|chest pain'],h:['Known AF|known AF on ***','Anticoagulation|on *** (missed doses ***)','Missed rate control|missed doses of ***'],
+  e:['Rate|HR *** in AF, BP ***','EKG|EKG with ***','Labs|K ***, Mg ***, TSH ***','Trigger|possible trigger: ***'],t:['Diltiazem|diltiazem *** mg IV','Metoprolol|metoprolol *** mg IV','Amiodarone|amiodarone ***','Cardioversion|cardioversion'],i:['CHA₂DS₂-VASc|CHA₂DS₂-VASc ***','Trigger|likely 2/2 ***','Rate now|rate now ***']},
+ htnem:{p:['Symptoms|*** (headache / vision change / chest pain / dyspnea)'],h:['HTN|HTN on ***, adherence ***','Stimulants|stimulant use ***'],e:['BP|BP *** on arrival','End-organ|end-organ injury: ***','Troponin / Cr|troponin ***, Cr ***','UA|UA ***','CT head|CT head ***'],t:['Nicardipine|nicardipine ***','Labetalol|labetalol ***'],i:['End-organ|with ***']},
+ brady:{p:['Symptoms|*** (lightheadedness / syncope / fatigue)'],h:['Nodal agents|on ***','Conduction disease|prior ***'],e:['Rate|HR ***, BP ***','EKG|EKG with ***','Labs|K ***, TSH ***, troponin ***, digoxin ***'],t:['Atropine|atropine ***','Pacing|transcutaneous pacing','Infusion|*** infusion'],i:['Rhythm|***','Cause|likely 2/2 ***']},
+ rosc:{p:['Arrest|*** arrest at ***'],h:['Baseline|baseline ***','Cardiac|***'],e:['Arrest details|initial rhythm ***, bystander CPR ***, time to ROSC *** min, epi ×***, shocks ×***','Post-ROSC EKG|post-ROSC EKG ***','Neuro|GCS ***, pupils ***','Lactate|lactate ***','CT|CT head ***'],t:['Airway|intubation','Pressors|***','TTM|temperature control'],i:['Cause|likely 2/2 ***']},
+ vt:{p:['Symptoms|*** (palpitations / syncope / ICD shock)'],h:['Structural heart disease|***','ICD|ICD ***'],e:['EKG|EKG with ***','Labs|K ***, Mg ***, troponin ***'],t:['Amiodarone|amiodarone ***','Cardioversion|cardioversion'],i:['Type|*** VT']},
+ svt:{p:['Palpitations|*** of palpitations'],h:['Prior SVT|***'],e:['EKG|EKG with ***, HR ***'],t:['Vagal|vagal maneuvers','Adenosine|adenosine *** mg ×***'],i:['Mechanism|likely ***']},
+ shock:{p:['Presentation|***'],h:['Relevant|***'],e:['Hemodynamics|MAP ***, HR ***','Lactate|lactate ***','POCUS|POCUS: EF ***, RV ***, IVC ***, effusion ***, FAST ***'],t:['Fluids|*** L','Pressors|***'],i:['Leading type|leading concern *** (distributive / cardiogenic / hypovolemic / obstructive)']},
+ // ---- Neuro
+ enceph:{p:['Confusion|*** of confusion per ***','Somnolence|somnolence'],h:['Baseline cognition|baseline ***','New meds|new or deliriogenic meds: ***','Alcohol / substances|***'],
+  e:['Mental status|GCS ***, oriented ×***, CAM ***','Focal deficits|no focal deficits','Glucose / Na|glucose ***, Na ***','UA|UA ***','CT head|CT head ***','Tox|***'],t:['Antibiotics|***','Other|***'],i:['Likely cause|likely 2/2 ***']},
+ etohw:{p:['Tremor|tremor and diaphoresis','Last drink|last drink ***','Hallucinations|hallucinations'],h:['Use|*** drinks/day','Withdrawal history|prior withdrawal seizures / DTs ***'],e:['CIWA|CIWA ***','Vitals|HR ***, BP ***','EtOH level|EtOH ***','Labs|Mg ***, K ***, glucose ***, AST/ALT ***/***'],t:['Benzodiazepines|lorazepam *** mg total','Phenobarbital|phenobarbital ***','Thiamine|thiamine ***'],i:['Severity|*** withdrawal','DTs risk|*** risk of DTs']},
+ seizure:{p:['Event|*** seizure lasting ***','Post-ictal|post-ictal ***'],h:['Epilepsy|epilepsy on ***','Adherence|missed doses ***','Triggers|***'],e:['Glucose / lytes|glucose ***, Na ***, Ca ***, Mg ***','AED levels|*** level ***','CT head|CT head ***','CK / lactate|CK ***, lactate ***'],t:['Benzodiazepine|lorazepam *** mg','Levetiracetam|levetiracetam *** mg load'],i:['Type|*** (first / breakthrough / provoked)']},
+ status:{p:['Event|*** seizure activity for *** min'],h:['Epilepsy|epilepsy on ***','Adherence|missed doses ***'],e:['Glucose / lytes|glucose ***, Na ***','AED levels|***','CT head|CT head ***','Mental status|GCS ***'],t:['Benzodiazepine|lorazepam *** mg ×***','Second line|*** (levetiracetam / fosphenytoin / valproate) load','Intubation|intubation','Infusion|*** infusion'],i:['Type|*** (convulsive / nonconvulsive)','Cause|likely 2/2 ***']},
+ stroke:{p:['Deficits|*** (deficits)','LKW|LKW ***'],h:['AF / anticoagulation|***','Prior stroke|***'],e:['NIHSS|NIHSS ***','CT / CTA|CT ***, CTA ***','Glucose|glucose ***','BP|BP ***'],t:['Thrombolytic|TNK at ***','Thrombectomy|thrombectomy (TICI ***)'],i:['Territory|*** territory','Mechanism|likely *** (cardioembolic / large-artery / small-vessel)']},
+ ich:{p:['Symptoms|*** (headache / deficits / decreased LOC) at ***'],h:['Anticoagulation|on *** (last dose ***)','HTN|***'],e:['Neuro|GCS ***, NIHSS ***','CT|*** mL *** ICH, IVH ***, shift ***','BP|BP ***','Coags|INR ***, plt ***'],t:['BP control|nicardipine to SBP ***','Reversal|reversal with ***','Neurosurgery|neurosurgery consulted'],i:['ICH score|ICH score ***','Cause|likely *** (hypertensive / amyloid / anticoagulation)']},
+ sah:{p:['Headache|thunderclap headache at ***'],h:['Risk|***'],e:['Grade|Hunt-Hess ***, WFNS ***','CT|CT with *** (modified Fisher ***)','CTA|CTA with ***'],t:['BP control|***','Nimodipine|nimodipine','Neurosurgery|neurosurgery'],i:['Aneurysm|*** aneurysm, secured ***']},
+ menenc:{p:['Symptoms|fever, headache, neck stiffness and ***'],h:['Immune status|***','Exposures|***'],e:['Exam|***','LP|LP: opening pressure ***, WBC ***, protein ***, glucose ***, Gram stain ***','CT head|CT head ***'],t:['Empiric|*** (vancomycin / ceftriaxone / ampicillin / acyclovir)','Dexamethasone|dexamethasone'],i:['Likely|likely *** (bacterial / viral / ***)']},
+ coma:{p:['Found|found ***'],h:['Baseline|***'],e:['Neuro|GCS ***, pupils ***, brainstem reflexes ***','Glucose|glucose ***','Tox|***','CT|CT head ***'],t:['Airway|intubation','Naloxone|naloxone ***'],i:['Cause|likely ***']},
+ nmd:{p:['Weakness|*** weakness over ***','Bulbar|dysphagia / dysarthria'],h:['Diagnosis|***','Triggers|***'],e:['Mechanics|FVC *** mL/kg, NIF ***','Exam|***'],t:['Treatment|*** (IVIG / PLEX)'],i:['Trajectory|***']},
+ icp:{p:['Symptoms|***'],h:['Cause|***'],e:['Neuro|GCS ***, pupils ***','CT|CT with ***'],t:['Osmotherapy|*** (hypertonic saline / mannitol)','Neurosurgery|***'],i:['Herniation signs|***']},
+ // ---- Renal & lytes
+ aki:{p:['Poor intake / losses|*** (poor PO intake / vomiting / diarrhea)','Low UOP|decreased urine output'],h:['Baseline Cr|baseline Cr *** (date ***)','Nephrotoxins|on *** (NSAIDs / ACEi/ARB / diuretics / ***)','Contrast|recent contrast ***','Urinary|*** (BPH / retention)'],
+  e:['Cr|Cr *** (baseline ***), BUN ***','K / HCO3|K ***, HCO3 ***','UA|UA ***','Urine lytes|FENa ***','Bladder scan|bladder scan *** mL','Renal US|renal US ***'],t:['Fluids|*** L IV fluids','Foley|Foley placed'],i:['KDIGO|KDIGO stage ***','Etiology|likely *** (prerenal / ATN / obstructive)']},
+ hyperk:{p:['Symptoms|*** (weakness / palpitations)'],h:['Kidney|*** (CKD / ESRD, last HD ***)','Meds|on ***'],e:['K|K *** (hemolyzed ***)','EKG|EKG with ***','Cr / glucose|Cr ***, glucose ***'],t:['Calcium|calcium gluconate *** g','Insulin / dextrose|insulin *** units with D50','Albuterol|albuterol','Binder|sodium zirconium cyclosilicate','Dialysis|emergent HD'],i:['Cause|likely 2/2 ***']},
+ hypona:{p:['Symptoms|*** (confusion / falls / nausea / seizure)'],h:['Meds|on *** (thiazide / SSRI / ***)','Intake|***','Volume disorders|***'],e:['Na|Na *** (prior ***)','Osms|serum osm ***, urine osm ***, UNa ***','Volume|*** volume status'],t:['3% saline|3% saline *** mL','Fluids|***'],i:['Etiology|likely *** (SIADH / hypovolemic / hypervolemic / low solute)','Chronicity|*** (acute / chronic)','ODS risk|*** ODS risk']},
+ hyperna:{p:['Intake|***'],h:['Access to water|***'],e:['Na|Na ***','Volume|***'],t:['Free water|***'],i:['Cause|likely ***']},
+ hypok:{p:['Symptoms|***'],h:['Losses / meds|***'],e:['K / Mg|K ***, Mg ***','EKG|EKG ***'],t:['Repletion|KCl *** mEq'],i:['Cause|likely 2/2 ***']},
+ dka:{p:['Symptoms|*** of polyuria, polydipsia, nausea and vomiting','Abdominal pain|abdominal pain'],h:['Diabetes|DM*** on ***','Missed insulin|missed insulin ***','SGLT2i|on SGLT2 inhibitor ***','Prior DKA|prior DKA ***'],
+  e:['Glucose / AG|glucose ***, AG ***, HCO3 ***','pH|pH ***','BHB|BHB ***','K|K ***','Trigger workup|***'],t:['Fluids|*** L IV fluids','Insulin|insulin infusion started ***','K repletion|K ***'],i:['Severity|*** DKA','Trigger|triggered by ***']},
+ rhabdo:{p:['Cause|*** (down time / exertion / seizure)'],h:['Meds|***'],e:['CK|CK ***','Cr / K|Cr ***, K ***, phos ***, Ca ***','UA|UA with *** blood, *** RBC'],t:['Fluids|*** L IV fluids'],i:['AKI|*** AKI']},
+ esrd:{h:['Schedule|HD *** via ***, last session ***','Dry weight|dry weight *** kg','Missed sessions|missed ***'],e:['K|K ***','Volume|***'],i:['Needs HD|*** HD today']},
+ ckd:{h:['Baseline|baseline Cr ***, eGFR ***','Etiology|***'],i:['At baseline|at baseline']},
+ // ---- GI & liver
+ ugib:{p:['Hematemesis|*** (hematemesis / coffee-ground emesis)','Melena|melena ×*** days','Syncope|lightheadedness / syncope'],h:['Antithrombotics|on *** (last dose ***)','NSAIDs|NSAID use ***','Liver|cirrhosis ***, known varices ***','Prior GIB|prior GI bleed ***','EtOH|***'],
+  e:['Hemodynamics|HR ***, BP ***','Hgb|Hgb *** (baseline ***)','BUN|BUN ***','Coags / plt|INR ***, plt ***','Rectal|rectal exam ***','GBS|Glasgow-Blatchford ***'],t:['PRBC|*** u PRBC','PPI|pantoprazole 80 mg IV','Octreotide|octreotide','Ceftriaxone|ceftriaxone','Reversal|reversal with ***','GI|GI consulted'],i:['Likely source|likely *** (PUD / variceal / ***)','Hemodynamics|currently ***']},
+ lgib:{p:['Hematochezia|*** episodes of hematochezia'],h:['Antithrombotics|on ***','Prior|prior *** (diverticulosis / hemorrhoids / colonoscopy ***)'],e:['Hemodynamics|HR ***, BP ***','Hgb|Hgb *** (baseline ***)','BUN|BUN ***','CTA|CTA ***'],t:['PRBC|*** u PRBC','Reversal|reversal with ***','GI|GI consulted'],i:['Likely source|likely ***']},
+ cirrhosis:{p:['Distension|increasing abdominal distension','Confusion|confusion','Jaundice|jaundice'],h:['Etiology|cirrhosis 2/2 ***','Decompensations|prior *** (ascites / HE / varices / SBP)','Meds|on *** (lactulose / rifaximin / diuretics / NSBB)','Last para|last para ***'],
+  e:['MELD labs|Tbili ***, INR ***, Cr ***, Na *** (MELD-Na ***)','Exam|*** ascites, asterixis ***','Para|diagnostic para: PMN ***','Imaging|RUQ US ***'],t:['Paracentesis|paracentesis (*** L)','Albumin|albumin ***','Antibiotics|ceftriaxone','Lactulose|lactulose'],i:['Trigger|decompensation likely 2/2 ***','MELD|MELD-Na ***']},
+ hepenc:{p:['Confusion|*** of confusion'],h:['Prior HE|prior HE ***','Adherence|lactulose adherence ***'],e:['Grade|West Haven ***, asterixis ***','Trigger workup|***'],t:['Lactulose|lactulose ***','Rifaximin|rifaximin'],i:['Trigger|likely triggered by ***']},
+ lft:{p:['Symptoms|***'],h:['Alcohol|***','Meds / supplements|***'],e:['LFTs|AST/ALT ***/***, ALP ***, Tbili ***, INR ***','APAP|APAP ***','RUQ US|RUQ US ***'],t:['Other|***'],i:['Pattern|*** pattern (R ***)','Likely|likely ***']},
+ panc:{p:['Pain|epigastric pain radiating to the back since ***','N/V|nausea and vomiting'],h:['EtOH|***','Gallstones|***','TG / meds|***'],e:['Lipase|lipase ***','LFTs|LFTs ***','TG / Ca|TG ***, Ca ***','Imaging|RUQ US ***, CT ***','Severity|BISAP ***'],t:['LR|*** L LR','Analgesia|***'],i:['Etiology|likely ***','Severity|*** (mild / moderately severe / severe)']},
+ sbo:{p:['Symptoms|abdominal pain, distension, emesis, and obstipation ×***'],h:['Prior surgery|prior abdominal surgery: ***','Hernia|***'],e:['CT|CT with *** (transition point ***)','Lactate|lactate ***','Exam|***'],t:['NGT|NGT with *** output','Surgery|surgery consulted'],i:['Partial|*** (partial / complete)','Likely cause|likely ***']},
+ cdiff:{p:['Diarrhea|*** stools/day ×***'],h:['Recent abx|recent ***','Prior CDI|prior C. diff ***','PPI|PPI use'],e:['C. diff|C. diff ***','WBC / Cr|WBC ***, Cr ***','CT|CT ***'],t:['Treatment|***'],i:['Severity|*** (non-severe / severe / fulminant)']},
+ alf:{p:['Symptoms|***'],h:['Ingestion / meds|***'],e:['Labs|INR ***, Tbili ***, AST/ALT ***/***','HE|HE grade ***','APAP|APAP ***'],t:['NAC|N-acetylcysteine','Transplant|transplant center contacted'],i:['Cause|likely ***']},
+ // ---- ID
+ neutfever:{p:['Fever|fever to ***'],h:['Cancer / chemo|*** on ***, last chemo ***','Prophylaxis|on ***','Line|***'],e:['ANC|ANC ***','Vitals|T ***, HR ***, BP ***','Source|***','Cultures|blood cultures ×2 (peripheral and line)'],t:['Cefepime|cefepime within *** min','Vancomycin|vancomycin'],i:['Source|no clear source / likely ***','MASCC|MASCC ***']},
+ // ---- Heme
+ anemia:{p:['Symptoms|*** (fatigue / dyspnea / melena)'],h:['Baseline|baseline Hgb ***','Antithrombotics|on ***','Prior|***'],e:['Hgb|Hgb *** (baseline ***), MCV ***','Iron / hemolysis|***'],t:['PRBC|*** u PRBC with appropriate rise to ***'],i:['Type|*** (microcytic / normocytic / macrocytic), likely ***']},
+ thrombocyt:{h:['Baseline|baseline plt ***','Heparin exposure|heparin since ***'],e:['Plt|plt *** (baseline ***)','Smear|smear ***','4T|4T score ***'],t:['Platelets|*** u plt'],i:['Likely|likely ***']},
+ dic:{e:['Labs|plt ***, INR ***, fibrinogen ***, D-dimer ***'],i:['Trigger|2/2 ***']},
+ // ---- Endo
+ hyperglyc:{h:['DM|DM2 on ***','A1c|A1c ***'],e:['Glucose|glucose ***'],i:['Control|***']},
+ hypoglyc:{p:['Found|found *** with glucose ***'],h:['Agents|on *** (insulin / sulfonylurea)','Intake|poor intake ***'],e:['Glucose|glucose ***'],t:['Dextrose|D50 ×***, D10 infusion'],i:['Cause|likely 2/2 ***']},
+ adrenal:{h:['Steroids|on prednisone *** mg','Missed|missed doses ***'],e:['Na / K / glucose|Na ***, K ***, glucose ***'],t:['Hydrocortisone|hydrocortisone *** mg'],i:['Stressor|in setting of ***']},
+ thyroid:{p:['Symptoms|***'],h:['Thyroid history|***'],e:['TSH / FT4|TSH ***, FT4 ***','Burch-Wartofsky|***'],t:['Treatment|***'],i:['Trigger|precipitated by ***']},
+ // ---- Onc
+ hypercalc:{p:['Symptoms|*** (confusion / constipation / polyuria)'],h:['Malignancy|***','Meds|***'],e:['Ca|Ca *** (corrected ***), iCa ***','PTH / PTHrP|PTH ***, PTHrP ***','Cr|Cr ***'],t:['Fluids|*** L NS','Calcitonin / bisphosphonate|***'],i:['Cause|likely *** (PTH-mediated / malignancy)']},
+ tls:{h:['Malignancy / therapy|***'],e:['Labs|K ***, phos ***, uric acid ***, Ca ***, Cr ***'],t:['Rasburicase|rasburicase'],i:['Cairo-Bishop|*** (laboratory / clinical) TLS']},
+ svc:{p:['Symptoms|facial swelling, dyspnea ×***'],h:['Malignancy|***'],e:['CT|CT with ***'],i:['Cause|2/2 ***']},
+ cord:{p:['Symptoms|back pain and *** (weakness / sensory level / retention)'],h:['Malignancy|***'],e:['Exam|***','MRI|MRI with ***'],t:['Dexamethasone|dexamethasone ***'],i:['Level|*** level']},
+ // ---- Tox & other
+ tox:{p:['Ingestion|reported ingestion of *** at ***','Found|found ***'],h:['Psychiatric|***','Prior attempts|***'],e:['Toxidrome|*** toxidrome','Levels|APAP ***, salicylate ***, EtOH ***','EKG|EKG QRS ***, QTc ***','Gap|AG ***, osm gap ***'],t:['Naloxone|naloxone ***','NAC|N-acetylcysteine','Charcoal|activated charcoal','Bicarbonate|sodium bicarbonate','Poison control|poison control consulted'],i:['Agent|***','Intent|***']},
+ opioid:{p:['Found|found down / apneic ***'],h:['Use|***'],e:['Mental status / RR|GCS ***, RR ***','Co-ingestants|***'],t:['Naloxone|naloxone *** mg ×***'],i:['Agent|***']},
+ anaphylaxis:{p:['Exposure|exposure to ***, followed by ***'],h:['Prior reactions|***'],e:['Findings|*** (urticaria / angioedema / wheeze / hypotension)'],t:['Epinephrine|epinephrine IM ×***','Adjuncts|***'],i:['Trigger|likely ***']},
+ heat:{p:['Exposure|***'],h:['Meds|***'],e:['Temp|core temp ***','CK / Cr|CK ***, Cr ***'],t:['Cooling|***'],i:['Type|***']},
+ hypotherm:{p:['Exposure|***'],e:['Temp|core temp ***','EKG|EKG ***'],t:['Rewarming|***'],i:['Stage|***']},
+ goc:{h:['Code status|currently ***','Decision-maker|HCPOA ***','Prior wishes|***'],i:['Discussed|discussed with *** on ***']},
+ decond:{h:['Baseline function|baseline ***','Falls|***'],i:['Expected dispo|***']},
+ malnut:{h:['Intake / weight|*** weight loss over ***'],e:['Albumin / BMI|BMI ***'],i:['Refeeding risk|*** refeeding risk']},
+ // ---- Chronic, stable
+ c_htn:{h:['Home regimen|on ***'],i:['BP here|BP *** here']},
+ c_hf:{h:['EF|HF*** (EF ***% on echo ***)','GDMT|on ***','Dry weight|dry weight *** kg'],i:['Euvolemic|appears euvolemic']},
+ c_cad:{h:['CAD|s/p ***','Antiplatelets|on ***'],i:['No ischemia|no active ischemic symptoms']},
+ c_afib:{h:['AF|*** AF on ***','Anticoagulation|on ***'],i:['Rate|rate controlled','CHA₂DS₂-VASc|CHA₂DS₂-VASc ***']},
+ c_copd:{h:['COPD|COPD on ***','Home O2|*** L home O2'],i:['At baseline|at baseline']},
+ c_dm:{h:['Regimen|on ***','A1c|A1c ***'],i:['Control|***']},
+ c_dm1:{h:['Regimen|on *** (pump ***)','A1c|A1c ***'],i:['Control|***']},
+ c_osa:{h:['CPAP|CPAP ***'],i:['Adherent|***']},
+ c_tob:{h:['Use|*** ppd, *** pack-years'],i:['Interested in quitting|***']},
+ c_pain:{h:['Regimen|on ***','PDMP|PDMP reviewed'],i:['Controlled|***']},
+ c_vte:{h:['Event|*** on ***'],i:['Plan|***']},
+ c_cva:{h:['Event|*** with residual ***'],i:['Stable|***']}
+};
+
+/* =========================================================
+   State
+   ========================================================= */
+let S;
+const SETTINGS=[['ED','ED','In the ED, '],['OSH','Outside hospital','At the outside hospital, '],['Floor','Floor (RRT / transfer)','On the floor, '],['Direct','Direct admit','On arrival, ']];
+function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[]}}
+S=blank();
+let q='';
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dirty=()=>!!(S.probs.length||S.sum.trim());
+const isChronic=k=>(LIB[k]&&LIB[k].sys==='chronic')||k==='ckd'||k==='esrd';
+const clean=n=>n.replace(/ \*\*\*$/,'').replace(', source','');
+const fixAbx=t=>t.replace(/ \(see antibiotic plan[^)]*\)/,': ***');
+
+/* ---------- the paragraph's five parts ---------- */
+const FIELDS=[
+ {k:'p',t:'Presentation',cue:'What brought them in: the symptoms, onset and course.',lead:'Presented with ',skip:/^(present|brought|found|transferred|was |were |admitted|sent|came|called|patient|pt )/i,sep:', ',ph:'e.g. 3 days of progressive dyspnea and productive cough'},
+ {k:'h',t:'Pertinent history',cue:'Only the history that bears on this problem.',lead:'History notable for ',skip:/^(history|hx|pmh|known|with |has |he |she |they |on |baseline|no )/i,sep:', ',ph:'e.g. COPD on 2 L home O2, 40 pack-years'},
+ {k:'e',t:'Findings',cue:'Vitals, exam, labs and imaging that define the problem.',lead:null,skip:/^(in the|at the|on the|on arrival|upon|initial|initially|here)/i,sep:'; ',ph:'e.g. SpO2 84% on RA, RR 30; CXR with RLL consolidation'},
+ {k:'t',t:'Treatment so far',cue:'What was given and how they responded.',lead:'Treated with ',skip:/^(treated|received|given|started|was |were |placed|underwent|intubated|s\/p|no )/i,sep:', ',ph:'e.g. DuoNebs, methylprednisolone and BiPAP, with improvement'},
+ {k:'i',t:'Assessment',cue:'Your read: likely cause, severity, where they are now.',lead:'',skip:null,sep:'; ',ph:'e.g. Likely 2/2 CAP; now on 4 L NC'}
+];
+const CHRONIC_FIELDS=['h','i'];
+function setLead(){return (SETTINGS.find(s=>s[0]===S.set)||SETTINGS[0])[2]}
+function fieldTitle(f){if(f.k==='e')return {ED:'Findings in the ED',OSH:'Findings at the outside hospital',Floor:'Findings on the floor',Direct:'Findings on arrival'}[S.set];if(f.k==='t')return S.set==='ED'?'Treatment in the ED':f.t;return f.t}
+function fieldsFor(p){const ch=isChronic(p.key);return FIELDS.filter(f=>!ch||CHRONIC_FIELDS.includes(f.k)||(p.f[f.k]||'').trim()||p.more)}
+
+function chipsFor(p,k){
+  const pr=PERT[p.key]||{},ch=isChronic(p.key);
+  let list=(pr[k]||[]).slice();
+  if(k==='e'&&!pr.e){const L=LIB[p.key]||{};(L.data||[]).forEach(d=>{if(DATA[d])list.push(DATA[d][0]+'|'+DATA[d][0].replace(/^([A-Z][a-z])/,m=>m.toLowerCase())+' '+DATA[d][1])})}
+  const g=(ch?GEN_CHRONIC:GEN)[k]||[];
+  const seen=new Set(list.map(x=>x.split('|')[0].toLowerCase()));
+  g.forEach(x=>{if(!seen.has(x.split('|')[0].toLowerCase()))list.push(x)});
+  return list.map(x=>{const i=x.indexOf('|');return i<0?{l:x.replace(/ ?\*\*\*/g,''),v:x}:{l:x.slice(0,i),v:x.slice(i+1)}});
+}
+
+// a prompt shows as used once its longest fixed wording appears in the field
+function chipOn(c,val){const k=c.v.split('***').map(x=>x.replace(/^[\s,;:()\/%-]+|[\s,;:()\/%-]+$/g,'')).sort((a,b)=>b.length-a.length)[0].toLowerCase();return !!val&&k.length>1&&String(val).toLowerCase().includes(k)}
+/* ---------- writing ---------- */
+const upFirst=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const lowFirst=s=>/^[A-Z][a-z]/.test(s)&&!/^(I |I'|[A-Z][a-z]+[A-Z])/.test(s)?s.charAt(0).toLowerCase()+s.slice(1):s;
+function sentence(txt,f){
+  let t=String(txt||'').replace(/\s+/g,' ').trim().replace(/[;,]$/,'').trim();
+  if(!t)return '';
+  const lead=f.k==='e'?setLead():f.lead;
+  if(lead&&!(f.skip&&f.skip.test(t)))t=lead+lowFirst(t);
+  t=upFirst(t);
+  if(!/[.!?]$/.test(t))t+='.';
+  return t;
+}
+function para(p){return fieldsFor(p).map(f=>sentence(p.f[f.k],f)).filter(Boolean).join(' ')}
+const SMALL=new Set(['a','an','and','as','at','by','for','in','of','on','or','the','to','with','vs','from','per','via']);
+function title(n){if(!S.tc)return n;return n.split(/(\s+|\/|-|\()/).map((w,i,a)=>{if(!/^[a-z]/.test(w))return w;if(i>0&&SMALL.has(w))return w;return upFirst(w)}).join('')}
+function plan(p){return p.items.filter(i=>i.on).map(i=>i.t).concat((p.extra||'').split('\n').map(s=>s.trim()).filter(Boolean))}
+function blocks(){return S.probs.map(p=>({h:'# '+title(p.name.trim()||'***'),a:para(p),pl:plan(p)}))}
+function plainText(){
+  const out=[];if(S.sum.trim())out.push(S.sum.trim());
+  blocks().forEach(b=>out.push([b.h,b.a,...b.pl.map(x=>'- '+x)].filter(Boolean).join('\n')));
+  return out.join('\n\n');
+}
+function richHTML(){
+  const f='font-family:Arial,sans-serif;font-size:11pt;';
+  const out=[];if(S.sum.trim())out.push(`<p style="${f}margin:0 0 10pt">${esc(S.sum.trim())}</p>`);
+  blocks().forEach(b=>out.push(`<p style="${f}margin:0">${esc(b.h)}</p>${b.a?`<p style="${f}margin:0"><i>${esc(b.a)}</i></p>`:''}${b.pl.length?`<ul style="${f}margin:0 0 10pt;padding-left:20pt">${b.pl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p style="margin:0 0 10pt"></p>'}`));
+  return out.join('');
+}
+function previewHTML(){
+  const out=[];if(S.sum.trim())out.push(`<p class="sumout">${esc(S.sum.trim())}</p>`);
+  blocks().forEach(b=>out.push(`<div class="blk"><p class="bh">${esc(b.h)}</p>${b.a?`<p class="ba"><i>${hl(b.a)}</i></p>`:'<p class="ba empty">Assessment paragraph goes here.</p>'}${b.pl.length?`<ul>${b.pl.map(x=>`<li>${hl(x)}</li>`).join('')}</ul>`:''}</div>`));
+  return out.join('');
+}
+const hl=s=>esc(s).replace(/\*\*\*/g,'<mark>***</mark>');
+
+/* ---------- problems ---------- */
+function addProb(key){const L=LIB[key];if(!L||S.probs.some(p=>p.key===key))return;
+  const np={id:uid(),key,name:L.name,f:{p:'',h:'',e:'',t:'',i:L.a||''},
+    items:L.items.map(t=>({t:fixAbx(t.replace(/^\?/,'')),on:!t.startsWith('?')})).concat((MEDS[key]||[]).map(medItem)),extra:''};
+  if(isChronic(key))S.probs.push(np);else{const i=S.probs.findIndex(p=>isChronic(p.key));if(i<0)S.probs.push(np);else S.probs.splice(i,0,np)}
+  recalcMeds();return np}
+
+/* =========================================================
+   UI
+   ========================================================= */
+const seg=(name,opts,cur)=>`<div class="chips">${opts.map(([v,l])=>`<button type="button" class="chip" data-${name}="${esc(v)}" aria-pressed="${cur===v}">${esc(l)}</button>`).join('')}</div>`;
+function libPane(){
+  const chosen=new Set(S.probs.map(p=>p.key));
+  const chip=k=>`<button type="button" class="chip" data-prob="${k}" data-name="${esc(clean(LIB[k].name).toLowerCase())}" aria-pressed="${chosen.has(k)}">${esc(clean(LIB[k].name))}</button>`;
+  const sug=[...new Set(S.cx.flatMap(c=>(COMPLAINTS.find(x=>x[0]===c)||[,,[]])[2]))].filter(k=>LIB[k]);
+  return `<section class="pane">
+    <div class="ph"><span class="eb">1</span><h2>Presentation</h2><p class="cue">Where they came from sets how findings are introduced. Presenting complaints suggest problems.</p></div>
+    <div class="field"><div class="flab">Presenting from</div>${seg('set',SETTINGS.map(s=>[s[0],s[1]]),S.set)}</div>
+    <div class="field"><div class="flab">Presenting complaint <span class="sub">optional</span></div><div class="chips">${COMPLAINTS.map(([k,l])=>`<button type="button" class="chip" data-cx="${k}" aria-pressed="${S.cx.includes(k)}">${esc(l)}</button>`).join('')}</div></div>
+    <label class="in"><span>Summary statement <span class="sub">optional; prints above the first problem</span></span><textarea data-sum rows="2" placeholder="e.g. 68 y/o M with COPD (2 L home O2) and HFrEF (EF 30%) presenting with 3 days of dyspnea, admitted for acute hypoxemic respiratory failure.">${esc(S.sum)}</textarea></label>
+  </section>
+  <section class="pane">
+    <div class="ph"><span class="eb">2</span><h2>Problems</h2><p class="cue">Pick each problem, most acute first. Each comes with the plan from Admit, which you can trim.</p></div>
+    ${sug.length?`<div class="field"><p class="gt" style="color:var(--accent)">Suggested for ${esc(S.cx.map(c=>COMPLAINTS.find(x=>x[0]===c)[1].toLowerCase()).join(', '))}</p><div class="chips">${sug.map(chip).join('')}</div></div>`:''}
+    <label class="in"><span>Find a problem</span><input id="q" type="search" value="${esc(q)}" placeholder="e.g. hypoxemic, AKI, sepsis" autocomplete="off"></label>
+    <details class="libd"${S.probs.length&&!q?'':' open'}><summary>All problems by system</summary>
+      <div class="lib">${SYS.map(([s,l])=>{const ks=Object.keys(LIB).filter(k=>LIB[k].sys===s);return ks.length?`<div class="sys" data-sys><p class="gt">${l}</p><div class="chips">${ks.map(chip).join('')}</div></div>`:''}).join('')}</div>
+    </details>
+    <div class="row"><label class="in"><span>Custom problem</span><input id="custom" placeholder="e.g. Hypomagnesemia" autocomplete="off"></label><div style="align-self:flex-end"><button type="button" class="btn" data-act="addCustom">Add</button></div></div>
+  </section>`;
+}
+function card(p,i){
+  const L=LIB[p.key]||{},n=S.probs.length,ch=isChronic(p.key);
+  const fs=fieldsFor(p);
+  const fieldHTML=fs.map((f,j)=>{const cs=chipsFor(p,f.k),val=p.f[f.k]||'';
+    return `<div class="gf"><div class="gfl"><span class="num">${j+1}</span><span class="gft">${esc(fieldTitle(f))}</span><span class="gfc">${esc(f.cue)}</span></div>
+      ${cs.length?`<div class="chips sm">${cs.map((c,ci)=>`<button type="button" class="chip sm" data-ins="${p.id}" data-f="${f.k}" data-ci="${ci}" aria-pressed="${chipOn(c,val)}" title="${esc(c.v)}">${esc(c.l)}</button>`).join('')}</div>`:''}
+      <textarea data-pf="${p.id}.${f.k}" rows="${f.k==='e'?3:2}" placeholder="${esc(f.ph)}">${esc(val)}</textarea></div>`}).join('');
+  const plans=p.items.map((it,j)=>[it,j]),gen=plans.filter(([it])=>!it.med),meds=plans.filter(([it])=>it.med);
+  const btn=([it,j])=>`<button type="button" class="pi" data-item="${p.id}" data-j="${j}" aria-pressed="${it.on}"><span class="bx"></span><span class="tx">${esc(it.t)}</span></button>`;
+  const pv=para(p);
+  return `<div class="pcard" id="c-${p.id}">
+    <div class="pch"><span class="hash">#</span><input data-pn="${p.id}" value="${esc(p.name)}" aria-label="Problem name">
+      <button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<n-1?'':'disabled'}>↓</button>
+      ${L.tip||L.ref?`<button type="button" class="info" data-tipk="${p.key}" aria-label="Key points and reference">i</button>`:''}<button type="button" class="mv" data-del="${p.id}" aria-label="Remove problem">×</button></div>
+    <div class="pcb">
+      <p class="sect">Assessment paragraph</p>
+      ${fieldHTML}
+      ${ch?`<button type="button" class="linkbtn" data-more="${p.id}">${p.more?'Fewer fields':'Add presentation, findings, treatment'}</button>`:''}
+      <p class="pvw" data-pv="${p.id}">${pv?`<i>${hl(pv)}</i>`:'<span class="muted">The paragraph builds here as you fill the parts above. Leave *** where you still need to look something up.</span>'}</p>
+      <p class="sect">Plan</p>
+      ${gen.length?`<div class="items">${gen.map(btn).join('')}</div>`:''}
+      ${meds.length?`<div class="medgrp"><p class="mlab">Home meds (PTA)</p><div class="items">${meds.map(btn).join('')}</div></div>`:''}
+      <label class="in"><span>More plan</span><textarea data-pp="${p.id}" rows="2" placeholder="One item per line">${esc(p.extra)}</textarea></label>
+    </div></div>`;
+}
+function render(keep){
+  const y=scrollY,a=document.activeElement,af=a&&(a.dataset.pf||a.dataset.pp||a.dataset.pn||(a.id==='q'?'#q':null)),sel=af&&[a.selectionStart,a.selectionEnd];
+  document.getElementById('panes').innerHTML=libPane()+`<section class="pane"><div class="ph"><span class="eb">3</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div>
+    <div class="pcards">${S.probs.length?S.probs.map(card).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`;
+  if(keep)scrollTo(0,y);
+  if(af){const el=af==='#q'?document.getElementById('q'):document.querySelector(`[data-pf="${af}"],[data-pp="${af}"],[data-pn="${af}"]`);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(sel[0],sel[1])}catch(_){}}}
+  applyQ();update();
+}
+function applyQ(){const v=q.trim().toLowerCase();document.querySelectorAll('.libd [data-prob]').forEach(b=>b.hidden=!!v&&!b.dataset.name.includes(v));document.querySelectorAll('.libd [data-sys]').forEach(s=>s.hidden=!!v&&!s.querySelector('[data-prob]:not([hidden])'));const d=document.querySelector('.libd');if(d&&v)d.open=true}
+function update(){
+  const d=document.getElementById('dict');
+  d.innerHTML=dirty()?previewHTML():'<p class="muted">Pick a problem to start. The A/P prints here as you write: the problem as a header, the assessment in italics, and the plan as bullets.</p>';
+  document.getElementById('tc').setAttribute('aria-pressed',S.tc);
+}
+function updateCard(p){const el=document.querySelector(`[data-pv="${p.id}"]`);if(el){const pv=para(p);el.innerHTML=pv?`<i>${hl(pv)}</i>`:'<span class="muted">The paragraph builds here as you fill the parts above.</span>'}
+  document.querySelectorAll(`[data-ins="${p.id}"]`).forEach(b=>{const c=chipsFor(p,b.dataset.f)[+b.dataset.ci];b.setAttribute('aria-pressed',chipOn(c,p.f[b.dataset.f]))})}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;clearTimeout(toast.t);toast.t=setTimeout(()=>t.textContent='',2600)}
+function insert(p,k,v){
+  const f=FIELDS.find(x=>x.k===k);let cur=(p.f[k]||'').replace(/\s+$/,'').replace(/[.;,]$/,'');
+  const start=cur?cur.length+f.sep.length:0;p.f[k]=cur?cur+f.sep+v:v;
+  render(true);
+  const ta=document.querySelector(`[data-pf="${p.id}.${k}"]`);if(!ta)return;
+  ta.focus({preventScroll:true});const at=p.f[k].indexOf('***',start);
+  if(at>=0)ta.setSelectionRange(at,at+3);else ta.setSelectionRange(p.f[k].length,p.f[k].length);
+}
+
+/* ---------- popovers (problem key points) ---------- */
+const pop=document.getElementById('pop');let pinned=false,anchor=null;
+function closePop(){pop.hidden=true;pinned=false;anchor=null}
+function openPop(html,el){pop.innerHTML=html;pop.hidden=false;anchor=el;pinned=true;
+  if(innerWidth<=640){pop.style.left='';pop.style.top='';return}
+  const r=el.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;
+  const x=Math.min(Math.max(12,r.left-200),innerWidth-pw-12),below=innerHeight-r.bottom>ph+20;
+  pop.style.left=x+'px';pop.style.top=Math.max(8,below?r.bottom+8:r.top-8-ph)+'px'}
+
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('.close')){closePop();return}
+  if(!pop.hidden&&!t.closest('#pop')&&!t.closest('[data-tipk]'))closePop();
+  const st=t.closest('[data-set]');if(st){S.set=st.dataset.set;render(true);return}
+  const cx=t.closest('[data-cx]');if(cx){const k=cx.dataset.cx;S.cx=S.cx.includes(k)?S.cx.filter(x=>x!==k):S.cx.concat(k);render(true);return}
+  const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);render(true);return}
+  const ins=t.closest('[data-ins]');if(ins){const p=S.probs.find(x=>x.id===ins.dataset.ins);if(p){const c=chipsFor(p,ins.dataset.f)[+ins.dataset.ci];insert(p,ins.dataset.f,c.v)}return}
+  const it=t.closest('[data-item]');if(it){const p=S.probs.find(x=>x.id===it.dataset.item);const x=p.items[+it.dataset.j];x.on=!x.on;x.touched=true;it.setAttribute('aria-pressed',x.on);update();return}
+  const mv=t.closest('[data-move]');if(mv){const i=S.probs.findIndex(x=>x.id===mv.dataset.move),j=i+(+mv.dataset.d);if(i>=0&&j>=0&&j<S.probs.length){[S.probs[i],S.probs[j]]=[S.probs[j],S.probs[i]]}render(true);return}
+  const dl=t.closest('[data-del]');if(dl){S.probs=S.probs.filter(x=>x.id!==dl.dataset.del);recalcMeds();render(true);return}
+  const mo=t.closest('[data-more]');if(mo){const p=S.probs.find(x=>x.id===mo.dataset.more);if(p){p.more=!p.more;render(true)}return}
+  const tk=t.closest('[data-tipk]');if(tk){if(anchor===tk&&!pop.hidden){closePop();return}const L=LIB[tk.dataset.tipk];openPop(`<div class="pt"><span>${esc(L.name)}</span><button class="close" type="button" aria-label="Close">×</button></div>${L.tip?`<p>${esc(L.tip)}</p>`:''}${L.ref?`<p style="color:var(--muted);font-size:.8rem">${esc(L.ref)}</p>`:''}`,tk);return}
+  const act=t.closest('[data-act]');if(act){const a=act.dataset.act;
+    if(a==='addCustom'){const el=document.getElementById('custom'),v=el.value.trim();if(v){S.probs.splice(Math.max(0,S.probs.findIndex(p=>isChronic(p.key)))>=0&&S.probs.some(p=>isChronic(p.key))?S.probs.findIndex(p=>isChronic(p.key)):S.probs.length,0,{id:uid(),key:'custom',name:v,f:{p:'',h:'',e:'',t:'',i:''},items:[],extra:''});render(true)}}
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pop.hidden)closePop();if(e.key==='Enter'&&e.target.id==='custom'){e.preventDefault();document.querySelector('[data-act="addCustom"]').click()}});
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='q'){q=t.value;applyQ();return}
+  if('sum' in t.dataset){S.sum=t.value;update();return}
+  if(t.dataset.pf){const [id,k]=t.dataset.pf.split('.');const p=S.probs.find(x=>x.id===id);if(p){p.f[k]=t.value;updateCard(p);update()}return}
+  if(t.dataset.pp){const p=S.probs.find(x=>x.id===t.dataset.pp);if(p){p.extra=t.value;update()}return}
+  if(t.dataset.pn){const p=S.probs.find(x=>x.id===t.dataset.pn);if(p){p.name=t.value;update()}return}
+});
+document.getElementById('tc').addEventListener('click',()=>{S.tc=!S.tc;update()});
+addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue=''}});
+document.getElementById('reset').addEventListener('click',function(){if(dirty()&&!this.dataset.armed){this.dataset.armed='1';this.textContent='Tap again to clear';setTimeout(()=>{delete this.dataset.armed;this.textContent='New patient'},3000);return}
+  delete this.dataset.armed;this.textContent='New patient';S=blank();q='';render();scrollTo(0,0);toast('Cleared.')});
+function selectPreview(){const d=document.getElementById('dict');const r=document.createRange();r.selectNodeContents(d);const s=getSelection();s.removeAllRanges();s.addRange(r)}
+async function copyRich(){
+  if(!dirty()){toast('Nothing to copy yet.');return}
+  try{
+    if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+      await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([richHTML()],{type:'text/html'}),'text/plain':new Blob([plainText()],{type:'text/plain'})})]);
+      toast('A/P copied with italics and bullets.');return}
+    throw 0;
+  }catch(_){selectPreview();try{if(document.execCommand('copy')){getSelection().removeAllRanges();toast('A/P copied with italics and bullets.');return}}catch(__){}toast('Copy blocked here; the A/P is selected. Press Ctrl/⌘ C.')}
+}
+async function copyPlain(){
+  if(!dirty()){toast('Nothing to copy yet.');return}
+  try{await navigator.clipboard.writeText(plainText());toast('Plain text copied (no italics; plan lines start with "- ").')}
+  catch(_){selectPreview();toast('Copy blocked here; the A/P is selected. Press Ctrl/⌘ C.')}
+}
+document.getElementById('copyRich').addEventListener('click',copyRich);
+document.getElementById('copyPlain').addEventListener('click',copyPlain);
+render();
+</script>
+</body>
+</html>
