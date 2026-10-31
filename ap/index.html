@@ -161,6 +161,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .chip.sm[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .pvw{margin:4px 0 2px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0;font-size:.9rem;line-height:1.5}
 .muted{color:var(--muted)}
+.gfs{font-weight:400;color:var(--muted);font-size:.8rem;text-transform:none;letter-spacing:0}
 .linkbtn{align-self:flex-start;border:0;background:none;color:var(--accent);font:inherit;font-size:.84rem;font-weight:700;padding:2px 0;cursor:pointer}
 mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 1px}
 .dict{white-space:normal;font-family:Arial,var(--f-body);font-size:.88rem;line-height:1.45;background:var(--surface);border:1px solid var(--line)}
@@ -760,22 +761,76 @@ function sentence(txt,f){
 function para(p){return fieldsFor(p).map(f=>sentence(p.f[f.k],f)).filter(Boolean).join(' ')}
 const SMALL=new Set(['a','an','and','as','at','by','for','in','of','on','or','the','to','with','vs','from','per','via']);
 function title(n){if(!S.tc)return n;return n.split(/(\s+|\/|-|\()/).map((w,i,a)=>{if(!/^[a-z]/.test(w))return w;if(i>0&&SMALL.has(w))return w;return upFirst(w)}).join('')}
-function plan(p){return p.items.filter(i=>i.on).map(i=>i.t).concat((p.extra||'').split('\n').map(s=>s.trim()).filter(Boolean))}
-function blocks(){return S.probs.map(p=>({h:'# '+title(p.name.trim()||'***'),a:para(p),pl:plan(p)}))}
+function blocks(){return units().map(u=>({h:u.map(p=>'# '+title(p.name.trim()||'***')),a:unitPara(u),pl:mergeUnit(u).plan}))}
+
+/* ---------- combined problems (stacked headers, one paragraph, one merged plan) ----------
+   p.g ties problems into one entry, as in Admit. Presentation, findings and treatment are shared and live on the
+   first problem of the stack; each problem keeps its own history and assessment. */
+const gid=p=>p.g||p.id;
+const SHARED=['p','e','t'];
+function normGroups(){const out=[],seen=new Set();S.probs.forEach(p=>{const g=gid(p);if(seen.has(g))return;seen.add(g);S.probs.forEach(q=>{if(gid(q)===g)out.push(q)})});S.probs=out}
+function units(){const u=[];S.probs.forEach(p=>{const last=u[u.length-1];if(last&&gid(last[0])===gid(p))last.push(p);else u.push([p])});return u}
+const unitOf=p=>units().find(u=>u.includes(p))||[p];
+function owner(p,k){const u=unitOf(p);return SHARED.includes(k)&&u.length>1?u[0]:p}
+const shortName=n=>n.replace(/,? (compensated|controlled|stable)$/i,'').replace(/ \*\*\*$/,'').trim();
+function showShared(u){return u.some(p=>!isChronic(p.key))||!!u[0].more||SHARED.some(k=>(u[0].f[k]||'').trim())}
+function unitPara(u){
+  if(u.length===1)return para(u[0]);
+  const F=k=>FIELDS.find(f=>f.k===k),sh=showShared(u),s=[],strip=x=>String(x||'').trim().replace(/[.;,]$/,'').trim();
+  if(sh)s.push(sentence(u[0].f.p,F('p')));
+  const hs=u.map(p=>strip(p.f.h)).filter(Boolean);if(hs.length)s.push(sentence(hs.join('; '),F('h')));
+  if(sh){s.push(sentence(u[0].f.e,F('e')));s.push(sentence(u[0].f.t,F('t')))}
+  u.forEach(p=>{const a=strip(p.f.i);if(a)s.push(sentence(shortName(p.name)+': '+lowFirst(a),F('i')))});
+  return s.filter(Boolean).join(' ');
+}
+// Home-med lines are classed by drug group so a combined plan keeps one line per class (from Admit).
+const MEDCLS=[['bb',/beta blocker|antihypertensives|GDMT/i],['raas',/ACEi|\bARB\b|ARNI|antihypertensives|GDMT/i],['ccb',/\bCCB\b|antihypertensives/i],['mra',/\bMRA\b|GDMT/i],['sglt2',/SGLT2|GDMT/i],['diur',/diuretic/i],['statin',/statin/i],['aspirin',/aspirin|antiplatelet/i],['p2y12',/P2Y12|antiplatelet/i],['anticoag',/anticoagulant|DOAC/i],['rate',/rate control/i],['metformin',/metformin|oral agents/i],['basal',/basal insulin/i],['inh',/inhalers|\bICS\b|LABA|LAMA/i],['ppi',/\bPPI\b/i],['levo',/levothyroxine/i],['alpha',/tamsulosin|alpha blocker/i]];
+const medCls=t=>MEDCLS.filter(([,r])=>r.test(t)).map(([k])=>k);
+const medAct=t=>/^Hold/i.test(t)?'hold':/^(Continue|Resume)/i.test(t)?'cont':'';
+const norm=t=>t.toLowerCase().replace(/\s+/g,' ').trim();
+function mergeUnit(u){
+  const lines=[];u.forEach(p=>p.items.forEach((it,j)=>{if(it.on)lines.push({p,j,it,t:it.t,med:!!it.med,cls:it.med?medCls(it.t):[],act:it.med?medAct(it.t):''})}));
+  const multi=u.length>1,why=new Map(),conf=[];
+  if(multi){
+    const held=new Set(lines.filter(l=>l.act==='hold').flatMap(l=>l.cls));
+    const seenTxt=new Map();
+    lines.forEach(l=>{const k=norm(l.t);if(seenTxt.has(k))why.set(l,'same line under '+shortName(seenTxt.get(k).p.name));else seenTxt.set(k,l)});
+    lines.forEach(l=>{if(why.has(l)||!l.act||!l.cls.length)return;
+      const hc=l.act==='cont'?l.cls.filter(c=>held.has(c)):[];
+      if(l.act==='cont'&&hc.length===l.cls.length){const h=lines.find(m=>m.act==='hold'&&m.cls.some(c=>l.cls.includes(c)));why.set(l,'held under '+shortName(h.p.name));return}
+      if(hc.length)conf.push(`${shortName(l.p.name)} continues and another problem holds: ${hc.join(', ')}`);
+      const sup=lines.find(m=>m!==l&&!why.has(m)&&m.p!==l.p&&m.act===l.act&&l.cls.every(c=>m.cls.includes(c))&&(m.cls.length>l.cls.length||(m.cls.length===l.cls.length&&lines.indexOf(m)<lines.indexOf(l))));
+      if(sup)why.set(l,'covered by '+shortName(sup.p.name))});
+  }
+  const show=lines.filter(l=>!why.has(l));
+  const plan=show.filter(l=>!l.med).map(l=>l.t).concat(show.filter(l=>l.med).map(l=>l.t)).concat(u.flatMap(p=>(p.extra||'').split('\n').map(x=>x.trim()).filter(Boolean)));
+  const lk=new Map();lines.forEach(l=>lk.set(l.p.id+':'+l.j,l));
+  return {plan:[...new Set(plan)],why,conf,lk};
+}
+// Familiar stacks offered as one-tap suggestions (never applied automatically).
+const CLUSTERS=[['Cardiac history',['c_hf','c_cad','c_htn','c_hld','c_afib']],['Lung history',['c_copd','c_osa','c_tob']],['Diabetes and kidney',['c_dm','c_dm1','ckd']],
+ ['Respiratory failure',['ahrf','hypercap','vent','ards','copd','asthma']],['Sepsis and shock',['septic','sepsis','shock']],['Bleeding and anemia',['ugib','lgib','hemshock','anemia']],['Liver',['cirrhosis','hepenc','hrs']],['Heart failure',['adhf','cardshock','c_hf']]];
+function clusterSugs(){return CLUSTERS.map(([n,ks])=>{const ps=S.probs.filter(p=>ks.includes(p.key));return ps.length>=2&&new Set(ps.map(gid)).size>1?{n,ps}:null}).filter(Boolean)}
+function combine(ps){const g=gid(ps[0]);const ids=new Set(ps.map(gid));S.probs.forEach(p=>{if(ids.has(gid(p)))p.g=g});normGroups();
+  const u=unitOf(ps[0]),o=u[0];
+  u.slice(1).forEach(m=>{SHARED.forEach(k=>{const v=(m.f[k]||'').trim().replace(/[.;,]$/,'');if(v){const f=FIELDS.find(x=>x.k===k),c=(o.f[k]||'').trim().replace(/[.;,]$/,'');o.f[k]=c?c+f.sep+v:v;m.f[k]=''}});
+    if((m.extra||'').trim()){o.extra=[o.extra,m.extra].map(x=>(x||'').trim()).filter(Boolean).join('\n');m.extra=''}})}
+// keep=true (removing the problem): the stack's shared story moves to the next problem so it isn't lost
+function detach(p,keep){const g=gid(p),rest=S.probs.filter(x=>x!==p&&gid(x)===g);if(p.id===g&&rest.length){rest.forEach(x=>x.g=rest[0].id);if(keep)SHARED.forEach(k=>{if((p.f[k]||'').trim()&&!(rest[0].f[k]||'').trim()){rest[0].f[k]=p.f[k];p.f[k]=''}})}p.g=null;return rest}
 function plainText(){
   const out=[];if(S.sum.trim())out.push(S.sum.trim());
-  blocks().forEach(b=>out.push([b.h,b.a,...b.pl.map(x=>'- '+x)].filter(Boolean).join('\n')));
+  blocks().forEach(b=>out.push([...b.h,b.a,...b.pl.map(x=>'- '+x)].filter(Boolean).join('\n')));
   return out.join('\n\n');
 }
 function richHTML(){
   const f='font-family:Arial,sans-serif;font-size:11pt;';
   const out=[];if(S.sum.trim())out.push(`<p style="${f}margin:0 0 10pt">${esc(S.sum.trim())}</p>`);
-  blocks().forEach(b=>out.push(`<p style="${f}margin:0">${esc(b.h)}</p>${b.a?`<p style="${f}margin:0"><i>${esc(b.a)}</i></p>`:''}${b.pl.length?`<ul style="${f}margin:0 0 10pt;padding-left:20pt">${b.pl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p style="margin:0 0 10pt"></p>'}`));
+  blocks().forEach(b=>out.push(`${b.h.map(h=>`<p style="${f}margin:0">${esc(h)}</p>`).join('')}${b.a?`<p style="${f}margin:0"><i>${esc(b.a)}</i></p>`:''}${b.pl.length?`<ul style="${f}margin:0 0 10pt;padding-left:20pt">${b.pl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p style="margin:0 0 10pt"></p>'}`));
   return out.join('');
 }
 function previewHTML(){
   const out=[];if(S.sum.trim())out.push(`<p class="sumout">${esc(S.sum.trim())}</p>`);
-  blocks().forEach(b=>out.push(`<div class="blk"><p class="bh">${esc(b.h)}</p>${b.a?`<p class="ba"><i>${hl(b.a)}</i></p>`:'<p class="ba empty">Assessment paragraph goes here.</p>'}${b.pl.length?`<ul>${b.pl.map(x=>`<li>${hl(x)}</li>`).join('')}</ul>`:''}</div>`));
+  blocks().forEach(b=>out.push(`<div class="blk">${b.h.map(h=>`<p class="bh">${esc(h)}</p>`).join('')}${b.a?`<p class="ba"><i>${hl(b.a)}</i></p>`:'<p class="ba empty">Assessment paragraph goes here.</p>'}${b.pl.length?`<ul>${b.pl.map(x=>`<li>${hl(x)}</li>`).join('')}</ul>`:''}</div>`));
   return out.join('');
 }
 const hl=s=>esc(s).replace(/\*\*\*/g,'<mark>***</mark>');
@@ -785,7 +840,7 @@ function addProb(key){const L=LIB[key];if(!L||S.probs.some(p=>p.key===key))retur
   const np={id:uid(),key,name:L.name,f:{p:'',h:'',e:'',t:'',i:L.a||''},
     items:L.items.map(t=>({t:fixAbx(t.replace(/^\?/,'')),on:!t.startsWith('?')})).concat((MEDS[key]||[]).map(medItem)),extra:''};
   if(isChronic(key))S.probs.push(np);else{const i=S.probs.findIndex(p=>isChronic(p.key));if(i<0)S.probs.push(np);else S.probs.splice(i,0,np)}
-  recalcMeds();return np}
+  normGroups();recalcMeds();return np}
 
 /* =========================================================
    UI
@@ -811,35 +866,49 @@ function libPane(){
     <div class="row"><label class="in"><span>Custom problem</span><input id="custom" placeholder="e.g. Hypomagnesemia" autocomplete="off"></label><div style="align-self:flex-end"><button type="button" class="btn" data-act="addCustom">Add</button></div></div>
   </section>`;
 }
-function card(p,i){
-  const L=LIB[p.key]||{},n=S.probs.length,ch=isChronic(p.key);
-  const fs=fieldsFor(p);
-  const fieldHTML=fs.map((f,j)=>{const cs=chipsFor(p,f.k),val=p.f[f.k]||'';
-    return `<div class="gf"><div class="gfl"><span class="num">${j+1}</span><span class="gft">${esc(fieldTitle(f))}</span><span class="gfc">${esc(f.cue)}</span></div>
-      ${cs.length?`<div class="chips sm">${cs.map((c,ci)=>`<button type="button" class="chip sm" data-ins="${p.id}" data-f="${f.k}" data-ci="${ci}" aria-pressed="${chipOn(c,val)}" title="${esc(c.v)}">${esc(c.l)}</button>`).join('')}</div>`:''}
-      <textarea data-pf="${p.id}.${f.k}" rows="${f.k==='e'?3:2}" placeholder="${esc(f.ph)}">${esc(val)}</textarea></div>`}).join('');
-  const plans=p.items.map((it,j)=>[it,j]),gen=plans.filter(([it])=>!it.med),meds=plans.filter(([it])=>it.med);
-  const btn=([it,j])=>`<button type="button" class="pi" data-item="${p.id}" data-j="${j}" aria-pressed="${it.on}"><span class="bx"></span><span class="tx">${esc(it.t)}</span></button>`;
-  const pv=para(p);
-  return `<div class="pcard" id="c-${p.id}">
-    <div class="pch"><span class="hash">#</span><input data-pn="${p.id}" value="${esc(p.name)}" aria-label="Problem name">
-      <button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<n-1?'':'disabled'}>↓</button>
-      ${L.tip||L.ref?`<button type="button" class="info" data-tipk="${p.key}" aria-label="Key points and reference">i</button>`:''}<button type="button" class="mv" data-del="${p.id}" aria-label="Remove problem">×</button></div>
+function chipBtn(m,f,c,ci,tgt){return `<button type="button" class="chip sm" data-ins="${m.id}" data-f="${f}" data-ci="${ci}" data-tgt="${tgt.id}" aria-pressed="${chipOn(c,tgt.f[f])}" title="${esc(c.v)}">${esc(c.l)}</button>`}
+function fieldBlock(num,f,tgt,chips,sub){
+  return `<div class="gf"><div class="gfl"><span class="num">${num}</span><span class="gft">${esc(fieldTitle(f))}${sub?` <span class="gfs">· ${esc(sub)}</span>`:''}</span><span class="gfc">${esc(f.cue)}</span></div>
+    ${chips.length?`<div class="chips sm">${chips.join('')}</div>`:''}
+    <textarea data-pf="${tgt.id}.${f.k}" rows="${f.k==='e'?3:2}" placeholder="${esc(f.ph)}">${esc(tgt.f[f.k]||'')}</textarea></div>`}
+function unitFields(u){
+  if(u.length===1){const p=u[0];return fieldsFor(p).map((f,j)=>fieldBlock(j+1,f,p,chipsFor(p,f.k).map((c,ci)=>chipBtn(p,f.k,c,ci,p)),''))
+    .join('')+(isChronic(p.key)?`<button type="button" class="linkbtn" data-more="${p.id}">${p.more?'Fewer fields':'Add presentation, findings, treatment'}</button>`:'')}
+  const o=u[0],F=k=>FIELDS.find(f=>f.k===k),sh=showShared(u);let n=0;const out=[];
+  const shared=k=>{const seen=new Set(),cs=[];u.forEach(m=>chipsFor(m,k).forEach((c,ci)=>{const key=c.l.toLowerCase();if(seen.has(key))return;seen.add(key);cs.push(chipBtn(m,k,c,ci,o))}));return fieldBlock(++n,F(k),o,cs,'shared')};
+  const per=(k,m)=>fieldBlock(++n,F(k),m,chipsFor(m,k).map((c,ci)=>chipBtn(m,k,c,ci,m)),shortName(m.name));
+  if(sh)out.push(shared('p'));
+  u.forEach(m=>out.push(per('h',m)));
+  if(sh){out.push(shared('e'));out.push(shared('t'))}
+  u.forEach(m=>out.push(per('i',m)));
+  if(!u.some(p=>!isChronic(p.key)))out.push(`<button type="button" class="linkbtn" data-more="${o.id}">${o.more?'Fewer fields':'Add presentation, findings, treatment'}</button>`);
+  return out.join('');
+}
+function ucard(u,i,all){
+  const multi=u.length>1,m=mergeUnit(u);
+  const head=u.map((p,k)=>{const L=LIB[p.key]||{};return `<div class="pch"><span class="hash">#</span><input data-pn="${p.id}" value="${esc(p.name)}" aria-label="Problem name">
+      ${k===0?`<button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<all.length-1?'':'disabled'}>↓</button>`:''}
+      ${L.tip||L.ref?`<button type="button" class="info" data-tipk="${p.key}" aria-label="Key points and reference">i</button>`:''}${multi?`<button type="button" class="mv" data-split="${p.id}" aria-label="Split ${esc(p.name)} out" title="Split out">⤓</button>`:''}<button type="button" class="mv" data-del="${p.id}" aria-label="Remove problem">×</button></div>`}).join('');
+  const btn=(p,j)=>{const it=p.items[j],l=m.lk.get(p.id+':'+j),w=l&&m.why.get(l);return `<button type="button" class="pi${w?' merged':''}" data-item="${p.id}" data-j="${j}" aria-pressed="${it.on}"><span class="bx"></span><span class="tx">${esc(it.t)}${w?`<span class="why"> · ${esc(w)}</span>`:''}</span></button>`};
+  const gen=u.map(p=>{const js=p.items.map((it,j)=>j).filter(j=>!p.items[j].med);return js.length?`${multi?`<p class="mlab">${esc(shortName(p.name))}</p>`:''}<div class="items">${js.map(j=>btn(p,j)).join('')}</div>`:''}).join('');
+  const meds=u.flatMap(p=>p.items.map((it,j)=>[p,j]).filter(([p,j])=>p.items[j].med));
+  const pv=unitPara(u);
+  return `<div class="pcard${multi?' grouped':''}" id="c-${u[0].id}">${i?`<button type="button" class="comb" data-comb="${u[0].id}">Combine with above</button>`:''}${head}
     <div class="pcb">
       <p class="sect">Assessment paragraph</p>
-      ${fieldHTML}
-      ${ch?`<button type="button" class="linkbtn" data-more="${p.id}">${p.more?'Fewer fields':'Add presentation, findings, treatment'}</button>`:''}
-      <p class="pvw" data-pv="${p.id}">${pv?`<i>${hl(pv)}</i>`:'<span class="muted">The paragraph builds here as you fill the parts above. Leave *** where you still need to look something up.</span>'}</p>
-      <p class="sect">Plan</p>
-      ${gen.length?`<div class="items">${gen.map(btn).join('')}</div>`:''}
-      ${meds.length?`<div class="medgrp"><p class="mlab">Home meds (PTA)</p><div class="items">${meds.map(btn).join('')}</div></div>`:''}
-      <label class="in"><span>More plan</span><textarea data-pp="${p.id}" rows="2" placeholder="One item per line">${esc(p.extra)}</textarea></label>
+      ${unitFields(u)}
+      <p class="pvw" data-pv="${u[0].id}">${pv?`<i>${hl(pv)}</i>`:'<span class="muted">The paragraph builds here as you fill the parts above. Leave *** where you still need to look something up.</span>'}</p>
+      <p class="sect">Plan${multi?' <span class="gfs">· one list for the stack; repeats and covered home meds are struck through</span>':''}</p>
+      ${gen}
+      ${meds.length?`<div class="medgrp"><p class="mlab">Home meds (PTA)${multi?' · merged by drug class':''}</p><div class="items">${meds.map(([p,j])=>btn(p,j)).join('')}</div></div>`:''}
+      ${m.conf.length?`<p class="conf">Check: ${esc(m.conf.join('; '))}</p>`:''}
+      <label class="in"><span>More plan</span><textarea data-pp="${u[0].id}" rows="2" placeholder="One item per line">${esc(u.map(p=>p.extra||'').filter(Boolean).join('\n'))}</textarea></label>
     </div></div>`;
 }
 function render(keep){
   const y=scrollY,a=document.activeElement,af=a&&(a.dataset.pf||a.dataset.pp||a.dataset.pn||(a.id==='q'?'#q':null)),sel=af&&[a.selectionStart,a.selectionEnd];
   document.getElementById('panes').innerHTML=libPane()+`<section class="pane"><div class="ph"><span class="eb">3</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div>
-    <div class="pcards">${S.probs.length?S.probs.map(card).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`;
+    <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${S.probs.length?units().map(ucard).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`;
   if(keep)scrollTo(0,y);
   if(af){const el=af==='#q'?document.getElementById('q'):document.querySelector(`[data-pf="${af}"],[data-pp="${af}"],[data-pn="${af}"]`);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(sel[0],sel[1])}catch(_){}}}
   applyQ();update();
@@ -850,8 +919,9 @@ function update(){
   d.innerHTML=dirty()?previewHTML():'<p class="muted">Pick a problem to start. The A/P prints here as you write: the problem as a header, the assessment in italics, and the plan as bullets.</p>';
   document.getElementById('tc').setAttribute('aria-pressed',S.tc);
 }
-function updateCard(p){const el=document.querySelector(`[data-pv="${p.id}"]`);if(el){const pv=para(p);el.innerHTML=pv?`<i>${hl(pv)}</i>`:'<span class="muted">The paragraph builds here as you fill the parts above.</span>'}
-  document.querySelectorAll(`[data-ins="${p.id}"]`).forEach(b=>{const c=chipsFor(p,b.dataset.f)[+b.dataset.ci];b.setAttribute('aria-pressed',chipOn(c,p.f[b.dataset.f]))})}
+function updateCard(p){const u=unitOf(p),el=document.querySelector(`[data-pv="${u[0].id}"]`);if(el){const pv=unitPara(u);el.innerHTML=pv?`<i>${hl(pv)}</i>`:'<span class="muted">The paragraph builds here as you fill the parts above.</span>'}
+  const card=document.getElementById('c-'+u[0].id);if(!card)return;
+  card.querySelectorAll('[data-ins]').forEach(b=>{const m=S.probs.find(x=>x.id===b.dataset.ins),tg=S.probs.find(x=>x.id===b.dataset.tgt);if(!m||!tg)return;const c=chipsFor(m,b.dataset.f)[+b.dataset.ci];b.setAttribute('aria-pressed',chipOn(c,tg.f[b.dataset.f]))})}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;clearTimeout(toast.t);toast.t=setTimeout(()=>t.textContent='',2600)}
 function insert(p,k,v){
   const f=FIELDS.find(x=>x.k===k);let cur=(p.f[k]||'').replace(/\s+$/,'').replace(/[.;,]$/,'');
@@ -877,15 +947,18 @@ document.addEventListener('click',e=>{
   if(!pop.hidden&&!t.closest('#pop')&&!t.closest('[data-tipk]'))closePop();
   const st=t.closest('[data-set]');if(st){S.set=st.dataset.set;render(true);return}
   const cx=t.closest('[data-cx]');if(cx){const k=cx.dataset.cx;S.cx=S.cx.includes(k)?S.cx.filter(x=>x!==k):S.cx.concat(k);render(true);return}
-  const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);render(true);return}
-  const ins=t.closest('[data-ins]');if(ins){const p=S.probs.find(x=>x.id===ins.dataset.ins);if(p){const c=chipsFor(p,ins.dataset.f)[+ins.dataset.ci];insert(p,ins.dataset.f,c.v)}return}
+  const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){detach(S.probs.find(p=>p.key===k),true);S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);render(true);return}
+  const ins=t.closest('[data-ins]');if(ins){const p=S.probs.find(x=>x.id===ins.dataset.ins),tg=S.probs.find(x=>x.id===ins.dataset.tgt)||p;if(p){const c=chipsFor(p,ins.dataset.f)[+ins.dataset.ci];insert(tg,ins.dataset.f,c.v)}return}
   const it=t.closest('[data-item]');if(it){const p=S.probs.find(x=>x.id===it.dataset.item);const x=p.items[+it.dataset.j];x.on=!x.on;x.touched=true;it.setAttribute('aria-pressed',x.on);update();return}
-  const mv=t.closest('[data-move]');if(mv){const i=S.probs.findIndex(x=>x.id===mv.dataset.move),j=i+(+mv.dataset.d);if(i>=0&&j>=0&&j<S.probs.length){[S.probs[i],S.probs[j]]=[S.probs[j],S.probs[i]]}render(true);return}
-  const dl=t.closest('[data-del]');if(dl){S.probs=S.probs.filter(x=>x.id!==dl.dataset.del);recalcMeds();render(true);return}
+  const mv=t.closest('[data-move]');if(mv){const U=units(),i=U.findIndex(u=>u.some(x=>x.id===mv.dataset.move)),j=i+(+mv.dataset.d);if(i>=0&&j>=0&&j<U.length){[U[i],U[j]]=[U[j],U[i]];S.probs=U.flat()}render(true);return}
+  const cb=t.closest('[data-comb]');if(cb){const U=units(),i=U.findIndex(u=>u[0].id===cb.dataset.comb);if(i>0)combine([U[i-1][0],U[i][0]]);render(true);return}
+  const sp=t.closest('[data-split]');if(sp){const p=S.probs.find(x=>x.id===sp.dataset.split);if(p){const rest=detach(p);S.probs.splice(S.probs.indexOf(p),1);const last=S.probs.map(gid).lastIndexOf(gid(rest[0]));S.probs.splice(last+1,0,p);normGroups()}render(true);return}
+  const dl=t.closest('[data-del]');if(dl){const p=S.probs.find(x=>x.id===dl.dataset.del);if(p){detach(p,true);S.probs=S.probs.filter(x=>x!==p)}recalcMeds();render(true);return}
   const mo=t.closest('[data-more]');if(mo){const p=S.probs.find(x=>x.id===mo.dataset.more);if(p){p.more=!p.more;render(true)}return}
   const tk=t.closest('[data-tipk]');if(tk){if(anchor===tk&&!pop.hidden){closePop();return}const L=LIB[tk.dataset.tipk];openPop(`<div class="pt"><span>${esc(L.name)}</span><button class="close" type="button" aria-label="Close">×</button></div>${L.tip?`<p>${esc(L.tip)}</p>`:''}${L.ref?`<p style="color:var(--muted);font-size:.8rem">${esc(L.ref)}</p>`:''}`,tk);return}
   const act=t.closest('[data-act]');if(act){const a=act.dataset.act;
-    if(a==='addCustom'){const el=document.getElementById('custom'),v=el.value.trim();if(v){S.probs.splice(Math.max(0,S.probs.findIndex(p=>isChronic(p.key)))>=0&&S.probs.some(p=>isChronic(p.key))?S.probs.findIndex(p=>isChronic(p.key)):S.probs.length,0,{id:uid(),key:'custom',name:v,f:{p:'',h:'',e:'',t:'',i:''},items:[],extra:''});render(true)}}
+    if(a==='addCustom'){const el=document.getElementById('custom'),v=el.value.trim();if(v){const ci=S.probs.findIndex(p=>isChronic(p.key));el.value='';S.probs.splice(ci<0?S.probs.length:ci,0,{id:uid(),key:'custom',name:v,f:{p:'',h:'',e:'',t:'',i:''},items:[],extra:''});render(true)}}
+    if(a==='cluster'){const c=clusterSugs().find(x=>x.n===act.dataset.n);if(c)combine(c.ps);render(true)}
   }
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pop.hidden)closePop();if(e.key==='Enter'&&e.target.id==='custom'){e.preventDefault();document.querySelector('[data-act="addCustom"]').click()}});
@@ -893,7 +966,7 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='q'){q=t.value;applyQ();return}
   if('sum' in t.dataset){S.sum=t.value;update();return}
   if(t.dataset.pf){const [id,k]=t.dataset.pf.split('.');const p=S.probs.find(x=>x.id===id);if(p){p.f[k]=t.value;updateCard(p);update()}return}
-  if(t.dataset.pp){const p=S.probs.find(x=>x.id===t.dataset.pp);if(p){p.extra=t.value;update()}return}
+  if(t.dataset.pp){const p=S.probs.find(x=>x.id===t.dataset.pp);if(p){unitOf(p).forEach(x=>{if(x!==p)x.extra=''});p.extra=t.value;update()}return}
   if(t.dataset.pn){const p=S.probs.find(x=>x.id===t.dataset.pn);if(p){p.name=t.value;update()}return}
 });
 document.getElementById('tc').addEventListener('click',()=>{S.tc=!S.tc;update()});
