@@ -177,6 +177,13 @@ mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 1
 .tog[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .privacy{font-size:.8rem;color:var(--muted);margin:0}
 .out{top:16px;max-height:calc(100vh - 32px)}
+.gobar{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(16,24,40,.12)}
+.gobar .gotx{flex:1;min-width:0;font-size:.88rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gobar .gotx b{color:var(--ink,inherit)}
+.gobar .btn{flex:none}
+.backbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.backbar .btn{flex:none}
+.backbar .bsum{flex:1;min-width:0;font-size:.86rem;color:var(--muted)}
 @media (max-width:980px){.out{max-height:none}}
 @media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
 </style>
@@ -711,7 +718,7 @@ const PERT={
    ========================================================= */
 let S;
 const SETTINGS=[['ED','ED','In the ED, '],['OSH','Outside hospital','At the outside hospital, '],['Floor','Floor (RRT / transfer)','On the floor, '],['Direct','Direct admit','On arrival, ']];
-function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[]}}
+function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[],view:'pick'}}
 S=blank();
 let q='';
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -907,8 +914,12 @@ function ucard(u,i,all){
 }
 function render(keep){
   const y=scrollY,a=document.activeElement,af=a&&(a.dataset.pf||a.dataset.pp||a.dataset.pn||(a.id==='q'?'#q':null)),sel=af&&[a.selectionStart,a.selectionEnd];
-  document.getElementById('panes').innerHTML=libPane()+`<section class="pane"><div class="ph"><span class="eb">3</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div>
-    <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${S.probs.length?units().map(ucard).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`;
+  if(S.view==='write'&&!S.probs.length)S.view='pick';
+  const n=S.probs.length,names=units().map(u=>u.map(p=>shortName(p.name)).join(' + ')).join(', ');
+  document.getElementById('panes').innerHTML=S.view==='write'
+    ?`<div class="backbar"><button type="button" class="btn" data-act="toPick">← Problems</button><span class="bsum">${n} problem${n===1?'':'s'}: ${esc(names)}</span></div>`+`<section class="pane"><div class="ph"><span class="eb">3</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div
+    <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${S.probs.length?units().map(ucard).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`
+    :libPane()+(n?`<div class="gobar"><span class="gotx"><b>${n} selected</b> · ${esc(names)}</span><button type="button" class="btn primary" data-act="toWrite">Write A/P →</button></div>`:'');
   if(keep)scrollTo(0,y);
   if(af){const el=af==='#q'?document.getElementById('q'):document.querySelector(`[data-pf="${af}"],[data-pp="${af}"],[data-pn="${af}"]`);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(sel[0],sel[1])}catch(_){}}}
   applyQ();update();
@@ -958,6 +969,8 @@ document.addEventListener('click',e=>{
   const tk=t.closest('[data-tipk]');if(tk){if(anchor===tk&&!pop.hidden){closePop();return}const L=LIB[tk.dataset.tipk];openPop(`<div class="pt"><span>${esc(L.name)}</span><button class="close" type="button" aria-label="Close">×</button></div>${L.tip?`<p>${esc(L.tip)}</p>`:''}${L.ref?`<p style="color:var(--muted);font-size:.8rem">${esc(L.ref)}</p>`:''}`,tk);return}
   const act=t.closest('[data-act]');if(act){const a=act.dataset.act;
     if(a==='addCustom'){const el=document.getElementById('custom'),v=el.value.trim();if(v){const ci=S.probs.findIndex(p=>isChronic(p.key));el.value='';S.probs.splice(ci<0?S.probs.length:ci,0,{id:uid(),key:'custom',name:v,f:{p:'',h:'',e:'',t:'',i:''},items:[],extra:''});render(true)}}
+    if(a==='toWrite'){if(S.probs.length){S.view='write';history.pushState({ap:'write'},'');render();scrollTo(0,0)}}
+    if(a==='toPick'){if(history.state&&history.state.ap==='write')history.back();else{S.view='pick';render();scrollTo(0,0)}}
     if(a==='cluster'){const c=clusterSugs().find(x=>x.n===act.dataset.n);if(c)combine(c.ps);render(true)}
   }
 });
@@ -970,9 +983,10 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.dataset.pn){const p=S.probs.find(x=>x.id===t.dataset.pn);if(p){p.name=t.value;update()}return}
 });
 document.getElementById('tc').addEventListener('click',()=>{S.tc=!S.tc;update()});
+addEventListener('popstate',()=>{const v=history.state&&history.state.ap==='write'&&S.probs.length?'write':'pick';if(v!==S.view){S.view=v;render();scrollTo(0,0)}});
 addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue=''}});
 document.getElementById('reset').addEventListener('click',function(){if(dirty()&&!this.dataset.armed){this.dataset.armed='1';this.textContent='Tap again to clear';setTimeout(()=>{delete this.dataset.armed;this.textContent='New patient'},3000);return}
-  delete this.dataset.armed;this.textContent='New patient';S=blank();q='';render();scrollTo(0,0);toast('Cleared.')});
+  delete this.dataset.armed;this.textContent='New patient';S=blank();q='';if(history.state&&history.state.ap==='write')history.replaceState(null,'');render();scrollTo(0,0);toast('Cleared.')});
 function selectPreview(){const d=document.getElementById('dict');const r=document.createRange();r.selectNodeContents(d);const s=getSelection();s.removeAllRanges();s.addRange(r)}
 async function copyRich(){
   if(!dirty()){toast('Nothing to copy yet.');return}
