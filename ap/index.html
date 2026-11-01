@@ -169,6 +169,13 @@ mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 1
 .dict .sumout{margin-bottom:12px}
 .dict .blk{margin-bottom:14px}
 .dict .blk:last-child{margin-bottom:0}
+.dict .sysb{margin-bottom:16px}.dict .sysb:last-child{margin-bottom:0}
+.dict .bsys{font-weight:700;text-decoration:underline;margin:0 0 6px}
+.dict .sysb .blk{margin-bottom:10px}
+.syshd{margin:6px 0 -4px;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.box.empty{padding:6px 10px;background:none;border-style:dashed}
+.box.empty .achips:empty::after{content:'Drop a problem here';color:var(--muted);font-size:.8rem}
+.fmtrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .dict .ba.empty{color:var(--muted);font-style:italic}
 .dict ul{margin:2px 0 0;padding-left:20px}
 .dict li{margin:1px 0}
@@ -795,7 +802,17 @@ const PERT={
    ========================================================= */
 let S;
 const SETTINGS=[['ED','ED','In the ED, '],['OSH','Outside hospital','At the outside hospital, '],['Floor','Floor (RRT / transfer)','On the floor, '],['Direct','Direct admit','On arrival, ']];
-function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[],view:'pick'}}
+const SYSBOX=[['neuro','Neuro / psych'],['cv','Cardiovascular'],['pulm','Pulmonary'],['renal','Renal / FEN'],['gi','GI / liver'],['id','Infectious disease'],['heme','Heme / onc'],['endo','Endocrine'],['other','Other']];
+const SYS_ALIAS={onc:'heme',trauma:'other',ob:'other',chronic:'other'};
+const KEY_SYS={tbi:'neuro',sci:'neuro',opioid:'neuro',tox:'other',ckd:'renal',esrd:'renal',
+ c_htn:'cv',c_hld:'cv',c_cad:'cv',c_hf:'cv',c_hfpef:'cv',c_mvalve:'cv',c_afib:'cv',c_vte:'heme',c_copd:'pulm',c_asthma:'pulm',c_osa:'pulm',c_tob:'pulm',c_pah:'pulm',
+ c_dm:'endo',c_dm1:'endo',c_hypothy:'endo',c_gerd:'gi',c_cirr:'gi',c_dep:'neuro',c_anx:'neuro',c_bipolar:'neuro',c_scz:'neuro',c_adhd:'neuro',c_aud:'neuro',c_oud:'neuro',c_pain:'neuro',
+ c_cva:'neuro',c_epi:'neuro',c_pd:'neuro',c_dementia:'neuro',c_bph:'renal',c_immuno:'id',c_tx:'id',c_hiv:'id',c_gout:'other'};
+const sysLabel=k=>(SYSBOX.find(x=>x[0]===k)||SYSBOX[SYSBOX.length-1])[1];
+function sysOf(p){let k=p.sk||KEY_SYS[p.key]||(LIB[p.key]?LIB[p.key].sys:'other');k=SYS_ALIAS[k]||k;return SYSBOX.some(x=>x[0]===k)?k:'other'}
+function sysUnits(){return S.sysOrder.map(k=>[k,S.probs.filter(p=>sysOf(p)===k)])}
+function savedFmt(){try{return localStorage.getItem('ap.fmt')==='sys'?'sys':'prob'}catch(_){return 'prob'}}
+function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[],view:'pick',fmt:savedFmt(),sysOrder:SYSBOX.map(x=>x[0])}}
 S=blank();
 let q='',libOpen=true;
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -845,7 +862,9 @@ function sentence(txt,f){
 function para(p){return fieldsFor(p).map(f=>sentence(p.f[f.k],f)).filter(Boolean).join(' ')}
 const SMALL=new Set(['a','an','and','as','at','by','for','in','of','on','or','the','to','with','vs','from','per','via']);
 function title(n){if(!S.tc)return n;return n.split(/(\s+|\/|-|\()/).map((w,i,a)=>{if(!/^[a-z]/.test(w))return w;if(i>0&&SMALL.has(w))return w;return upFirst(w)}).join('')}
-function blocks(){return units().map(u=>({h:u.map(p=>'# '+title(p.name.trim()||'***')),a:unitPara(u),pl:mergeUnit(u).plan}))}
+function planFor(p,m){const ls=p.items.map((it,j)=>m.lk.get(p.id+':'+j)).filter(l=>l&&!m.why.has(l));return [...new Set(ls.filter(l=>!l.med).map(l=>l.t).concat(ls.filter(l=>l.med).map(l=>l.t)).concat((p.extra||'').split('\n').map(x=>x.trim()).filter(Boolean)))]}
+function sysBlocks(){return sysUnits().filter(([,ps])=>ps.length).map(([k,ps])=>{const m=mergeUnit(ps);return {sys:sysLabel(k),subs:ps.map(p=>({h:['# '+title(p.name.trim()||'***')],a:para(p),pl:planFor(p,m)}))}})}
+function blocks(){if(S.fmt==='sys')return sysBlocks();return units().map(u=>({h:u.map(p=>'# '+title(p.name.trim()||'***')),a:unitPara(u),pl:mergeUnit(u).plan}))}
 
 /* ---------- combined problems (stacked headers, one paragraph, one merged plan) ----------
    p.g ties problems into one entry, as in Admit. Presentation, findings and treatment are shared and live on the
@@ -853,7 +872,7 @@ function blocks(){return units().map(u=>({h:u.map(p=>'# '+title(p.name.trim()||'
 const gid=p=>p.g||p.id;
 const SHARED=['p','e','t'];
 function normGroups(){const out=[],seen=new Set();S.probs.forEach(p=>{const g=gid(p);if(seen.has(g))return;seen.add(g);S.probs.forEach(q=>{if(gid(q)===g)out.push(q)})});S.probs=out}
-function units(){const u=[];S.probs.forEach(p=>{const last=u[u.length-1];if(last&&gid(last[0])===gid(p))last.push(p);else u.push([p])});return u}
+function units(){if(S.fmt==='sys')return S.sysOrder.flatMap(k=>S.probs.filter(p=>sysOf(p)===k)).map(p=>[p]);const u=[];S.probs.forEach(p=>{const last=u[u.length-1];if(last&&gid(last[0])===gid(p))last.push(p);else u.push([p])});return u}
 const unitOf=p=>units().find(u=>u.includes(p))||[p];
 function owner(p,k){const u=unitOf(p);return SHARED.includes(k)&&u.length>1?u[0]:p}
 const shortName=n=>n.replace(/,? (compensated|controlled|stable)$/i,'').replace(/ \*\*\*$/,'').trim();
@@ -894,7 +913,7 @@ function mergeUnit(u){
 // Familiar stacks offered as one-tap suggestions (never applied automatically).
 const CLUSTERS=[['Cardiac history',['c_hf','c_hfpef','c_cad','c_htn','c_hld','c_afib','c_mvalve']],['Lung history',['c_copd','c_asthma','c_osa','c_tob','c_pah']],['Psychiatric history',['c_dep','c_anx','c_bipolar','c_scz','c_adhd']],['Substance use',['c_aud','c_oud','c_pain','c_tob']],['Neuro history',['c_epi','c_pd','c_dementia','c_cva']],['Immunosuppression',['c_immuno','c_tx','c_hiv']],['Diabetes and kidney',['c_dm','c_dm1','ckd']],
  ['Respiratory failure',['ahrf','hypercap','rf4','vent','ards','copd','asthma']],['Sepsis and shock',['septic','sepsis','shock','rf4']],['Bleeding and anemia',['ugib','lgib','hemshock','anemia']],['Liver',['cirrhosis','hepenc','hrs']],['Heart failure',['adhf','cardshock','c_hf','c_hfpef']]];
-function clusterSugs(){return CLUSTERS.map(([n,ks])=>{const ps=S.probs.filter(p=>ks.includes(p.key));return ps.length>=2&&new Set(ps.map(gid)).size>1?{n,ps}:null}).filter(Boolean)}
+function clusterSugs(){if(S.fmt==='sys')return [];return CLUSTERS.map(([n,ks])=>{const ps=S.probs.filter(p=>ks.includes(p.key));return ps.length>=2&&new Set(ps.map(gid)).size>1?{n,ps}:null}).filter(Boolean)}
 function combine(ps){const g=gid(ps[0]);const ids=new Set(ps.map(gid));S.probs.forEach(p=>{if(ids.has(gid(p)))p.g=g});normGroups();mergeShared(unitOf(ps[0]))}
 function mergeShared(u){const o=u[0];
   u.slice(1).forEach(m=>{SHARED.forEach(k=>{const v=(m.f[k]||'').trim().replace(/[.;,]$/,'');if(v){const f=FIELDS.find(x=>x.k===k),c=(o.f[k]||'').trim().replace(/[.;,]$/,'');o.f[k]=c?c+f.sep+v:v;m.f[k]=''}});
@@ -903,18 +922,21 @@ function mergeShared(u){const o=u[0];
 function detach(p,keep){const g=gid(p),rest=S.probs.filter(x=>x!==p&&gid(x)===g);if(p.id===g&&rest.length){rest.forEach(x=>x.g=rest[0].id);if(keep)SHARED.forEach(k=>{if((p.f[k]||'').trim()&&!(rest[0].f[k]||'').trim()){rest[0].f[k]=p.f[k];p.f[k]=''}})}p.g=null;return rest}
 function plainText(){
   const out=[];if(S.sum.trim())out.push(S.sum.trim());
-  blocks().forEach(b=>out.push([...b.h,b.a,...b.pl.map(x=>'- '+x)].filter(Boolean).join('\n')));
+  const one=b=>[...b.h,b.a,...b.pl.map(x=>'- '+x)].filter(Boolean).join('\n');
+  blocks().forEach(b=>out.push(b.sys?b.sys+':\n'+b.subs.map(one).join('\n\n'):one(b)));
   return out.join('\n\n');
 }
 function richHTML(){
   const f='font-family:Arial,sans-serif;font-size:11pt;';
   const out=[];if(S.sum.trim())out.push(`<p style="${f}margin:0 0 10pt">${esc(S.sum.trim())}</p>`);
-  blocks().forEach(b=>out.push(`${b.h.map(h=>`<p style="${f}margin:0">${esc(h)}</p>`).join('')}${b.a?`<p style="${f}margin:0"><i>${esc(b.a)}</i></p>`:''}${b.pl.length?`<ul style="${f}margin:0 0 10pt;padding-left:20pt">${b.pl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p style="margin:0 0 10pt"></p>'}`));
+  const one=b=>`${b.h.map(h=>`<p style="${f}margin:0">${esc(h)}</p>`).join('')}${b.a?`<p style="${f}margin:0"><i>${esc(b.a)}</i></p>`:''}${b.pl.length?`<ul style="${f}margin:0 0 10pt;padding-left:20pt">${b.pl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p style="margin:0 0 10pt"></p>'}`;
+  blocks().forEach(b=>out.push(b.sys?`<p style="${f}margin:0 0 4pt"><b><u>${esc(b.sys)}:</u></b></p>${b.subs.map(one).join('')}`:one(b)));
   return out.join('');
 }
 function previewHTML(){
   const out=[];if(S.sum.trim())out.push(`<p class="sumout">${esc(S.sum.trim())}</p>`);
-  blocks().forEach(b=>out.push(`<div class="blk">${b.h.map(h=>`<p class="bh">${esc(h)}</p>`).join('')}${b.a?`<p class="ba"><i>${hl(b.a)}</i></p>`:'<p class="ba empty">Assessment paragraph goes here.</p>'}${b.pl.length?`<ul>${b.pl.map(x=>`<li>${hl(x)}</li>`).join('')}</ul>`:''}</div>`));
+  const one=b=>`<div class="blk">${b.h.map(h=>`<p class="bh">${esc(h)}</p>`).join('')}${b.a?`<p class="ba"><i>${hl(b.a)}</i></p>`:'<p class="ba empty">Assessment paragraph goes here.</p>'}${b.pl.length?`<ul>${b.pl.map(x=>`<li>${hl(x)}</li>`).join('')}</ul>`:''}</div>`;
+  blocks().forEach(b=>out.push(b.sys?`<div class="sysb"><p class="bsys">${esc(b.sys)}:</p>${b.subs.map(one).join('')}</div>`:one(b)));
   return out.join('');
 }
 const hl=s=>esc(s).replace(/\*\*\*/g,'<mark>***</mark>');
@@ -936,6 +958,7 @@ function libPane(){
   const sug=[...new Set(S.cx.flatMap(c=>(COMPLAINTS.find(x=>x[0]===c)||[,,[]])[2]))].filter(k=>LIB[k]);
   return `<section class="pane">
     <div class="ph"><span class="eb">1</span><h2>Presentation</h2><p class="cue">Where they came from sets how findings are introduced. Presenting complaints suggest problems.</p></div>
+    <div class="field"><div class="flab">Note format <span class="sub">remembered on this device</span></div>${seg('fmt',[['prob','Problem-based'],['sys','System-based']],S.fmt)}</div>
     <div class="field"><div class="flab">Presenting from</div>${seg('set',SETTINGS.map(s=>[s[0],s[1]]),S.set)}</div>
     <div class="field"><div class="flab">Presenting complaint <span class="sub">optional</span></div><div class="chips">${COMPLAINTS.map(([k,l])=>`<button type="button" class="chip" data-cx="${k}" aria-pressed="${S.cx.includes(k)}">${esc(l)}</button>`).join('')}</div></div>
     <label class="in"><span>Summary statement <span class="sub">optional; prints above the first problem</span></span><textarea data-sum rows="2" placeholder="e.g. 68 y/o M with COPD (2 L home O2) and HFrEF (EF 30%) presenting with 3 days of dyspnea, admitted for acute hypoxemic respiratory failure.">${esc(S.sum)}</textarea></label>
@@ -969,9 +992,10 @@ function unitFields(u){
   return out.join('');
 }
 function ucard(u,i,all){
-  const multi=u.length>1,m=mergeUnit(u);
+  const ctx=S.fmt==='sys'?S.probs.filter(q=>sysOf(q)===sysOf(u[0])):u;
+  const multi=u.length>1,m=mergeUnit(ctx.length>1?ctx:u);
   const head=u.map((p,k)=>{const L=LIB[p.key]||{};return `<div class="pch"><span class="hash">#</span><input data-pn="${p.id}" value="${esc(p.name)}" aria-label="Problem name">
-      ${k===0?`<button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<all.length-1?'':'disabled'}>↓</button>`:''}
+      ${k===0&&S.fmt!=='sys'?`<button type="button" class="mv" data-move="${p.id}" data-d="-1" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" class="mv" data-move="${p.id}" data-d="1" aria-label="Move down" ${i<all.length-1?'':'disabled'}>↓</button>`:''}
       ${L.tip||L.ref?`<button type="button" class="info" data-tipk="${p.key}" aria-label="Key points and reference">i</button>`:''}${multi?`<button type="button" class="mv" data-split="${p.id}" aria-label="Split ${esc(p.name)} out" title="Split out">⤓</button>`:''}<button type="button" class="mv" data-del="${p.id}" aria-label="Remove problem">×</button></div>`}).join('');
   const btn=(p,j)=>{const it=p.items[j],l=m.lk.get(p.id+':'+j),w=l&&m.why.get(l);return `<button type="button" class="pi${w?' merged':''}" data-item="${p.id}" data-j="${j}" aria-pressed="${it.on}"><span class="bx"></span><span class="tx">${esc(it.t)}${w?`<span class="why"> · ${esc(w)}</span>`:''}</span></button>`};
   const gen=u.map(p=>{const js=p.items.map((it,j)=>j).filter(j=>!p.items[j].med);return js.length?`${multi?`<p class="mlab">${esc(shortName(p.name))}</p>`:''}<div class="items">${js.map(j=>btn(p,j)).join('')}</div>`:''}).join('');
@@ -989,10 +1013,17 @@ function ucard(u,i,all){
       <label class="in"><span>More plan</span><textarea data-pp="${u[0].id}" rows="2" placeholder="One item per line">${esc(u.map(p=>p.extra||'').filter(Boolean).join('\n'))}</textarea></label>
     </div></div>`;
 }
-function arrangePane(){const U=units();if(S.probs.length<2)return '';
-  return `<section class="pane"><div class="ph"><span class="eb">3</span><h2>Arrange</h2><p class="cue">Each box is one A/P block. Drag a problem onto another box to combine them; drag it between boxes or to the bottom to give it its own box. Drag a box by its label to reorder. On a phone, press and hold to pick up.</p></div>
+function fmtSeg(){return `<div class="fmtrow"><span class="flab" style="margin:0">Note format</span>${seg('fmt',[['prob','Problem-based'],['sys','System-based']],S.fmt)}</div>`}
+function arrangePane(){if(S.fmt==='sys')return sysArrange();const U=units();if(S.probs.length<2)return `<section class="pane">${fmtSeg()}</section>`;
+  return `<section class="pane"><div class="ph"><span class="eb">3</span><h2>Arrange</h2><p class="cue">Each box is one A/P block. Drag a problem onto another box to combine them; drag it between boxes or to the bottom to give it its own box. Drag a box by its label to reorder. On a phone, press and hold to pick up.</p></div>${fmtSeg()}
   <div class="board">${U.map((u,i)=>`<div class="gap" data-gap="${i}"></div><div class="box${u.length>1?' multi':''}" data-box="${i}"><div class="boxh" data-boxh="${i}"><span class="grip">⠿</span>${u.length>1?'Combined · '+(i+1):'Problem · '+(i+1)}</div><div class="achips">${u.map(p=>`<div class="ach" data-ap="${p.id}"><span class="grip">⠿</span>${esc(shortName(p.name)||'***')}</div>`).join('')}</div></div>`).join('')}
   <div class="newbox" data-gap="${U.length}">Drop here for a new box</div></div></section>`}
+function sysArrange(){
+  return `<section class="pane"><div class="ph"><span class="eb">3</span><h2>Arrange by system</h2><p class="cue">Problems start in their usual system. Drag a problem into another system to move it, or onto a problem to change its order. Drag a system by its label to reorder systems; empty systems are left out of the note. On a phone, press and hold to pick up.</p></div>${fmtSeg()}
+  <div class="board">${sysUnits().map(([k,ps],i)=>`<div class="gap" data-gap="${i}"></div><div class="box${ps.length?'':' empty'}" data-box="${i}"><div class="boxh" data-boxh="${i}"><span class="grip">⠿</span>${esc(sysLabel(k))}</div><div class="achips">${ps.map(p=>`<div class="ach" data-ap="${p.id}"><span class="grip">⠿</span>${esc(shortName(p.name)||'***')}</div>`).join('')}</div></div>`).join('')}<div class="gap" data-gap="${S.sysOrder.length}"></div></div></section>`}
+function sysMove(p,i,refId,before){p.sk=S.sysOrder[i];if(!refId||refId===p.id)return;
+  S.probs.splice(S.probs.indexOf(p),1);const r=S.probs.findIndex(x=>x.id===refId);S.probs.splice(r+(before?0:1),0,p);normGroups()}
+function sysReorder(from,to){const o=S.sysOrder,k=o.splice(from,1)[0];o.splice(to>from?to-1:to,0,k)}
 function placeUnit(unit,arr){const start=S.probs.indexOf(unit[0]);S.probs.splice(start,unit.length,...arr)}
 function moveInto(p,unit,refId,before){
   const arr=unit.filter(x=>x!==p);let pos=arr.length;if(refId){const r=arr.findIndex(x=>x.id===refId);if(r>=0)pos=r+(before?0:1)}
@@ -1011,7 +1042,7 @@ function render(keep){
   const n=S.probs.length,names=units().map(u=>u.map(p=>shortName(p.name)).join(' + ')).join(', ');
   document.getElementById('panes').innerHTML=S.view==='write'
     ?`<div class="backbar"><button type="button" class="btn" data-act="toPick">← Problems</button><span class="bsum">${n} problem${n===1?'':'s'}: ${esc(names)}</span></div>`+arrangePane()+`<section class="pane"><div class="ph"><span class="eb">${S.probs.length<2?3:4}</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div
-    <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${S.probs.length?units().map(ucard).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`
+    <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${!S.probs.length?'<p class="empty">No problems yet. Pick one above.</p>':S.fmt==='sys'?sysUnits().filter(([,ps])=>ps.length).map(([k,ps])=>`<p class="syshd">${esc(sysLabel(k))}</p>`+ps.map(p=>ucard([p],0,[[p]])).join('')).join(''):units().map(ucard).join('')}</div></section>`
     :libPane()+`<div id="goslot">${gobarHTML()}</div>`;
   if(keep)scrollTo(0,y);
   if(af){const el=af==='#q'?document.getElementById('q'):document.querySelector(`[data-pf="${af}"],[data-pp="${af}"],[data-pn="${af}"]`);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(sel[0],sel[1])}catch(_){}}}
@@ -1049,6 +1080,7 @@ document.addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('.close')){closePop();return}
   if(!pop.hidden&&!t.closest('#pop')&&!t.closest('[data-tipk]'))closePop();
+  const fm=t.closest('[data-fmt]');if(fm){S.fmt=fm.dataset.fmt;try{localStorage.setItem('ap.fmt',S.fmt)}catch(_){}render(true);return}
   const st=t.closest('[data-set]');if(st){S.set=st.dataset.set;render(true);return}
   const cx=t.closest('[data-cx]');if(cx){const k=cx.dataset.cx;S.cx=S.cx.includes(k)?S.cx.filter(x=>x!==k):S.cx.concat(k);render(true);return}
   const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){detach(S.probs.find(p=>p.key===k),true);S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);if(S.view==='pick'&&document.getElementById('goslot'))refreshPick();else render(true);return}
@@ -1089,10 +1121,12 @@ function dPlace(){const d=drag;d.ghost.style.transform=`translate(${d.x-d.ox}px,
   const gap=hit.closest('[data-gap]'),box=hit.closest('[data-box]');
   if(d.kind==='box'){let i=null;if(gap)i=+gap.dataset.gap;else if(box){const r=box.getBoundingClientRect();i=+box.dataset.box+(d.y>r.top+r.height/2?1:0)}
     if(i===null)return;d.t={gap:i};const el=document.querySelector(`.gap[data-gap="${i}"]`)||document.querySelector(`.newbox[data-gap="${i}"]`);if(el)el.classList.add('over');return}
-  if(gap){d.t={gap:+gap.dataset.gap};gap.classList.add('over');return}
+  if(gap&&S.fmt!=='sys'){d.t={gap:+gap.dataset.gap};gap.classList.add('over');return}
   if(box){const c=hit.closest('[data-ap]');d.t={box:+box.dataset.box};box.classList.add('over');
     if(c&&c.dataset.ap!==d.id){const r=c.getBoundingClientRect(),b=d.x<r.left+r.width/2;d.t.ref=c.dataset.ap;d.t.before=b;c.classList.add(b?'ib':'ia')}}}
-function dDrop(){const d=drag,t=d.t;if(!t)return;const U=units();
+function dDrop(){const d=drag,t=d.t;if(!t)return;
+  if(S.fmt==='sys'){if(d.kind==='box')sysReorder(d.id,t.gap);else{const p=S.probs.find(x=>x.id===d.id);if(p&&'box' in t)sysMove(p,t.box,t.ref,t.before)}render(true);return}
+  const U=units();
   if(d.kind==='box'){moveBox(d.id,t.gap)}
   else{const p=S.probs.find(x=>x.id===d.id);if(!p)return;if('gap' in t)moveToNew(p,t.gap);else moveInto(p,U[t.box],t.ref,t.before)}
   recalcMeds();render(true)}
