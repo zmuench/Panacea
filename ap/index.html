@@ -178,6 +178,23 @@ mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 1
 .privacy{font-size:.8rem;color:var(--muted);margin:0}
 .out{top:16px;max-height:calc(100vh - 32px)}
 #goslot{display:contents}
+.board{display:flex;flex-direction:column}
+.box{border:1px solid var(--line);border-radius:12px;padding:8px 10px 10px;background:var(--surface);display:flex;flex-direction:column;gap:6px;transition:border-color .12s,box-shadow .12s,background .12s}
+.box.multi{border-color:#B9C7F0;background:var(--accent-soft)}
+.box.over{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.boxh{display:flex;align-items:center;gap:6px;align-self:flex-start;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);cursor:grab;padding:2px 4px 2px 0}
+.achips{display:flex;flex-wrap:wrap;gap:6px}
+.ach{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px 7px 10px;font-size:.88rem;font-weight:600;cursor:grab;min-height:38px}
+.ach,.boxh{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.ach.ib{box-shadow:-3px 0 0 var(--accent)}.ach.ia{box-shadow:3px 0 0 var(--accent)}
+.grip{color:#9AA7B4;font-size:.95rem;line-height:1}
+.gap{height:14px;border-radius:10px;transition:height .12s}
+.gap.over{height:40px;border:2px dashed var(--accent);background:var(--accent-soft)}
+.newbox{margin-top:2px;border:1.5px dashed var(--line);border-radius:12px;padding:12px;text-align:center;color:var(--muted);font-size:.84rem}
+.newbox.over{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.src{opacity:.35}
+.ghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;box-shadow:0 10px 26px rgba(16,24,40,.25);margin:0}
+body.dnd,body.dnd *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
 .gobar{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(16,24,40,.12)}
 .gobar .gotx{flex:1;min-width:0;font-size:.88rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gobar .gotx b{color:var(--ink,inherit)}
@@ -878,8 +895,8 @@ function mergeUnit(u){
 const CLUSTERS=[['Cardiac history',['c_hf','c_hfpef','c_cad','c_htn','c_hld','c_afib','c_mvalve']],['Lung history',['c_copd','c_asthma','c_osa','c_tob','c_pah']],['Psychiatric history',['c_dep','c_anx','c_bipolar','c_scz','c_adhd']],['Substance use',['c_aud','c_oud','c_pain','c_tob']],['Neuro history',['c_epi','c_pd','c_dementia','c_cva']],['Immunosuppression',['c_immuno','c_tx','c_hiv']],['Diabetes and kidney',['c_dm','c_dm1','ckd']],
  ['Respiratory failure',['ahrf','hypercap','rf4','vent','ards','copd','asthma']],['Sepsis and shock',['septic','sepsis','shock','rf4']],['Bleeding and anemia',['ugib','lgib','hemshock','anemia']],['Liver',['cirrhosis','hepenc','hrs']],['Heart failure',['adhf','cardshock','c_hf','c_hfpef']]];
 function clusterSugs(){return CLUSTERS.map(([n,ks])=>{const ps=S.probs.filter(p=>ks.includes(p.key));return ps.length>=2&&new Set(ps.map(gid)).size>1?{n,ps}:null}).filter(Boolean)}
-function combine(ps){const g=gid(ps[0]);const ids=new Set(ps.map(gid));S.probs.forEach(p=>{if(ids.has(gid(p)))p.g=g});normGroups();
-  const u=unitOf(ps[0]),o=u[0];
+function combine(ps){const g=gid(ps[0]);const ids=new Set(ps.map(gid));S.probs.forEach(p=>{if(ids.has(gid(p)))p.g=g});normGroups();mergeShared(unitOf(ps[0]))}
+function mergeShared(u){const o=u[0];
   u.slice(1).forEach(m=>{SHARED.forEach(k=>{const v=(m.f[k]||'').trim().replace(/[.;,]$/,'');if(v){const f=FIELDS.find(x=>x.k===k),c=(o.f[k]||'').trim().replace(/[.;,]$/,'');o.f[k]=c?c+f.sep+v:v;m.f[k]=''}});
     if((m.extra||'').trim()){o.extra=[o.extra,m.extra].map(x=>(x||'').trim()).filter(Boolean).join('\n');m.extra=''}})}
 // keep=true (removing the problem): the stack's shared story moves to the next problem so it isn't lost
@@ -960,7 +977,7 @@ function ucard(u,i,all){
   const gen=u.map(p=>{const js=p.items.map((it,j)=>j).filter(j=>!p.items[j].med);return js.length?`${multi?`<p class="mlab">${esc(shortName(p.name))}</p>`:''}<div class="items">${js.map(j=>btn(p,j)).join('')}</div>`:''}).join('');
   const meds=u.flatMap(p=>p.items.map((it,j)=>[p,j]).filter(([p,j])=>p.items[j].med));
   const pv=unitPara(u);
-  return `<div class="pcard${multi?' grouped':''}" id="c-${u[0].id}">${i?`<button type="button" class="comb" data-comb="${u[0].id}">Combine with above</button>`:''}${head}
+  return `<div class="pcard${multi?' grouped':''}" id="c-${u[0].id}">${head}
     <div class="pcb">
       <p class="sect">Assessment paragraph</p>
       ${unitFields(u)}
@@ -972,6 +989,20 @@ function ucard(u,i,all){
       <label class="in"><span>More plan</span><textarea data-pp="${u[0].id}" rows="2" placeholder="One item per line">${esc(u.map(p=>p.extra||'').filter(Boolean).join('\n'))}</textarea></label>
     </div></div>`;
 }
+function arrangePane(){const U=units();if(S.probs.length<2)return '';
+  return `<section class="pane"><div class="ph"><span class="eb">3</span><h2>Arrange</h2><p class="cue">Each box is one A/P block. Drag a problem onto another box to combine them; drag it between boxes or to the bottom to give it its own box. Drag a box by its label to reorder. On a phone, press and hold to pick up.</p></div>
+  <div class="board">${U.map((u,i)=>`<div class="gap" data-gap="${i}"></div><div class="box${u.length>1?' multi':''}" data-box="${i}"><div class="boxh" data-boxh="${i}"><span class="grip">⠿</span>${u.length>1?'Combined · '+(i+1):'Problem · '+(i+1)}</div><div class="achips">${u.map(p=>`<div class="ach" data-ap="${p.id}"><span class="grip">⠿</span>${esc(shortName(p.name)||'***')}</div>`).join('')}</div></div>`).join('')}
+  <div class="newbox" data-gap="${U.length}">Drop here for a new box</div></div></section>`}
+function placeUnit(unit,arr){const start=S.probs.indexOf(unit[0]);S.probs.splice(start,unit.length,...arr)}
+function moveInto(p,unit,refId,before){
+  const arr=unit.filter(x=>x!==p);let pos=arr.length;if(refId){const r=arr.findIndex(x=>x.id===refId);if(r>=0)pos=r+(before?0:1)}
+  if(unit.includes(p)){const old=unit[0],g=gid(old);arr.splice(pos,0,p);arr.forEach(x=>x.g=g);placeUnit(unit,arr);
+    if(arr[0]!==old)SHARED.forEach(k=>{if((old.f[k]||'').trim()&&!(arr[0].f[k]||'').trim()){arr[0].f[k]=old.f[k];old.f[k]=''}});return}
+  const g=gid(unit[0]);detach(p,true);S.probs.splice(S.probs.indexOf(p),1);arr.splice(pos,0,p);arr.forEach(x=>x.g=g);placeUnit(unit,arr);normGroups();mergeShared(unitOf(p))}
+function moveToNew(p,i){const U=units();detach(p,true);S.probs.splice(S.probs.indexOf(p),1);p.g=null;
+  let anchor=null;for(const u of U.slice(i)){anchor=u.find(x=>x!==p);if(anchor)break}
+  if(anchor){const a=unitOf(anchor)[0];S.probs.splice(S.probs.indexOf(a),0,p)}else S.probs.push(p);normGroups()}
+function moveBox(from,to){const U=units();const u=U.splice(from,1)[0];U.splice(to>from?to-1:to,0,u);S.probs=U.flat()}
 function gobarHTML(){const n=S.probs.length;if(!n)return '';const names=units().map(u=>u.map(p=>shortName(p.name)).join(' + ')).join(', ');return `<div class="gobar"><span class="gotx"><b>${n} selected</b> · ${esc(names)}</span><button type="button" class="btn primary" data-act="toWrite">Write A/P →</button></div>`}
 function refreshPick(){const on=new Set(S.probs.map(p=>p.key));document.querySelectorAll('[data-prob]').forEach(b=>b.setAttribute('aria-pressed',on.has(b.dataset.prob)));const g=document.getElementById('goslot');if(g)g.innerHTML=gobarHTML();update()}
 function render(keep){
@@ -979,7 +1010,7 @@ function render(keep){
   if(S.view==='write'&&!S.probs.length)S.view='pick';
   const n=S.probs.length,names=units().map(u=>u.map(p=>shortName(p.name)).join(' + ')).join(', ');
   document.getElementById('panes').innerHTML=S.view==='write'
-    ?`<div class="backbar"><button type="button" class="btn" data-act="toPick">← Problems</button><span class="bsum">${n} problem${n===1?'':'s'}: ${esc(names)}</span></div>`+`<section class="pane"><div class="ph"><span class="eb">3</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div
+    ?`<div class="backbar"><button type="button" class="btn" data-act="toPick">← Problems</button><span class="bsum">${n} problem${n===1?'':'s'}: ${esc(names)}</span></div>`+arrangePane()+`<section class="pane"><div class="ph"><span class="eb">${S.probs.length<2?3:4}</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div
     <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${S.probs.length?units().map(ucard).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`
     :libPane()+`<div id="goslot">${gobarHTML()}</div>`;
   if(keep)scrollTo(0,y);
@@ -1045,6 +1076,43 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.dataset.pn){const p=S.probs.find(x=>x.id===t.dataset.pn);if(p){p.name=t.value;update()}return}
 });
 document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('libd'))libOpen=e.target.open},true);
+/* ---------- drag to arrange (mouse: drag; touch: press and hold) ---------- */
+let drag=null;
+function dBegin(){if(!drag)return;drag.on=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}
+  const r=drag.el.getBoundingClientRect();drag.ox=drag.x0-r.left;drag.oy=drag.y0-r.top;
+  const g=drag.el.cloneNode(true);g.classList.add('ghost');g.style.width=r.width+'px';document.body.appendChild(g);drag.ghost=g;
+  (drag.kind==='box'?drag.el.closest('.box'):drag.el).classList.add('src');document.body.classList.add('dnd');dPlace();
+  const tick=()=>{if(!drag||!drag.on)return;const m=70,y=drag.y;if(y<m)scrollBy(0,-Math.ceil((m-y)/5));else if(y>innerHeight-m)scrollBy(0,Math.ceil((y-innerHeight+m)/5));dPlace();requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+function dClear(){document.querySelectorAll('.over,.ib,.ia').forEach(e=>e.classList.remove('over','ib','ia'))}
+function dPlace(){const d=drag;d.ghost.style.transform=`translate(${d.x-d.ox}px,${d.y-d.oy}px)`;dClear();d.t=null;
+  const hit=document.elementFromPoint(d.x,d.y);if(!hit)return;
+  const gap=hit.closest('[data-gap]'),box=hit.closest('[data-box]');
+  if(d.kind==='box'){let i=null;if(gap)i=+gap.dataset.gap;else if(box){const r=box.getBoundingClientRect();i=+box.dataset.box+(d.y>r.top+r.height/2?1:0)}
+    if(i===null)return;d.t={gap:i};const el=document.querySelector(`.gap[data-gap="${i}"]`)||document.querySelector(`.newbox[data-gap="${i}"]`);if(el)el.classList.add('over');return}
+  if(gap){d.t={gap:+gap.dataset.gap};gap.classList.add('over');return}
+  if(box){const c=hit.closest('[data-ap]');d.t={box:+box.dataset.box};box.classList.add('over');
+    if(c&&c.dataset.ap!==d.id){const r=c.getBoundingClientRect(),b=d.x<r.left+r.width/2;d.t.ref=c.dataset.ap;d.t.before=b;c.classList.add(b?'ib':'ia')}}}
+function dDrop(){const d=drag,t=d.t;if(!t)return;const U=units();
+  if(d.kind==='box'){moveBox(d.id,t.gap)}
+  else{const p=S.probs.find(x=>x.id===d.id);if(!p)return;if('gap' in t)moveToNew(p,t.gap);else moveInto(p,U[t.box],t.ref,t.before)}
+  recalcMeds();render(true)}
+function dEnd(){if(!drag)return;clearTimeout(drag.timer);const d=drag;
+  if(d.on){dDrop()}
+  if(d.ghost)d.ghost.remove();document.body.classList.remove('dnd');document.querySelectorAll('.src').forEach(e=>e.classList.remove('src'));dClear();drag=null}
+function dStart(e,x,y,touch){const el=e.target.closest('[data-ap],[data-boxh]');if(!el)return false;
+  drag={el,kind:el.dataset.ap?'p':'box',id:el.dataset.ap||+el.dataset.boxh,x0:x,y0:y,x,y,touch,on:false};
+  if(touch)drag.timer=setTimeout(dBegin,260);return true}
+function dMove(x,y,e){if(!drag)return;drag.x=x;drag.y=y;
+  if(!drag.on){if(Math.hypot(x-drag.x0,y-drag.y0)>8){if(drag.touch){clearTimeout(drag.timer);drag=null}else dBegin()}return}
+  if(e.cancelable)e.preventDefault();dPlace()}
+document.addEventListener('mousedown',e=>{if(e.button===0&&dStart(e,e.clientX,e.clientY,false))e.preventDefault()});
+document.addEventListener('mousemove',e=>dMove(e.clientX,e.clientY,e));
+document.addEventListener('mouseup',dEnd);
+document.addEventListener('touchstart',e=>{if(e.touches.length===1)dStart(e,e.touches[0].clientX,e.touches[0].clientY,true)},{passive:true});
+document.addEventListener('touchmove',e=>{if(drag)dMove(e.touches[0].clientX,e.touches[0].clientY,e)},{passive:false});
+document.addEventListener('touchend',dEnd);document.addEventListener('touchcancel',()=>{if(drag){drag.on=false;dEnd()}});
+document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-ap],[data-boxh]'))e.preventDefault()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drag){drag.on=false;dEnd()}});
 document.getElementById('tc').addEventListener('click',()=>{S.tc=!S.tc;update()});
 addEventListener('popstate',()=>{const v=history.state&&history.state.ap==='write'&&S.probs.length?'write':'pick';if(v!==S.view){S.view=v;render();scrollTo(0,0)}});
 addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue=''}});
