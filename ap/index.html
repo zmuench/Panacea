@@ -777,7 +777,7 @@ let S;
 const SETTINGS=[['ED','ED','In the ED, '],['OSH','Outside hospital','At the outside hospital, '],['Floor','Floor (RRT / transfer)','On the floor, '],['Direct','Direct admit','On arrival, ']];
 function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[],view:'pick'}}
 S=blank();
-let q='';
+let q='',libOpen=true;
 const uid=()=>Math.random().toString(36).slice(2,10);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dirty=()=>!!(S.probs.length||S.sum.trim());
@@ -924,7 +924,7 @@ function libPane(){
     <div class="ph"><span class="eb">2</span><h2>Problems</h2><p class="cue">Pick each problem, most acute first. Each comes with the plan from Admit, which you can trim.</p></div>
     ${sug.length?`<div class="field"><p class="gt" style="color:var(--accent)">Suggested for ${esc(S.cx.map(c=>COMPLAINTS.find(x=>x[0]===c)[1].toLowerCase()).join(', '))}</p><div class="chips">${sug.map(chip).join('')}</div></div>`:''}
     <label class="in"><span>Find a problem</span><input id="q" type="search" value="${esc(q)}" placeholder="e.g. hypoxemic, AKI, sepsis" autocomplete="off"></label>
-    <details class="libd"${S.probs.length&&!q?'':' open'}><summary>All problems by system</summary>
+    <details class="libd"${libOpen||q?' open':''}><summary>All problems by system</summary>
       <div class="lib">${SYS.map(([s,l])=>{const ks=Object.keys(LIB).filter(k=>LIB[k].sys===s);return ks.length?`<div class="sys" data-sys><p class="gt">${l}</p><div class="chips">${ks.map(chip).join('')}</div></div>`:''}).join('')}</div>
     </details>
     <div class="row"><label class="in"><span>Custom problem</span><input id="custom" placeholder="e.g. Hypomagnesemia" autocomplete="off"></label><div style="align-self:flex-end"><button type="button" class="btn" data-act="addCustom">Add</button></div></div>
@@ -1039,11 +1039,12 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.dataset.pp){const p=S.probs.find(x=>x.id===t.dataset.pp);if(p){unitOf(p).forEach(x=>{if(x!==p)x.extra=''});p.extra=t.value;update()}return}
   if(t.dataset.pn){const p=S.probs.find(x=>x.id===t.dataset.pn);if(p){p.name=t.value;update()}return}
 });
+document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('libd'))libOpen=e.target.open},true);
 document.getElementById('tc').addEventListener('click',()=>{S.tc=!S.tc;update()});
 addEventListener('popstate',()=>{const v=history.state&&history.state.ap==='write'&&S.probs.length?'write':'pick';if(v!==S.view){S.view=v;render();scrollTo(0,0)}});
 addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue=''}});
 document.getElementById('reset').addEventListener('click',function(){if(dirty()&&!this.dataset.armed){this.dataset.armed='1';this.textContent='Tap again to clear';setTimeout(()=>{delete this.dataset.armed;this.textContent='New patient'},3000);return}
-  delete this.dataset.armed;this.textContent='New patient';S=blank();q='';if(history.state&&history.state.ap==='write')history.replaceState(null,'');render();scrollTo(0,0);toast('Cleared.')});
+  delete this.dataset.armed;this.textContent='New patient';S=blank();q='';libOpen=true;if(history.state&&history.state.ap==='write')history.replaceState(null,'');render();scrollTo(0,0);toast('Cleared.')});
 function selectPreview(){const d=document.getElementById('dict');const r=document.createRange();r.selectNodeContents(d);const s=getSelection();s.removeAllRanges();s.addRange(r)}
 async function copyRich(){
   if(!dirty()){toast('Nothing to copy yet.');return}
