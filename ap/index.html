@@ -177,6 +177,7 @@ mark{background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:0 1
 .tog[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .privacy{font-size:.8rem;color:var(--muted);margin:0}
 .out{top:16px;max-height:calc(100vh - 32px)}
+#goslot{display:contents}
 .gobar{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(16,24,40,.12)}
 .gobar .gotx{flex:1;min-width:0;font-size:.88rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gobar .gotx b{color:var(--ink,inherit)}
@@ -969,6 +970,8 @@ function ucard(u,i,all){
       <label class="in"><span>More plan</span><textarea data-pp="${u[0].id}" rows="2" placeholder="One item per line">${esc(u.map(p=>p.extra||'').filter(Boolean).join('\n'))}</textarea></label>
     </div></div>`;
 }
+function gobarHTML(){const n=S.probs.length;if(!n)return '';const names=units().map(u=>u.map(p=>shortName(p.name)).join(' + ')).join(', ');return `<div class="gobar"><span class="gotx"><b>${n} selected</b> · ${esc(names)}</span><button type="button" class="btn primary" data-act="toWrite">Write A/P →</button></div>`}
+function refreshPick(){const on=new Set(S.probs.map(p=>p.key));document.querySelectorAll('[data-prob]').forEach(b=>b.setAttribute('aria-pressed',on.has(b.dataset.prob)));const g=document.getElementById('goslot');if(g)g.innerHTML=gobarHTML();update()}
 function render(keep){
   const y=scrollY,a=document.activeElement,af=a&&(a.dataset.pf||a.dataset.pp||a.dataset.pn||(a.id==='q'?'#q':null)),sel=af&&[a.selectionStart,a.selectionEnd];
   if(S.view==='write'&&!S.probs.length)S.view='pick';
@@ -976,7 +979,7 @@ function render(keep){
   document.getElementById('panes').innerHTML=S.view==='write'
     ?`<div class="backbar"><button type="button" class="btn" data-act="toPick">← Problems</button><span class="bsum">${n} problem${n===1?'':'s'}: ${esc(names)}</span></div>`+`<section class="pane"><div class="ph"><span class="eb">3</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div
     <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${S.probs.length?units().map(ucard).join(''):'<p class="empty">No problems yet. Pick one above.</p>'}</div></section>`
-    :libPane()+(n?`<div class="gobar"><span class="gotx"><b>${n} selected</b> · ${esc(names)}</span><button type="button" class="btn primary" data-act="toWrite">Write A/P →</button></div>`:'');
+    :libPane()+`<div id="goslot">${gobarHTML()}</div>`;
   if(keep)scrollTo(0,y);
   if(af){const el=af==='#q'?document.getElementById('q'):document.querySelector(`[data-pf="${af}"],[data-pp="${af}"],[data-pn="${af}"]`);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(sel[0],sel[1])}catch(_){}}}
   applyQ();update();
@@ -1015,7 +1018,7 @@ document.addEventListener('click',e=>{
   if(!pop.hidden&&!t.closest('#pop')&&!t.closest('[data-tipk]'))closePop();
   const st=t.closest('[data-set]');if(st){S.set=st.dataset.set;render(true);return}
   const cx=t.closest('[data-cx]');if(cx){const k=cx.dataset.cx;S.cx=S.cx.includes(k)?S.cx.filter(x=>x!==k):S.cx.concat(k);render(true);return}
-  const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){detach(S.probs.find(p=>p.key===k),true);S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);render(true);return}
+  const pr=t.closest('[data-prob]');if(pr){const k=pr.dataset.prob;if(S.probs.some(p=>p.key===k)){detach(S.probs.find(p=>p.key===k),true);S.probs=S.probs.filter(p=>p.key!==k);recalcMeds()}else addProb(k);if(S.view==='pick'&&document.getElementById('goslot'))refreshPick();else render(true);return}
   const ins=t.closest('[data-ins]');if(ins){const p=S.probs.find(x=>x.id===ins.dataset.ins),tg=S.probs.find(x=>x.id===ins.dataset.tgt)||p;if(p){const c=chipsFor(p,ins.dataset.f)[+ins.dataset.ci];insert(tg,ins.dataset.f,c.v)}return}
   const it=t.closest('[data-item]');if(it){const p=S.probs.find(x=>x.id===it.dataset.item);const x=p.items[+it.dataset.j];x.on=!x.on;x.touched=true;it.setAttribute('aria-pressed',x.on);update();return}
   const mv=t.closest('[data-move]');if(mv){const U=units(),i=U.findIndex(u=>u.some(x=>x.id===mv.dataset.move)),j=i+(+mv.dataset.d);if(i>=0&&j>=0&&j<U.length){[U[i],U[j]]=[U[j],U[i]];S.probs=U.flat()}render(true);return}
