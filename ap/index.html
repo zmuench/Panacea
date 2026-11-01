@@ -234,7 +234,7 @@ body.dnd,body.dnd *{cursor:grabbing!important;user-select:none;-webkit-user-sele
         <button class="btn" id="copyPlain" type="button">Copy plain text</button>
       </div>
       <p class="toast" id="toast"></p>
-      <p class="privacy">Copy A/P keeps the italics and bullets when pasted into Epic or Word. Nothing is saved or sent anywhere. Do not enter names, MRNs or dates of birth.</p>
+      <p class="privacy">Copy A/P keeps the italics and bullets when pasted into Epic or Word. Nothing is saved or sent anywhere, except that Send to ICU Rounder stores the patient on this device for ICU Rounder. Do not enter names, MRNs or dates of birth.</p>
     </aside>
   </div>
 </div>
@@ -814,7 +814,7 @@ const sysLabel=k=>(SYSBOX.find(x=>x[0]===k)||SYSBOX[SYSBOX.length-1])[1];
 function sysOf(p){let k=p.sk||KEY_SYS[p.key]||(LIB[p.key]?LIB[p.key].sys:'other');k=SYS_ALIAS[k]||k;return SYSBOX.some(x=>x[0]===k)?k:'other'}
 function sysUnits(){return S.sysOrder.map(k=>[k,S.probs.filter(p=>sysOf(p)===k)])}
 function savedFmt(){try{return localStorage.getItem('ap.fmt')==='sys'?'sys':'prob'}catch(_){return 'prob'}}
-function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[],view:'pick',fmt:savedFmt(),sysOrder:SYSBOX.map(x=>x[0]),icu:null,icuX:'',icuInc:{sys:true,prob:false}}}
+function blank(){return {set:'ED',cx:[],tc:true,sum:'',probs:[],view:'pick',fmt:savedFmt(),sysOrder:SYSBOX.map(x=>x[0]),icu:null,icuX:'',icuInc:{sys:true,prob:false},rt:{bed:'',age:'',sex:'',admit:'',code:'Full code',allergies:''},sent:''}}
 S=blank();
 let q='',libOpen=true;
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -1048,6 +1048,26 @@ function icuPane(n){const sel=icuSel(),inc=icuOn();
   <div class="fmtrow"><button type="button" class="tog" data-act="icuInc" aria-pressed="${inc}">${inc?'Included in note':'Not included'}</button>${S.icu?'<button type="button" class="linkbtn" data-act="icuReset">Reset to suggested</button>':''}</div>
   ${inc?`<div class="icul">${ICUB.map(([k,l,opts])=>`<div class="field"><div class="flab"><span class="icuk">${k.replace('2','')}</span>${esc(l)}</div><div class="chips">${opts.map(([v,t])=>`<button type="button" class="chip sm" data-icu="${k}" data-v="${v}" aria-pressed="${(sel[k]||[]).includes(v)}">${esc(t)}</button>`).join('')}</div></div>`).join('')}
   <label class="in"><span>Other checklist items <span class="sub">one per line, e.g. code status, dispo</span></span><textarea data-icux rows="2" placeholder="Code status: ***">${esc(S.icuX)}</textarea></label></div>`:''}</section>`}
+const todayISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+function rounderProblems(admit){const P=(n,pl)=>({id:uid(),name:n,plan:pl.map(t=>({id:uid(),text:t,started:admit}))});
+  if(S.fmt==='sys')return sysUnits().flatMap(([,ps])=>{const m=mergeUnit(ps);return ps.map(p=>P(p.name.trim()||'***',planFor(p,m)))});
+  return units().map(u=>P(u.map(p=>p.name.trim()||'***').join(' / '),mergeUnit(u).plan))}
+function sendPane(n){const r=S.rt,inp=(k,l,ph,w)=>`<label class="in"${w?` style="max-width:${w}"`:''}><span>${l}</span><input data-rt="${k}" value="${esc(r[k]||'')}" placeholder="${ph}" autocomplete="off"></label>`;
+  return `<section class="pane"><div class="ph"><span class="eb">${n}</span><h2>Send to ICU Rounder</h2><p class="cue">Adds this patient to ICU Rounder on this device with each problem${S.fmt==='sys'?' (in system order)':''} and its checked plan, so daily rounds start from this A/P. The summary statement becomes the one-liner and chronic problems become the PMH. If sync is on in ICU Rounder, it syncs from there.</p></div>
+  <div class="row">${inp('bed','Bed <span class="sub">required</span>','e.g. 4E-12','150px')}${inp('age','Age','e.g. 68','90px')}<div class="field"><div class="flab">Sex</div>${seg('rtsex',[['M','M'],['F','F']],r.sex)}</div></div>
+  <div class="row"><label class="in" style="max-width:180px"><span>Admit date</span><input type="date" data-rt="admit" value="${esc(r.admit||todayISO())}"></label>${inp('code','Code status','Full code','200px')}${inp('allergies','Allergies','NKDA')}</div>
+  <div><button type="button" class="btn primary" data-act="toRounder">${S.sent?'Send again (adds another copy)':'Send to ICU Rounder'}</button></div><p class="hint" id="hint-send"${S.sent?'':' hidden'}>${S.sent}</p></section>`}
+function sendToRounder(){const bed=String(S.rt.bed||'').trim(),say=m=>{S.sent=m;const h=document.getElementById('hint-send');if(h){h.innerHTML=m;h.hidden=false}};
+  if(!bed){say('Add a bed number first; ICU Rounder sorts by bed.');S.sent='';document.querySelector('[data-rt="bed"]')?.focus();return}
+  if(!S.probs.length){say('Pick at least one problem first.');S.sent='';return}
+  let R={patients:[]};try{const raw=localStorage.getItem('icu-rounds-v1');if(raw)R=JSON.parse(raw)}catch(e){}
+  if(!R||!Array.isArray(R.patients))R={patients:[]};
+  const clash=R.patients.find(p=>p.status==='active'&&String(p.bed)===bed),admit=S.rt.admit||todayISO();
+  R.patients.push({id:uid(),status:'active',days:[],draft:null,bed,age:String(S.rt.age||'').trim(),sex:S.rt.sex||'',height:'',hUnit:'in',admit,
+    oneLiner:S.sum.trim(),pmh:S.probs.filter(p=>isChronic(p.key)).map(p=>shortName(p.name)).join(', '),code:String(S.rt.code||'').trim()||'Full code',allergies:String(S.rt.allergies||'').trim(),
+    problems:rounderProblems(admit),_mod:Date.now(),from:'ap'});
+  try{localStorage.setItem('icu-rounds-v1',JSON.stringify(R))}catch(e){say('Could not save to ICU Rounder on this device (storage blocked or full).');S.sent='';return}
+  say(`Sent to ICU Rounder as bed ${esc(bed)}${clash?' (another active patient already has this bed)':''}. <a href="../icu-rounder/">Open ICU Rounder</a>`);render(true)}
 function sysArrange(){
   return `<section class="pane"><div class="ph"><span class="eb">3</span><h2>Arrange by system</h2><p class="cue">Problems start in their usual system. Drag a problem into another system to move it, or onto a problem to change its order. Drag a system by its label to reorder systems; empty systems are left out of the note. On a phone, press and hold to pick up.</p></div>${fmtSeg()}
   <div class="board">${sysUnits().map(([k,ps],i)=>`<div class="gap" data-gap="${i}"></div><div class="box${ps.length?'':' empty'}" data-box="${i}"><div class="boxh" data-boxh="${i}"><span class="grip">⠿</span>${esc(sysLabel(k))}</div><div class="achips">${ps.map(p=>`<div class="ach" data-ap="${p.id}"><span class="grip">⠿</span>${esc(shortName(p.name)||'***')}</div>`).join('')}</div></div>`).join('')}<div class="gap" data-gap="${S.sysOrder.length}"></div></div></section>`}
@@ -1072,7 +1092,7 @@ function render(keep){
   const n=S.probs.length,names=units().map(u=>u.map(p=>shortName(p.name)).join(' + ')).join(', ');
   document.getElementById('panes').innerHTML=S.view==='write'
     ?`<div class="backbar"><button type="button" class="btn" data-act="toPick">← Problems</button><span class="bsum">${n} problem${n===1?'':'s'}: ${esc(names)}</span></div>`+arrangePane()+`<section class="pane"><div class="ph"><span class="eb">${S.probs.length<2?3:4}</span><h2>Assessment and plan</h2><p class="cue">For each problem, build the paragraph in order: presentation, pertinent history, findings, treatment so far, then your assessment. Tap a prompt to drop in its wording with *** blanks; the first blank is selected so you can type straight over it.</p></div
-    <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${!S.probs.length?'<p class="empty">No problems yet. Pick one above.</p>':S.fmt==='sys'?sysUnits().filter(([,ps])=>ps.length).map(([k,ps])=>`<p class="syshd">${esc(sysLabel(k))}</p>`+ps.map(p=>ucard([p],0,[[p]])).join('')).join(''):units().map(ucard).join('')}</div></section>`+icuPane(S.probs.length<2&&S.fmt!=='sys'?4:5)
+    <div class="pcards">${clusterSugs().map(c=>`<button type="button" class="btn small sug" data-act="cluster" data-n="${esc(c.n)}">Combine ${esc(c.n.toLowerCase())}: ${esc(c.ps.map(p=>shortName(p.name)).join(', '))}</button>`).join('')}${!S.probs.length?'<p class="empty">No problems yet. Pick one above.</p>':S.fmt==='sys'?sysUnits().filter(([,ps])=>ps.length).map(([k,ps])=>`<p class="syshd">${esc(sysLabel(k))}</p>`+ps.map(p=>ucard([p],0,[[p]])).join('')).join(''):units().map(ucard).join('')}</div></section>`+icuPane(S.probs.length<2&&S.fmt!=='sys'?4:5)+sendPane(S.probs.length<2&&S.fmt!=='sys'?5:6)
     :libPane()+`<div id="goslot">${gobarHTML()}</div>`;
   if(keep)scrollTo(0,y);
   if(af){const el=af==='#q'?document.getElementById('q'):document.querySelector(`[data-pf="${af}"],[data-pp="${af}"],[data-pn="${af}"]`);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(sel[0],sel[1])}catch(_){}}}
@@ -1112,6 +1132,7 @@ document.addEventListener('click',e=>{
   if(!pop.hidden&&!t.closest('#pop')&&!t.closest('[data-tipk]'))closePop();
   const ic=t.closest('[data-icu]');if(ic){const k=ic.dataset.icu,v=ic.dataset.v;if(!S.icu)S.icu=JSON.parse(JSON.stringify(icuDefaults()));const a=S.icu[k]||(S.icu[k]=[]);
     const solo=['none','na'],grp=[['hep','lmwh','ther'],['ssi','gtt']].find(g=>g.includes(v))||[];if(a.includes(v))S.icu[k]=a.filter(x=>x!==v);else S.icu[k]=solo.includes(v)?[v]:a.filter(x=>!solo.includes(x)&&!grp.includes(x)).concat(v);render(true);return}
+  const rs=t.closest('[data-rtsex]');if(rs){S.rt.sex=S.rt.sex===rs.dataset.rtsex?'':rs.dataset.rtsex;render(true);return}
   const fm=t.closest('[data-fmt]');if(fm){S.fmt=fm.dataset.fmt;try{localStorage.setItem('ap.fmt',S.fmt)}catch(_){}render(true);return}
   const st=t.closest('[data-set]');if(st){S.set=st.dataset.set;render(true);return}
   const cx=t.closest('[data-cx]');if(cx){const k=cx.dataset.cx;S.cx=S.cx.includes(k)?S.cx.filter(x=>x!==k):S.cx.concat(k);render(true);return}
@@ -1128,6 +1149,7 @@ document.addEventListener('click',e=>{
     if(a==='addCustom'){const el=document.getElementById('custom'),v=el.value.trim();if(v){const ci=S.probs.findIndex(p=>isChronic(p.key));el.value='';S.probs.splice(ci<0?S.probs.length:ci,0,{id:uid(),key:'custom',name:v,f:{p:'',h:'',e:'',t:'',i:''},items:[],extra:''});render(true)}}
     if(a==='toWrite'){if(S.probs.length){S.view='write';history.pushState({ap:'write'},'');render();scrollTo(0,0)}}
     if(a==='toPick'){if(history.state&&history.state.ap==='write')history.back();else{S.view='pick';render();scrollTo(0,0)}}
+    if(a==='toRounder')sendToRounder();
     if(a==='icuInc'){S.icuInc[S.fmt]=!S.icuInc[S.fmt];render(true)}
     if(a==='icuReset'){S.icu=null;render(true)}
     if(a==='cluster'){const c=clusterSugs().find(x=>x.n===act.dataset.n);if(c)combine(c.ps);render(true)}
@@ -1138,6 +1160,7 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='q'){q=t.value;applyQ();return}
   if('sum' in t.dataset){S.sum=t.value;update();return}
   if('icux' in t.dataset){S.icuX=t.value;update();return}
+  if(t.dataset.rt){S.rt[t.dataset.rt]=t.value;return}
   if(t.dataset.pf){const [id,k]=t.dataset.pf.split('.');const p=S.probs.find(x=>x.id===id);if(p){p.f[k]=t.value;updateCard(p);update()}return}
   if(t.dataset.pp){const p=S.probs.find(x=>x.id===t.dataset.pp);if(p){unitOf(p).forEach(x=>{if(x!==p)x.extra=''});p.extra=t.value;update()}return}
   if(t.dataset.pn){const p=S.probs.find(x=>x.id===t.dataset.pn);if(p){p.name=t.value;update()}return}
