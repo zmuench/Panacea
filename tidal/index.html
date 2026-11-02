@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tidal">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Tidal</title>
+<style>
+/* Tidal: initial ventilator settings, ABG-driven adjustments, troubleshooting, and liberation.
+   Reference: William Owens, The Ventilator Book (chapters cited inline as "Owens ch. N").
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--amber:#8A5A00;--amber-soft:#FCF0D6;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.top h1{margin:0;font-size:1.5rem}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:38px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding-block:8px;margin-top:10px}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.stepbtn .n{font-size:.7rem;font-weight:700;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .sh{display:none}
+.mbar{display:none}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:3px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.3rem}
+.ph .cue{margin:0;color:var(--muted);font-size:.9rem}
+.sec h3{margin:0 0 8px;font-size:.98rem}
+.sec{display:flex;flex-direction:column;gap:8px}
+.flab{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:.88rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip small{display:block;font-size:.72rem;opacity:.8;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.in{display:flex;flex-direction:column;gap:3px;min-width:92px;flex:1 1 92px;max-width:150px}
+.in>span{font-size:.74rem;font-weight:700;color:var(--muted)}
+.in input,.in select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--paper);font-size:16px;width:100%;min-height:38px}
+.in input:focus,.in select:focus{outline:2px solid var(--accent);outline-offset:0}
+.in.wide{max-width:none;flex:2 1 180px}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:#F4F6F8;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.kpi.bad{background:var(--warn-soft)}.kpi.bad b{color:var(--warn)}
+.kpi.mid{background:var(--amber-soft)}.kpi.mid b{color:var(--amber)}
+.kpi.good{background:var(--ok-soft)}.kpi.good b{color:var(--ok)}
+table.set{width:100%;border-collapse:collapse;font-size:.92rem}
+table.set th,table.set td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.set th{width:34%;color:var(--muted);font-weight:700;font-size:.8rem}
+table.set td b{font-size:1.02rem}
+table.set td small{display:block;color:var(--muted)}
+.cite{font-size:.72rem;color:var(--muted);font-style:italic}
+.note-box{background:#F4F6F8;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px;text-align:left;cursor:pointer}
+.tcard b{display:block}.tcard span{font-size:.8rem;color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow{border-left:3px solid var(--accent);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.flow h4{margin:6px 0 0;font-size:.9rem}
+.out{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 90px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rec{border-radius:10px;padding:9px 11px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rec .h{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.rec .h b{font-size:.95rem}
+.rec p{margin:0;font-size:.86rem}
+.pri{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
+.rec.now{border-color:#E5A69F;background:#FFF7F6}.rec.now .pri{background:var(--warn-soft);color:var(--warn)}
+.rec.next{border-color:#EBCB86;background:#FFFCF4}.rec.next .pri{background:var(--amber-soft);color:var(--amber)}
+.rec.con .pri{background:var(--accent-soft);color:var(--accent)}
+.rec.ok{border-color:#A9D6BE;background:#F6FBF8}.rec.ok .pri{background:var(--ok-soft);color:var(--ok)}
+.miss{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.miss li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;cursor:pointer}
+.miss .bx{flex:none;width:18px;height:18px;border:1.5px solid #9AA9B8;border-radius:4px;margin-top:1px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.miss li.done .bx{background:var(--ok);border-color:var(--ok)}
+.miss li.done .tx{color:var(--muted);text-decoration:line-through}
+.miss .tx small{display:block;color:var(--muted);font-size:.74rem}
+pre.dict{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#F4F6F8;border-radius:10px;padding:10px;margin:0}
+.empty{color:var(--muted);font-size:.9rem;background:#F4F6F8;border-radius:10px;padding:10px 12px}
+.pfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fine{font-size:.76rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepbtn{padding:6px}
+  .stepbtn .t{font-size:.8rem}
+  .stepbtn .lg{display:none}.stepbtn .sh{display:inline}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:10px;align-items:center}
+  .mbar .mid{flex:1;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .mbar .mid b{color:var(--warn)}
+  .wrap{padding-bottom:80px}
+  .out{scroll-margin-top:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Tidal</h1></div>
+      <p>Ventilator settings from the physiology, adjustments from the gas, and what you might be missing.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <nav class="steps" aria-label="Steps" id="steps"></nav>
+  <div class="grid">
+    <section class="pane" id="pane"></section>
+    <aside class="out" id="out" aria-label="Recommendations"></aside>
+  </div>
+</div>
+<div class="mbar" id="mbar"><span class="mid" id="mbarmid"></span><button class="btn primary" type="button" id="seeRecs">Recommendations ↓</button></div>
+<script>
+/* ---------- Reference data (Owens, The Ventilator Book) ---------- */
+const LOW_PEEP=[[30,5],[40,5],[40,8],[50,8],[50,10],[60,10],[70,10],[70,12],[70,14],[80,14],[90,14],[90,16],[90,18],[100,18],[100,20],[100,22],[100,24]]; // ch. 26
+const HIGH_PEEP=[[30,5],[30,8],[30,10],[30,12],[30,14],[40,14],[40,16],[50,16],[50,18],[50,20],[60,20],[70,20],[80,20],[80,22],[90,22],[100,22],[100,24]]; // ch. 26
+const CXR_PEEP={clear:5,scattered:10,diffuse:15,whiteout:20}; // ch. 12
+
+const PHYS=[
+ ['restrict','Restrictive','ARDS, pneumonia, aspiration, edema, hemorrhage, chest trauma'],
+ ['asthma','Asthma','Fixed obstruction; air trapping'],
+ ['copd','COPD','Dynamic obstruction; air trapping'],
+ ['metab','Severe metabolic acidosis','DKA, salicylates, septic shock, toxic exposures, renal failure'],
+ ['normal','Normal lungs','Airway protection, overdose, coma, procedure'],
+];
+const MODS=[
+ ['brain','Acute brain injury','Stroke, hemorrhage, trauma'],
+ ['herniate','Signs of herniation','Short-term hyperventilation only'],
+ ['rv','RV failure','Massive PE, pulmonary hypertension'],
+ ['lv','LV failure','Cardiogenic edema'],
+ ['co','Carbon monoxide','Keep FiO2 100%'],
+ ['shock','Shock','Take over the work of breathing'],
+];
+const STEPS=[['pt','Patient','Patient'],['start','Initial settings','Start'],['gas','Gas & mechanics','Gas'],['trouble','Troubleshoot','Fix'],['lib','Liberation','Wean']];
+
+/* ---------- State: blank on every visit ---------- */
+const blank=()=>({step:'pt',sex:'',ht:'',htU:'in',wt:'',phys:'',cxr:'',mods:[],
+  cur:{mode:'VC',rr:'',rrTot:'',vt:'',pinsp:'',ps:'',peep:'',fio2:'',ti:'',pip:'',pplat:'',apeep:'',flowzero:'',hypot:false},
+  abg:{ph:'',paco2:'',pao2:'',hco3:'',spo2:'',etco2:''},
+  sbt:{rass:false,suction:false,hemo:false,airway:false,rr:'',vt:'',mip:'',ok:''},
+  trouble:'',done:{},prePaco2:''});
+let S=blank();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(v===''||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:null};
+const r0=n=>Math.round(n),r1=n=>Math.round(n*10)/10;
+const has=m=>S.mods.includes(m);
+
+/* ---------- Derived numbers ---------- */
+function heightCm(){const h=num(S.ht);if(h===null)return null;return S.htU==='in'?h*2.54:h}
+function pbw(){const h=heightCm();if(!h||!S.sex)return null;const w=(S.sex==='M'?50:45.5)+0.91*(h-152.4);return w>20?w:null} // appendix
+function fio2Frac(){const f=num(S.cur.fio2);if(f===null)return null;return f>1?f/100:f}
+function derived(){
+  const P=pbw(),c=S.cur,a=S.abg,f=fio2Frac();
+  const vt=num(c.vt),pplat=num(c.pplat),pip=num(c.pip),peep=num(c.peep),rr=num(c.rrTot)??num(c.rr),ti=num(c.ti);
+  const pao2=num(a.pao2),paco2=num(a.paco2),ph=num(a.ph),hco3=num(a.hco3),apeep=num(c.apeep);
+  const d={P,vt,pplat,pip,peep,rr,ti,pao2,paco2,ph,hco3,f,apeep};
+  d.vtkg=P&&vt?vt/P:null;
+  d.dp=pplat!==null&&peep!==null?pplat-peep:null;                 // driving pressure, ch. 8
+  d.cstat=vt&&d.dp>0?vt/d.dp:null;                                 // ch. 3
+  d.cdyn=vt&&pip!==null&&peep!==null&&pip-peep>0?vt/(pip-peep):null;
+  d.res=pip!==null&&pplat!==null?pip-pplat:null;                   // PIP-Pplat gradient, ch. 15
+  d.pf=pao2&&f?pao2/f:null;                                        // appendix
+  d.aa=f&&pao2&&paco2?713*f-1.2*paco2-pao2:null;                    // alveolar gas equation, appendix
+  d.ve=vt&&rr?vt*rr/1000:null;
+  d.ie=ti&&rr?(60/rr-ti)/ti:null;
+  d.winter=hco3!==null&&hco3<22?[1.5*hco3+8-2,1.5*hco3+8+2]:null; // Winter formula applies to metabolic acidosis only
+  return d;
+}
+function ards(pf){if(pf===null)return'';return pf<100?'severe':pf<200?'moderate':pf<=300?'mild':''}
+
+/* ---------- Targets by physiology ---------- */
+function targets(){
+  const t={spo2:[88,94],pao2:[55,70],ph:7.15,paco2:null,vt:[4,6],pplat:30,dp:15,src:'Owens ch. 1, 8'};
+  if(S.phys==='asthma'||S.phys==='copd'){Object.assign(t,{spo2:[88,95],pao2:[55,80],ph:7.10,vt:[6,8],src:'Owens ch. 1, 15'})}
+  if(S.phys==='normal'){Object.assign(t,{spo2:[90,96],pao2:[60,100],ph:7.30,paco2:[35,45],vt:[6,8],src:'Owens ch. 8; SpO2 range is general practice'})}
+  if(S.phys==='metab'){Object.assign(t,{ph:7.20,vt:null,src:'Owens ch. 1'})}
+  if(has('brain')){Object.assign(t,{spo2:[94,98],pao2:[80,100],paco2:[35,40],ph:7.30,src:t.src+'; brain injury, ch. 1'})}
+  if(has('co')){t.co=true}
+  return t;
+}
+
+/* ---------- Initial settings ---------- */
+function initial(){
+  const P=pbw(),cx=S.cxr,peep0=CXR_PEEP[cx]||null,ph=S.phys;
+  if(!ph)return null;
+  const vtmL=k=>P?`${r0(P*k)} mL`:`${k} mL/kg PBW`;
+  const o={rows:[],notes:[],cite:''};
+  if(ph==='restrict'){
+    let peep=peep0??'5–10';if(has('rv')&&typeof peep==='number')peep=Math.min(peep,10);
+    o.rows=[['Mode','Assist-control, volume control','Pressure control is equally acceptable (Pinsp 15–20 above PEEP, I-time 1.0–1.5 s, I:E 1:1.5 or longer).'],
+      ['Tidal volume',vtmL(6),'6 mL/kg PBW; lower toward 4 if Pplat over 30.'],
+      ['Rate','14–18 /min','Decelerating flow pattern.'],
+      ['FiO2','100%, then down to 60% once SpO2 is 88% or more',''],
+      ['PEEP',typeof peep==='number'?`${peep} cmH2O`:`${peep} cmH2O`,cx?`From the CXR: ${({clear:'clear',scattered:'scattered infiltrates',diffuse:'diffuse dense infiltrates',whiteout:'bilateral white-out'})[cx]}. Raise until SpO2 88% or more; do not exceed 20.`:'Pick the CXR pattern on the Patient step to set this. Raise until SpO2 88% or more; do not exceed 20.']];
+    o.notes=['After setting PEEP, check the plateau pressure; if over 30, drop Vt (not below 4 mL/kg).','A pH of 7.15 or better is acceptable; protect the lung over normalizing the CO2.','Lower the FiO2 to keep PaO2 55–70 and SpO2 88–94%.'];
+    if(has('lv'))o.notes.push('LV failure: the LV likes PEEP (lowers preload and afterload).');
+    if(has('rv'))o.notes.push('RV failure: use more FiO2 and less PEEP (ideally 10 or less).');
+    o.cite='Owens ch. 1, 8, 12';
+  }else if(ph==='asthma'||ph==='copd'){
+    o.rows=[['Mode','Assist-control, volume control','Pressure control gives very low Vt with high airway resistance. SIMV with PS works if rate and PS are high enough.'],
+      ['Tidal volume',vtmL(8),'8 mL/kg PBW; lower volumes worsen air trapping and air hunger. Avoid over 10.'],
+      ['Rate','10–14 /min','Slower is better; it buys expiratory time.'],
+      ['I:E','1:3 or longer (up to 1:5)','Shorten I-time; inspiratory flow 60–80 L/min if air hungry.'],
+      ['PEEP',ph==='asthma'?'0 (ZEEP)':'0 (ZEEP) to start',ph==='asthma'?'Applied PEEP worsens hyperinflation in asthma (fixed obstruction).':'In COPD, applied PEEP at 75–85% of measured auto-PEEP can splint collapsing airways.'],
+      ['FiO2','100%, then down to 60% if SpO2 88% or more','']];
+    o.notes=['Allow the PaCO2 to rise; pH above 7.10 is acceptable.','Measure auto-PEEP with an expiratory hold.','Bronchodilators and systemic steroids; sedate to RASS −1 to −2 (ketamine is an option).'];
+    if(ph==='copd')o.notes.push('Steroid dose over 40–60 mg prednisone daily adds little in COPD.');
+    o.cite='Owens ch. 1, 2, 13, 15';
+  }else if(ph==='metab'){
+    o.rows=[['Mode','Pressure support (CPAP + PS)','Let his own drive do the work; A/C often cannot meet the demand and alarms limit his minute ventilation.'],
+      ['CPAP / PEEP',`${peep0??'5–10'} cmH2O`,'By degree of hypoxemia.'],
+      ['Pressure support','10–15 cmH2O','Usually 10 is enough; adjust for comfort.'],
+      ['Expect','Minute ventilation 18–25 L/min or more','Spontaneous volumes of 1000–2000 mL are fine.'],
+      ['Sedation','Bare minimum to intubate; no paralytics','']];
+    const h=num(S.abg.hco3);
+    o.notes=[h!==null?`With HCO3 ${h}, expected PaCO2 is about ${r0(1.5*h+8-2)}–${r0(1.5*h+8+2)} (Winter). Usual vent settings may let it rise to 25–30 and drop the pH into the 6.6s.`:'Enter the HCO3 on the Gas step to see the PaCO2 he needs (Winter formula).','Match or exceed the pre-intubation minute ventilation; recheck a gas within 15–20 minutes.','Widen the volume and pressure alarm limits so they do not cap his breathing.'];
+    o.cite='Owens ch. 1';
+  }else{
+    o.rows=[['Mode','Assist-control, volume control',''],
+      ['Tidal volume',vtmL(7),'6–8 mL/kg PBW.'],
+      ['Rate','12–16 /min','Adjust to the PaCO2.'],
+      ['PEEP',`${peep0??5} cmH2O`,'Usually 3–5 at the start.'],
+      ['FiO2','100%, then wean to the SpO2 goal','']];
+    o.notes=['Never base Vt on actual body weight.'];
+    o.cite='Owens ch. 8, 12';
+  }
+  if(has('brain'))o.notes.push('Brain injury: SpO2 94–98%, PaO2 80–100, PaCO2 35–40. PEEP matters for ICP mainly at 15 or more; hypoxemia raises ICP for sure.');
+  if(has('herniate'))o.notes.push('Impending herniation: brief hyperventilation (PaCO2 under 32) to bridge to mannitol or the OR; prolonged hyperventilation worsens ischemia.');
+  if(has('co'))o.notes.push('Carbon monoxide: keep FiO2 at 100%.');
+  if(has('shock'))o.notes.push('Shock: breathing can take 40–50% of energy expenditure; use assist-control and do not let him fatigue.');
+  return o;
+}
+
+/* ---------- PEEP table helpers ---------- */
+function tablePos(T,f,p){if(f===null||p===null)return -1;let best=-1,bd=1e9;T.forEach(([tf,tp],i)=>{const dd=Math.abs(tf-f*100)/10+Math.abs(tp-p);if(dd<bd){bd=dd;best=i}});return best}
+const pair=x=>x?`FiO2 ${x[0]}% / PEEP ${x[1]}`:'';
+
+/* ---------- Recommendation engine ---------- */
+function recs(){
+  const out=[],d=derived(),t=targets(),c=S.cur,ph=S.phys;
+  const add=(pri,h,p,cite)=>out.push({pri,h,p,cite});
+  if(!ph){return out}
+  const obstructive=ph==='asthma'||ph==='copd';
+  const anyGas=d.ph!==null||d.paco2!==null||d.pao2!==null;
+  const P=d.P;
+
+  /* Lung protection */
+  if(d.vtkg!==null&&c.mode!=='PSV'){
+    if(ph==='restrict'&&d.vtkg>6.5)add('now','Lower the tidal volume',`Vt is ${r1(d.vtkg)} mL/kg PBW. Go to 6 mL/kg${P?` (${r0(P*6)} mL)`:''} and raise the rate to keep minute ventilation.`,'Owens ch. 1, 8');
+    else if(d.vtkg>8.5&&ph!=='metab')add('now','Tidal volume is too high',`Vt is ${r1(d.vtkg)} mL/kg PBW. Keep it 4–8 mL/kg${P?` (${r0(P*4)}–${r0(P*8)} mL)`:''}; check that it was set from height, not actual weight.`,'Owens ch. 3, 8');
+    else if(obstructive&&d.vtkg<6)add('con','Tidal volume may be too low for obstruction',`At ${r1(d.vtkg)} mL/kg, air hunger and tachypnea can worsen air trapping; 8 mL/kg usually works.`,'Owens ch. 15');
+  }
+  if(d.pplat!==null&&d.pplat>30){
+    const newVt=d.vt&&P?Math.max(4*P,ph==='restrict'?Math.min(6*P,d.vt-P):d.vt-P):null;
+    add('now','Plateau pressure over 30',`Pplat ${d.pplat}. Reduce Vt by about 1 mL/kg${newVt?` (to ${r0(newVt)} mL)`:''}, not below 4 mL/kg; recheck the plateau.`+(obstructive?' In obstruction, also slow the rate and lengthen expiration.':''),'Owens ch. 1, 8');
+  }
+  if(d.dp!==null&&d.dp>15&&!(d.pplat>30)&&!obstructive)add('next','Driving pressure over 15',`Driving pressure ${d.dp} (Pplat ${d.pplat} − PEEP ${d.peep}). Over 15 is linked to higher mortality; try a smaller Vt${P?` (5 mL/kg is ${r0(5*P)} mL)`:''}.`,'Owens ch. 8');
+  if(d.pplat===null&&d.vt&&c.mode==='VC'&&ph!=='metab')add('next','Measure a plateau pressure','Inspiratory hold of 0.5–1 s. Without it you cannot check lung protection or driving pressure.','Owens ch. 2, 8');
+  if(d.res!==null&&d.res>10)add(d.res>15?'now':'next','High airway resistance',`Peak minus plateau is ${d.res} (normal 5 or less). Check for a kinked or bitten tube, suction for mucus, treat bronchospasm, or consider a narrow tube.`,'Owens ch. 2, 15');
+  if(d.pip!==null&&d.pplat!==null&&d.pplat>30&&d.res<=10)add('next','The problem is in the lungs',`High peak and plateau. Think mainstem intubation, lobar atelectasis, pulmonary edema, worsening ARDS, or pneumothorax.`,'Owens ch. 2');
+
+  /* Auto-PEEP */
+  const ap=d.apeep;
+  if((ap!==null&&ap>0)||c.flowzero==='no'){
+    add(ap>=5||c.hypot?'now':'next','Dynamic hyperinflation (auto-PEEP)',`${ap!==null?`Auto-PEEP ${ap}. `:''}Slow the rate to 10–14, shorten I-time for I:E 1:3–1:5, flow 60–80 L/min if air hungry, Vt 6–8 mL/kg, opioid sedation, bronchodilators and steroids.${c.hypot?' Hypotensive: disconnect from the vent briefly to let him exhale.':''}`,'Owens ch. 2, 3, 15');
+    if(ph==='copd'&&ap>0)add('con','Applied PEEP for COPD',`Set PEEP near 75–85% of the auto-PEEP${ap?` (about ${r0(ap*0.8)})`:''} to help him trigger and exhale.`,'Owens ch. 13');
+  }
+  if(d.ie!==null&&obstructive&&d.ie<3)add('next','Expiratory time is short',`I:E is 1:${r1(d.ie)}. Aim for 1:3 or longer by slowing the rate or shortening the I-time.`,'Owens ch. 1, 15');
+
+  /* Oxygenation */
+  const lowO2=(d.pao2!==null&&d.pao2<t.pao2[0])||(num(S.abg.spo2)!==null&&num(S.abg.spo2)<t.spo2[0]);
+  const highO2=(d.pao2!==null&&d.pao2>t.pao2[1])||(num(S.abg.spo2)!==null&&num(S.abg.spo2)>t.spo2[1]&&d.pao2===null);
+  if(lowO2){
+    if(ph==='restrict'&&!has('rv')){
+      const i=tablePos(LOW_PEEP,d.f,d.peep),nx=i>=0?LOW_PEEP[Math.min(i+1,LOW_PEEP.length-1)]:null;
+      add('now','Oxygenation below goal',`Raise PEEP before FiO2 when the film is white. ${nx?`Next step on the lower-PEEP table: ${pair(nx)}.`:'Use the lower-PEEP table (shown on the Gas step).'} Recheck Pplat after each PEEP change.`,'Owens ch. 2, 3, 26');
+    }else if(has('rv')){
+      add('now','Oxygenation below goal (RV failure)','Use more FiO2 and keep PEEP at 10 or less; PEEP stresses the RV.','Owens ch. 1');
+    }else if(obstructive){
+      add('now','Oxygenation below goal','Raise the FiO2; look for a pneumothorax, plugging, or atelectasis before adding PEEP in obstruction.','Owens ch. 2, 15');
+    }else add('now','Oxygenation below goal','Increase PEEP, then FiO2. If sudden, use the desaturation checklist on the Troubleshoot step.','Owens ch. 2');
+  }else if(highO2&&d.f!==null){
+    if(d.f>0.6)add('next','Wean the FiO2',`Oxygenation is above goal. Lower the FiO2 toward 60% first, keeping PaO2 ${t.pao2[0]}–${t.pao2[1]} and SpO2 ${t.spo2[0]}–${t.spo2[1]}%.`,'Owens ch. 1');
+    else if(ph==='restrict'){const i=tablePos(LOW_PEEP,d.f,d.peep),pv=i>0?LOW_PEEP[i-1]:null;add('next','Step down',`Oxygenation is above goal.${pv?` Previous step on the lower-PEEP table: ${pair(pv)}.`:''}`,'Owens ch. 26')}
+    else if(d.f>0.4)add('next','Wean the FiO2',`Lower the FiO2 to keep SpO2 ${t.spo2[0]}–${t.spo2[1]}%.`,'Owens ch. 8');
+  }
+  if(t.co)add('con','Carbon monoxide','Keep FiO2 at 100% regardless of SpO2 (pulse oximetry reads COHb as oxyhemoglobin).','Owens ch. 1');
+
+  /* Ventilation */
+  if(d.paco2!==null&&d.ph!==null){
+    const acid=d.ph<7.35,alk=d.ph>7.45;
+    const metabAcid=d.hco3!==null&&d.hco3<20;
+    if(metabAcid&&d.winter&&d.paco2>d.winter[1]){
+      add('now','He is not compensating for his metabolic acidosis',`HCO3 ${d.hco3} needs a PaCO2 near ${r0(d.winter[0])}–${r0(d.winter[1])}; it is ${d.paco2}. Increase minute ventilation now${c.mode!=='PSV'?'; consider pressure support so his own drive can do it':''}. Avoid paralytics.`,'Owens ch. 1');
+    }
+    let goal=t.paco2?(t.paco2[0]+t.paco2[1])/2:40;
+    if(has('herniate'))goal=30;
+    const rr=d.rr;
+    if(acid&&d.paco2>45){
+      const tooAcid=d.ph<t.ph;
+      if(obstructive){
+        add(tooAcid?'now':'con',tooAcid?`pH below ${t.ph.toFixed(2)}`:'Permissive hypercapnia is fine',tooAcid?'Raising the rate usually worsens air trapping. Check auto-PEEP first; if none, raise the rate cautiously while keeping I:E 1:3 or longer. Treat bronchospasm.':`pH ${d.ph} is above ${t.ph.toFixed(2)}; let the PaCO2 run. Raising the rate risks breath stacking.`,'Owens ch. 6, 15');
+      }else if(tooAcid||t.paco2){
+        const want=has('brain')?Math.min(goal,40):Math.min(Math.max(goal,d.paco2*0.75),50);
+        const nrr=rr?Math.min(35,r0(rr*d.paco2/want)):null;
+        add(tooAcid?'now':'next','Raise the rate',`${nrr?`About ${nrr}/min (current ${rr} × PaCO2 ${d.paco2} ÷ goal ${r0(want)}). `:''}Keep Vt in range; watch for auto-PEEP at high rates.${ph==='restrict'?' Buffering to keep pH 7.15 or more is common but unproven.':''}`,'Owens ch. 1, 2, 6');
+        if(ph==='restrict'&&rr>=30&&tooAcid)add('con','Refractory hypercapnia','At high rates, consider dead space (PE, low cardiac output, auto-PEEP). If pH stays under 7.15 despite optimal care, VV-ECMO criteria apply.','Owens ch. 2, 20');
+      }else add('ok','Permissive hypercapnia acceptable',`pH ${d.ph} is at or above ${t.ph.toFixed(2)}; do not chase a normal PaCO2 with injurious settings.`,'Owens ch. 3, 6');
+    }
+    if(alk&&d.paco2<35&&!has('herniate')){
+      const set=num(c.rr),tot=num(c.rrTot);
+      if(set&&tot&&tot>set+4)add('next','Respiratory alkalosis from his own breathing',`Total rate ${tot} over a set rate of ${set}. Treat pain, agitation, fever; in A/C every triggered breath is a full Vt, so SIMV may help.`,'Owens ch. 1, 2');
+      else add('next','Lower the rate',`PaCO2 ${d.paco2}, pH ${d.ph}. ${rr?`About ${r0(rr*d.paco2/goal)}/min.`:''}`,'Owens ch. 2');
+      if(has('brain'))add('now','Avoid hyperventilation in brain injury','PaCO2 under 32 causes cerebral vasoconstriction and ischemia; aim for 35–40.','Owens ch. 1');
+    }
+    if(has('brain')&&!has('herniate')&&d.paco2>45)add('now','Hypercapnia raises ICP','Permissive hypercapnia is not appropriate with cerebral edema; normalize the PaCO2.','Owens ch. 3');
+  }
+
+  /* ARDS severity and rescue */
+  if(d.pf!==null&&(ph==='restrict')){
+    const sev=ards(d.pf);
+    if(d.pf<150)add('now','P/F under 150: prone positioning',`P/F ${r0(d.pf)}. Prone for 16 h, supine 8 h; continue until P/F over 150 near the end of the supine period. Consider neuromuscular blockade case by case, most benefit at P/F 120 or less.`,'Owens ch. 16, 26');
+    if(d.pf<150&&d.f>=0.9)add('next','VV-ECMO criteria','P/F under 150 on FiO2 over 90% despite optimal care for 6 hours or more (or Murray score 3 or more) with a reversible cause. Call the ECMO center early.','Owens ch. 20');
+    if(d.pf<100)add('con','Rescue options','Inhaled pulmonary vasodilator (iNO 20 ppm; wean 5–10 ppm every 15–30 min to 5, then 1 ppm every 30 min), recruitment, APRV, or esophageal-pressure-guided PEEP.','Owens ch. 12, 17, 18');
+    if(sev)add('ok',`ARDS physiology: ${sev}`,`P/F ${r0(d.pf)} (mild 200–300, moderate 100–200, severe under 100, on PEEP 5 or more with bilateral infiltrates not from heart failure).`,'Owens ch. 4');
+  }
+
+  /* Compliance */
+  if(d.cstat!==null){
+    if(d.cstat<30&&!obstructive)add('con','Low static compliance',`${r0(d.cstat)} mL/cmH2O (ventilated normal is 70–80). He is working with a small "baby lung"; keep Vt and driving pressure low. Track it daily; falling compliance means edema, pneumonia, ARDS, or pneumothorax.`,'Owens ch. 3, 8');
+    if(d.cdyn&&d.cstat-d.cdyn>20&&!(d.res>10))add('con','Dynamic far below static compliance','The gap points to airway resistance.','Owens ch. 3');
+  }
+
+  /* Mode-specific */
+  if(ph==='metab'&&c.mode!=='PSV')add('next','Consider pressure support',"A/C often cannot match the minute ventilation severe acidosis needs; he may breathe against the vent.",'Owens ch. 1');
+  if(has('shock')&&c.mode==='PSV')add('next','Use assist-control in shock','Do not let a shocked patient fatigue on pressure support.','Owens ch. 3');
+
+  /* Liberation screen */
+  const sb=sbtScreen();
+  if(sb.ready)add('ok','Ready for a spontaneous breathing trial','CPAP 5, PS 7 for 30–60 min; extubate if RSBI under 80 and he looks good. Details on the Liberation step.','Owens ch. 22, 26');
+  if(!out.length&&anyGas)add('ok','No changes needed','Current settings meet the goals. Do not chase numbers that are already adequate.','Owens ch. 25');
+  const order={now:0,next:1,con:2,ok:3};
+  return out.sort((a,b)=>order[a.pri]-order[b.pri]);
+}
+
+/* ---------- Liberation ---------- */
+function sbtScreen(){
+  const f=fio2Frac(),p=num(S.cur.peep),b=S.sbt,d=derived();
+  const crit=[
+    ['FiO2 50% or less',f!==null?f<=0.5:null],
+    ['PEEP 8 or less',p!==null?p<=8:null],
+    ['Follows commands',b.rass||null],
+    ['Not suctioned frequently',b.suction||null],
+    ['Hemodynamically stable',b.hemo||null],
+    ['Not a known difficult airway',b.airway||null],
+    ['Minute ventilation under 10 L/min',d.ve!==null?d.ve<10:null],
+    ['No auto-PEEP',d.apeep!==null?d.apeep<=0:(S.cur.flowzero==='yes'?true:null)],
+  ];
+  const ready=crit.every(c=>c[1]===true);
+  const rsbi=num(b.rr)&&num(b.vt)?num(b.rr)/(num(b.vt)>20?num(b.vt)/1000:num(b.vt)):null;
+  return {crit,ready,rsbi};
+}
+
+/* ---------- Things that are easy to miss ---------- */
+function misses(){
+  const L=[],ph=S.phys,d=derived(),c=S.cur;
+  const add=(id,t,s)=>L.push({id,t,s});
+  if(!ph)return L;
+  add('abg','Blood gas 15–20 minutes after any vent change','Owens ch. 1');
+  if(c.mode==='VC')add('pplat','Plateau pressure after each PEEP or Vt change','Owens ch. 1, 8');
+  add('pbw','Vt set from height and sex (PBW), not actual weight','Owens ch. 3');
+  add('etco2','Continuous waveform capnography; no waveform means tube out, tube occluded, or sensor fault','Owens ch. 2');
+  add('cxr','CXR for tube position and to look for pneumothorax or new infiltrate','Owens ch. 2');
+  add('comp','Record compliance daily (Vt ÷ (Pplat − PEEP))','Owens ch. 3');
+  add('sbt','Daily SBT screen once the reason for intubation has resolved','Owens ch. 3, 22');
+  add('rt','Make changes with the RT present','Owens ch. 3');
+  if(ph==='asthma'||ph==='copd'){add('ap','Expiratory hold for auto-PEEP; watch the flow waveform return to zero','Owens ch. 2, 15');add('bd','Bronchodilators, systemic steroids, sedation to RASS −1 to −2','Owens ch. 15');add('hypo','Hypotension after intubation: think breath stacking; disconnect and let him exhale','Owens ch. 3, 15')}
+  if(ph==='restrict'){add('peeptab','Titrate PEEP and FiO2 together on the PEEP table','Owens ch. 26');if(d.pf!==null&&d.pf<150)add('prone','Proning checklist: eyes taped, lines secured, 1 RT + 4 turners + supervisor','Owens ch. 26')}
+  if(ph==='metab')add('alarm','Widen pressure and volume alarm limits so they do not cap his minute ventilation','Owens ch. 1');
+  if(has('brain'))add('icp','Avoid PaCO2 under 32 unless he is herniating','Owens ch. 1');
+  if(has('rv'))add('rvpeep','Keep PEEP 10 or less; favor FiO2','Owens ch. 1');
+  add('pe','New hypoxemia in an ICU patient: keep PE on the list','Owens ch. 2');
+  add('long','Prolonged severe failure: plan an early tracheostomy','Owens ch. 25');
+  add('bundle','Head of bed 30–45°, VTE and stress-ulcer prophylaxis, oral care, cuff pressure','General ICU practice');
+  return L;
+}
+
+/* ---------- Note ---------- */
+function noteText(){
+  const d=derived(),c=S.cur,a=S.abg,P=d.P,L=[];
+  const mode={VC:'AC/VC',PC:'AC/PC',SIMV:'SIMV/PS',PSV:'CPAP/PS'}[c.mode];
+  let s=`Vent: ${mode}`;
+  if(c.mode==='VC'||c.mode==='SIMV')s+=d.vt?` Vt ${d.vt}${d.vtkg?` (${r1(d.vtkg)} mL/kg PBW)`:''}`:'';
+  if(c.mode==='PC'&&num(c.pinsp)!==null)s+=` Pinsp ${c.pinsp}`;
+  if((c.mode==='PSV'||c.mode==='SIMV')&&num(c.ps)!==null)s+=` PS ${c.ps}`;
+  if(num(c.rr)!==null)s+=`, RR ${c.rr}${num(c.rrTot)!==null?` (total ${c.rrTot})`:''}`;
+  if(d.peep!==null)s+=`, PEEP ${d.peep}`;
+  if(d.f!==null)s+=`, FiO2 ${r0(d.f*100)}%`;
+  if(L.push(s+'.'),d.pip!==null||d.pplat!==null){L.push(`Mechanics: ${[d.pip!==null?`PIP ${d.pip}`:'',d.pplat!==null?`Pplat ${d.pplat}`:'',d.dp!==null?`DP ${d.dp}`:'',d.cstat?`Cstat ${r0(d.cstat)}`:'',d.apeep!==null?`auto-PEEP ${d.apeep}`:''].filter(Boolean).join(', ')}.`)}
+  if(d.ph!==null||d.paco2!==null||d.pao2!==null)L.push(`ABG ${[a.ph,a.paco2,a.pao2,a.hco3].map(x=>x||'—').join('/')}${d.f!==null?` on ${r0(d.f*100)}%`:''}${d.pf?`; P/F ${r0(d.pf)}${ards(d.pf)&&S.phys==='restrict'?` (${ards(d.pf)})`:''}`:''}.`);
+  if(P)L.push(`PBW ${r1(P)} kg.`);
+  const R=recs().filter(r=>r.pri!=='ok');
+  if(R.length)L.push('Plan: '+R.map(r=>r.h.replace(/\.$/,'')).join('; ')+'.');
+  return L.join('\n');
+}
+
+/* ---------- Rendering ---------- */
+const chip=(k,v,l,sub,on)=>`<button type="button" class="chip" data-set="${k}" data-v="${esc(v)}" aria-pressed="${on}">${esc(l)}${sub?`<small>${esc(sub)}</small>`:''}</button>`;
+const inp=(k,label,ph,extra='')=>{const v=k.split('.').reduce((o,x)=>o[x],S);return `<label class="in ${extra}"><span>${label}</span><input inputmode="decimal" data-k="${k}" value="${esc(v)}" placeholder="${esc(ph||'')}" autocomplete="off"></label>`};
+function renderSteps(){$('steps').innerHTML=STEPS.map(([k,t,sh],i)=>`<button type="button" class="stepbtn" data-step="${k}" ${S.step===k?'aria-current="step"':''}><span class="n">${i+1}</span><span class="t"><span class="lg">${t}</span><span class="sh">${sh}</span></span></button>`).join('')}
+
+function panePt(){
+  const P=pbw(),w=num(S.wt);
+  return `<div class="ph"><span class="eb">1</span><h2>Patient</h2><p class="cue">Height and sex set the tidal volume. The physiology sets everything else.</p></div>
+  <div class="sec"><span class="flab">Sex</span><div class="chips">${chip('sex','M','Male','',S.sex==='M')}${chip('sex','F','Female','',S.sex==='F')}</div></div>
+  <div class="sec"><div class="row">${inp('ht','Height',S.htU==='in'?'inches, e.g. 70':'cm, e.g. 178')}<div class="in"><span>Unit</span><div class="chips">${chip('htU','in','in','',S.htU==='in')}${chip('htU','cm','cm','',S.htU==='cm')}</div></div>${inp('wt','Actual weight (kg, optional)','e.g. 110')}</div>
+  ${P?`<div class="calc"><div class="kpi"><span>PBW</span><b>${r1(P)} kg</b></div>${[4,5,6,7,8].map(k=>`<div class="kpi${k===6?' good':''}"><span>${k} mL/kg</span><b>${r0(P*k)} mL</b></div>`).join('')}</div>`:''}
+  ${P&&w&&w>P*1.3?`<p class="note-box">Actual weight is ${r0(w/P*100)}% of predicted. Lungs do not grow with weight; set Vt from PBW. <span class="cite">Owens ch. 8</span></p>`:''}</div>
+  <div class="sec"><span class="flab">Why is he on the vent? (physiology)</span><div class="chips">${PHYS.map(([k,l,s])=>chip('phys',k,l,s,S.phys===k)).join('')}</div></div>
+  <div class="sec"><span class="flab">Chest X-ray</span><div class="chips">${[['clear','Clear'],['scattered','Scattered infiltrates'],['diffuse','Diffuse dense infiltrates'],['whiteout','Bilateral white-out']].map(([k,l])=>chip('cxr',k,l,`PEEP ${CXR_PEEP[k]}`,S.cxr===k)).join('')}</div><span class="cite">Initial PEEP by CXR, Owens ch. 12</span></div>
+  <div class="sec"><span class="flab">Also present</span><div class="chips">${MODS.map(([k,l,s])=>chip('mods',k,l,s,has(k))).join('')}</div></div>
+  <div class="pfoot"><span></span><button class="btn primary" data-step="start" type="button">Initial settings →</button></div>`;
+}
+function paneStart(){
+  const o=initial(),t=targets();
+  if(!o)return `<div class="ph"><span class="eb">2</span><h2>Initial settings</h2></div><p class="empty">Pick the physiology on the Patient step first.</p><div class="pfoot"><button class="btn" data-step="pt">← Patient</button><span></span></div>`;
+  return `<div class="ph"><span class="eb">2</span><h2>Initial settings</h2><p class="cue">${esc(PHYS.find(p=>p[0]===S.phys)[1])}${S.mods.length?' · '+S.mods.map(m=>MODS.find(x=>x[0]===m)[1]).join(', '):''}${pbw()?` · PBW ${r1(pbw())} kg`:' · add height and sex for exact volumes'}</p></div>
+  <table class="set">${o.rows.map(([a,b,c])=>`<tr><th>${esc(a)}</th><td><b>${esc(b)}</b>${c?`<small>${esc(c)}</small>`:''}</td></tr>`).join('')}</table>
+  <div class="sec"><h3>Goals</h3><div class="calc">
+    <div class="kpi"><span>SpO2</span><b>${t.spo2[0]}–${t.spo2[1]}%</b></div>
+    <div class="kpi"><span>PaO2</span><b>${t.pao2[0]}–${t.pao2[1]}</b></div>
+    <div class="kpi"><span>pH at least</span><b>${t.ph.toFixed(2)}</b></div>
+    ${t.paco2?`<div class="kpi"><span>PaCO2</span><b>${t.paco2[0]}–${t.paco2[1]}</b></div>`:''}
+    ${S.phys!=='metab'?`<div class="kpi"><span>Pplat</span><b>≤ 30</b></div><div class="kpi"><span>Driving pressure</span><b>≤ 15</b></div>`:''}
+  </div><span class="cite">${esc(t.src)}</span></div>
+  <div class="sec"><h3>Remember</h3><ul class="list">${o.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><span class="cite">${esc(o.cite)}</span></div>
+  <div class="pfoot"><button class="btn" data-step="pt" type="button">← Patient</button><button class="btn primary" data-step="gas" type="button">Enter the gas →</button></div>`;
+}
+function paneGas(){
+  const c=S.cur,d=derived(),t=targets();
+  const k=(label,val,cls)=>`<div class="kpi ${cls||''}"><span>${label}</span><b>${val}</b></div>`;
+  const cls=(v,good,bad)=>v===null?'':bad(v)?'bad':good(v)?'good':'mid';
+  const iL=tablePos(LOW_PEEP,d.f,d.peep),iH=tablePos(HIGH_PEEP,d.f,d.peep);
+  return `<div class="ph"><span class="eb">3</span><h2>Gas & mechanics</h2><p class="cue">Enter what the vent shows and the latest ABG. Recommendations update as you type.</p></div>
+  <div class="sec"><span class="flab">Current mode</span><div class="chips">${[['VC','AC / volume'],['PC','AC / pressure'],['SIMV','SIMV + PS'],['PSV','CPAP + PS']].map(([k2,l])=>chip('cur.mode',k2,l,'',c.mode===k2)).join('')}</div></div>
+  <div class="sec"><span class="flab">Settings</span><div class="row">
+    ${c.mode==='PC'?inp('cur.pinsp','Pinsp above PEEP','e.g. 18'):''}
+    ${c.mode==='PSV'||c.mode==='SIMV'?inp('cur.ps','Pressure support','e.g. 10'):''}
+    ${inp('cur.vt',c.mode==='VC'||c.mode==='SIMV'?'Tidal volume (mL)':'Exhaled Vt (mL)','e.g. 420')}
+    ${c.mode!=='PSV'?inp('cur.rr','Set rate','e.g. 18'):''}
+    ${inp('cur.rrTot','Total rate','e.g. 22')}
+    ${inp('cur.peep','PEEP','e.g. 10')}
+    ${inp('cur.fio2','FiO2 (%)','e.g. 60')}
+    ${c.mode!=='PSV'?inp('cur.ti','I-time (s)','e.g. 0.9'):''}
+  </div></div>
+  <div class="sec"><span class="flab">Mechanics</span><div class="row">${inp('cur.pip','Peak pressure','e.g. 32')}${inp('cur.pplat','Plateau pressure','e.g. 26')}${inp('cur.apeep','Auto-PEEP','expiratory hold')}</div>
+    <div class="chips"><span class="flab" style="align-self:center">Expiratory flow returns to zero?</span>${chip('cur.flowzero','yes','Yes','',c.flowzero==='yes')}${chip('cur.flowzero','no','No','',c.flowzero==='no')}${chip('cur.hypot',!c.hypot,'Hypotensive','',c.hypot)}</div></div>
+  <div class="sec"><span class="flab">Blood gas</span><div class="row">${inp('abg.ph','pH','7.32')}${inp('abg.paco2','PaCO2','48')}${inp('abg.pao2','PaO2','62')}${inp('abg.hco3','HCO3','24')}${inp('abg.spo2','SpO2 (%)','91')}${inp('abg.etco2','ETCO2','38')}</div></div>
+  <div class="sec"><h3>Calculated</h3><div class="calc">
+    ${k('Vt mL/kg PBW',d.vtkg!==null?r1(d.vtkg):'—',d.vtkg===null?'':(t.vt&&d.vtkg>t.vt[1]+0.5?'bad':'good'))}
+    ${k('Driving pressure',d.dp!==null?d.dp:'—',cls(d.dp,v=>v<=15,v=>v>17))}
+    ${k('Static compliance',d.cstat?r0(d.cstat):'—',cls(d.cstat,v=>v>=50,v=>v<30))}
+    ${k('Peak − plateau',d.res!==null?d.res:'—',cls(d.res,v=>v<=5,v=>v>10))}
+    ${k('P/F ratio',d.pf?r0(d.pf):'—',cls(d.pf,v=>v>300,v=>v<150))}
+    ${k('A–a gradient',d.aa!==null?r0(d.aa):'—')}
+    ${k('Minute ventilation',d.ve!==null?r1(d.ve)+' L':'—')}
+    ${k('I:E',d.ie!==null?'1:'+r1(d.ie):'—',d.ie===null?'':(S.phys==='asthma'||S.phys==='copd')?(d.ie>=3?'good':'bad'):'')}
+    ${d.winter?k('Expected PaCO2 (Winter)',`${r0(d.winter[0])}–${r0(d.winter[1])}`,d.paco2===null?'':d.paco2>d.winter[1]?'bad':'good'):''}
+  </div><span class="cite">Formulae: Owens appendix, ch. 3, 8</span></div>
+  ${S.phys==='restrict'?`<div class="sec"><h3>PEEP tables</h3><div class="row" style="align-items:flex-start">
+    <div style="flex:1;min-width:150px"><span class="flab">Lower PEEP</span>${peepTable(LOW_PEEP,iL)}</div>
+    <div style="flex:1;min-width:150px"><span class="flab">Higher PEEP</span>${peepTable(HIGH_PEEP,iH)}</div></div><span class="cite">Owens ch. 26. The lower-PEEP table suits most patients (ch. 12).</span></div>`:''}
+  <div class="pfoot"><button class="btn" data-step="start" type="button">← Initial settings</button><button class="btn primary" data-step="trouble" type="button">Troubleshoot →</button></div>`;
+}
+function peepTable(T,i){return `<table class="set" style="font-size:.82rem"><tr><th style="width:auto">FiO2</th>${T.map((r,j)=>`<td style="${j===i?'background:var(--accent-soft);font-weight:700':''}">${r[0]}</td>`).join('')}</tr><tr><th style="width:auto">PEEP</th>${T.map((r,j)=>`<td style="${j===i?'background:var(--accent-soft);font-weight:700':''}">${r[1]}</td>`).join('')}</tr></table>`.replace('<table','<div style="overflow-x:auto"><table')+'</div>'}
+
+const TROUBLE={
+ peak:{t:'High peak pressure',s:'Peak alarm, rising PIP',cite:'Owens ch. 2, 15',html:`<h4>1. Inspiratory hold: measure the plateau</h4><p>Peak minus plateau is normally 5 or less.</p>
+  <h4>High peak, normal plateau: airway resistance</h4><ul class="list"><li>Kinked or bitten tube: unkink, bite block</li><li>Mucus plugging: pass a suction catheter</li><li>Bronchospasm: inhaled bronchodilators</li><li>Tube too narrow: change it, or accept the higher peak</li></ul>
+  <h4>High peak, high plateau: the lungs</h4><ul class="list"><li>Mainstem intubation: pull the tube back</li><li>Lobar or lung atelectasis: percussion, bronchoscopy</li><li>Pulmonary edema: diuretics or inotropes</li><li>ARDS: lower Vt, higher PEEP</li><li>Pneumothorax: chest tube</li></ul>`},
+ desat:{t:'Sudden desaturation',s:'SpO2 dropping',cite:'Owens ch. 2',html:`<h4>Exclude the machine and the tube first</h4><ul class="list"><li>Disconnect from the vent and bag him</li><li>Confirm the tube with waveform capnography; check breath sounds are present and equal</li><li>ABG and chest X-ray (infiltrates, pneumothorax, edema, atelectasis, effusion)</li></ul>
+  <h4>One side silent</h4><ul class="list"><li>Pull the tube back a few centimeters if it is deep</li><li>If the tube is in the right place: pneumothorax, or mucus plug with total lung collapse</li><li>Silent side plus hypotension: tension pneumothorax. Needle decompression, then a chest tube.</li></ul>
+  <h4>Always</h4><p>Consider pulmonary embolism in any ICU patient with new hypoxemia; keep the threshold for testing low.</p>`},
+ fight:{t:'Fighting the vent',s:'Agitated, bucking, alarming',cite:'Owens ch. 2, 14',html:`<h4>Before sedating or paralyzing: TSS</h4><ul class="list"><li><b>Tube</b>: in place and not obstructed</li><li><b>Sounds</b>: present and equal</li><li><b>Sats</b>: not hypoxemic</li></ul>
+  <h4>Then look for</h4><ul class="list"><li>Dynamic hyperinflation</li><li>Untreated pain, especially trauma and surgical patients</li><li>Inadequate rate or Vt; switch to assist-control if he is fatiguing</li><li>Other distress: cardiac ischemia, fever, abdominal distension, neurologic decline</li></ul>`},
+ auto:{t:'Auto-PEEP / hypotension',s:'Breath stacking, low BP',cite:'Owens ch. 2, 3, 15',html:`<h4>Recognize it</h4><ul class="list"><li>Forceful abdominal muscle use on exhalation, distended neck veins, loud wheeze</li><li>Expiratory flow does not return to zero before the next breath</li><li>PaCO2 keeps rising as you raise the rate</li></ul>
+  <h4>Fix it</h4><ul class="list"><li>Hypotensive or in PEA: disconnect and let him exhale</li><li>Rate 10–14; I:E 1:3 to 1:5 by shortening I-time</li><li>Vt 6–8 mL/kg; inspiratory flow 60–80 L/min if air hungry</li><li>Opioid sedation; bronchodilators and systemic steroids</li><li>COPD: applied PEEP at 75–85% of auto-PEEP helps triggering</li></ul>`},
+ etco2:{t:'ETCO2 changed',s:'Lost waveform or new trend',cite:'Owens ch. 2',html:`<h4>No waveform</h4><ul class="list"><li>Tube not in the trachea, tube fully occluded, or sensor fault. Assume one of the first two until proven otherwise.</li></ul>
+  <h4>Waveform present: get an ABG and compare</h4><ul class="list"><li><b>Rising ETCO2 and PaCO2</b>: more CO2 production (fever, malignant hyperthermia, thyrotoxicosis) or too little backup ventilation</li><li><b>Falling ETCO2, same or rising PaCO2</b>: more dead space (PE, falling cardiac output, auto-PEEP)</li><li><b>Falling ETCO2 and PaCO2</b>: more ventilation (pain, agitation, fever, sepsis)</li></ul>`},
+ dys:{t:'Dyssynchrony',s:'Waveforms do not match effort',cite:'Owens ch. 13, 14',html:`<h4>Ineffective triggering</h4><p>Efforts without a breath (hand on the chest). Usually auto-PEEP raising the trigger threshold: lengthen expiration, treat obstruction, consider applied PEEP; check trigger sensitivity (pressure −1 to −3, or flow 1–4 L/min).</p>
+  <h4>Flow starvation</h4><p>Scooped pressure waveform, air hunger. Give more flow: shorten the I-time in volume control.</p>
+  <h4>Double triggering</h4><p>Trigger too sensitive (reduce, or switch pressure and flow triggering), or the patient wants more volume than set: raise Vt, or use SIMV with PS if Vt must stay low.</p>
+  <h4>Auto-cycling</h4><p>Circuit leak, water in the tubing, or a bronchopleural fistula. Fix the leak; lower trigger sensitivity.</p>`},
+};
+function paneTrouble(){
+  const k=S.trouble;
+  return `<div class="ph"><span class="eb">4</span><h2>Troubleshoot</h2><p class="cue">The calls you will get. Always examine the patient first.</p></div>
+  <div class="tcards">${Object.entries(TROUBLE).map(([id,x])=>`<button type="button" class="tcard" data-trouble="${id}" aria-pressed="${k===id}"><b>${esc(x.t)}</b><span>${esc(x.s)}</span></button>`).join('')}</div>
+  ${k?`<div class="flow">${TROUBLE[k].html}<span class="cite">${TROUBLE[k].cite}</span></div>`:'<p class="empty">Pick a problem to see the approach.</p>'}
+  <div class="pfoot"><button class="btn" data-step="gas" type="button">← Gas & mechanics</button><button class="btn primary" data-step="lib" type="button">Liberation →</button></div>`;
+}
+function paneLib(){
+  const sb=sbtScreen(),b=S.sbt,P=pbw();
+  const mark=v=>v===true?'<b style="color:var(--ok)">✓</b>':v===false?'<b style="color:var(--warn)">✗</b>':'<span style="color:var(--muted)">?</span>';
+  const rs=sb.rsbi;
+  return `<div class="ph"><span class="eb">5</span><h2>Liberation</h2><p class="cue">Screen daily. No one can reliably predict who will pass; do the trial.</p></div>
+  <div class="sec"><h3>Daily SBT screen</h3>
+    <div class="chips">${[['rass','Follows commands'],['suction','Not suctioned frequently'],['hemo','Hemodynamically stable'],['airway','Not a difficult airway']].map(([k,l])=>chip('sbt.'+k,!b[k],l,'',b[k])).join('')}</div>
+    <table class="set">${sb.crit.map(([l,v])=>`<tr><th>${esc(l)}</th><td>${mark(v)}</td></tr>`).join('')}</table>
+    <p class="note-box">${sb.ready?'<b>Screen passed.</b> Start the SBT.':'FiO2, PEEP, minute ventilation and auto-PEEP come from the Gas step.'}</p></div>
+  <div class="sec"><h3>Spontaneous breathing trial</h3><ul class="list"><li>CPAP 5, PS 7 for 30–60 minutes (or T-piece)</li><li>Abort for SpO2 under 88%, heart rate up 20, a significant BP change, diaphoresis, or accessory muscle use or paradoxical breathing</li></ul>
+    <div class="row">${inp('sbt.rr','RR at end of SBT','e.g. 24')}${inp('sbt.vt','Vt at end of SBT (mL)','e.g. 380')}${inp('sbt.mip','MIP (cmH2O)','e.g. −35')}</div>
+    ${rs!==null?`<div class="calc"><div class="kpi ${rs<80?'good':rs<105?'mid':'bad'}"><span>RSBI</span><b>${r0(rs)}</b></div><div class="kpi ${num(b.mip)!==null?(num(b.mip)<=-30?'good':'bad'):''}"><span>MIP</span><b>${num(b.mip)??'—'}</b></div>${P&&num(b.vt)?`<div class="kpi"><span>Vt mL/kg</span><b>${r1(num(b.vt)/P)}</b></div>`:''}</div>
+    <p class="note-box">${rs<80?'RSBI under 80 on PS: extubate if he looks comfortable.':rs<105?'RSBI 80–105: under 105 predicts success off PS; on PS the stricter cutoff is 80. Use judgment.':'RSBI over 105: back to assist-control; try again tomorrow.'} ${num(b.mip)!==null&&num(b.mip)>-30?'MIP weaker than −30 suggests weak respiratory muscles.':''}</p>`:''}
+    <span class="cite">Owens ch. 22, 26</span></div>
+  <div class="sec"><h3>After extubation, or if he fails</h3><ul class="list"><li>Treat the reason he failed; return to full support (assist-control) between trials</li><li>An occasional reintubation is expected; never reintubating means waiting too long for others</li><li>Prolonged failure: early tracheostomy allows less sedation and more mobility</li></ul><span class="cite">Owens ch. 3, 22, 23, 25</span></div>
+  <div class="pfoot"><button class="btn" data-step="trouble" type="button">← Troubleshoot</button><span></span></div>`;
+}
+function renderPane(){
+  $('pane').innerHTML={pt:panePt,start:paneStart,gas:paneGas,trouble:paneTrouble,lib:paneLib}[S.step]();
+}
+function renderOut(){
+  const R=recs(),M=misses();
+  let h=`<h3>Recommendations</h3>`;
+  if(!S.phys)h+=`<p class="empty">Start with the patient: height, sex, and why he is on the vent.</p>`;
+  else if(!R.length)h+=`<p class="empty">Enter current settings and a gas on step 3 to get adjustments. Initial settings are on step 2.</p>`;
+  else h+=R.map(r=>`<div class="rec ${r.pri}"><div class="h"><span class="pri">${{now:'Now',next:'Next',con:'Consider',ok:'OK'}[r.pri]}</span><b>${esc(r.h)}</b></div><p>${esc(r.p)}</p><span class="cite">${esc(r.cite)}</span></div>`).join('');
+  if(M.length){h+=`<h3>Don’t miss</h3><ul class="miss">${M.map(m=>`<li data-done="${m.id}" class="${S.done[m.id]?'done':''}"><span class="bx">${S.done[m.id]?'✓':''}</span><span class="tx">${esc(m.t)}<small>${esc(m.s)}</small></span></li>`).join('')}</ul>`}
+  const n=noteText();
+  if(S.phys&&n){h+=`<h3>Vent note</h3><pre class="dict">${esc(n)}</pre><button class="btn primary" id="copy" type="button">Copy note</button>`}
+  h+=`<p class="fine">Decision support from Owens, The Ventilator Book. It does not replace bedside judgment or your RT.</p>`;
+  $('out').innerHTML=h;
+  const nNow=R.filter(r=>r.pri==='now').length,nNext=R.filter(r=>r.pri==='next').length;
+  $('mbarmid').innerHTML=!S.phys?'Start with the patient':R.length?`${nNow?`<b>${nNow} now</b> · `:''}${nNext} next · ${R.length} total`:'No recommendations yet';
+}
+function render(keep){const y=window.scrollY;renderSteps();renderPane();renderOut();if(keep)window.scrollTo(0,y)}
+
+/* ---------- Events ---------- */
+function setPath(k,v){const p=k.split('.');let o=S;for(let i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=v}
+function getPath(k){return k.split('.').reduce((o,x)=>o[x],S)}
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');if(st){S.step=st.dataset.step;render();window.scrollTo(0,0);return}
+  const ch=e.target.closest('[data-set]');if(ch){const k=ch.dataset.set,v=ch.dataset.v;
+    if(k==='mods'){S.mods=has(v)?S.mods.filter(x=>x!==v):[...S.mods,v]}
+    else if(v==='true'||v==='false')setPath(k,v==='true');
+    else setPath(k,getPath(k)===v&&k!=='htU'&&k!=='cur.mode'?'':v);
+    render(true);return}
+  const tr=e.target.closest('[data-trouble]');if(tr){S.trouble=S.trouble===tr.dataset.trouble?'':tr.dataset.trouble;render(true);return}
+  const dn=e.target.closest('[data-done]');if(dn){S.done[dn.dataset.done]=!S.done[dn.dataset.done];renderOut();return}
+  if(e.target.closest('#copy')){copy(noteText());return}
+  if(e.target.closest('#seeRecs')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(e.target.closest('#reset')){if(e.target.dataset.armed){S=blank();render();window.scrollTo(0,0)}else{e.target.dataset.armed='1';e.target.textContent='Tap again to clear';setTimeout(()=>{const b=$('reset');if(b){delete b.dataset.armed;b.textContent='New patient'}},2500)}return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(!t.dataset.k)return;setPath(t.dataset.k,t.value);
+  renderOut();renderSteps();
+  // refresh calculated tiles without stealing focus
+  if(S.step==='pt'||S.step==='gas'||S.step==='lib'){const pos=t.selectionStart,key=t.dataset.k;renderPane();const n=document.querySelector(`[data-k="${key}"]`);if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}}
+});
+async function copy(t){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  const el=document.createElement('div');el.className='toast';el.textContent=ok?'Note copied.':'Couldn’t copy on this device.';document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+render();
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>

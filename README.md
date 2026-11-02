@@ -15,6 +15,7 @@ Clinical documentation and residency planning tools.
 | ICU Rounder | `/icu-rounder/` | Daily ICU rounds and problem-based A/P, with CPOT, RASS and CAM-ICU calculators |
 | Spectrum | `/spectrum/` | ID consults: HPI with complaint-specific questions, chart review and prior cultures; drafted summary statement with impression and recommendation menus by consult reason; cultures and antimicrobial days; lines, catheters and hardware review (device days, site exam, removal rules flagged against blood cultures); daily ID note with a rounding checklist by consult reason; bugs and drugs reference |
 | Sweep | `/sweep/` | Morning ICU considerations, system by system |
+| Tidal | `/tidal/` | Ventilator management: initial settings by physiology, ABG-driven adjustments, troubleshooting, and liberation, from Owens’ The Ventilator Book |
 | Ether | `/ether/` | Anesthesia pre-op: chart review with structured ECG, echo, cath, device, PFT studies; ASA/RCRI/STOP-BANG/Apfel, anesthetic plan, landscape two-column OR card, pre-op note |
 | Constellation | `/constellation/` | Combine workup findings (labs, imaging, ECG, exam, exposures) and see the diseases classically associated with that combination; weighted to and cited from Tintinalli’s Emergency Medicine, 9th ed. |
 | Primer | `/primer/` | Daily ICU curriculum: one lesson a day with readings, orders, evidence and a self-check |
