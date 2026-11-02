@@ -74,6 +74,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .chip.n{background:var(--neg-soft);border-color:var(--neg);color:var(--neg);font-weight:700}
 .chip.p::before{content:"+ "}.chip.n::before{content:"− "}
 .legend{font-size:.8rem;color:var(--muted);margin:2px 0 0}
+.rgl{font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:12px 0 0}.rgl:first-of-type{margin-top:4px}
 .legend b.p{color:var(--pos)}.legend b.n{color:var(--neg)}
 .hint{font-size:.82rem;color:var(--muted);margin:6px 0 0}
 .pearls{margin:0 0 10px;padding:9px 11px 9px 28px;border-radius:10px;background:var(--amb-soft);color:var(--amb);font-size:.9rem;line-height:1.4}
@@ -396,6 +397,24 @@ const PANEL={
 /* ================= HPI: CONSULT REASONS ================= */
 /* sx = symptoms (reports/denies), rf = history and risk factors (notable for / no history of) */
 const REASONS=[
+ {id:'bact',n:'Bacteremia (any organism)',pf:'bacteremia',q:'whether this is true bacteremia, the source workup, and antibiotic selection and duration',
+  sx:['fevers','chills','rigors','dysuria','flank pain','cough','abdominal pain','diarrhea','back pain','joint pain or swelling','pain or redness at a line site','a skin wound or abscess'],
+  rf:['a central venous catheter','a prosthetic heart valve','a pacemaker or ICD','orthopedic hardware','injection drug use','hemodialysis','an indwelling urinary catheter','a recent procedure','neutropenia or other immunosuppression','prior bacteremia']},
+ {id:'sepsis',n:'Sepsis, unclear source',pf:'sepsis without a clear source',q:'empiric antimicrobials and the source workup for sepsis',
+  sx:['fevers','chills or rigors','confusion','cough','dyspnea','abdominal pain','dysuria','diarrhea','headache','rash','new skin or wound changes','pain or redness at a line site'],
+  rf:['a hospitalization in the last 90 days','IV antibiotics in the last 90 days','prior resistant organisms','a central venous catheter','recent surgery','immunosuppression','asplenia','nursing facility residence','an indwelling urinary catheter']},
+ {id:'fever',n:'Fever in the hospital',pf:'new fever during hospitalization',q:'evaluation of new fever in a hospitalized patient',
+  sx:['fevers','chills or rigors','cough or increased secretions','dysuria','diarrhea','pain or redness at a line site','wound pain or drainage','leg swelling','rash','abdominal pain','headache'],
+  rf:['a central venous catheter','an indwelling urinary catheter','recent surgery','mechanical ventilation','a nasogastric or nasotracheal tube','new medications','a recent transfusion','recent antibiotics','immobility','alcohol use']},
+ {id:'abx',n:'Antibiotic selection / stewardship',pf:'antimicrobial selection',q:'antibiotic selection, de-escalation, IV-to-oral conversion, and duration',
+  sx:['fevers','clinical improvement since antibiotics started','diarrhea','rash','nausea or vomiting','tolerating oral intake'],
+  rf:['antimicrobial allergies','CKD or dialysis','liver disease','QT prolongation','interacting medications (warfarin, tacrolimus, serotonergic drugs)','prior C. difficile infection','prior resistant organisms','pregnancy']},
+ {id:'allergy',n:'Beta-lactam allergy',pf:'a reported beta-lactam allergy',q:'antibiotic options and evaluation of a reported beta-lactam allergy',
+  sx:['hives with the prior reaction','swelling of the lips, tongue, or throat','wheezing or throat tightness','low blood pressure or passing out','a delayed rash','skin blistering or peeling','mouth or eye sores','fever or organ involvement with the reaction'],
+  rf:['cephalosporin use since the reaction','amoxicillin or penicillin use since the reaction','prior penicillin skin testing','a reaction more than 10 years ago','a reaction that needed treatment','mastocytosis']},
+ {id:'opat',n:'OPAT / discharge planning',pf:'planning for outpatient parenteral antimicrobial therapy',q:'the antimicrobial plan, access, and monitoring for discharge on IV antibiotics',
+  sx:['fevers','chills','diarrhea','rash','pain or redness at a line site','nausea or vomiting','tolerating oral intake'],
+  rf:['injection drug use','CKD or dialysis','unstable housing','limited caregiver support','prior PICC complications','a planned skilled nursing facility discharge','limited insurance coverage for home infusion']},
  {id:'sab',n:'S. aureus bacteremia',pf:'Staphylococcus aureus bacteremia',q:'antibiotic selection, workup, and duration for S. aureus bacteremia',
   sx:['fevers','chills','rigors','back pain','joint pain or swelling','chest pain','dyspnea','headache','new focal weakness'],
   rf:['injection drug use','a prosthetic heart valve','a pacemaker or ICD','prior endocarditis','hemodialysis','a central venous catheter','recent surgery','orthopedic hardware','a recent skin or soft tissue infection']},
@@ -414,6 +433,9 @@ const REASONS=[
  {id:'pu',n:'Decubitus ulcer / pressure injury',pf:'an infected pressure injury and possible underlying osteomyelitis',q:'whether the pressure injury is infected, whether there is underlying osteomyelitis, and antibiotic choice and duration',
   sx:['increased drainage from the wound','purulent drainage','malodor','spreading redness around the wound','worsening wound pain','an enlarging wound','fevers','chills','increased spasticity or autonomic dysreflexia','confusion'],
   rf:['spinal cord injury','immobility or bedbound status','fecal incontinence','urinary incontinence or a chronic catheter','malnutrition','prior pressure injury flap surgery','prior osteomyelitis','diabetes','nursing facility residence','prior MRSA or resistant gram-negatives']},
+ {id:'sa',n:'Septic arthritis (native joint)',pf:'possible septic arthritis',q:'evaluation and antibiotic choice for possible septic arthritis',
+  sx:['joint pain','joint swelling','warmth or redness over the joint','decreased range of motion','inability to bear weight','fevers','chills','rash or skin lesions','urethral or vaginal discharge','pain along tendons'],
+  rf:['rheumatoid arthritis','gout or pseudogout','a recent joint injection or arthroscopy','injection drug use','diabetes','immunosuppression','a new sexual partner','a recent skin infection','a recent bacteremia']},
  {id:'pji',n:'Prosthetic joint infection',pf:'possible prosthetic joint infection',q:'evaluation and management of possible prosthetic joint infection',
   sx:['joint pain','joint swelling','drainage or a sinus tract','fevers','decreased range of motion','wound breakdown'],
   rf:['a revision arthroplasty','prior joint infection','a recent bacteremia','postoperative wound complications','a recent dental or invasive procedure']},
@@ -438,6 +460,9 @@ const REASONS=[
  {id:'cns',n:'Meningitis / encephalitis',pf:'possible meningitis or encephalitis',q:'empiric therapy and workup for possible CNS infection',
   sx:['headache','neck stiffness','photophobia','confusion','seizure','rash','fevers','focal weakness'],
   rf:['recent neurosurgery or a shunt','head trauma or a CSF leak','immunosuppression','splenectomy','a recent ear or sinus infection','sick contacts']},
+ {id:'tb',n:'Tuberculosis',pf:'possible tuberculosis',q:'evaluation and management of possible tuberculosis',
+  sx:['cough for more than 2 weeks','hemoptysis','fevers','night sweats','weight loss','chest pain','swollen lymph nodes','back pain'],
+  rf:['a known TB exposure','a prior positive TST or IGRA','prior TB treatment','birth or long residence in a high-incidence country','incarceration','homelessness or shelter stays','HIV','TNF inhibitors or chronic steroids','diabetes','ESRD']},
  {id:'fn',n:'Febrile neutropenia',pf:'febrile neutropenia',q:'antimicrobial management of febrile neutropenia',
   sx:['fevers','chills','mouth sores','cough','diarrhea','abdominal pain','line site pain','perianal pain','rash'],
   rf:['expected neutropenia longer than 7 days','a central line or port','prior bacteremia or fungal infection','levofloxacin prophylaxis','antifungal prophylaxis','antiviral prophylaxis']},
@@ -463,6 +488,65 @@ const REASONS=[
    bn  = rounding checklist (an organism bundle, or the reason's own r_ bundle) */
 const IDU_TG={k:'idu',s:'Substance use',l:'Injection drug use: substances, last use, sharing or reusing needles, licking needles, injection sites',ph:'injects fentanyl daily, last use 10/7, reuses needles, R antecubital'};
 const TARGET={
+ bact:{site:'Blood',pcx:'Prior blood cultures and organisms, with susceptibilities',bn:'r_bact',
+  tg:[{k:'org',s:'Organism and culture details',l:'Gram stain or organism, sets positive out of sets drawn, and time to positivity',ph:'GPC in clusters in 1 of 2 sets at 30 h; rapid ID S. epidermidis, mecA +'},
+   {k:'src',s:'Suspected source',l:'Suspected source',ph:'possible urinary source; R chest port'},
+   {k:'hw',s:'Valves, devices, and hardware',l:'Valves, devices, and hardware (type, location, year)',ph:'bioprosthetic AVR 2019; port placed 3/2026'},
+   {k:'rep',s:'Repeat cultures',l:'Repeat blood cultures so far',ph:'repeat cultures 10/9 no growth to date'}],
+  ck:['Number of sets positive out of sets drawn and time to positivity','Rapid blood culture ID panel and resistance genes (mecA, vanA, CTX-M, KPC)','Repeat blood cultures since the first positive','Prior isolates of the same organism','Lines, devices, and hardware with insertion dates','Urinalysis, chest imaging, and other source evaluation','Antibiotics given before cultures were drawn'],
+  pr:['Usually contaminants when in 1 of 2 or more sets: coagulase-negative staphylococci, Cutibacterium, Corynebacterium (diphtheroids), Bacillus (non-anthracis), Micrococcus.','Never contaminants: S. aureus, S. lugdunensis, S. pneumoniae, beta-hemolytic streptococci, Enterobacterales, Pseudomonas, and Candida.','Coagulase-negative staphylococci in multiple sets with a line, prosthetic valve, or hardware: treat as real.','S. gallolyticus or Clostridium septicum: colonoscopy. Endocarditis-associated organisms (S. aureus, viridans group streptococci, enterococci, HACEK): echocardiogram.']},
+ sepsis:{site:'Blood',pcx:'Prior cultures with resistant organisms (MRSA, ESBL, CRE, Pseudomonas)',bn:'r_sepsis',
+  tg:[{k:'course',s:'Presentation',l:'Onset, hemodynamics, and vasopressors',ph:'hypotensive since 10/8, norepinephrine 0.1 mcg/kg/min; lactate 4.2 → 2.1'},
+   {k:'abx',s:'Antibiotics so far',l:'Antibiotics so far and timing relative to cultures',ph:'vancomycin and piperacillin-tazobactam 10/8 at 22:00, after blood cultures'},
+   {k:'sys',s:'Source review by system',l:'Source review by system (lungs, urine, abdomen, skin and wounds, lines, CNS)',ph:'CXR clear, UA bland, abdomen benign, port site clean'},
+   {k:'res',s:'Resistance risk',l:'Prior resistant organisms and antibiotics in the last 90 days',ph:'ESBL E. coli in urine 4/2026; cefepime 7/2026'}],
+  ck:['Lactate trend and vasopressor requirement','Cultures obtained before antibiotics','Chest imaging, urinalysis, and any CT','Prior resistant organisms and antibiotics in the last 90 days','Lines, devices, and recent procedures','MRSA nares PCR and procalcitonin','Medication list and recent transfusions (noninfectious mimics)'],
+  pr:['Shock: broad coverage within 1 hour, then de-escalate at 48–72 hours as cultures return.','Look for what needs source control: abscess, obstruction, necrotizing infection, infected lines or hardware.','Asplenia: pneumococcus, meningococcus, and Capnocytophaga after dog bites.','Mimics: PE, adrenal insufficiency, pancreatitis, drug reaction, transfusion reaction, and withdrawal.']},
+ fever:{site:'Blood',pcx:'Cultures from this admission',bn:'r_fever',
+  tg:[{k:'curve',s:'Fever curve',l:'Onset, maximum, and pattern (hospital day of onset)',ph:'Tmax 38.9 °C on hospital day 5, twice daily since'},
+   {k:'proc',s:'Recent procedures and transfusions',l:'Recent surgeries, procedures, and transfusions',ph:'R hemicolectomy 10/3; 2 units PRBC 10/6'},
+   {k:'meds',s:'New medications',l:'New medications in the last 1–3 weeks',ph:'started phenytoin 10/2 and cefepime 10/4'},
+   {k:'lines',s:'Lines and tubes',l:'Lines, catheters, and tubes (with dates)',ph:'R IJ CVC 10/3, Foley since 10/3, NG tube'}],
+  ck:['Fever curve off antipyretics','Lines, catheters, and tubes with insertion dates','Operative notes and wound exam','Medication list for drug fever (beta-lactams, anticonvulsants, sulfonamides, heparin)','VTE prophylaxis and leg exam','Stool frequency (C. difficile)','Transfusion records'],
+  pr:['The five Ws after surgery: wind (pneumonia; atelectasis itself does not cause fever), water (UTI), walking (VTE), wound, and wonder drugs.','Noninfectious causes are common: drug fever, VTE, transfusion reaction, gout, pancreatitis, hematoma, alcohol withdrawal, and acalculous cholecystitis.','Nasogastric or nasotracheal tubes cause sinusitis. Diarrhea on antibiotics: C. difficile.','A stable, non-neutropenic patient does not need empiric antibiotics while the workup proceeds.']},
+ abx:{site:'Blood',pcx:'Cultures and susceptibilities driving therapy',bn:'r_abx',
+  tg:[{k:'ind',s:'Indication',l:'Working diagnosis and indication',ph:'CAP, now improving'},
+   {k:'reg',s:'Current regimen',l:'Current antimicrobials and day of therapy',ph:'ceftriaxone day 4, azithromycin day 3'},
+   {k:'micro',s:'Culture data',l:'Relevant culture data and susceptibilities',ph:'blood cultures negative; MRSA nares negative'},
+   {k:'org',s:'Organ function',l:'Renal and hepatic function, weight, and dialysis',ph:'CrCl 35 mL/min; 92 kg'},
+   {k:'po',s:'Oral route',l:'Can the patient take oral medications reliably?',ph:'eating, no vomiting, normal GI absorption'}],
+  ck:['Indication and day of therapy for each antimicrobial','Cultures and susceptibilities','MRSA nares PCR (de-escalate vancomycin if negative)','Creatinine clearance, weight, and dialysis schedule','QTc and interacting medications','Allergy history and what has been tolerated','Local antibiogram'],
+  pr:['Short courses are evidence-based: CAP 5 days, cellulitis 5–6 days, cUTI and gram-negative bacteremia 7 days, intra-abdominal infection 4 days after source control.','Highly bioavailable oral agents: fluoroquinolones, TMP-SMX, linezolid, metronidazole, doxycycline, fluconazole.','Oral therapy is noninferior for many bone and joint infections (OVIVA) and for stable left-sided endocarditis (POET).','No infection found: stop antibiotics rather than finish an arbitrary course.']},
+ allergy:{site:'Blood',pcx:'Cultures driving antibiotic choice',bn:'r_allergy',
+  tg:[{k:'drug',s:'Culprit drug',l:'Culprit drug and indication',ph:'penicillin as a child for strep throat'},
+   {k:'rxn',s:'Reaction',l:'Reaction details (type, timing after the dose, treatment needed)',ph:'hives within 1 hour, resolved with diphenhydramine; no ED visit'},
+   {k:'when',s:'Timing',l:'How long ago',ph:'about 30 years ago'},
+   {k:'tol',s:'Since tolerated',l:'Beta-lactams tolerated since',ph:'cephalexin 2022 without reaction'}],
+  ck:['Allergy entry details and source','Pharmacy administration records for beta-lactams given since','Prior allergy testing or challenges','Current indication and the preferred agent','PEN-FAST score'],
+  pr:['About 90% of patients labeled penicillin-allergic tolerate penicillin.','PEN-FAST < 3 is low risk: a direct oral amoxicillin challenge is safe (PALACE).','Cross-reactivity follows side chains: cefazolin shares none with other beta-lactams and is usually safe; carbapenem cross-reactivity is < 1%.','SJS/TEN, DRESS, or organ injury: avoid the culprit and do not challenge.']},
+ opat:{site:'Blood',pcx:'Cultures and susceptibilities supporting the final regimen',bn:'r_opat',
+  tg:[{k:'dx',s:'Diagnosis and regimen',l:'Diagnosis, final agent, and dose',ph:'MSSA vertebral osteomyelitis; cefazolin 2 g IV q8h'},
+   {k:'dates',s:'Dates',l:'Start date, duration anchor, and planned stop date',ph:'6 weeks from first negative culture 10/5, stop 11/16'},
+   {k:'access',s:'Access',l:'Planned access',ph:'R arm PICC once cultures negative 48 h'},
+   {k:'dispo',s:'Disposition',l:'Disposition (home infusion, SNF, infusion center, dialysis unit)',ph:'home with home infusion; wife to help'},
+   {k:'fu',s:'Follow-up',l:'Follow-up and who receives weekly labs',ph:'ID clinic in 2 weeks; labs faxed to ID clinic'}],
+  ck:['Final cultures and susceptibilities','Creatinine clearance and dialysis schedule','Date of first negative blood culture','Insurance coverage for home infusion','Social work and case management notes','Oral options supported by evidence'],
+  pr:['Prefer oral when evidence supports it (OVIVA, POET). Once-daily IV agents (ceftriaxone, ertapenem, daptomycin) simplify home infusion.','Hemodialysis: cefazolin, vancomycin, or ceftazidime dosed after dialysis avoids a PICC. CKD 3b or worse: avoid PICCs to preserve veins.','Injection drug use is not an automatic barrier to OPAT; options include SNF, long-acting lipoglycopeptides (dalbavancin), or oral therapy with addiction treatment.']},
+ sa:{site:'Joint fluid',pcx:'Prior joint aspirations and cultures',bn:'r_sa',
+  tg:[{k:'joint',s:'Joint and onset',l:'Joint involved, onset, and progression',ph:'R knee, pain and swelling since 10/7, unable to bear weight'},
+   {k:'asp',s:'Aspiration',l:'Aspiration results (WBC, % PMN, crystals, Gram stain)',ph:'WBC 78,000, 92% PMN, no crystals, Gram stain negative'},
+   {k:'jhx',s:'Joint history',l:'Underlying joint disease, injections, or prior surgery',ph:'gout; R knee steroid injection 9/20'},
+   {k:'sex',s:'Sexual history',l:'Sexual history (new partners, STI history)',ph:'new partner 9/2026; no prior STIs'},
+   {k:'preabx',s:'Antibiotics before aspiration',l:'Antibiotics before aspiration',ph:'none'}],
+  ck:['Synovial fluid cell count, differential, crystals, Gram stain, and culture','Blood cultures','Gonorrhea and chlamydia NAAT (urine, throat, rectum) if sexually active','Joint imaging','Orthopedics note (washout planned?)','Prior joint aspirations and cultures'],
+  pr:['Crystals do not rule out infection.','Synovial WBC > 50,000 strongly suggests infection, but lower counts happen, especially with immunosuppression or prior antibiotics.','Young and sexually active with tenosynovitis, dermatitis, or migratory arthralgias: disseminated gonococcal infection.','Aspirate before antibiotics when the patient is stable.']},
+ tb:{site:'Sputum',pcx:'Prior AFB smears, NAAT, and cultures with susceptibilities',bn:'tb',
+  tg:[{k:'exp',s:'TB exposure',l:'Known exposures (household contacts, congregate settings)',ph:'brother treated for TB 2025'},
+   {k:'test',s:'Prior testing and treatment',l:'Prior TST or IGRA and any prior treatment (latent or active)',ph:'IGRA positive 2023, no treatment'},
+   {k:'res',s:'Residence and travel',l:'Birth country, residence, and travel to high-incidence areas',ph:'born in the Philippines, moved to the US 2015'},
+   {k:'img',s:'Imaging',l:'Chest imaging findings',ph:'RUL cavitary lesion on CT 10/8'}],
+  ck:['Chest imaging and comparison films','AFB smears, NAAT, and cultures (three sputum samples)','HIV test','Prior IGRA or TST results','Baseline LFTs, creatinine, and visual acuity','Diabetes and other immunosuppression'],
+  pr:['Airborne isolation until three negative smears or a negative NAAT plus an alternative diagnosis.','A negative IGRA does not rule out active TB.','Drug interactions: rifampin lowers levels of many drugs (warfarin, DOACs, antiretrovirals, transplant drugs, hormonal contraception).','Report to public health; directly observed therapy is standard.']},
  sab:{site:'Blood',pcx:'Prior blood and wound cultures; MRSA or MSSA, and when',bn:'sab',
   tg:[{k:'src',s:'Suspected source',l:'Suspected source',ph:'R IJ CVC placed 10/2; R forearm abscess'},IDU_TG,
    {k:'hw',s:'Valves, devices, and hardware',l:'Valves, devices, and hardware (type, location, year)',ph:'bioprosthetic AVR 2019, L TKA 2015'},
@@ -604,6 +688,13 @@ REASONS.forEach(r=>Object.assign(r,TARGET[r.id]||{}));
 
 /* Rounding checklists by consult reason (reasons without an organism bundle). Shared state with organism bundles via pt.bnd. */
 Object.assign(BUNDLES,{
+ r_bact:{n:'Bacteremia',i:['True bacteremia vs contaminant decided (organism, sets positive, time to positivity)','Repeat blood cultures until negative (S. aureus, S. lugdunensis, Candida, enterococcus, persistent fever, or retained hardware)','Source identified and controlled','Lines and devices evaluated for removal','Echocardiogram if an endocarditis-associated organism','Narrowed to susceptibilities','Oral step-down considered once afebrile, stable, and cleared','Duration set from first negative blood culture']},
+ r_sepsis:{n:'Sepsis, unclear source',i:['Blood cultures × 2 before antibiotics','Antibiotics within 1 hour if in shock','Source reviewed by system (lungs, urine, abdomen, skin, lines, CNS)','Imaging to find a source','Source control arranged','MRSA nares PCR; vancomycin stopped if negative','Noninfectious mimics considered','De-escalated or stopped at 48–72 hours','Duration set']},
+ r_fever:{n:'Fever in the hospital',i:['Fever confirmed (≥ 38.3 °C) and curve reviewed','Lines, catheters, and tubes reviewed and removed if not needed','Wound examined','Blood cultures × 2; urine and respiratory cultures only if indicated','C. difficile tested if ≥ 3 unformed stools in 24 hours','VTE considered','Medications reviewed for drug fever','Empiric antibiotics only if unstable or neutropenic']},
+ r_abx:{n:'Antibiotic stewardship',i:['Indication documented for each antimicrobial','Cultures and susceptibilities reviewed','Narrowed, or stopped if no infection','IV-to-oral conversion considered','Dosed for renal and hepatic function','Interactions and QTc checked','Stop date documented']},
+ r_allergy:{n:'Beta-lactam allergy',i:['Reaction history documented (drug, reaction, timing, treatment, since tolerated)','PEN-FAST scored','Low risk: direct oral amoxicillin challenge offered','Moderate risk: skin testing or graded challenge','Severe cutaneous or organ reaction: culprit avoided; allergy consulted','Best agent chosen using side-chain cross-reactivity','Allergy label updated in the chart']},
+ r_opat:{n:'OPAT',i:['Final regimen, dose, and renal adjustment confirmed','Stop date documented','Access placed after blood cultures negative ≥ 48–72 hours','Weekly labs ordered with results sent to ID','Home infusion, SNF, or infusion center accepted','Insurance coverage verified','ID clinic appointment scheduled','Patient and caregiver education completed']},
+ r_sa:{n:'Septic arthritis',i:['Arthrocentesis: cell count, crystals, Gram stain, and culture (before antibiotics if stable)','Blood cultures × 2','Gonorrhea and chlamydia NAAT if sexually active','Orthopedics consulted for washout','Empiric vancomycin ± ceftriaxone','Repeat aspiration or washout if not improving','Duration set (often 3–4 weeks; longer with osteomyelitis)']},
  r_ie:{n:'Endocarditis',i:['Three sets of blood cultures (before antibiotics if not started)','TTE; TEE if nondiagnostic, prosthetic valve, or high suspicion','modified Duke (Duke-ISCVID) criteria documented','Cardiac surgery consulted (heart failure, abscess, persistent bacteremia, large vegetation, or emboli)','Embolic workup as indicated (brain MRI, ophthalmology)','Dental evaluation','HIV, hepatitis B, and hepatitis C screening','Addiction medicine consulted if IDU','Duration set from first negative culture (often 4–6 weeks)']},
  r_clabsi:{n:'Line infection',i:['Line necessity reviewed','Paired line and peripheral cultures drawn','Line removed if S. aureus, Pseudomonas, Candida, mycobacteria, tunnel/pocket infection, or sepsis','Line tip cultured if removed','Lock therapy considered if salvaging a tunneled line','New line placed after cultures clear when feasible','Duration set from line removal or first negative culture']},
  r_dfo:{n:'Osteomyelitis / diabetic foot',i:['Probe to bone documented','Foot X-ray; MRI if nondiagnostic','Bone biopsy or deep culture obtained','Vascular assessment (ABI/toe pressures; vascular surgery if ischemic)','Podiatry or surgery for debridement or resection','Offloading and glycemic control','Duration set from residual bone after resection']},
@@ -632,6 +723,7 @@ DRUGS.forEach(d=>{d.cm=Object.fromEntries(d.cov.split(' ').filter(Boolean).map(x
 const DR=Object.fromEntries(DRUGS.map(d=>[d.id,d]));
 const BG=Object.fromEntries(BUGS.map(b=>[b.id,b]));
 const ST=Object.fromEntries(STAINS.map(s=>[s.id,s]));
+const REASON_GROUPS=[['General','bact sepsis fever fuo abx allergy opat'],['Bloodstream and endovascular','sab gnb ie clabsi fung'],['Bone, joint, and skin','sa pji vo dfo pu ssti'],['Organ systems','pna uti iai cdi cns tb'],['Host','fn hiv tx']];
 const RS=Object.fromEntries(REASONS.map(r=>[r.id,r]));
 const RANK={y:3,p:2,v:1,n:0};
 const KEYMISS=['MRSA','EFAE','PSA','ESBL','ANA','ATYP'];
@@ -987,6 +1079,39 @@ const LEG=`<p class="legend">Tap once for <b class="p">present</b>, twice for <b
 const REC_GROUPS=[['dx','Diagnostics'],['tx','Antimicrobials'],['sc','Source control and consults'],['mo','Monitoring and other']];
 const REC_COMMON={mo:['Follow up pending cultures and susceptibilities','OPAT: PICC once blood cultures negative ≥ 48–72 hours; weekly labs faxed to ID clinic','ID clinic follow-up in *** weeks']};
 const RECS={
+ bact:{imp:['Bacteremia with *** from a likely *** source','*** in *** of *** sets, most consistent with a contaminant','True bacteremia given ***','Source not yet identified','Persistent bacteremia (positive ≥ 72 hours on active therapy)'],
+  dx:['Repeat blood cultures × 2 now and every 24–48 hours until negative','Follow identification and susceptibilities','TTE (endocarditis-associated organism)','Urinalysis and urine culture','Imaging of *** to look for a source','Colonoscopy for S. gallolyticus or C. septicum'],
+  tx:['Continue empiric *** pending identification','Narrow to *** based on susceptibilities','No antibiotics for a likely contaminant; repeat cultures if clinically indicated','Oral step-down to *** once afebrile, stable, and cleared','Duration *** days from first negative blood culture'],
+  sc:['Remove the central line','Drainage of ***','Orthopedics to evaluate hardware'],mo:[]},
+ sepsis:{imp:['Sepsis, source not yet identified','Septic shock requiring vasopressors','Most likely source ***','Noninfectious mimic possible (***)','Risk factors for resistant organisms (***)'],
+  dx:['Blood cultures × 2 before further antibiotics','Urinalysis and urine culture','Chest imaging; sputum culture if productive','CT *** to look for a source','MRSA nares PCR','C. difficile testing if diarrhea','Respiratory viral testing','Lactate trend'],
+  tx:['Empiric vancomycin plus cefepime (or piperacillin-tazobactam)','Meropenem given prior ESBL or recent broad-spectrum exposure','Add *** for ***','Stop vancomycin if MRSA nares PCR is negative and there are no other MRSA risks','De-escalate at 48–72 hours based on cultures; stop if an alternative diagnosis is found'],
+  sc:['Drainage or surgery for ***','Remove or exchange lines if no other source is found'],mo:['Daily review of the need for broad-spectrum therapy']},
+ fever:{imp:['New fever on hospital day ***, likely ***','Line-associated infection possible','Noninfectious cause favored (***)','Drug fever possible (***)','No clear infectious source; stable for observation off antibiotics'],
+  dx:['Blood cultures × 2 (one peripheral, one from the line)','Urinalysis and urine culture if urinary symptoms or catheter','Chest imaging','C. difficile testing if ≥ 3 unformed stools in 24 hours','Lower extremity duplex for VTE','CT *** to look for a postoperative collection','Wound culture from deep tissue if the wound is open'],
+  tx:['Hold empiric antibiotics while stable and not neutropenic','Empiric *** given hemodynamic instability','Stop *** (possible drug fever)'],
+  sc:['Remove unneeded lines and catheters','Surgery to evaluate the wound'],mo:['Document the fever curve off antipyretics']},
+ abx:{imp:['*** on day *** of ***, clinically improving','Current regimen broader than needed given ***','Infection not supported; antibiotics can be stopped','Candidate for IV-to-oral conversion'],
+  dx:['Follow pending cultures and susceptibilities','MRSA nares PCR to guide stopping vancomycin','Baseline QTc on ***'],
+  tx:['Narrow to ***','Stop ***','Switch to oral *** (highly bioavailable, gut functioning)','Renal dose adjustment: ***','Total duration *** days (through ***)','Stop all antibiotics; no infection identified'],
+  sc:[],mo:['Pharmacy to follow levels and dosing']},
+ allergy:{imp:['Reported penicillin allergy, low risk (PEN-FAST ***)','Reported allergy with a history consistent with IgE-mediated reaction','History of a severe cutaneous or organ reaction (***): avoid the culprit','Allergy label unlikely to be accurate given tolerance of ***'],
+  dx:['Direct oral amoxicillin challenge (500 mg, observe 1 hour)','Penicillin skin testing','Allergy and immunology consultation'],
+  tx:['Cefazolin is acceptable (no shared side chains)','Use *** (dissimilar side chain)','Graded challenge to ***','Carbapenem acceptable (cross-reactivity < 1%)','Avoid *** and structurally related drugs'],
+  sc:[],mo:['Update the allergy entry in the chart','Educate the patient about the updated allergy status']},
+ opat:{imp:['*** requiring IV *** through ***','Candidate for oral therapy instead of OPAT (***)','OPAT barriers: ***'],
+  dx:['Weekly CBC with differential and BMP','Weekly ESR and CRP','Weekly vancomycin trough or AUC','Weekly CK on daptomycin'],
+  tx:['*** IV *** through *** (*** weeks from ***)','Oral step-down to *** on ***','Dalbavancin *** on day 1 and day 8'],
+  sc:['PICC once blood cultures negative ≥ 48–72 hours','Tunneled line or dialysis dosing to preserve veins (CKD)','Case management for home infusion or SNF placement','Addiction medicine consult'],
+  mo:['Remove the PICC after the last dose','Weekly labs faxed to ID clinic','ID clinic follow-up in *** weeks']},
+ sa:{imp:['Native joint septic arthritis of the *** (organism ***)','Possible septic arthritis; crystal arthropathy also possible','Possible disseminated gonococcal infection','Septic arthritis with adjacent osteomyelitis'],
+  dx:['Arthrocentesis: cell count, crystals, Gram stain, and culture','Blood cultures × 2','Gonorrhea and chlamydia NAAT (urine, throat, rectum)','MRI of the *** for adjacent osteomyelitis','ESR and CRP baseline'],
+  tx:['Empiric vancomycin (add ceftriaxone if gram-negative risk or gonococcus possible)','Ceftriaxone 1 g IV daily for disseminated gonococcal infection','Narrow to *** per culture','Duration 3–4 weeks (longer with adjacent osteomyelitis)'],
+  sc:['Orthopedics for washout (arthroscopic or open)','Repeat aspiration if not improving'],mo:[]},
+ tb:{imp:['Possible pulmonary TB','Confirmed TB (NAAT or culture positive)','Extrapulmonary TB (***)','Latent TB infection; active TB excluded','TB felt unlikely; alternative diagnosis ***'],
+  dx:['Three sputum samples for AFB smear, NAAT, and culture (at least 8 hours apart, one early morning)','Rapid rifampin resistance testing','HIV test','IGRA','Hepatitis B and C serologies','Baseline LFTs, creatinine, and visual acuity','Biopsy of *** for AFB and pathology'],
+  tx:['RIPE (rifampin, isoniazid, pyrazinamide, ethambutol) with pyridoxine','Hold treatment while awaiting diagnostics if stable','Check rifampin interactions with ***','Latent TB: rifampin daily for 4 months (or alternative ***)'],
+  sc:['Airborne isolation','Public health notified','Contact investigation'],mo:['Monthly LFTs if risk factors','Directly observed therapy']},
  sab:{imp:['Uncomplicated S. aureus bacteremia if cultures clear, echo is negative, and there are no metastatic foci','Complicated S. aureus bacteremia (***)','Source likely the central line','Source likely skin and soft tissue','Source likely injection drug use','No clear source, which raises concern for endocarditis','Concern for metastatic infection (***)'],
   dx:['Repeat blood cultures every 24–48 hours until negative','TTE','TEE (high risk: IDU, prosthetic valve or device, persistent bacteremia, or no clear source)','MRI spine with and without contrast for back pain','Imaging of *** for a possible metastatic focus','HIV, hepatitis B, and hepatitis C screening'],
   tx:['MSSA: switch to cefazolin 2 g IV q8h (or nafcillin/oxacillin) and stop vancomycin','MRSA: vancomycin dosed to AUC 400–600, or daptomycin 8–10 mg/kg daily','Duration at least 14 days from first negative blood culture if uncomplicated','Duration 4–6 weeks from first negative blood culture if complicated','Oral step-down may be considered in selected uncomplicated cases after initial IV therapy'],
@@ -1289,7 +1414,7 @@ function vHpi(pt){
     <div class="row">${fld('Consulting team','team',pt.team,'placeholder="hospital medicine"')}${fld('Consult date','created',pt.created,'type="date"')}</div>
     ${fld('PMHx, separated by commas','pmh',pt.pmh,'placeholder="DM2, CKD 3, HFrEF"')}
   </div>
-  <div class="card"><h3>Reason for consult</h3><div class="chips">${REASONS.map(x=>`<button type="button" class="chip${pt.reason===x.id?' on':''}" data-a="reason" data-v="${x.id}">${esc(x.n)}</button>`).join('')}</div>
+  <div class="card"><h3>Reason for consult</h3>${REASON_GROUPS.map(([g,ids])=>`<div class="rgl">${esc(g)}</div><div class="chips">${ids.split(' ').filter(id=>RS[id]).map(id=>{const x=RS[id];return`<button type="button" class="chip${pt.reason===x.id?' on':''}" data-a="reason" data-v="${x.id}">${esc(x.n)}</button>`}).join('')}</div>`).join('')}
     ${fld('Consult question','q',pt.q,`placeholder="${esc(r?r.q:'What does the team want from ID?')}"`)}
     ${area('Story so far (hospital course, how this came up)','story',pt.story,3,'Admitted 10/8 with fevers and back pain; blood cultures 2/2 grew GPC in clusters...')}
   </div>`;
