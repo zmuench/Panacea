@@ -350,7 +350,7 @@ function recs(){
     if(d.pf<150)add('now','P/F under 150: prone positioning',`P/F ${r0(d.pf)}. Prone for 16 h, supine 8 h; continue until P/F over 150 near the end of the supine period. Consider neuromuscular blockade case by case, most benefit at P/F 120 or less.`,'Owens ch. 16, 26');
     if(d.pf<150&&d.f>=0.9)add('next','VV-ECMO criteria','P/F under 150 on FiO2 over 90% despite optimal care for 6 hours or more (or Murray score 3 or more) with a reversible cause. Call the ECMO center early.','Owens ch. 20');
     if(d.pf<100)add('con','Rescue options','Inhaled pulmonary vasodilator (iNO 20 ppm; wean 5–10 ppm every 15–30 min to 5, then 1 ppm every 30 min), recruitment, APRV, or esophageal-pressure-guided PEEP.','Owens ch. 12, 17, 18');
-    if(sev)add('ok',`ARDS physiology: ${sev}`,`P/F ${r0(d.pf)} (mild 200–300, moderate 100–200, severe under 100, on PEEP 5 or more with bilateral infiltrates not from heart failure).`,'Owens ch. 4');
+    if(sev)add('ok',`ARDS physiology: ${sev}`,`P/F ${r0(d.pf)} (mild 200–300, moderate 100–200, severe under 100, on PEEP 5 or more with bilateral infiltrates not from heart failure).`,'Berlin definition (general practice); not from Owens');
   }
 
   /* Compliance */
