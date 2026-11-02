@@ -88,6 +88,9 @@ h2.sec{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(
 .chip[aria-pressed="true"]{background:var(--ab-soft);border-color:var(--ab);color:var(--ab);font-weight:700}
 .chip.dv[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 input.loc{margin-top:8px;padding:7px 10px;font-size:.92rem;background:var(--paper)}
+.tri{margin:0 0 6px;font-size:.78rem;color:var(--muted)}
+.chip[data-s="neg"]{background:var(--nl-soft);border-color:var(--nl);color:var(--nl);text-decoration:none}
+.chip[data-s="neg"] .no{font-weight:800;letter-spacing:.02em}
 .abp .row2{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .abp input[type=text]{flex:1;min-width:160px;padding:8px 10px;background:var(--paper)}
 /* widgets */
@@ -581,7 +584,7 @@ const KEY='panacea.px.v1';
 let S={d:{}};try{localStorage.removeItem(KEY)}catch(e){}
 if(location.hash)history.replaceState(null,'',location.pathname+location.search);
 function save(){}
-function D(k){return S.d[k]||(S.d[k]={m:{},ch:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{},derm:[]},extra:[],dev:[],sex:''});if(!S.d[k].dev)S.d[k].dev=[];return S.d[k]}
+function D(k){if(S.d[k]&&!S.d[k].ng)S.d[k].ng={};return S.d[k]||(S.d[k]={m:{},ch:{},ng:{},sd:{},tx:{},w:{gcs:{},str:{},refl:{},nih:{},derm:[]},extra:[],dev:[],sex:''});if(!S.d[k].dev)S.d[k].dev=[];return S.d[k]}
 function started(k){const d=S.d[k];return !!(d&&(((d.w&&d.w.derm)||[]).some(L=>Object.keys(L).length)||Object.keys(d.m).length||Object.keys(d.w.nih||{}).length||Object.keys(d.w.str||{}).length))}
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -595,10 +598,14 @@ function items(k){const t=TPL[k],d=D(k);const list=[...t.items,...d.extra.map(id
 function hasSexItems(k){return items(k).some(x=>MALE.has(x.id)||FEMALE.has(x.id))||D(k).sex}
 
 /* ---------- sentence building ---------- */
-function abText(k,id){const d=D(k),ch=(d.ch[id]||[]).filter(c=>I[id].ab.includes(c)),tx=(d.tx[id]||'').trim(),sd=d.sd[id];
+/* Pertinent negatives: findings tapped twice are written as "no A, B, or C" after the positives. */
+const orList=a=>a.length<3?a.join(' or '):a.slice(0,-1).join(', ')+', or '+a[a.length-1];
+function abText(k,id){const d=D(k),ch=(d.ch[id]||[]).filter(c=>I[id].ab.includes(c)),ng=I[id].ab.filter(c=>((d.ng||{})[id]||[]).includes(c)),tx=(d.tx[id]||'').trim(),sd=d.sd[id];
   const pre=I[id].pre||'';
   let s=ch.map((c,i)=>i||pre?low(c):c).join(', ');if(pre&&s)s=pre+s;
-  if(sd)s+=(s?' ':'')+`(${SIDE[sd]})`;
+  if(sd&&s)s+=` (${SIDE[sd]})`;
+  if(ng.length)s+=(s?'; ':'')+'no '+orList(ng.map(low));
+  if(sd&&!ch.length)s+=(s?' ':'')+`(${SIDE[sd]})`;
   if(tx)s+=(s?'; ':'')+tx;
   return s?cap(s).replace(/[.;,]?$/,'.'):''}
 function widgetText(k,id){const w=D(k).w;
@@ -662,11 +669,11 @@ function itemHTML(k,x){const it=I[x.id],d=D(k),m=d.m[x.id]||'';
   if(WIDGET[x.id]){const pv=widgetText(k,x.id);return `<div class="it" data-id="${x.id}" data-m="${pv?'n':''}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv||'Not documented')}</div></div>
     <div class="na"><button class="linkbtn" data-a="wnl" data-id="${x.id}">${{neu_gcs:'Set 15',nc_str:'All 5/5',nc_refl:'All 2+',nihss:'All 0',derm:'Clear'}[x.id]}</button></div></div><div class="wg">${widgetHTML(k,x.id)}</div></div>`}
   const pv=m==='n'?it.nl:m==='a'?(abText(k,x.id)||'Abnormal: choose findings or describe'):it.nl;
-  const ch=d.ch[x.id]||[];
+  const ch=d.ch[x.id]||[],ng=(d.ng||{})[x.id]||[];
   return `<div class="it" data-id="${x.id}" data-m="${m}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv)}</div></div>
    <div class="na"><button class="n" data-a="mark" data-v="n" aria-pressed="${m==='n'}">Nl</button><button class="a" data-a="mark" data-v="a" aria-pressed="${m==='a'}">Abn</button></div></div>
    ${it.loc?`<input type="text" class="loc" data-loc="${x.id}" value="${esc((d.loc||{})[x.id]||'')}" placeholder="${esc(it.loc)}">`:''}
-   <div class="abp">${it.ab.length?`<div class="chips">${it.ab.map(c=>`<button class="chip" data-a="chip" data-c="${esc(c)}" aria-pressed="${ch.includes(c)}">${esc(c)}</button>`).join('')}</div>`:''}
+   <div class="abp">${it.ab.length?`<p class="tri">Tap once if present, twice for a pertinent negative.</p><div class="chips">${it.ab.map(c=>{const st=ch.includes(c)?'pos':ng.includes(c)?'neg':'';return `<button class="chip" data-a="chip" data-c="${esc(c)}" data-s="${st}" aria-pressed="${st==='pos'?'true':st==='neg'?'mixed':'false'}" aria-label="${esc((st==='neg'?'No ':'')+c+(st==='pos'?', present':st==='neg'?', pertinent negative':''))}">${st==='neg'?'<b class="no">No</b> ':''}${esc(c)}</button>`}).join('')}</div>`:''}
    <div class="row2">${it.side?`<div class="seg">${Object.entries({R:'Right',L:'Left',B:'Both'}).map(([v,l])=>`<button data-a="side" data-v="${v}" aria-pressed="${d.sd[x.id]===v}">${l}</button>`).join('')}</div>`:''}
    <input type="text" data-tx="${x.id}" value="${esc(d.tx[x.id]||'')}" placeholder="${esc(it.ph||'Details (size, location, value)')}"></div></div></div>`}
 
@@ -725,7 +732,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   if(!k)return;const d=D(k),el=b.closest('.it'),id=el&&el.dataset.id;
   if(a==='mark'){const v=b.dataset.v;d.m[id]=d.m[id]===v?undefined:v;if(!d.m[id])delete d.m[id];save();refreshItem(k,id);
 }
-  else if(a==='chip'){const c=b.dataset.c,arr=d.ch[id]||(d.ch[id]=[]);const i=arr.indexOf(c);i<0?arr.push(c):arr.splice(i,1);d.m[id]='a';save();refreshItem(k,id)}
+  else if(a==='chip'){const c=b.dataset.c,arr=d.ch[id]||(d.ch[id]=[]),ngs=d.ng[id]||(d.ng[id]=[]);const i=arr.indexOf(c),j=ngs.indexOf(c);
+    if(i>=0){arr.splice(i,1);ngs.push(c)}else if(j>=0)ngs.splice(j,1);else arr.push(c);d.m[id]='a';save();refreshItem(k,id)}
   else if(a==='side'){d.sd[id]=d.sd[id]===b.dataset.v?undefined:b.dataset.v;if(!d.sd[id])delete d.sd[id];d.m[id]='a';save();refreshItem(k,id)}
   else if(a==='restsys'){for(const i of b.dataset.ids.split(','))if(!WIDGET[i]&&!d.m[i])d.m[i]='n';save();render(true)}
   else if(a==='restall'){const n=items(k).filter(x=>!WIDGET[x.id]&&!d.m[x.id]);if(!n.length){toast('Everything is already marked.');return}

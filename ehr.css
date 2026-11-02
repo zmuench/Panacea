@@ -82,3 +82,4 @@ footer.bar,.bar{background:linear-gradient(#EEF2F6,#DCE3EA)!important;border-top
 .box:has(>input:focus){outline:2px solid #8DB4DB}
 a.tile,a.svc,.tile,.svc{border-radius:3px!important}
 .tile:hover,.svc:hover{background:#E6F0FA!important}
+.chip[data-s="neg"]{background:#E1F2E9!important;border-color:#1D6E49!important;color:#1D6E49!important}
