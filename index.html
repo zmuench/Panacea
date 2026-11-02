@@ -6,275 +6,309 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>PANACEA</title>
 <meta name="apple-mobile-web-app-title" content="PANACEA">
-<meta name="theme-color" content="#EBEFF2">
+<meta name="theme-color" content="#1E3550">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: three group buttons (clinical tools, curricula, residency) switch which apps show; the page opens on the group named in the link (#clinical, #curricula, #residency), or clinical tools by default.
-   Apps sit in two columns; narrow phones switch to compact stacked cards.
-   Palette and type match Hx, Dispo, ICU Rounder, Sweep, Ether and Nenya: fixed light theme, blue-gray ground, navy ink, royal blue accent. */
+/* muench.md, styled after an EHR workspace (title bar, toolbar, patient-style storyboard,
+   vertical activity tabs, grid report). Same apps, same group links (#clinical, #curricula, #residency, #sync), same sync logic. */
 :root{
-  --bg:#EBEFF2; --surface:#FFFFFF; --ink:#14233A; --muted:#5A6A7E; --line:#D2DAE1;
-  --accent:#1D4ED0; --accent-soft:#E1E9FB;
-  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --title:#1E3550; --title2:#2A4A6E; --tool:#EEF2F6; --tool2:#DCE3EA;
+  --sb:#25476B; --sb2:#1D3A59; --sbtxt:#E8EFF6; --sbmuted:#A9BCD0;
+  --bg:#F3F5F7; --surface:#FFFFFF; --ink:#1B2733; --muted:#5B6877; --line:#C9D2DB; --line2:#E2E7EC;
+  --link:#0B5CAD; --band:#3D6E9E; --band2:#2F5E8C; --hover:#E6F0FA; --sel:#FFF7D6; --zebra:#F7F9FB;
+  --ok:#2E7D32; --warn:#F6D46B; --err:#B3261E;
+  --f:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;
   color-scheme:light only;
 }
-html{background:var(--bg)}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-.wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:36px 48px;display:flex;flex-direction:column;gap:22px}
-header h1{font-weight:700;font-size:1.7rem;letter-spacing:-.01em;margin:0;text-wrap:balance}
-header{display:flex;align-items:center;gap:14px}
-header .logo{width:46px;height:46px;flex:none;display:block}
-header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
-ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-ul[hidden]{display:none}
-.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;background:#DDE3E9;border-radius:14px}
-.seg button{appearance:none;border:0;background:none;font:inherit;font-weight:700;font-size:.95rem;color:var(--muted);min-height:44px;padding:8px 6px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;line-height:1.15;text-align:center}
-.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,35,58,.12)}
-.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.seg .ct{font-size:.75rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:1px 7px}
-li{display:flex}li>a.app{flex:1}
-a.app{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;min-height:76px;transition:border-color .15s,transform .15s}
-a.app:hover{border-color:var(--accent)}
-a.app:active{transform:scale(.99)}
-a.app:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ic{flex:none;width:48px;height:48px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center}
-.ic svg{width:26px;height:26px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.txt{flex:1;min-width:0}
-.name{font-weight:700;font-size:1.1rem;line-height:1.2}
-.kind{display:block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:2px}
-.desc{margin:4px 0 0;color:var(--muted);font-size:.9rem}
-.go{flex:none;width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-a.app:hover .go{stroke:var(--accent)}
-footer{color:var(--muted);font-size:.8rem}
-@media (max-width:599px){
-  a.app{flex-direction:column;align-items:flex-start;gap:10px;padding:12px;min-height:0;position:relative}
-  .desc{display:none}
-  .go{position:absolute;top:14px;right:10px}
-  .name{font-size:1.05rem}
-  .seg button{font-size:.88rem;flex-direction:column;gap:3px}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:13px;line-height:1.4;-webkit-text-size-adjust:100%;display:flex;flex-direction:column;min-height:100vh}
+button{font:inherit;color:inherit}
+
+/* Title bar */
+.titlebar{background:linear-gradient(var(--title2),var(--title));color:#fff;display:flex;align-items:stretch;height:34px;padding-left:6px;flex:none}
+.menu{display:flex;align-items:center;gap:6px;padding:0 10px 0 4px;margin:4px 6px 4px 0;border-radius:3px;background:linear-gradient(#3B5F86,#2C4D72);border:1px solid #4F7399;font-weight:700;letter-spacing:.04em;font-size:12px}
+.menu img{width:18px;height:18px;border-radius:4px}
+.wstabs{display:flex;align-items:flex-end;gap:2px}
+.wstab{display:flex;align-items:center;gap:6px;height:28px;padding:0 14px;border-radius:4px 4px 0 0;background:rgba(255,255,255,.12);color:#D6E2EE;font-size:12px;white-space:nowrap}
+.wstab.on{background:var(--tool);color:var(--ink);font-weight:600}
+.wstab .x{opacity:.5;font-size:11px}
+.tright{margin-left:auto;display:flex;align-items:center;gap:14px;padding:0 12px;font-size:12px;color:#C9D7E5}
+.tright b{color:#fff;font-weight:600}
+
+/* Toolbar */
+.toolbar{background:linear-gradient(var(--tool),var(--tool2));border-bottom:1px solid var(--line);display:flex;align-items:center;gap:2px;padding:3px 6px;flex:none;overflow-x:auto}
+.tb{display:flex;align-items:center;gap:5px;border:1px solid transparent;background:none;border-radius:3px;padding:3px 8px;cursor:pointer;font-size:12px;white-space:nowrap;min-height:28px}
+.tb:hover{background:#fff;border-color:var(--line)}
+.tb svg{width:16px;height:16px;fill:none;stroke:var(--band2);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tb.on{background:#fff;border-color:#9DB3C9;box-shadow:inset 0 1px 2px rgba(0,0,0,.08)}
+.sep{width:1px;height:20px;background:var(--line);margin:0 4px}
+
+/* Workspace */
+.ws{flex:1;display:grid;grid-template-columns:232px 168px minmax(0,1fr);min-height:0}
+
+/* Storyboard */
+.story{background:linear-gradient(var(--sb),var(--sb2));color:var(--sbtxt);padding:12px 12px 16px;display:flex;flex-direction:column;gap:10px;border-right:1px solid #16304A}
+.who{display:flex;gap:10px;align-items:center}
+.who img{width:46px;height:46px;border-radius:6px;border:2px solid rgba(255,255,255,.25)}
+.who h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.02em;color:#fff}
+.who .sub{font-size:12px;color:var(--sbmuted)}
+.flag{border-radius:3px;padding:4px 8px;font-size:12px;font-weight:600}
+.flag.allergy{background:var(--warn);color:#4A3A00}
+.sbsec{border-top:1px solid rgba(255,255,255,.14);padding-top:8px;display:flex;flex-direction:column;gap:3px}
+.sbsec h3{margin:0 0 2px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--sbmuted);font-weight:700}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:12.5px}
+.kv span:first-child{color:var(--sbmuted)}
+.kv b{font-weight:600;color:#fff;text-align:right}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff}
+.pill i{width:7px;height:7px;border-radius:50%;background:#9AA7B4}
+.pill.on{background:#DDF1DF;color:#1B5E20}.pill.on i{background:var(--ok)}
+
+/* Activity tabs */
+.acts{background:#E7ECF1;border-right:1px solid var(--line);padding:8px 0;display:flex;flex-direction:column}
+.act{appearance:none;border:0;background:none;text-align:left;padding:8px 12px 8px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;border-left:3px solid transparent;color:#2B3B4C;min-height:36px}
+.act:hover{background:#F3F6F9}
+.act[aria-selected="true"]{background:var(--surface);border-left-color:#E08A1E;font-weight:700;color:var(--ink);box-shadow:0 1px 0 var(--line),0 -1px 0 var(--line)}
+.act:focus-visible{outline:2px solid var(--link);outline-offset:-2px}
+.act .ct{font-size:11px;font-weight:700;color:var(--band2);background:#D6E2EE;border-radius:999px;padding:0 7px}
+.acts .div{height:1px;background:var(--line);margin:8px 10px}
+
+/* Report area */
+.main{padding:10px 12px 24px;min-width:0;overflow:auto}
+.band{background:linear-gradient(var(--band),var(--band2));color:#fff;padding:5px 10px;font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:space-between;border-radius:3px 3px 0 0}
+.band small{font-weight:400;opacity:.85}
+.panel{background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 3px 3px}
+.filter{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--line2);background:#FAFBFC}
+.filter label{font-size:12px;color:var(--muted)}
+.filter input{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:2px;padding:3px 6px;min-height:26px;width:220px;max-width:100%}
+.filter input:focus{outline:2px solid #8DB4DB;outline-offset:0;border-color:#6A9BCB}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);background:#EEF2F5;border-bottom:1px solid var(--line);padding:4px 8px;white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line2);vertical-align:middle}
+tbody tr:nth-child(even){background:var(--zebra)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--hover)}
+tbody tr:focus-within{background:var(--sel)}
+td.ic{width:34px;padding-right:0}
+td.ic span{width:26px;height:26px;border-radius:4px;background:#E3ECF5;display:grid;place-items:center}
+td.ic svg{width:17px;height:17px;fill:none;stroke:var(--band2);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+td.nm a{color:var(--link);font-weight:700;text-decoration:none}
+td.nm a:hover{text-decoration:underline}
+td.nm a:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+td.ty{white-space:nowrap;color:#33475B}
+td.ds{color:var(--muted)}
+.empty{padding:14px;color:var(--muted);font-style:italic}
+
+/* Sync form */
+.form{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.form p{margin:0;color:#33475B}
+.form ul.what{margin:0;padding-left:18px;color:#33475B}
+.grid{display:grid;grid-template-columns:120px minmax(0,320px);gap:6px 10px;align-items:center}
+.grid label{text-align:right;font-weight:600;font-size:12.5px;color:#33475B}
+.grid input{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:2px;padding:4px 7px;min-height:28px;width:100%;background:#FFFDE8}
+.grid input:focus{outline:2px solid #8DB4DB;outline-offset:0}
+.req{color:var(--err)}
+.btns{display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--line2);padding-top:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #9FB0C1;background:linear-gradient(#FFFFFF,#E6EBF0);border-radius:3px;padding:4px 12px;min-height:30px;cursor:pointer;font-size:12.5px;font-weight:600}
+.btn:hover{border-color:#6A8BAD}
+.btn:disabled{opacity:.6;cursor:default}
+.btn .ck{color:var(--ok);font-weight:900}
+.btn .xx{color:var(--err);font-weight:900}
+.err{background:#FDECEA;border:1px solid #F1B8B2;color:var(--err);padding:5px 8px;border-radius:2px}
+.form details summary{cursor:pointer;color:var(--link);font-weight:600}
+.form ol{margin:6px 0 0;padding-left:20px;color:#33475B;display:flex;flex-direction:column;gap:3px}
+code{font-family:Consolas,ui-monospace,monospace;font-size:12px;background:#EEF2F5;padding:0 3px;border-radius:2px}
+
+.status{flex:none;background:#E1E7ED;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);padding:3px 10px;display:flex;gap:16px}
+
+/* Phones: storyboard becomes a header strip, activity tabs go horizontal, rows stack */
+@media (max-width:760px){
+  body{font-size:14px}
+  .titlebar .wstab:not(.on),.tright span.t{display:none}
+  .toolbar{display:none}
+  .ws{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
+  .story{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px}
+  .story .sbsec{display:none}
+  .story .sbsec.keep{display:flex;border:0;padding:0;flex-direction:row;gap:8px}
+  .story .sbsec.keep h3,.story .sbsec.keep .kv span:first-child{display:none}
+  .who img{width:38px;height:38px}
+  .acts{flex-direction:row;overflow-x:auto;padding:0;border-right:0;border-bottom:1px solid var(--line)}
+  .acts .div{display:none}
+  .act{border-left:0;border-bottom:3px solid transparent;white-space:nowrap;min-height:44px;flex:none}
+  .act[aria-selected="true"]{border-bottom-color:#E08A1E;box-shadow:none}
+  .main{padding:8px}
+  thead{display:none}
+  tbody tr{display:grid;grid-template-columns:34px 1fr;grid-template-areas:"i n" "i t" "i d";padding:8px 6px;border-bottom:1px solid var(--line2)}
+  td{border:0;padding:0 4px}
+  td.ic{grid-area:i;padding-top:2px}
+  td.nm{grid-area:n}td.ty{grid-area:t;font-size:12px}td.ds{grid-area:d;font-size:12.5px}
+  .grid{grid-template-columns:1fr}.grid label{text-align:left}
+  .filter input{width:100%}
+  .status{display:none}
 }
-/* Sync section */
-.sync{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
-.sync h2{margin:0;font-size:1.05rem;display:flex;align-items:center;gap:8px}
-.sync h2 .dot{width:9px;height:9px;border-radius:50%;background:#9AA7B4}
-.sync h2 .dot.on{background:#1C7C4C}
-.sync p{margin:0;color:var(--muted);font-size:.92rem}
-.sync p b{color:var(--ink)}
-.sync ul.what{display:block;margin:0;padding-left:20px;list-style:disc;color:var(--muted);font-size:.92rem}
-.sync ul.what li{display:list-item}
-.sync .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.sync label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.sync input{font:inherit;font-size:1rem;text-transform:none;letter-spacing:0;color:var(--ink);background:#F7F9FA;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
-.sync input:focus{outline:2px solid var(--accent);outline-offset:1px}
-.sync .btns{display:flex;gap:8px;flex-wrap:wrap}
-.sync button{font:inherit;font-weight:700;font-size:.95rem;min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
-.sync button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.sync button:disabled{opacity:.6;cursor:default}
-.sync .err{color:#A3261B;font-size:.92rem;margin:0}
-.sync details{font-size:.92rem;color:var(--muted)}
-.sync details summary{cursor:pointer;font-weight:700;color:var(--accent)}
-.sync ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
-@media (max-width:599px){.sync .row{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header>
-    <img class="logo" src="favicon.svg" alt="">
-    <div>
-      <h1>PANACEA</h1>
-      <p>Shift tools in one place.</p>
-    </div>
-  </header>
+<div class="titlebar">
+  <div class="menu"><img src="favicon.svg" alt="">PANACEA</div>
+  <div class="wstabs">
+    <div class="wstab on">Shift Tools <span class="x">✕</span></div>
+    <div class="wstab">In Basket</div>
+    <div class="wstab">Schedule</div>
+  </div>
+  <div class="tright"><span><b>muench.md</b></span><span class="t" id="clock"></span></div>
+</div>
 
-  <nav class="seg" role="tablist" aria-label="App groups">
-    <button type="button" role="tab" id="tab-clinical" aria-controls="g-clinical" aria-selected="true" data-g="clinical">Clinical tools<span class="ct">11</span></button>
-    <button type="button" role="tab" id="tab-curricula" aria-controls="g-curricula" aria-selected="false" data-g="curricula">Curricula<span class="ct">5</span></button>
-    <button type="button" role="tab" id="tab-residency" aria-controls="g-residency" aria-selected="false" data-g="residency">Residency<span class="ct">1</span></button>
+<div class="toolbar" aria-hidden="true">
+  <button class="tb" data-jump="clinical" tabindex="-1"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M12 9v6M9 12h6"/></svg>Clinical Tools</button>
+  <button class="tb" data-jump="curricula" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5v13"/></svg>Curricula</button>
+  <button class="tb" data-jump="residency" tabindex="-1"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="9" rx="7" ry="3"/><path d="M12 13v6M9 20h6"/></svg>Residency</button>
+  <span class="sep"></span>
+  <button class="tb" data-jump="sync" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>Sync</button>
+  <button class="tb" onclick="window.print()" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7"/></svg>Print</button>
+</div>
+
+<div class="ws">
+  <aside class="story" aria-label="Summary">
+    <div class="who"><img src="favicon.svg" alt=""><div><h1>PANACEA</h1><div class="sub">Shift tools in one place</div></div></div>
+    <div class="flag allergy">No Known Allergies</div>
+    <div class="sbsec keep"><h3>Sync</h3><div class="kv"><span>Status</span><b id="sbSync"></b></div></div>
+    <div class="sbsec"><h3>Census</h3>
+      <div class="kv"><span>Clinical tools</span><b id="n-clinical"></b></div>
+      <div class="kv"><span>Curricula</span><b id="n-curricula"></b></div>
+      <div class="kv"><span>Residency</span><b id="n-residency"></b></div>
+    </div>
+    <div class="sbsec"><h3>Service</h3>
+      <div class="kv"><span></span><b>Emergency Medicine</b></div>
+    </div>
+    <div class="sbsec"><h3>Code Status</h3><div class="kv"><span></span><b>Full Code</b></div></div>
+  </aside>
+
+  <nav class="acts" role="tablist" aria-label="App groups">
+    <button class="act" role="tab" id="tab-clinical" aria-controls="pane" data-g="clinical">Clinical Tools<span class="ct">11</span></button>
+    <button class="act" role="tab" id="tab-curricula" aria-controls="pane" data-g="curricula">Curricula<span class="ct">5</span></button>
+    <button class="act" role="tab" id="tab-residency" aria-controls="pane" data-g="residency">Residency<span class="ct">1</span></button>
+    <div class="div"></div>
+    <button class="act" role="tab" id="tab-sync" aria-controls="pane" data-g="sync">Sync</button>
   </nav>
 
-  <ul class="grp" id="g-clinical" role="tabpanel" aria-labelledby="tab-clinical">
-    <li><a class="app" href="hx/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M8 8.5h8M8 12h5"/></svg></span>
-      <span class="txt"><span class="name">Hx</span><span class="kind">HPI builder</span>
-        <p class="desc">Pick a chief complaint, mark pertinent positives and negatives, get the HPI.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="px/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M10 12v3a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/></svg></span>
-      <span class="txt"><span class="name">Px</span><span class="kind">Exam builder</span>
-        <p class="desc">Focused exams by complaint, plus ICU, full neuro and NIHSS, written for the note.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="tracing/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 12h4l1.5-2.5 2 6 2.5-9 2 5.5h6"/></svg></span>
-      <span class="txt"><span class="name">Tracing</span><span class="kind">EKG dictation</span>
-        <p class="desc">Walk Dubin’s five steps with example strips, and get the read and impression.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="silhouette/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v7"/><path d="M12 10l-2.5 2.5M12 10l2.5 2.5"/><path d="M9.5 5C6 5 4 8.5 4 13c0 3 .5 5.5 1.5 7 2-1.5 4-2 5.5-1.5"/><path d="M14.5 5C18 5 20 8.5 20 13c0 3-.5 5.5-1.5 7-2-1.5-4-2-5.5-1.5"/></svg></span>
-      <span class="txt"><span class="name">Silhouette</span><span class="kind">Chest X-ray read</span>
-        <p class="desc">Film check, then A to E finding by finding, with diagrams; get the report and impression.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="dispo/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 13.5l19-8-5 14-4.5-5z"/><path d="M12 14.5l9.5-9"/></svg></span>
-      <span class="txt"><span class="name">Dispo</span><span class="kind">ED MDM builder</span>
-        <p class="desc">Flow-chart inputs that write the MDM and discharge instructions.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="consult/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/><path d="M15 3.5a6 6 0 0 1 5.5 5.5M15 7a2.5 2.5 0 0 1 2 2"/></svg></span>
-      <span class="txt"><span class="name">Consult</span><span class="kind">Consult call prep</span>
-        <p class="desc">Pick a service, gather what they’ll ask about, and get a call script and note line.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="spectrum/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10" r="1.6"/><circle cx="14.5" cy="8.5" r="1"/><circle cx="14" cy="14.5" r="2"/><circle cx="9" cy="15" r=".7"/></svg></span>
-      <span class="txt"><span class="name">Spectrum</span><span class="kind">ID consults</span>
-        <p class="desc">ID HPI, cultures and antibiotic days, the daily note, and a bugs and drugs reference.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="admit/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M12 9v6M9 12h6"/></svg></span>
-      <span class="txt"><span class="name">Admit</span><span class="kind">ICU &amp; floor H&amp;P</span>
-        <p class="desc">Problems with ready plans, antibiotics by source, FAST HUGS BID, then send to ICU Rounder.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="ap/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8.5 9.5h7"/><path d="M8.5 13h7M10 16.5h5.5"/></svg></span>
-      <span class="txt"><span class="name">A/P</span><span class="kind">Assessment &amp; plan</span>
-        <p class="desc">Each problem as a header, an italic assessment built from what matters, and a bulleted plan.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="icu-rounder/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8 13h2l1.5-3 2 5 1.5-2h1"/></svg></span>
-      <span class="txt"><span class="name">ICU Rounder</span><span class="kind">Daily rounds</span>
-        <p class="desc">Patient profiles through discharge, daily inputs, problem-based A/P.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="sweep/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 12l6-4.5"/><circle cx="9" cy="15.5" r=".6"/></svg></span>
-      <span class="txt"><span class="name">Sweep</span><span class="kind">ICU considerations</span>
-        <p class="desc">A morning pass through every system, with open items flagged for rounds.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-    <li><a class="app" href="ether/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 10h11l-1.6 6.4A3.5 3.5 0 0 1 12.5 19h-1a3.5 3.5 0 0 1-3.4-2.6z"/><path d="M12 10V6.5A2.5 2.5 0 0 1 14.5 4H18"/><path d="M4 13h2.9M17.1 13H20"/></svg></span>
-      <span class="txt"><span class="name">Ether</span><span class="kind">Anesthesia plan</span>
-        <p class="desc">Review the chart, score the risk, build the anesthetic plan, and print a card for the OR.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-  </ul>
-
-  <ul class="grp" id="g-curricula" role="tabpanel" aria-labelledby="tab-curricula" hidden>
-    <li><a class="app" href="primer/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/></svg></span>
-      <span class="txt"><span class="name">Primer</span><span class="kind">ICU curriculum</span>
-        <p class="desc">One lesson a day: readings, what to order, the evidence, and a self-check.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="core/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>
-      <span class="txt"><span class="name">Core</span><span class="kind">EM curriculum</span>
-        <p class="desc">All of Tintinalli’s, one lesson a day: chapters, workup, treatment and dispo.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="rhythm/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 13h4l1.5-3 2.5 8 3-14 2.5 9h5.5"/></svg></span>
-      <span class="txt"><span class="name">Rhythm</span><span class="kind">EKG curriculum</span>
-        <p class="desc">Dubin’s Rapid Interpretation of EKG’s, one lesson a day, with your copy open beside it.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="rhythm2/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 13h3l1-2.5 1.5 6 2-11 1.5 7.5h3l1-2.5 1.5 6 2-11 1.5 7.5h2"/></svg></span>
-      <span class="txt"><span class="name">Rhythm 2</span><span class="kind">ECG curriculum</span>
-        <p class="desc">Chizner’s ECG Interpretation Made Ridiculously Simple, one lesson a day, ending with 55 practice ECGs.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-
-    <li><a class="app" href="systole/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M3 12.5h4l1.5-2.5 2 5 2-6.5 1.5 4h7"/></svg></span>
-      <span class="txt"><span class="name">Systole</span><span class="kind">Cardiology curriculum</span>
-        <p class="desc">Chizner’s Clinical Cardiology Made Ridiculously Simple, one lesson a day, for the cardiology sub-I.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-  </ul>
-
-  <ul class="grp" id="g-residency" role="tabpanel" aria-labelledby="tab-residency" hidden>
-    <li><a class="app" href="nenya/">
-      <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="9" rx="7" ry="3"/><path d="M7 11.5c1.5 1 3.2 1.5 5 1.5s3.5-.5 5-1.5"/><path d="M12 13v6M9 20h6"/></svg></span>
-      <span class="txt"><span class="name">Nenya</span><span class="kind">EM rank list</span>
-        <p class="desc">Weight what matters, add programs as you interview, watch the list sort.</p></span>
-      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    </a></li>
-  </ul>
-
-
-
-  <section class="sync" id="sync" aria-labelledby="sync-h"></section>
+  <main class="main" id="pane" role="tabpanel"></main>
 </div>
+
+<div class="status"><span id="stat"></span><span>Shift tools in one place</span></div>
+
 <script>
-/* Group buttons: show one group at a time. Arrow keys move between them. */
-const tabs=[...document.querySelectorAll('.seg button')];
-function show(t){tabs.forEach(b=>{const on=b===t;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;document.getElementById('g-'+b.dataset.g).hidden=!on})}
-tabs.forEach((b,i)=>{b.tabIndex=i?-1:0;b.addEventListener('click',()=>show(b));
-  b.addEventListener('keydown',e=>{const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;const n=tabs[(i+d+tabs.length)%tabs.length];n.focus();show(n)})});
-/* Open on the group in the link (apps' home buttons link to #clinical, #curricula or #residency); default is clinical tools. */
-function fromHash(){const t=tabs.find(b=>'#'+b.dataset.g===location.hash)||tabs[0];show(t)}
-tabs.forEach(b=>b.addEventListener('click',()=>history.replaceState(null,'','#'+b.dataset.g)));
+const I={
+ hx:'<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/><path d="M8 8.5h8M8 12h5"/>',
+ px:'<path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M10 12v3a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>',
+ tracing:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 12h4l1.5-2.5 2 6 2.5-9 2 5.5h6"/>',
+ silhouette:'<path d="M12 3v7"/><path d="M12 10l-2.5 2.5M12 10l2.5 2.5"/><path d="M9.5 5C6 5 4 8.5 4 13c0 3 .5 5.5 1.5 7 2-1.5 4-2 5.5-1.5"/><path d="M14.5 5C18 5 20 8.5 20 13c0 3-.5 5.5-1.5 7-2-1.5-4-2-5.5-1.5"/>',
+ dispo:'<path d="M2.5 13.5l19-8-5 14-4.5-5z"/><path d="M12 14.5l9.5-9"/>',
+ consult:'<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/><path d="M15 3.5a6 6 0 0 1 5.5 5.5M15 7a2.5 2.5 0 0 1 2 2"/>',
+ spectrum:'<circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10" r="1.6"/><circle cx="14.5" cy="8.5" r="1"/><circle cx="14" cy="14.5" r="2"/><circle cx="9" cy="15" r=".7"/>',
+ admit:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M12 9v6M9 12h6"/>',
+ ap:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8.5 9.5h7"/><path d="M8.5 13h7M10 16.5h5.5"/>',
+ icu:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8 13h2l1.5-3 2 5 1.5-2h1"/>',
+ sweep:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 12l6-4.5"/><circle cx="9" cy="15.5" r=".6"/>',
+ ether:'<path d="M6.5 10h11l-1.6 6.4A3.5 3.5 0 0 1 12.5 19h-1a3.5 3.5 0 0 1-3.4-2.6z"/><path d="M12 10V6.5A2.5 2.5 0 0 1 14.5 4H18"/><path d="M4 13h2.9M17.1 13H20"/>',
+ primer:'<path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/>',
+ core:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/>',
+ rhythm:'<path d="M2.5 13h4l1.5-3 2.5 8 3-14 2.5 9h5.5"/>',
+ rhythm2:'<path d="M1.5 13h3l1-2.5 1.5 6 2-11 1.5 7.5h3l1-2.5 1.5 6 2-11 1.5 7.5h2"/>',
+ systole:'<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M3 12.5h4l1.5-2.5 2 5 2-6.5 1.5 4h7"/>',
+ nenya:'<ellipse cx="12" cy="9" rx="7" ry="3"/><path d="M7 11.5c1.5 1 3.2 1.5 5 1.5s3.5-.5 5-1.5"/><path d="M12 13v6M9 20h6"/>'
+};
+const G={
+ clinical:{title:'Clinical Tools',apps:[
+  ['hx','Hx','hx/','HPI builder','Pick a chief complaint, mark pertinent positives and negatives, get the HPI.'],
+  ['px','Px','px/','Exam builder','Focused exams by complaint, plus ICU, full neuro and NIHSS, written for the note.'],
+  ['tracing','Tracing','tracing/','EKG dictation','Walk Dubin’s five steps with example strips, and get the read and impression.'],
+  ['silhouette','Silhouette','silhouette/','Chest X-ray read','Film check, then A to E finding by finding, with diagrams; get the report and impression.'],
+  ['dispo','Dispo','dispo/','ED MDM builder','Flow-chart inputs that write the MDM and discharge instructions.'],
+  ['consult','Consult','consult/','Consult call prep','Pick a service, gather what they’ll ask about, and get a call script and note line.'],
+  ['spectrum','Spectrum','spectrum/','ID consults','ID HPI, cultures and antibiotic days, the daily note, and a bugs and drugs reference.'],
+  ['admit','Admit','admit/','ICU & floor H&P','Problems with ready plans, antibiotics by source, FAST HUGS BID, then send to ICU Rounder.'],
+  ['ap','A/P','ap/','Assessment & plan','Each problem as a header, an italic assessment built from what matters, and a bulleted plan.'],
+  ['icu','ICU Rounder','icu-rounder/','Daily rounds','Patient profiles through discharge, daily inputs, problem-based A/P.'],
+  ['sweep','Sweep','sweep/','ICU considerations','A morning pass through every system, with open items flagged for rounds.'],
+  ['ether','Ether','ether/','Anesthesia plan','Review the chart, score the risk, build the anesthetic plan, and print a card for the OR.']]},
+ curricula:{title:'Curricula',apps:[
+  ['primer','Primer','primer/','ICU curriculum','One lesson a day: readings, what to order, the evidence, and a self-check.'],
+  ['core','Core','core/','EM curriculum','All of Tintinalli’s, one lesson a day: chapters, workup, treatment and dispo.'],
+  ['rhythm','Rhythm','rhythm/','EKG curriculum','Dubin’s Rapid Interpretation of EKG’s, one lesson a day, with your copy open beside it.'],
+  ['rhythm2','Rhythm 2','rhythm2/','ECG curriculum','Chizner’s ECG Interpretation Made Ridiculously Simple, one lesson a day, ending with 55 practice ECGs.'],
+  ['systole','Systole','systole/','Cardiology curriculum','Chizner’s Clinical Cardiology Made Ridiculously Simple, one lesson a day, for the cardiology sub-I.']]},
+ residency:{title:'Residency',apps:[
+  ['nenya','Nenya','nenya/','EM rank list','Weight what matters, add programs as you interview, watch the list sort.']]}
+};
+// Counts in the tabs come from the lists themselves
+for(const k in G){const c=document.querySelector(`#tab-${k} .ct`);if(c)c.textContent=G[k].apps.length}
+for(const k in G)document.getElementById('n-'+k).textContent=G[k].apps.length;
+
+const escH=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pane=document.getElementById('pane');
+const tabs=[...document.querySelectorAll('.act')];
+let cur='clinical',q='';
+
+function rows(list){
+  const f=q.toLowerCase();
+  const r=list.filter(a=>!f||(a[1]+' '+a[3]+' '+a[4]).toLowerCase().includes(f));
+  if(!r.length)return `<tr><td colspan="4" class="empty">No apps match “${escH(q)}”.</td></tr>`;
+  return r.map(([ic,n,h,t,d])=>`<tr data-href="${h}"><td class="ic"><span><svg viewBox="0 0 24 24" aria-hidden="true">${I[ic]}</svg></span></td><td class="nm"><a href="${h}">${escH(n)}</a></td><td class="ty">${escH(t)}</td><td class="ds">${escH(d)}</td></tr>`).join('');
+}
+function renderGroup(k){
+  const g=G[k];
+  pane.innerHTML=`<div class="band">${g.title}<small>${g.apps.length} item${g.apps.length>1?'s':''}</small></div>
+  <div class="panel"><div class="filter"><label for="flt">Filter</label><input id="flt" type="search" value="${escH(q)}" placeholder="Name, type or description" autocomplete="off"></div>
+  <table><thead><tr><th></th><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody id="tb">${rows(g.apps)}</tbody></table></div>`;
+  document.getElementById('flt').addEventListener('input',e=>{q=e.target.value;document.getElementById('tb').innerHTML=rows(g.apps)});
+  document.getElementById('stat').textContent=`${g.title}: ${g.apps.length} apps`;
+}
+pane.addEventListener('click',e=>{const tr=e.target.closest('tr[data-href]');if(tr&&!e.target.closest('a'))location.href=tr.dataset.href});
+
+function show(k,focus){
+  cur=k;q='';
+  tabs.forEach(b=>{const on=b.dataset.g===k;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;if(on&&focus)b.focus()});
+  document.querySelectorAll('.tb[data-jump]').forEach(b=>b.classList.toggle('on',b.dataset.jump===k));
+  pane.setAttribute('aria-labelledby','tab-'+k);
+  if(k==='sync'){renderSync();document.getElementById('stat').textContent='Sync settings'}else renderGroup(k);
+}
+tabs.forEach((b,i)=>{
+  b.addEventListener('click',()=>{show(b.dataset.g);history.replaceState(null,'','#'+b.dataset.g)});
+  b.addEventListener('keydown',e=>{const d=(e.key==='ArrowDown'||e.key==='ArrowRight')?1:(e.key==='ArrowUp'||e.key==='ArrowLeft')?-1:0;if(!d)return;e.preventDefault();const n=tabs[(i+d+tabs.length)%tabs.length];show(n.dataset.g,true);history.replaceState(null,'','#'+n.dataset.g)});
+});
+document.querySelectorAll('.tb[data-jump]').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.jump);history.replaceState(null,'','#'+b.dataset.jump)}));
+function fromHash(){const k=location.hash.slice(1);show(G[k]||k==='sync'?k:'clinical')}
 window.addEventListener('hashchange',fromHash);
 window.addEventListener('pageshow',fromHash);
-fromHash();
 
-/* Sync across devices: one private GitHub repo and token, saved in this browser and used by every app
-   (ICU Rounder and Spectrum patients, Ether cases; curricula progress, notes and PDFs). */
+/* Sync across devices: unchanged logic, same storage key as every app. */
 const SYNC_KEY='icu-rounds-sync';
-const syncEl=document.getElementById('sync');
 let syncErr='',syncBusy=false,typed={token:'',repo:''};
-const escH=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function getSync(){try{const r=JSON.parse(localStorage.getItem(SYNC_KEY)||'null');return r&&r.token&&r.owner&&r.repo?r:null}catch(e){return null}}
 const ownerGuess=()=>location.hostname.endsWith('.github.io')?location.hostname.split('.')[0]:'your-username';
-function renderSync(){const SY=getSync();
+function renderSB(){const on=!!getSync();document.getElementById('sbSync').innerHTML=`<span class="pill${on?' on':''}"><i></i>${on?'On':'Off'}</span>`}
+function renderSync(){const SY=getSync();renderSB();
   const what=`<ul class="what"><li>ICU Rounder and Spectrum patients, and Ether cases</li><li>Progress and notes in Primer, Core, Rhythm, Rhythm 2 and Systole</li><li>The PDFs you link in those curricula</li></ul>`;
-  syncEl.innerHTML=SY?`<h2 id="sync-h"><span class="dot on"></span>Sync is on</h2>
-    <p>This device syncs through your private repo <b>${escH(SY.owner)}/${escH(SY.repo)}</b>:</p>${what}
+  pane.innerHTML=`<div class="band">Sync Across Devices<small>${SY?'Active':'Not configured'}</small></div><div class="panel"><div class="form">`+(SY?
+   `<p>This device syncs through your private repo <b>${escH(SY.owner)}/${escH(SY.repo)}</b>:</p>${what}
     <p>Set up each phone or computer the same way, with the same repo and token.</p>
-    <div class="btns"><button type="button" data-s="off">Stop syncing on this device</button></div>`
-  :`<h2 id="sync-h"><span class="dot"></span>Sync across devices</h2>
-    <p>Turn on sync once per device to keep these the same on your phone, laptop and desktop:</p>${what}
+    <div class="btns"><button type="button" class="btn" data-s="off"><span class="xx">✕</span>Stop syncing on this device</button></div>`
+  :`<p>Turn on sync once per device to keep these the same on your phone, laptop and desktop:</p>${what}
     <p>Everything is saved to a <b>private</b> GitHub repo with a token you paste once on each device.</p>
-    <div class="row"><label>GitHub token<input type="password" id="syncToken" placeholder="github_pat_…" autocomplete="off" value="${escH(typed.token)}"></label>
-    <label>Private repo<input type="text" id="syncRepo" value="${escH(typed.repo||ownerGuess()+'/panacea-data')}" autocapitalize="off" spellcheck="false"></label></div>
-    ${syncErr?`<p class="err">${escH(syncErr)}</p>`:''}
-    <div class="btns"><button type="button" class="primary" data-s="on"${syncBusy?' disabled':''}>${syncBusy?'Checking…':'Turn on sync'}</button></div>
+    <div class="grid"><label for="syncToken"><span class="req">*</span> GitHub token</label><input type="password" id="syncToken" placeholder="github_pat_…" autocomplete="off" value="${escH(typed.token)}">
+    <label for="syncRepo"><span class="req">*</span> Private repo</label><input type="text" id="syncRepo" value="${escH(typed.repo||ownerGuess()+'/panacea-data')}" autocapitalize="off" spellcheck="false"></div>
+    ${syncErr?`<div class="err">${escH(syncErr)}</div>`:''}
     <details><summary>How to set this up</summary><ol>
     <li>On github.com, create a new <b>private</b> repository named <code>panacea-data</code>.</li>
     <li>Profile picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
     <li>Repository access: <em>Only select repositories</em> → <code>panacea-data</code>. Permissions → Contents: <em>Read and write</em>.</li>
-    <li>Paste the token here and tap <b>Turn on sync</b>. Repeat on each device.</li></ol></details>`}
+    <li>Paste the token here and click <b>Accept</b>. Repeat on each device.</li></ol></details>
+    <div class="btns"><button type="button" class="btn" data-s="on"${syncBusy?' disabled':''}><span class="ck">✓</span>${syncBusy?'Checking…':'Accept'}</button><button type="button" class="btn" data-s="cancel"><span class="xx">✕</span>Cancel</button></div>`)+`</div></div>`}
 async function turnOn(){
   const token=document.getElementById('syncToken').value.trim(),full=document.getElementById('syncRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/+$/,'');
   typed={token,repo:full};const[owner,repo]=full.split('/');syncErr='';
@@ -288,11 +322,15 @@ async function turnOn(){
       else{localStorage.setItem(SYNC_KEY,JSON.stringify({token,owner:info.owner&&info.owner.login||owner,repo:info.name||repo}));typed={token:'',repo:''};try{localStorage.removeItem('panacea.spectrum.sync')}catch(e){}}}}
   catch(e){syncErr='Couldn’t reach GitHub. Check your connection.'}
   syncBusy=false;renderSync()}
-syncEl.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;
+pane.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;
   if(b.dataset.s==='on')turnOn();
-  else if(b.dataset.s==='off'){if(b.dataset.armed){localStorage.removeItem(SYNC_KEY);try{localStorage.removeItem('panacea.spectrum.sync')}catch(e){}renderSync()}else{b.dataset.armed='1';b.textContent='Tap again to stop. Data on this device stays.'}}});
-renderSync();
-if(location.hash==='#sync')syncEl.scrollIntoView();
+  else if(b.dataset.s==='cancel'){typed={token:'',repo:''};syncErr='';show('clinical');history.replaceState(null,'','#clinical')}
+  else if(b.dataset.s==='off'){if(b.dataset.armed){localStorage.removeItem(SYNC_KEY);try{localStorage.removeItem('panacea.spectrum.sync')}catch(e){}renderSync()}else{b.dataset.armed='1';b.lastChild.textContent='Click again to stop. Data on this device stays.'}}});
+
+const clk=document.getElementById('clock');
+function tick(){clk.textContent=new Date().toLocaleString([], {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+tick();setInterval(tick,30000);
+renderSB();fromHash();
 </script>
 </body>
 </html>
