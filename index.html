@@ -99,6 +99,9 @@ td.nm a:hover{text-decoration:underline}
 td.nm a:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 td.ty{white-space:nowrap;color:#33475B}
 td.ds{color:var(--muted)}
+tr.sech th{background:#E3ECF5;color:var(--band2);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+tbody tr.sech,tbody tr.sech:hover{background:none;cursor:default}
+@media (max-width:760px){tbody tr.sech{display:block;padding:0}tr.sech th{display:block}}
 .empty{padding:14px;color:var(--muted);font-style:italic}
 
 /* Sync form */
@@ -224,18 +227,18 @@ const I={
 };
 const G={
  clinical:{title:'Clinical Tools',apps:[
-  ['hx','Hx','hx/','HPI builder','Pick a chief complaint, mark pertinent positives and negatives, get the HPI.'],
-  ['px','Px','px/','Exam builder','Focused exams by complaint, plus ICU, full neuro and NIHSS, written for the note.'],
-  ['tracing','Tracing','tracing/','EKG dictation','Walk Dubin’s five steps with example strips, and get the read and impression.'],
-  ['silhouette','Silhouette','silhouette/','Chest X-ray read','Film check, then A to E finding by finding, with diagrams; get the report and impression.'],
-  ['dispo','Dispo','dispo/','ED MDM builder','Flow-chart inputs that write the MDM and discharge instructions.'],
-  ['consult','Consult','consult/','Consult call prep','Pick a service, gather what they’ll ask about, and get a call script and note line.'],
-  ['spectrum','Spectrum','spectrum/','ID consults','ID HPI, cultures and antibiotic days, the daily note, and a bugs and drugs reference.'],
-  ['admit','Admit','admit/','ICU & floor H&P','Problems with ready plans, antibiotics by source, FAST HUGS BID, then send to ICU Rounder.'],
-  ['ap','A/P','ap/','Assessment & plan','Each problem as a header, an italic assessment built from what matters, and a bulleted plan.'],
-  ['icu','ICU Rounder','icu-rounder/','Daily rounds','Patient profiles through discharge, daily inputs, problem-based A/P.'],
-  ['sweep','Sweep','sweep/','ICU considerations','A morning pass through every system, with open items flagged for rounds.'],
-  ['ether','Ether','ether/','Anesthesia plan','Review the chart, score the risk, build the anesthetic plan, and print a card for the OR.']]},
+  ['hx','Hx','hx/','HPI builder','Pick a chief complaint, mark pertinent positives and negatives, get the HPI.','EM'],
+  ['px','Px','px/','Exam builder','Focused exams by complaint, plus ICU, full neuro and NIHSS, written for the note.','EM'],
+  ['dispo','Dispo','dispo/','ED MDM builder','Flow-chart inputs that write the MDM and discharge instructions.','EM'],
+  ['consult','Consult','consult/','Consult call prep','Pick a service, gather what they’ll ask about, and get a call script and note line.','EM'],
+  ['admit','Admit','admit/','ICU & floor H&P','Problems with ready plans, antibiotics by source, FAST HUGS BID, then send to ICU Rounder.','ICU'],
+  ['ap','A/P','ap/','Assessment & plan','Each problem as a header, an italic assessment built from what matters, and a bulleted plan.','ICU'],
+  ['icu','ICU Rounder','icu-rounder/','Daily rounds','Patient profiles through discharge, daily inputs, problem-based A/P.','ICU'],
+  ['sweep','Sweep','sweep/','ICU considerations','A morning pass through every system, with open items flagged for rounds.','ICU'],
+  ['tracing','Tracing','tracing/','EKG dictation','Walk Dubin’s five steps with example strips, and get the read and impression.','Interpretation'],
+  ['silhouette','Silhouette','silhouette/','Chest X-ray read','Film check, then A to E finding by finding, with diagrams; get the report and impression.','Interpretation'],
+  ['spectrum','Spectrum','spectrum/','ID consults','ID HPI, cultures and antibiotic days, the daily note, and a bugs and drugs reference.','Specialty Services'],
+  ['ether','Ether','ether/','Anesthesia plan','Review the chart, score the risk, build the anesthetic plan, and print a card for the OR.','Specialty Services']]},
  curricula:{title:'Curricula',apps:[
   ['primer','Primer','primer/','ICU curriculum','One lesson a day: readings, what to order, the evidence, and a self-check.'],
   ['core','Core','core/','EM curriculum','All of Tintinalli’s, one lesson a day: chapters, workup, treatment and dispo.'],
@@ -258,7 +261,8 @@ function rows(list){
   const f=q.toLowerCase();
   const r=list.filter(a=>!f||(a[1]+' '+a[3]+' '+a[4]).toLowerCase().includes(f));
   if(!r.length)return `<tr><td colspan="4" class="empty">No apps match “${escH(q)}”.</td></tr>`;
-  return r.map(([ic,n,h,t,d])=>`<tr data-href="${h}"><td class="ic"><span><svg viewBox="0 0 24 24" aria-hidden="true">${I[ic]}</svg></span></td><td class="nm"><a href="${h}">${escH(n)}</a></td><td class="ty">${escH(t)}</td><td class="ds">${escH(d)}</td></tr>`).join('');
+  let last='';
+  return r.map(([ic,n,h,t,d,sec])=>(sec&&sec!==last?(last=sec,`<tr class="sech"><th colspan="4" scope="colgroup">${escH(sec)}</th></tr>`):'')+`<tr data-href="${h}"><td class="ic"><span><svg viewBox="0 0 24 24" aria-hidden="true">${I[ic]}</svg></span></td><td class="nm"><a href="${h}">${escH(n)}</a></td><td class="ty">${escH(t)}</td><td class="ds">${escH(d)}</td></tr>`).join('');
 }
 function renderGroup(k){
   const g=G[k];
