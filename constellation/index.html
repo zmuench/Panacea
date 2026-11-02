@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Constellation">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Constellation</title>
+<style>
+/* Constellation: pick workup findings, see the diseases classically associated with that combination.
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:12px 16px 110px}
+header.top{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.hd{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.hd h1{margin:0;font-size:1.2rem}
+.hd .sub{font-size:.8rem;color:var(--muted)}
+.hd .sp{flex:1}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);flex:none;text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:36px;cursor:pointer;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.btn:disabled{opacity:.5;cursor:default}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;align-items:start}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:2px}
+.ph h2{margin:0;font-size:1.15rem}
+.ph .cue{margin:0;font-size:.85rem;color:var(--muted)}
+.search{display:flex;gap:8px;align-items:center}
+.search input{flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--paper);font-size:16px}
+.picked{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:32px}
+.picked .none{color:var(--muted);font-size:.88rem}
+.pk{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 6px 3px 10px;font-size:.84rem;font-weight:700;cursor:pointer}
+.pk .x{font-size:1rem;line-height:1;opacity:.7}
+details.cat{border-top:1px solid var(--line);padding-top:8px}
+details.cat summary{cursor:pointer;font-weight:700;font-size:.92rem;display:flex;align-items:center;gap:8px;list-style:none;padding:2px 0}
+details.cat summary::-webkit-details-marker{display:none}
+details.cat summary::before{content:"▸";color:var(--muted);font-size:.8rem;transition:transform .15s}
+details.cat[open] summary::before{transform:rotate(90deg)}
+details.cat summary .n{font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:0 7px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 4px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 11px;min-height:32px;cursor:pointer;font-size:.86rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip mark{background:#FFF1A8;color:inherit;padding:0}
+.out{scroll-margin-top:80px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0;position:sticky;top:70px;max-height:calc(100vh - 84px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.outhd{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.empty{color:var(--muted);font-size:.92rem;background:#F4F6F8;border-radius:10px;padding:12px}
+.dx{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:7px}
+.dx.top1{border-color:var(--accent)}
+.dxh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dxh .rk{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.dxh .nm{font-weight:700;font-size:1.02rem}
+.tag{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:4px;padding:1px 6px;background:#EEF2F5;color:var(--muted)}
+.tag.mnm{background:var(--warn-soft);color:var(--warn)}
+.tag.str{background:var(--ok-soft);color:var(--ok)}
+.meter{height:6px;background:#E6EBF0;border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.clue{margin:0;font-size:.9rem}
+.row{display:flex;flex-wrap:wrap;gap:5px;align-items:baseline;font-size:.84rem}
+.row .lb{font-weight:700;color:var(--muted);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;margin-right:2px}
+.hit{background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:1px 6px}
+.hit.key{font-weight:700}
+.add{border:1px dashed #9AA9B8;background:none;border-radius:4px;padding:1px 6px;cursor:pointer;font-size:.82rem;color:var(--ink)}
+.add:hover{border-color:var(--accent);color:var(--accent)}
+.add.key{font-weight:700}
+.conf{font-size:.84rem;margin:0}
+.conf b{color:var(--muted);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase}
+.more{align-self:center}
+.fine{font-size:.78rem;color:var(--muted);margin:0}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));display:none}
+.bar .in{display:flex;align-items:center;gap:10px;max-width:1180px;margin:0 auto}
+.bar .mid{flex:1;font-size:.85rem;color:var(--muted);font-weight:700}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .bar{display:block}
+  .wrap{padding-bottom:90px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="hd">
+  <a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>
+  <div><h1>Constellation</h1><div class="sub">Combine workup findings; see the diseases they classically point to.</div></div>
+  <span class="sp"></span>
+  <button class="btn" id="clear" type="button" disabled>Clear</button>
+</div></header>
+
+<div class="wrap">
+  <div class="grid">
+    <section class="pane" aria-labelledby="fh">
+      <div class="ph"><h2 id="fh">Findings</h2><p class="cue">Pick everything you have: labs, imaging, ECG, exam, and exposures.</p></div>
+      <div class="search"><input id="q" type="search" placeholder="Search, e.g. hyponatremia" autocomplete="off" spellcheck="false" aria-label="Search findings"></div>
+      <div class="picked" id="picked" aria-live="polite"></div>
+      <div id="cats"></div>
+    </section>
+    <section class="out" id="out" aria-labelledby="dh">
+      <div class="outhd"><h3 id="dh">Differential</h3><button class="btn sm primary" id="copy" type="button" disabled>Copy differential</button></div>
+      <div id="res"></div>
+      <p class="fine">Pattern matching for study and to broaden a differential. It does not weigh pretest probability or exclude anything; confirm with the listed tests and clinical judgment.</p>
+    </section>
+  </div>
+</div>
+
+<div class="bar" id="bar"><div class="in"><span class="mid" id="barmid">No findings yet</span><button class="btn primary" id="see" type="button">See differential</button></div></div>
+
+<script>
+/* ---------- Findings library: category, then id=label pairs ---------- */
+const CATS=[
+['ctx','History & exposures',`travel=Travel to the tropics|ivdu=Injection drug use|etoh=Heavy alcohol use|immuno=Immunocompromised (transplant, chemo, steroids)|cd4=HIV with CD4 under 200|abx=Recent antibiotics or hospitalization|asp=Aspiration risk (intoxication, seizure, dysphagia)|vte=VTE risk (surgery, immobility, cancer, estrogen)|malig=Known malignancy|hmalig=Leukemia, lymphoma, or bulky tumor|chemo=Recent chemotherapy|preg=Pregnant or postpartum|tick=Tick bite or woods in an endemic area|ohio=Ohio or Mississippi valley, caves, bird or bat droppings|sw=Southwest US desert|water=Hot tub, cooling tower, or plumbing water|flood=Freshwater, flooding, or rodent urine|rodent=Deer mouse droppings (cabins, sheds)|farm=Livestock or birthing animals|birds=Pet birds (parrots, parakeets)|cirr=Cirrhosis|chf=Known heart failure|dm=Known diabetes|sickle=Sickle cell disease|malnut=Malnutrition or days of poor intake|down=Long downtime, crush, or extreme exertion|heat=Heat exposure or exertion in heat|ingest=Intentional ingestion or overdose|uri=Viral illness or pharyngitis 1 to 3 weeks ago|m_sero=Serotonergic drugs (SSRI, linezolid, tramadol, MDMA)|m_apsy=Antipsychotic or antiemetic dopamine blocker|m_li=Lithium|m_diur=Diuretic|m_dig=Digoxin|m_sglt2=SGLT2 inhibitor|m_hep=Heparin in the last 5 to 14 days|m_ster=Chronic steroids, stopped or under stress|m_ox=Dapsone, benzocaine, or nitrates`],
+['sx','Symptoms',`cough=Cough|hemopt=Hemoptysis|pleur=Pleuritic chest pain|cp=Chest pain|dysp=Dyspnea|ha=Headache|thunder=Thunderclap headache|neck=Neck stiffness|ams=Altered mental status|sz=Seizure|focal=Focal neurologic deficit|ruq=RUQ pain|epig=Epigastric pain radiating to the back|rlq=RLQ pain|pootp=Pain out of proportion to exam|abd=Diffuse abdominal pain|flank=Flank pain|back=Back pain|diarr=Diarrhea|bdiarr=Bloody diarrhea|vom=Vomiting|melena=Melena or hematemesis|polyu=Polyuria and polydipsia|wtloss=Weight loss|sweats=Night sweats|bone=Bone pain|myal=Myalgias|weakasc=Ascending weakness|weak=Episodic weakness or paralysis|syncope=Syncope|phar=Sore throat|tinn=Tinnitus|jaw=Jaw claudication or new temporal headache|vis=Visual blurring or loss`],
+['ex','Vitals & exam',`fever=Fever|hyperth=Temperature over 40 °C|hypoth=Temperature under 35 °C|tachy=Tachycardia|brady=Bradycardia, or relative bradycardia with fever|hypot=Hypotension|htn=Severe hypertension|tachyp=Tachypnea or Kussmaul breathing|hypox=Hypoxemia|jvd=JVD|edema=Peripheral edema|legsw=Unilateral leg swelling|ascites=Ascites|jaund=Jaundice|murmur=New murmur|stig=Splinter hemorrhages, Janeway lesions, or Osler nodes|murphy=Murphy sign|spleno=Splenomegaly|pete=Petechiae or purpura|palms=Rash on palms and soles|em=Erythema migrans|erythro=Diffuse erythroderma|rash=Maculopapular rash|en=Erythema nodosum|arth=Arthritis|clonus=Clonus or hyperreflexia|rigid=Lead-pipe rigidity|areflex=Areflexia|wern=Ophthalmoplegia or ataxia|bpdiff=Pulse or BP difference between arms|diaph=Diaphoresis|cyan=Cyanosis despite oxygen`],
+['cbc','CBC',`leuk=Leukocytosis (over 12)|leukx=Marked leukocytosis (over 30)|leukop=Leukopenia (under 4)|neutrop=Neutropenia (ANC under 500)|bands=Bandemia|lymphop=Lymphopenia|atyp=Atypical lymphocytes|eos=Eosinophilia|anemia=Anemia|macro=Macrocytosis|plt_lo=Thrombocytopenia|plt_hi=Thrombocytosis|pancyt=Pancytopenia|hemoconc=Hemoconcentration (rising Hct)|schist=Schistocytes|blasts=Circulating blasts|spher=Spherocytes|retic=Reticulocytosis`],
+['chem','Chemistry',`na_lo=Hyponatremia|na_hi=Hypernatremia|k_lo=Hypokalemia|k_hi=Hyperkalemia|cl_lo=Hypochloremia|ca_hi=Hypercalcemia|ca_lo=Hypocalcemia|mg_lo=Hypomagnesemia|po4_lo=Hypophosphatemia|po4_hi=Hyperphosphatemia|agma=Anion gap metabolic acidosis|nagma=Non-gap metabolic acidosis|metalk=Metabolic alkalosis|aki=AKI (rising creatinine)|bunr=BUN:Cr over 20|glu_lo=Hypoglycemia|glu_hi=Glucose over 250|glu_vhi=Glucose over 600|urate=Hyperuricemia|alb_lo=Hypoalbuminemia|osm_hi=Serum osmolality over 320|osmgap=Osmolal gap over 10|protgap=Protein gap (total protein minus albumin over 4)`],
+['liver','Liver & pancreas',`ast_vhi=AST and ALT over 1000|transam=Mild to moderate transaminitis|ast2=AST:ALT over 2:1|alp=Elevated alkaline phosphatase|dbili=Direct hyperbilirubinemia|ibili=Indirect hyperbilirubinemia|lipase=Lipase over 3× ULN|inr=Elevated INR|nh3=Elevated ammonia`],
+['lab','Other blood tests',`ck=CK over 5× ULN|trop=Elevated troponin|bnp=Elevated BNP|lact=Elevated lactate|ddimer=Elevated D-dimer|fib_lo=Low fibrinogen|ldh=Elevated LDH|hapto=Low haptoglobin|ferr=Ferritin over 10,000|crp=Elevated CRP or ESR|esr=ESR over 100|tg=Very high triglycerides|tsh_lo=Low TSH with high free T4|tsh_hi=High TSH with low free T4|cort=Low cortisol|pth_hi=High or inappropriately normal PTH|pth_lo=Suppressed PTH|ketones=Elevated β-hydroxybutyrate|respalk=Respiratory alkalosis|respac=Respiratory acidosis|hcg=Positive β-hCG|dat=Positive DAT (Coombs)|ana=Positive ANA or anti-dsDNA|c3c4=Low complement|cohb=Elevated carboxyhemoglobin|methb=Elevated methemoglobin|crag=Positive cryptococcal antigen`],
+['ua','Urine',`hematuria=Hematuria|prot=Heavy proteinuria|rbccast=RBC casts or dysmorphic RBCs|mbcast=Muddy brown casts|wbccast=WBC casts|pyuria=Pyuria|nitrite=Positive nitrite|myo=Dipstick blood without RBCs|uosm_lo=Urine osmolality under 100|uosm_hi=Urine osmolality over 100 despite low Na|una_lo=Urine Na under 20 or FENa under 1%|una_hi=Urine Na over 30|oxal=Calcium oxalate crystals|pneumoag=Pneumococcal urine antigen|legag=Legionella urine antigen`],
+['img','Imaging',`cxr_lobar=CXR: lobar consolidation|cxr_multi=CXR: multilobar consolidation|cxr_cav=CXR: cavitary lesion|cxr_upper=CXR: upper-lobe infiltrate|cxr_bilat=CXR: diffuse bilateral infiltrates|cxr_int=CXR: interstitial or reticular pattern|ct_ggo=CT: diffuse ground-glass opacities|cxr_hilar=CXR: bilateral hilar adenopathy|cxr_nod=CXR: multiple peripheral nodules|cxr_eff=CXR: pleural effusion|cxr_edema=CXR: pulmonary edema|cxr_cm=CXR: cardiomegaly|cxr_wide=CXR: widened mediastinum|cxr_ptx=CXR: pneumothorax|cxr_pm=CXR: pneumomediastinum|cxr_free=Upright film: free air|cxr_clear=CXR clear despite hypoxemia|us_stones=US: gallstones|us_gbw=US: gallbladder wall thickening or pericholecystic fluid|us_cbd=US: dilated common bile duct|us_hydro=US: hydronephrosis|us_ff=US: free intraperitoneal fluid|us_peff=Echo: pericardial effusion|us_rv=Echo: dilated RV|img_liver=CT or US: liver abscess|img_gas=CT or film: soft-tissue gas|img_temp=MRI or CT: temporal lobe abnormality|img_sah=CT head: subarachnoid blood`],
+['ecg','ECG',`ste=Regional ST elevation|diffste=Diffuse ST elevation with PR depression|rvs=RV strain (S1Q3T3, new RBBB, TWI V1–V4)|peaked=Peaked T waves|uwave=U waves|qtl=Long QT|widqrs=Wide QRS or terminal R in aVR|lowv=Low voltage|alt=Electrical alternans|osborn=Osborn (J) waves|afib=Atrial fibrillation|avb=AV block`],
+['fl','Cultures & fluids',`bcx_sa=Blood cultures: S. aureus|bcx=Positive blood cultures|csf_pmn=CSF: neutrophilic pleocytosis|csf_lym=CSF: lymphocytic pleocytosis|csf_glu=CSF: low glucose|csf_prot=CSF: high protein|csf_xan=CSF: xanthochromia|csf_op=CSF: high opening pressure|asc_pmn=Ascitic fluid PMN over 250|pf_ph=Pleural fluid pH under 7.2 or low glucose|smear=Malaria smear positive`]
+];
+
+/* ---------- Disease library ----------
+   D(name, system, must-not-miss, classic clue, confirm with, findings)
+   Findings: id:3 hallmark, id:2 strong, id (=1) supportive. */
+const DX=[];
+function D(n,s,m,clue,conf,f){DX.push({n,s,m:!!m,clue,conf,f:f.trim().split(/\s+/).map(t=>{const[id,w]=t.split(':');return{id,w:+(w||1)}})})}
+
+/* Infectious: lungs */
+D("Pneumococcal pneumonia","Infectious",0,"Abrupt fever, rigors, productive cough, and a lobar infiltrate.","Blood and sputum cultures; pneumococcal urine antigen.","cxr_lobar:3 pneumoag:3 cough:2 fever:2 leuk:2 bands pleur hypox");
+D("Legionella pneumonia","Infectious",1,"Pneumonia plus hyponatremia, diarrhea, confusion, and relative bradycardia.","Legionella urine antigen; Legionella PCR of sputum.","legag:3 water:3 na_lo:3 cxr_multi:2 diarr:2 transam:2 brady:2 fever:2 ams po4_lo ck hematuria cxr_lobar:2 leuk");
+D("Mycoplasma pneumonia","Infectious",0,"Walking pneumonia with an interstitial film; cold-agglutinin hemolysis.","Mycoplasma PCR.","cxr_int:3 cough:2 hapto:2 ldh anemia phar ha");
+D("Aspiration pneumonia or lung abscess","Infectious",0,"Aspiration risk with a dependent-lobe infiltrate that cavitates.","CT chest; sputum culture.","asp:3 cxr_cav:2 etoh:2 cxr_lobar fever leuk cough");
+D("Right-sided endocarditis with septic emboli","Infectious",1,"Injection drug use, S. aureus bacteremia, and multiple peripheral nodules.","Repeat blood cultures; echo (TEE).","ivdu:3 cxr_nod:3 bcx_sa:3 bcx:2 murmur:2 fever:2 cxr_cav:2 hypox");
+D("Left-sided infective endocarditis","Infectious",1,"Fever, new murmur, embolic stigmata, and persistent bacteremia.","Three sets of blood cultures; TEE.","murmur:3 stig:3 bcx:3 bcx_sa:2 fever:2 focal hematuria rbccast anemia spleno crp");
+D("Pulmonary tuberculosis","Infectious",1,"Upper-lobe cavity with weight loss, night sweats, and hemoptysis.","Airborne isolation; sputum AFB smears and NAAT ×3.","cxr_upper:3 cxr_cav:3 hemopt:2 wtloss:2 sweats:2 cough fever immuno cd4 travel ca_hi na_lo");
+D("Pneumocystis pneumonia","Infectious",1,"Low CD4, diffuse ground glass, hypoxemia out of proportion, high LDH.","Induced sputum or BAL PCR/DFA; serum β-D-glucan.","cd4:3 ct_ggo:3 hypox:2 ldh:2 cxr_int:2 cxr_bilat dysp cxr_ptx immuno");
+D("Histoplasmosis","Infectious",0,"Ohio valley exposure with hilar adenopathy; disseminated disease causes pancytopenia.","Urine and serum Histoplasma antigen.","ohio:3 cxr_hilar:2 pancyt:2 fever transam immuno ferr spleno ldh");
+D("Coccidioidomycosis (valley fever)","Infectious",0,"Southwest exposure with pneumonia, eosinophilia, erythema nodosum, and arthralgias.","Coccidioides serology (EIA, immunodiffusion).","sw:3 eos:2 en:2 cxr_lobar cxr_hilar arth fever cxr_eff");
+D("Psittacosis","Infectious",0,"Pet birds, severe headache, relative bradycardia, and pneumonia.","Chlamydia psittaci PCR or serology.","birds:3 ha:2 brady:2 cxr_lobar fever spleno transam");
+D("Q fever","Infectious",0,"Livestock exposure with pneumonia, hepatitis, and thrombocytopenia.","Coxiella burnetii serology or PCR.","farm:3 transam:2 fever:2 plt_lo cxr_lobar ha");
+D("Viral pneumonia (influenza, COVID-19)","Infectious",0,"Bilateral ground glass with lymphopenia, myalgias, and high inflammatory markers.","Respiratory viral PCR.","ct_ggo:2 cxr_bilat:2 lymphop:2 myal:2 fever cough hypox leukop ferr ddimer ldh");
+D("Hantavirus pulmonary syndrome","Infectious",1,"Rodent exposure, thrombocytopenia, hemoconcentration, immunoblasts, then rapid pulmonary edema.","Hantavirus IgM; contact the health department.","rodent:3 plt_lo:2 hemoconc:2 atyp:2 cxr_bilat:2 fever myal hypot sw");
+D("Parapneumonic effusion or empyema","Infectious",0,"Pneumonia with an effusion that is acidic or low in glucose.","Diagnostic thoracentesis; chest tube if complicated.","cxr_eff:3 pf_ph:3 fever:2 leuk:2 pleur cough cxr_lobar");
+
+/* Infectious: systemic and travel */
+D("Leptospirosis (Weil disease)","Infectious",1,"Freshwater exposure, jaundice, AKI, and myalgias; hypokalemia is common.","Leptospira PCR or serology.","flood:3 aki:3 jaund:2 myal:2 k_lo:2 plt_lo fever ck dbili hemopt");
+D("Malaria","Infectious",1,"Fever after tropical travel with thrombocytopenia and hemolysis.","Thick and thin smears ×3 or rapid antigen test.","smear:3 travel:3 fever:2 plt_lo:2 hapto:2 anemia ibili aki glu_lo ams spleno");
+D("Dengue","Infectious",0,"Fever after travel with leukopenia, thrombocytopenia, myalgias, and rash.","Dengue NS1 antigen, PCR, or IgM.","travel:3 plt_lo:3 leukop:2 myal:2 fever:2 transam hemoconc ha rash");
+D("Typhoid fever","Infectious",0,"Fever after travel with relative bradycardia, leukopenia, and abdominal pain.","Blood cultures (several sets).","travel:3 brady:2 leukop:2 fever:2 abd transam diarr spleno");
+D("Ehrlichiosis or anaplasmosis","Infectious",0,"Tick exposure, fever, leukopenia, thrombocytopenia, and transaminitis.","Ehrlichia/Anaplasma PCR; start doxycycline.","tick:3 leukop:2 plt_lo:2 transam:2 fever:2 na_lo ha myal");
+D("Rocky Mountain spotted fever","Infectious",1,"Tick exposure, fever, headache, then a petechial rash on wrists, ankles, palms, and soles.","Start doxycycline; Rickettsia serology or PCR.","tick:3 palms:3 pete:2 fever:2 ha:2 na_lo:2 plt_lo ams transam");
+D("Lyme carditis","Infectious",0,"Erythema migrans with new heart block.","Lyme serology (two-tier).","em:3 avb:3 tick:2 arth syncope");
+D("Infectious mononucleosis (EBV)","Infectious",0,"Pharyngitis, atypical lymphocytes, splenomegaly, and transaminitis.","Heterophile antibody; EBV serology.","atyp:3 phar:2 spleno:2 transam:2 fever");
+D("Acute HIV infection","Infectious",0,"Mononucleosis-like illness with rash, cytopenias, and transaminitis.","HIV antigen/antibody test plus HIV RNA.","rash:2 phar leukop:2 plt_lo transam fever lymphop");
+
+/* Infectious: CNS */
+D("Bacterial meningitis","Infectious",1,"Fever, neck stiffness, and altered mental status; neutrophilic CSF with low glucose.","Blood cultures, then empiric antibiotics; LP.","csf_pmn:3 neck:3 csf_glu:2 fever:2 ams:2 csf_prot ha leuk pete");
+D("Meningococcemia","Infectious",1,"Fever and petechiae progressing to purpura and shock.","Blood cultures; immediate ceftriaxone.","pete:3 fever:2 hypot:2 inr fib_lo plt_lo neck");
+D("HSV encephalitis","Infectious",1,"Fever, confusion, seizures, lymphocytic CSF, temporal lobe changes.","CSF HSV PCR; start acyclovir.","img_temp:3 csf_lym:2 sz:2 ams:2 fever:2 focal");
+D("Cryptococcal meningitis","Infectious",1,"Low CD4 with headache and high opening pressure.","Serum and CSF cryptococcal antigen.","crag:3 cd4:3 csf_op:3 ha:2 csf_lym csf_glu fever");
+D("Spinal epidural abscess","Infectious",1,"Back pain, fever, and a neurologic deficit, often with injection drug use.","MRI spine with contrast; blood cultures.","back:3 fever:2 focal:2 ivdu:2 crp:2 bcx_sa");
+
+/* Infectious: abdomen, urinary, soft tissue */
+D("C. difficile colitis","Infectious",0,"Diarrhea after antibiotics with leukocytosis, sometimes leukemoid.","C. difficile toxin/PCR.","abx:3 diarr:3 leukx:3 leuk:2 fever aki alb_lo abd");
+D("Spontaneous bacterial peritonitis","Infectious",1,"Cirrhosis with ascites, fever or encephalopathy, and worsening kidney function.","Diagnostic paracentesis (PMN count, culture).","asc_pmn:3 cirr:3 ascites:2 fever abd ams aki");
+D("Acute cholangitis","Infectious",1,"Fever, RUQ pain, and jaundice; add confusion and shock for the Reynolds pentad.","RUQ ultrasound; blood cultures; ERCP.","us_cbd:3 jaund:2 ruq:2 fever:2 dbili:2 alp:2 leuk hypot ams");
+D("Acute cholecystitis","GI / liver",0,"RUQ pain, Murphy sign, fever, and a thickened gallbladder wall.","RUQ ultrasound; HIDA if equivocal.","us_gbw:3 ruq:3 murphy:2 us_stones:2 leuk:2 fever transam");
+D("Pyogenic or amebic liver abscess","Infectious",0,"Fever and RUQ pain with a high alkaline phosphatase.","CT or US; blood cultures; Entamoeba serology.","img_liver:3 fever:2 ruq:2 alp:2 leuk:2 travel cxr_eff");
+D("Acute pyelonephritis","Infectious",0,"Fever, flank pain, and pyuria with WBC casts.","Urine culture; blood cultures if septic.","flank:3 wbccast:3 pyuria:2 fever:2 nitrite leuk vom");
+D("Infected obstructing kidney stone","Infectious",1,"Flank pain, fever, pyuria, and hydronephrosis; needs decompression.","CT abdomen/pelvis; urology for stent or nephrostomy.","us_hydro:3 flank:2 pyuria:2 fever:2 aki hematuria");
+D("Necrotizing soft-tissue infection","Infectious",1,"Pain out of proportion, systemic toxicity, hyponatremia, and soft-tissue gas.","Emergent surgical exploration; CT if it won't delay surgery.","pootp:3 img_gas:3 na_lo:2 leuk:2 crp:2 tachy fever aki glu_hi ck anemia dm");
+D("Toxic shock syndrome","Infectious",1,"Fever, shock, and diffuse erythroderma with multiorgan involvement.","Find and remove the source; blood cultures.","erythro:3 hypot:3 fever:2 aki transam plt_lo ck diarr");
+D("Neutropenic fever","Infectious",1,"Fever after chemotherapy with an ANC under 500.","Blood cultures; antipseudomonal β-lactam within an hour.","neutrop:3 chemo:3 fever:3 leukop");
+D("Sepsis or septic shock","Infectious",1,"Infection with organ dysfunction: hypotension, lactate, AKI, confusion.","Cultures, lactate, source control, early antibiotics.","hypot:2 lact:2 fever bands leuk tachy aki ams plt_lo leukop");
+
+/* Cardiopulmonary and vascular */
+D("Pulmonary embolism","Cardiopulmonary",1,"Tachycardia and hypoxemia with a clear film, RV strain, and a swollen leg.","CT pulmonary angiography (or V/Q).","us_rv:3 rvs:3 legsw:3 cxr_clear:2 tachy:2 hypox:2 ddimer:2 vte:2 pleur hemopt syncope trop bnp respalk hypot");
+D("Acute coronary syndrome (STEMI)","Cardiopulmonary",1,"Chest pain, regional ST elevation, and a rising troponin.","Serial ECGs and troponin; cath lab activation.","ste:3 trop:3 cp:2 diaph");
+D("Acute decompensated heart failure","Cardiopulmonary",0,"Pulmonary edema, high BNP, JVD, and edema.","Echo; BNP trend.","cxr_edema:3 bnp:3 jvd:2 edema:2 chf:2 cxr_cm cxr_eff na_lo aki dysp");
+D("Acute pericarditis","Cardiopulmonary",0,"Positional pleuritic chest pain with diffuse ST elevation and PR depression.","Echo; CRP.","diffste:3 pleur:2 cp us_peff crp fever uri trop");
+D("Cardiac tamponade","Cardiopulmonary",1,"Hypotension, JVD, a pericardial effusion, and electrical alternans.","Bedside echo; pericardiocentesis.","us_peff:3 alt:3 hypot:2 jvd:2 lowv:2 tachy malig cxr_cm");
+D("Myocarditis","Cardiopulmonary",1,"Recent viral illness, troponin rise, and heart failure.","Echo; cardiac MRI.","trop:3 uri:2 bnp:2 cp tachy diffste ck");
+D("Aortic dissection","Cardiopulmonary",1,"Tearing chest or back pain, a widened mediastinum, and a pulse differential.","CT angiography of the chest.","bpdiff:3 cxr_wide:3 cp:2 back:2 htn focal ddimer aki syncope");
+D("Tension pneumothorax","Cardiopulmonary",1,"Hypoxemia and hypotension with a pneumothorax and JVD.","Clinical diagnosis; needle or finger decompression.","cxr_ptx:3 hypot:2 hypox:2 jvd tachy");
+D("ARDS","Cardiopulmonary",1,"Bilateral infiltrates with severe hypoxemia, not from heart failure.","ABG (P/F ratio); echo to exclude cardiogenic edema.","cxr_bilat:3 hypox:3 tachyp lact");
+D("Esophageal rupture (Boerhaave)","GI / liver",1,"Forceful vomiting, then chest pain, pneumomediastinum, and a left effusion.","CT chest with oral contrast; esophagram.","cxr_pm:3 vom:2 cp:2 cxr_eff:2 fever etoh");
+D("Perforated viscus","GI / liver",1,"Abdominal pain with free air.","CT abdomen; surgery.","cxr_free:3 abd:2 leuk fever lact hypot");
+D("Acute mesenteric ischemia","GI / liver",1,"Pain out of proportion in a patient with atrial fibrillation; lactate rises late.","CT angiography of the abdomen.","pootp:3 afib:2 lact:2 leuk:2 agma ddimer po4_hi vom");
+
+/* Endocrine and metabolic */
+D("Diabetic ketoacidosis","Endocrine",1,"Hyperglycemia, anion gap acidosis, and ketones.","BMP, VBG, β-hydroxybutyrate.","glu_hi:3 agma:3 ketones:3 polyu:2 k_hi tachyp vom abd aki leuk dm");
+D("Euglycemic DKA (SGLT2 inhibitor)","Endocrine",1,"Anion gap acidosis with ketones and near-normal glucose on an SGLT2 inhibitor.","β-hydroxybutyrate; VBG.","m_sglt2:3 agma:3 ketones:3 vom tachyp");
+D("Hyperosmolar hyperglycemic state","Endocrine",1,"Glucose over 600, very high osmolality, and confusion, without much ketosis.","Serum osmolality; BMP.","glu_vhi:3 osm_hi:3 ams:3 na_hi:2 aki:2 glu_hi polyu");
+D("Alcoholic ketoacidosis","Endocrine",0,"Binge drinking, then vomiting and poor intake, with ketoacidosis and low or normal glucose.","β-hydroxybutyrate; lactate; glucose.","etoh:3 ketones:2 agma:2 vom:2 glu_lo k_lo mg_lo po4_lo");
+D("Toxic alcohol (methanol or ethylene glycol)","Toxicology",1,"Anion gap acidosis with an osmolal gap; ethylene glycol adds AKI, oxalate crystals, and hypocalcemia.","Serum osmolality; toxic alcohol levels; fomepizole.","osmgap:3 agma:3 oxal:3 ca_lo:2 aki:2 ams ingest vis");
+D("Salicylate toxicity","Toxicology",1,"Respiratory alkalosis plus anion gap acidosis with tinnitus.","Salicylate level, repeated; VBG.","tinn:3 respalk:3 agma:3 vom tachyp hyperth ams glu_lo ingest");
+D("Thyroid storm","Endocrine",1,"Fever, marked tachycardia or AF, agitation, and suppressed TSH.","TSH, free T4, T3; Burch-Wartofsky score.","tsh_lo:3 tachy:3 fever:2 afib:2 ams diarr glu_hi ca_hi transam");
+D("Myxedema coma","Endocrine",1,"Hypothermia, bradycardia, hyponatremia, and hypercapnia with a high TSH.","TSH, free T4, cortisol.","tsh_hi:3 hypoth:3 brady:2 na_lo:2 ams:2 respac:2 glu_lo ck lowv us_peff");
+D("Adrenal crisis","Endocrine",1,"Shock with hyponatremia, hyperkalemia, and hypoglycemia, often after stopping steroids.","Random cortisol (draw, then give hydrocortisone).","cort:3 hypot:3 m_ster:2 na_lo:2 k_hi:2 glu_lo:2 eos vom abd ca_hi peaked");
+D("Pheochromocytoma crisis","Endocrine",0,"Paroxysmal severe hypertension, headache, sweating, and palpitations.","Plasma free metanephrines.","htn:3 diaph:2 ha:2 tachy:2 glu_hi");
+D("SIADH","Renal / electrolytes",0,"Euvolemic hyponatremia with inappropriately concentrated urine and high urine sodium.","Serum and urine osmolality, urine Na; TSH and cortisol.","na_lo:3 uosm_hi:2 una_hi:2 malig m_sero cxr_lobar ams");
+D("Primary polydipsia or low solute intake","Renal / electrolytes",0,"Hyponatremia with maximally dilute urine (beer potomania, tea and toast).","Urine osmolality; diet and fluid history.","na_lo:3 uosm_lo:3 etoh malnut");
+D("Diabetes insipidus","Renal / electrolytes",0,"Hypernatremia with polyuria and dilute urine; lithium causes the nephrogenic form.","Urine osmolality; desmopressin response.","na_hi:3 polyu:3 uosm_lo:3 m_li:2 ca_hi k_lo");
+D("Primary hyperparathyroidism","Endocrine",0,"Hypercalcemia with low phosphate, stones, and bone pain.","PTH, vitamin D.","ca_hi:3 pth_hi:3 po4_lo:2 flank bone");
+D("Hypercalcemia of malignancy","Endocrine",1,"Known cancer with high calcium and a suppressed PTH.","PTH, PTHrP, vitamin D metabolites.","ca_hi:3 malig:3 pth_lo:2 wtloss ams aki");
+D("Multiple myeloma","Heme / onc",0,"Hypercalcemia, renal failure, anemia, and bone pain (CRAB) with a protein gap.","SPEP with immunofixation; serum free light chains.","protgap:3 ca_hi:2 aki:2 anemia:2 bone:2 esr:2 prot");
+D("Sarcoidosis","Pulmonary",0,"Bilateral hilar adenopathy, erythema nodosum, and hypercalcemia.","CT chest; biopsy showing noncaseating granulomas.","cxr_hilar:3 ca_hi:2 en:2 arth lymphop avb");
+D("Milk-alkali syndrome","Renal / electrolytes",0,"Hypercalcemia, metabolic alkalosis, and AKI from calcium supplements.","Medication history; PTH (suppressed).","ca_hi:3 metalk:3 aki:2 pth_lo");
+D("Refeeding syndrome","Renal / electrolytes",0,"Hypophosphatemia, hypokalemia, and hypomagnesemia after feeding a malnourished patient.","Daily phosphate, potassium, and magnesium.","po4_lo:3 malnut:3 k_lo:2 mg_lo:2 etoh uwave");
+D("Tumor lysis syndrome","Heme / onc",1,"High K, phosphate, and uric acid with low calcium and AKI after chemotherapy.","BMP, phosphate, calcium, uric acid, LDH every 6 hours.","po4_hi:3 urate:3 hmalig:2 chemo:2 k_hi:2 ca_lo:2 aki:2 ldh peaked");
+D("Rhabdomyolysis","Renal / electrolytes",0,"Very high CK and dipstick blood without RBCs after a crush, downtime, or exertion.","CK; urinalysis; BMP.","ck:3 myo:3 down:2 aki:2 k_hi:2 po4_hi ca_lo myal transam agma peaked");
+D("Hypokalemic periodic paralysis","Endocrine",0,"Sudden weakness with marked hypokalemia; screen for thyrotoxicosis.","Potassium; TSH.","k_lo:3 weak:3 tsh_lo uwave:2");
+D("Uremia (advanced kidney injury)","Renal / electrolytes",1,"AKI with hyperkalemia, hyperphosphatemia, acidosis, and confusion or pericarditis.","BMP; renal ultrasound; dialysis criteria.","aki:3 k_hi:2 po4_hi:2 agma:2 ca_lo ams diffste anemia peaked:2");
+D("Primary hyperaldosteronism","Endocrine",0,"Hypertension with hypokalemia and metabolic alkalosis.","Aldosterone-to-renin ratio.","k_lo:3 metalk:2 htn:2 na_hi uwave");
+D("Diuretic effect (loop or thiazide)","Renal / electrolytes",0,"Hypokalemia, metabolic alkalosis, and hyponatremia (thiazide) on a diuretic.","Medication history; urine chloride (high).","m_diur:3 k_lo:2 metalk:2 na_lo mg_lo cl_lo uwave");
+D("Vomiting or gastric outlet obstruction","GI / liver",0,"Hypochloremic, hypokalemic metabolic alkalosis with prerenal AKI.","Urine chloride (low); imaging for obstruction.","vom:3 metalk:3 cl_lo:2 k_lo:2 bunr aki uwave");
+D("GI bicarbonate loss (diarrhea)","Renal / electrolytes",0,"Non-gap acidosis with hypokalemia from diarrhea.","Urine anion gap (negative).","diarr:3 nagma:3 k_lo:2 aki");
+D("Renal tubular acidosis (type 1 or 2)","Renal / electrolytes",0,"Non-gap acidosis with hypokalemia without diarrhea; type 1 forms stones.","Urine anion gap (positive); urine pH.","nagma:3 k_lo:2 flank");
+D("Type 4 RTA (hypoaldosteronism)","Renal / electrolytes",0,"Non-gap acidosis with hyperkalemia, often in diabetes.","Urine anion gap; aldosterone and renin.","nagma:3 k_hi:3 dm peaked");
+
+/* GI and liver */
+D("Hepatic encephalopathy","GI / liver",0,"Cirrhosis with confusion and asterixis.","Look for the trigger: infection, bleeding, electrolytes, sedatives.","cirr:3 ams:3 nh3:2 inr plt_lo k_lo");
+D("Acetaminophen-induced liver failure","Toxicology",1,"Ingestion followed by AST and ALT in the thousands, rising INR, and hypoglycemia.","Acetaminophen level; start NAC.","ast_vhi:3 ingest:2 inr:3 glu_lo:2 ams agma aki");
+D("Ischemic hepatitis (shock liver)","GI / liver",0,"AST and ALT in the thousands with a very high LDH after hypotension.","Trend LFTs; treat the low-flow state.","ast_vhi:3 hypot:2 ldh:2 aki chf");
+D("Alcoholic hepatitis","GI / liver",1,"Heavy drinking, jaundice, AST:ALT over 2, and leukocytosis.","Maddrey discriminant function; MELD.","etoh:3 ast2:3 jaund:2 dbili:2 leuk:2 fever inr macro plt_lo");
+D("Choledocholithiasis","GI / liver",0,"RUQ pain with a cholestatic pattern and a dilated duct.","MRCP or ERCP.","us_cbd:3 us_stones:2 dbili:2 alp:2 ruq lipase");
+D("Acute pancreatitis","GI / liver",0,"Epigastric pain to the back with lipase over 3× ULN.","Lipase; RUQ US for stones; triglycerides; calcium.","lipase:3 epig:3 vom ca_lo:2 leuk glu_hi etoh us_stones tg:2 ca_hi cxr_eff");
+D("Upper GI bleed","GI / liver",1,"Melena with a high BUN:Cr ratio and anemia.","Type and screen; EGD.","melena:3 bunr:3 anemia:2 tachy hypot cirr");
+D("Appendicitis","GI / liver",0,"Periumbilical pain migrating to the RLQ with leukocytosis.","CT abdomen/pelvis or US.","rlq:3 leuk:2 vom fever crp");
+
+/* Heme and onc */
+D("Thrombotic thrombocytopenic purpura","Heme / onc",1,"Schistocytes and thrombocytopenia with neurologic changes; normal coags.","ADAMTS13 (send before plasma); PLASMIC score.","schist:3 plt_lo:3 hapto:2 ldh:2 anemia:2 ams:2 aki fever");
+D("Hemolytic uremic syndrome","Heme / onc",1,"Bloody diarrhea, then schistocytes, thrombocytopenia, and AKI.","Stool Shiga toxin; ADAMTS13 to exclude TTP.","schist:3 aki:3 bdiarr:2 plt_lo:2 anemia ldh hapto");
+D("Disseminated intravascular coagulation","Heme / onc",1,"Thrombocytopenia, high INR, low fibrinogen, and high D-dimer in a sick patient.","DIC panel; ISTH score; treat the cause.","fib_lo:3 inr:3 plt_lo:2 ddimer:2 schist pete");
+D("HELLP syndrome","Obstetric",1,"Pregnancy with hemolysis, elevated liver enzymes, and low platelets.","CBC, LFTs, LDH, haptoglobin; OB now.","preg:3 plt_lo:3 transam:2 hapto:2 htn:2 schist ldh ruq epig");
+D("Preeclampsia or eclampsia","Obstetric",1,"Pregnancy after 20 weeks with severe hypertension and proteinuria; seizures mean eclampsia.","Urine protein:creatinine ratio; magnesium; OB now.","preg:3 htn:3 prot:2 sz:2 ha transam plt_lo aki vis");
+D("Ruptured ectopic pregnancy","Obstetric",1,"Positive hCG, abdominal pain, and free fluid with hypotension.","Bedside US; OB/GYN.","hcg:3 us_ff:3 abd:2 hypot:2 anemia:2 tachy");
+D("Autoimmune hemolytic anemia","Heme / onc",0,"Anemia with low haptoglobin, high LDH, spherocytes, and a positive DAT.","DAT; peripheral smear; reticulocyte count.","dat:3 hapto:3 spher:2 ldh:2 ibili:2 retic:2 anemia:2");
+D("Acute leukemia (including APL)","Heme / onc",1,"Circulating blasts with cytopenias; APL adds DIC.","Peripheral smear; flow cytometry; fibrinogen.","blasts:3 pancyt:2 fib_lo:2 inr leukx fever pete");
+D("Hemophagocytic lymphohistiocytosis","Heme / onc",1,"Fever, extreme ferritin, cytopenias, splenomegaly, high triglycerides, low fibrinogen.","HScore; soluble IL-2 receptor; marrow biopsy.","ferr:3 fever:2 pancyt:2 spleno:2 tg:2 fib_lo:2 transam na_lo ldh");
+D("Adult-onset Still disease","Rheumatologic",0,"Quotidian fever, arthritis, evanescent rash, leukocytosis, and very high ferritin.","Ferritin, glycosylated ferritin; exclude infection and malignancy.","ferr:3 arth:2 fever:2 leuk:2 phar transam");
+D("Acute chest syndrome","Heme / onc",1,"Sickle cell disease with a new infiltrate, chest pain, and hypoxemia.","CXR; type and screen; consider exchange transfusion.","sickle:3 cxr_lobar:2 hypox:2 cp fever anemia");
+D("Heparin-induced thrombocytopenia","Heme / onc",1,"Platelets fall by over 50% 5 to 14 days after heparin, with new clot.","4T score; PF4 antibody.","m_hep:3 plt_lo:3 legsw");
+D("Methemoglobinemia","Toxicology",1,"Cyanosis and low SpO2 that do not improve with oxygen after an oxidant drug.","Co-oximetry (MetHb level); methylene blue.","methb:3 cyan:3 m_ox:3 hypox ha");
+
+/* Renal */
+D("Prerenal AKI","Renal / electrolytes",0,"AKI with BUN:Cr over 20 and avid sodium retention.","Urine Na, FENa (FEUrea on diuretics).","una_lo:3 bunr:3 aki:2 vom diarr hypot m_diur");
+D("Acute tubular necrosis","Renal / electrolytes",0,"AKI after hypotension or a nephrotoxin with muddy brown casts.","Urine microscopy; FENa over 2%.","mbcast:3 aki:3 hypot");
+D("Acute interstitial nephritis","Renal / electrolytes",0,"AKI with rash, fever, eosinophilia, and WBC casts after a new drug.","Urinalysis and microscopy; stop the drug.","eos:2 wbccast:2 aki:3 pyuria rash fever abx");
+D("Rapidly progressive GN (pulmonary-renal)","Renal / electrolytes",1,"RBC casts and AKI with hemoptysis or nodules (GPA, anti-GBM).","ANCA, anti-GBM; kidney biopsy.","rbccast:3 aki:2 hematuria:2 hemopt:2 cxr_bilat cxr_nod prot anemia");
+D("Post-streptococcal glomerulonephritis","Renal / electrolytes",0,"Hematuria, edema, and hypertension 1 to 3 weeks after strep.","ASO or anti-DNase B; C3.","rbccast:2 hematuria:2 uri:2 edema:2 c3c4:2 htn aki prot");
+D("Nephrotic syndrome","Renal / electrolytes",0,"Heavy proteinuria, hypoalbuminemia, edema, and hyperlipidemia.","Urine protein:creatinine ratio; kidney biopsy.","prot:3 alb_lo:3 edema:3 tg vte");
+D("Obstructing kidney stone","Renal / electrolytes",0,"Colicky flank pain with hematuria.","CT abdomen/pelvis (non-contrast) or US.","flank:3 hematuria:3 us_hydro:2 vom");
+
+/* Toxicology and environmental */
+D("Serotonin syndrome","Toxicology",1,"Serotonergic drugs with clonus, hyperreflexia, agitation, and hyperthermia.","Hunter criteria; stop the drug; benzodiazepines.","m_sero:3 clonus:3 hyperth tachy:2 diaph ams diarr");
+D("Neuroleptic malignant syndrome","Toxicology",1,"Antipsychotic exposure with lead-pipe rigidity, fever, and a high CK.","CK; stop the drug; cooling, benzodiazepines.","m_apsy:3 rigid:3 fever:2 hyperth:2 ck:2 ams:2 leuk aki tachy");
+D("Lithium toxicity","Toxicology",1,"Tremor, confusion, and vomiting, often with AKI or new diuretic.","Lithium level (repeat); BMP.","m_li:3 ams:2 aki:2 vom clonus na_hi brady");
+D("Tricyclic antidepressant toxicity","Toxicology",1,"Wide QRS, tachycardia, hypotension, and seizures after an ingestion.","ECG; sodium bicarbonate for QRS over 100 ms.","widqrs:3 ingest:2 tachy:2 hypot:2 sz:2 ams");
+D("Digoxin toxicity","Toxicology",1,"Vomiting, bradycardia or heart block, and hyperkalemia on digoxin.","Digoxin level; Digifab.","m_dig:3 k_hi:2 avb:2 brady:2 vom:2 aki vis");
+D("Heat stroke","Toxicology",1,"Temperature over 40 °C with CNS dysfunction after heat exposure.","Core temperature; rapid cooling.","hyperth:3 heat:3 ams:3 transam:2 aki ck inr");
+D("Accidental hypothermia","Toxicology",1,"Temperature under 35 °C with bradycardia and Osborn waves.","Core temperature; rewarming.","hypoth:3 osborn:3 brady:2 afib ams");
+D("Carbon monoxide poisoning","Toxicology",1,"Headache and confusion, often several people in the same home.","Co-oximetry (COHb).","cohb:3 ha:2 ams lact trop");
+
+/* Neuro and rheum */
+D("Subarachnoid hemorrhage","Neuro",1,"Thunderclap headache with neck stiffness; xanthochromia if CT is negative.","CT head; LP if negative.","thunder:3 img_sah:3 csf_xan:3 neck:2 ams syncope na_lo qtl");
+D("Guillain-Barré syndrome","Neuro",1,"Ascending weakness and areflexia after an infection; high CSF protein with few cells.","LP; NIF and vital capacity.","weakasc:3 areflex:3 csf_prot:2 uri:2 diarr respac");
+D("Wernicke encephalopathy","Neuro",1,"Confusion, ophthalmoplegia, and ataxia in alcohol use or malnutrition.","Clinical; give thiamine before glucose.","wern:3 etoh:2 malnut:2 ams:2");
+D("Giant cell arteritis","Rheumatologic",1,"New headache over 50 with jaw claudication, vision changes, and ESR over 100.","ESR, CRP; temporal artery biopsy or US.","jaw:3 esr:3 vis:2 ha:2 plt_hi anemia");
+D("Systemic lupus erythematosus flare","Rheumatologic",0,"Arthritis, cytopenias, serositis, and active urine sediment with low complement.","ANA, dsDNA, C3/C4; urinalysis.","ana:3 c3c4:2 arth:2 rbccast:2 prot leukop plt_lo hapto us_peff cxr_eff");
+
+/* ---------- Lookup tables ---------- */
+const FL={},FCAT={};
+for(const[c,,s]of CATS)for(const p of s.split('|')){const[id,l]=p.split('=');FL[id]=l;FCAT[id]=c}
+for(const d of DX)d.tot=d.f.reduce((a,x)=>a+x.w,0);
+
+/* ---------- State (blank on every visit) ---------- */
+let SEL=new Set(),Q='',SHOWALL=false;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+
+/* ---------- Matching ----------
+   Each disease scores the weights of the findings you picked (hallmark 3, strong 2, supportive 1).
+   Shown when the matched weight is at least 3 and either two findings match or only one finding is picked.
+   Ranked by matched weight, nudged toward diseases whose picture you cover more completely
+   and that explain more of what you picked. */
+function rank(){
+  const n=SEL.size;if(!n)return[];
+  const out=[];
+  for(const d of DX){
+    const hit=d.f.filter(x=>SEL.has(x.id));if(!hit.length)continue;
+    const mw=hit.reduce((a,x)=>a+x.w,0);
+    if(mw<3)continue;if(hit.length<2&&n>1)continue;if(n===1&&hit[0].w<2)continue;
+    const cov=mw/d.tot,expl=hit.length/n;
+    out.push({d,hit,mw,cov,score:mw*(0.6+0.4*cov)*(0.5+0.5*expl)+(d.m?0.01:0)});
+  }
+  return out.sort((a,b)=>b.score-a.score||b.cov-a.cov);
+}
+function strength(r){return r.hit.length>=3&&(r.cov>=0.45||r.mw>=9)?'Strong match':r.hit.length>=2&&r.cov>=0.3?'Good match':'Partial match'}
+
+/* ---------- Rendering ---------- */
+const OPEN=new Set(window.innerWidth>900?CATS.map(c=>c[0]):[]);
+function hl(label){if(!Q)return esc(label);const i=label.toLowerCase().indexOf(Q.toLowerCase());if(i<0)return esc(label);
+  return esc(label.slice(0,i))+'<mark>'+esc(label.slice(i,i+Q.length))+'</mark>'+esc(label.slice(i+Q.length))}
+function renderCats(){
+  const q=Q.toLowerCase();let h='';
+  for(const[c,name,s]of CATS){
+    const ids=s.split('|').map(p=>p.split('=')[0]).filter(id=>!q||FL[id].toLowerCase().includes(q)||id.includes(q));
+    if(!ids.length)continue;
+    const nsel=ids.filter(id=>SEL.has(id)).length;
+    h+=`<details class="cat" data-c="${c}"${q||OPEN.has(c)?' open':''}><summary>${esc(name)}${nsel?`<span class="n">${nsel}</span>`:''}</summary><div class="chips">${ids.map(id=>`<button type="button" class="chip" data-f="${id}" aria-pressed="${SEL.has(id)}">${hl(FL[id])}</button>`).join('')}</div></details>`;
+  }
+  $('cats').innerHTML=h||`<p class="empty">No findings match “${esc(Q)}”.</p>`;
+}
+function renderPicked(){
+  $('picked').innerHTML=SEL.size?[...SEL].map(id=>`<button type="button" class="pk" data-rm="${id}" aria-label="Remove ${esc(FL[id])}">${esc(FL[id])}<span class="x" aria-hidden="true">×</span></button>`).join(''):'<span class="none">Nothing picked yet.</span>';
+  $('clear').disabled=!SEL.size;
+}
+function renderRes(){
+  const R=rank();$('copy').disabled=!R.length;
+  $('barmid').textContent=SEL.size?`${SEL.size} finding${SEL.size>1?'s':''} · ${R.length} match${R.length===1?'':'es'}`:'No findings yet';
+  if(!SEL.size){$('res').innerHTML='<p class="empty">Pick findings on the left. A positive CXR, a leukocytosis, and an electrolyte derangement together will narrow things quickly.</p>';return}
+  if(!R.length){$('res').innerHTML='<p class="empty">No classic pattern yet. Add another finding, or try a broader one.</p>';return}
+  const show=SHOWALL?R:R.slice(0,10);
+  $('res').innerHTML=show.map((r,i)=>{const d=r.d,st=strength(r);
+    const look=d.f.filter(x=>!SEL.has(x.id)&&x.w>=2).sort((a,b)=>b.w-a.w);
+    return `<article class="dx${i===0?' top1':''}"><div class="dxh"><span class="rk">${i+1}.</span><span class="nm">${esc(d.n)}</span>
+      <span class="tag">${esc(d.s)}</span>${d.m?'<span class="tag mnm">Must not miss</span>':''}${st==='Strong match'?'<span class="tag str">Strong match</span>':`<span class="tag">${st}</span>`}</div>
+      <div class="meter" title="${Math.round(r.cov*100)}% of the classic picture"><i style="width:${Math.max(6,Math.round(r.cov*100))}%"></i></div>
+      <p class="clue">${esc(d.clue)}</p>
+      <div class="row"><span class="lb">Fits</span>${r.hit.sort((a,b)=>b.w-a.w).map(x=>`<span class="hit${x.w===3?' key':''}">${esc(FL[x.id])}</span>`).join('')}</div>
+      ${look.length?`<div class="row"><span class="lb">Look for</span>${look.map(x=>`<button type="button" class="add${x.w===3?' key':''}" data-f="${x.id}" title="Add this finding">+ ${esc(FL[x.id])}</button>`).join('')}</div>`:''}
+      <p class="conf"><b>Confirm</b> ${esc(d.conf)}</p></article>`}).join('')
+    +(R.length>10?`<button type="button" class="btn sm more" id="more">${SHOWALL?'Show top 10':`Show all ${R.length}`}</button>`:'');
+}
+function render(){renderPicked();renderCats();renderRes()}
+
+/* ---------- Copy ---------- */
+const lc=s=>{s=s.replace(/^(CXR|CT|US|Echo|CSF|MRI or CT|CT or US|CT or film|CT head|Upright film|Blood cultures): /,'$1 ');return /^[A-Z]{2}|^[A-Z][^a-z ]/.test(s)?s:s.charAt(0).toLowerCase()+s.slice(1)};
+function copyText(){
+  const R=rank().slice(0,5);if(!R.length)return'';
+  return `Findings: ${[...SEL].map(id=>lc(FL[id])).join('; ')}.\nPattern-based differential:\n`+R.map((r,i)=>`${i+1}. ${r.d.n}, given ${r.hit.map(x=>lc(FL[x.id])).join(', ')}. Confirm: ${r.d.conf}`).join('\n');
+}
+async function doCopy(){const t=copyText();if(!t)return;let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  toast(ok?'Differential copied.':'Couldn’t copy on this device.')}
+function toast(m){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=m;document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+
+/* ---------- Events ---------- */
+function toggle(id){SEL.has(id)?SEL.delete(id):SEL.add(id);SHOWALL=false}
+document.addEventListener('click',e=>{
+  const f=e.target.closest('[data-f]');if(f){toggle(f.dataset.f);
+    if(f.classList.contains('add')){OPEN.add(FCAT[f.dataset.f]);toast('Added: '+FL[f.dataset.f])}
+    render();return}
+  const rm=e.target.closest('[data-rm]');if(rm){SEL.delete(rm.dataset.rm);render();return}
+  if(e.target.closest('#more')){SHOWALL=!SHOWALL;renderRes();return}
+  if(e.target.closest('#clear')){SEL.clear();SHOWALL=false;Q='';$('q').value='';render();return}
+  if(e.target.closest('#copy')){doCopy();return}
+  if(e.target.closest('#see')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.cat')&&!Q){d.open?OPEN.add(d.dataset.c):OPEN.delete(d.dataset.c)}},true);
+$('q').addEventListener('input',e=>{Q=e.target.value.trim();renderCats()});
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter'){const first=$('cats').querySelector('.chip');if(first){toggle(first.dataset.f);Q='';e.target.value='';render()}}});
+render();
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>

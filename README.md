@@ -16,6 +16,7 @@ Clinical documentation and residency planning tools.
 | Spectrum | `/spectrum/` | ID consults: HPI with complaint-specific questions, chart review and prior cultures; drafted summary statement with impression and recommendation menus by consult reason; cultures and antimicrobial days; lines, catheters and hardware review (device days, site exam, removal rules flagged against blood cultures); daily ID note with a rounding checklist by consult reason; bugs and drugs reference |
 | Sweep | `/sweep/` | Morning ICU considerations, system by system |
 | Ether | `/ether/` | Anesthesia pre-op: chart review with structured ECG, echo, cath, device, PFT studies; ASA/RCRI/STOP-BANG/Apfel, anesthetic plan, landscape two-column OR card, pre-op note |
+| Constellation | `/constellation/` | Combine workup findings (labs, imaging, ECG, exam, exposures) and see the diseases classically associated with that combination |
 | Primer | `/primer/` | Daily ICU curriculum: one lesson a day with readings, orders, evidence and a self-check |
 | Core | `/core/` | Daily EM curriculum through Tintinalli’s 9th ed.: chapter checklist, PDF linked on-device, workup/treatment/dispo, self-check |
 | Rhythm | `/rhythm/` | Daily EKG curriculum through Dubin: readings checklist, your PDF linked on-device, practice 12-lead cases |
