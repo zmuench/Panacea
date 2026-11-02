@@ -88,6 +88,7 @@ h2.sec{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(
 .chip[aria-pressed="true"]{background:var(--ab-soft);border-color:var(--ab);color:var(--ab);font-weight:700}
 .chip.dv[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 input.loc{margin-top:8px;padding:7px 10px;font-size:.92rem;background:var(--paper)}
+.abp .chip{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .tri{margin:0 0 6px;font-size:.78rem;color:var(--muted)}
 .chip[data-s="neg"]{background:var(--nl-soft);border-color:var(--nl);color:var(--nl);text-decoration:none}
 .chip[data-s="neg"] .no{font-weight:800;letter-spacing:.02em}
@@ -599,6 +600,7 @@ function hasSexItems(k){return items(k).some(x=>MALE.has(x.id)||FEMALE.has(x.id)
 
 /* ---------- sentence building ---------- */
 /* Pertinent negatives: findings tapped twice are written as "no A, B, or C" after the positives. */
+const TOUCH=matchMedia('(hover: none)').matches;
 const orList=a=>a.length<3?a.join(' or '):a.slice(0,-1).join(', ')+', or '+a[a.length-1];
 function abText(k,id){const d=D(k),ch=(d.ch[id]||[]).filter(c=>I[id].ab.includes(c)),ng=I[id].ab.filter(c=>((d.ng||{})[id]||[]).includes(c)),tx=(d.tx[id]||'').trim(),sd=d.sd[id];
   const pre=I[id].pre||'';
@@ -673,7 +675,7 @@ function itemHTML(k,x){const it=I[x.id],d=D(k),m=d.m[x.id]||'';
   return `<div class="it" data-id="${x.id}" data-m="${m}"><div class="ir"><div class="lb">${t}<div class="pv">${esc(pv)}</div></div>
    <div class="na"><button class="n" data-a="mark" data-v="n" aria-pressed="${m==='n'}">Nl</button><button class="a" data-a="mark" data-v="a" aria-pressed="${m==='a'}">Abn</button></div></div>
    ${it.loc?`<input type="text" class="loc" data-loc="${x.id}" value="${esc((d.loc||{})[x.id]||'')}" placeholder="${esc(it.loc)}">`:''}
-   <div class="abp">${it.ab.length?`<p class="tri">Tap once if present, twice for a pertinent negative.</p><div class="chips">${it.ab.map(c=>{const st=ch.includes(c)?'pos':ng.includes(c)?'neg':'';return `<button class="chip" data-a="chip" data-c="${esc(c)}" data-s="${st}" aria-pressed="${st==='pos'?'true':st==='neg'?'mixed':'false'}" aria-label="${esc((st==='neg'?'No ':'')+c+(st==='pos'?', present':st==='neg'?', pertinent negative':''))}">${st==='neg'?'<b class="no">No</b> ':''}${esc(c)}</button>`}).join('')}</div>`:''}
+   <div class="abp">${it.ab.length?`<p class="tri">${TOUCH?'Tap if present · press and hold if absent':'Click if present · right-click if absent'}</p><div class="chips">${it.ab.map(c=>{const st=ch.includes(c)?'pos':ng.includes(c)?'neg':'';return `<button class="chip" data-a="chip" data-c="${esc(c)}" data-s="${st}" aria-pressed="${st==='pos'?'true':st==='neg'?'mixed':'false'}" aria-label="${esc((st==='neg'?'No ':'')+c+(st==='pos'?', present':st==='neg'?', pertinent negative':''))}">${st==='neg'?'<b class="no">No</b> ':''}${esc(c)}</button>`}).join('')}</div>`:''}
    <div class="row2">${it.side?`<div class="seg">${Object.entries({R:'Right',L:'Left',B:'Both'}).map(([v,l])=>`<button data-a="side" data-v="${v}" aria-pressed="${d.sd[x.id]===v}">${l}</button>`).join('')}</div>`:''}
    <input type="text" data-tx="${x.id}" value="${esc(d.tx[x.id]||'')}" placeholder="${esc(it.ph||'Details (size, location, value)')}"></div></div></div>`}
 
@@ -732,8 +734,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   if(!k)return;const d=D(k),el=b.closest('.it'),id=el&&el.dataset.id;
   if(a==='mark'){const v=b.dataset.v;d.m[id]=d.m[id]===v?undefined:v;if(!d.m[id])delete d.m[id];save();refreshItem(k,id);
 }
-  else if(a==='chip'){const c=b.dataset.c,arr=d.ch[id]||(d.ch[id]=[]),ngs=d.ng[id]||(d.ng[id]=[]);const i=arr.indexOf(c),j=ngs.indexOf(c);
-    if(i>=0){arr.splice(i,1);ngs.push(c)}else if(j>=0)ngs.splice(j,1);else arr.push(c);d.m[id]='a';save();refreshItem(k,id)}
+  else if(a==='chip'){if(holdFired)return;const c=b.dataset.c,arr=d.ch[id]||(d.ch[id]=[]),ngs=d.ng[id]||(d.ng[id]=[]);const i=arr.indexOf(c),j=ngs.indexOf(c);
+    if(i>=0)arr.splice(i,1);else{if(j>=0)ngs.splice(j,1);arr.push(c)}d.m[id]='a';save();refreshItem(k,id)}
   else if(a==='side'){d.sd[id]=d.sd[id]===b.dataset.v?undefined:b.dataset.v;if(!d.sd[id])delete d.sd[id];d.m[id]='a';save();refreshItem(k,id)}
   else if(a==='restsys'){for(const i of b.dataset.ids.split(','))if(!WIDGET[i]&&!d.m[i])d.m[i]='n';save();render(true)}
   else if(a==='restall'){const n=items(k).filter(x=>!WIDGET[x.id]&&!d.m[x.id]);if(!n.length){toast('Everything is already marked.');return}
@@ -753,6 +755,17 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   else if(a==='addtog'){addOpen=!addOpen;addQ='';render(true)}
   else if(a==='add'){d.extra.push(b.dataset.id);save();render(true);toast(I[b.dataset.id].label+' added.')}
 });
+/* Right-click (or press and hold on a phone) marks a finding absent: a pertinent negative. */
+function markNeg(b){const k=route(),el=b.closest('.it'),id=el&&el.dataset.id;if(!k||!id)return;const d=D(k),c=b.dataset.c;
+  const arr=d.ch[id]||(d.ch[id]=[]),ngs=d.ng[id]||(d.ng[id]=[]);const i=arr.indexOf(c),j=ngs.indexOf(c);
+  if(j>=0)ngs.splice(j,1);else{if(i>=0)arr.splice(i,1);ngs.push(c)}d.m[id]='a';save();refreshItem(k,id)}
+app.addEventListener('contextmenu',e=>{const b=e.target.closest('.chip[data-a="chip"]');if(!b)return;e.preventDefault();if(holdFired)return;markNeg(b)});
+let holdT=0,holdFired=false,holdXY=null;
+app.addEventListener('touchstart',e=>{const b=e.target.closest('.chip[data-a="chip"]');holdFired=false;if(!b)return;const t=e.touches[0];holdXY=[t.clientX,t.clientY];
+  clearTimeout(holdT);holdT=setTimeout(()=>{holdFired=true;markNeg(b);if(navigator.vibrate)navigator.vibrate(15)},450)},{passive:true});
+app.addEventListener('touchmove',e=>{if(!holdXY)return;const t=e.touches[0];if(Math.abs(t.clientX-holdXY[0])+Math.abs(t.clientY-holdXY[1])>10)clearTimeout(holdT)},{passive:true});
+app.addEventListener('touchend',e=>{clearTimeout(holdT);holdXY=null;if(holdFired){e.preventDefault();setTimeout(()=>holdFired=false,400)}});
+app.addEventListener('touchcancel',()=>{clearTimeout(holdT);holdXY=null});
 app.addEventListener('input',e=>{const t=e.target,k=route();
   if(t.id==='q'){filter=t.value;const p=t.selectionStart;renderHome();const q=document.getElementById('q');q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
   if(!k)return;const d=D(k);
