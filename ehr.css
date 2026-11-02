@@ -1,0 +1,84 @@
+/* PANACEA EHR skin: loaded last by each clinical app, so it overrides that app's own palette and shapes.
+   Same look as the muench.md index: navy title bar, dense Segoe type, square corners, blue section bands,
+   tabs with an orange marker, pale-yellow entry fields. Layout and behavior of each app are untouched. */
+:root{
+  --bg:#F3F5F7 !important; --surface:#FFFFFF !important; --sunk:#FFFDE8 !important; --paper:#FFFFFF !important;
+  --ink:#1B2733 !important; --text:#1B2733 !important; --muted:#5B6877 !important; --line:#C9D2DB !important;
+  --accent:#1F5FA8 !important; --accent-ink:#FFFFFF !important; --accent-soft:#E3ECF5 !important;
+  --f-display:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif !important;
+  --f-body:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif !important;
+  --ehr-band:#3D6E9E; --ehr-band2:#2F5E8C; --ehr-title:#1E3550; --ehr-title2:#2A4A6E; --ehr-mark:#E08A1E;
+}
+html,body{background:var(--bg)!important}
+body{font-family:var(--f-body)!important;font-size:14px!important}
+button,input,select,textarea{font-family:var(--f-body)}
+
+/* Title bar (added by ehr.js) */
+.ehr-title{background:linear-gradient(var(--ehr-title2),var(--ehr-title));color:#fff;display:flex;align-items:stretch;height:34px;padding:0 0 0 6px;padding-top:env(safe-area-inset-top,0px);box-sizing:content-box;font:12px var(--f-body);position:relative;z-index:50}
+.ehr-title a.ehr-menu{display:flex;align-items:center;gap:6px;padding:0 10px 0 4px;margin:4px 6px 4px 0;border-radius:3px;background:linear-gradient(#3B5F86,#2C4D72);border:1px solid #4F7399;font-weight:700;letter-spacing:.04em;color:#fff;text-decoration:none}
+.ehr-title a.ehr-menu img{width:18px;height:18px;border-radius:4px}
+.ehr-title .ehr-tab{align-self:flex-end;display:flex;align-items:center;height:28px;padding:0 14px;border-radius:4px 4px 0 0;background:var(--bg);color:var(--ink);font-weight:600;white-space:nowrap}
+.ehr-title .ehr-r{margin-left:auto;display:flex;align-items:center;gap:14px;padding:0 12px;color:#C9D7E5}
+.ehr-title .ehr-r b{color:#fff;font-weight:600}
+@media (max-width:600px){.ehr-title .ehr-clock{display:none}}
+.homebtn{display:none!important}
+
+/* App headers become a light toolbar strip */
+header.top{background:linear-gradient(#EEF2F6,#DCE3EA)!important;border-bottom:1px solid var(--line)!important}
+div.top,section.top{border-bottom:1px solid var(--line);padding-bottom:10px}
+.top h1,.brand,.hd h1{font-size:1.1rem!important;font-weight:700!important;letter-spacing:0!important}
+.top p,.brand small{font-size:12px!important}
+
+/* Cards and panes: square panels; a leading heading becomes a blue band */
+.sec,.card,.pane,.out,.pcard,.rec,.sync{border-radius:3px!important;border-color:var(--line)!important;box-shadow:none!important}
+.sec>h2:first-child,.card>h3:first-child,.card>.cardhd:first-child,.pane>.ph:first-child{
+  background:linear-gradient(var(--ehr-band),var(--ehr-band2));color:#fff!important;margin:-14px -14px 4px!important;padding:6px 12px!important;border-radius:2px 2px 0 0}
+.pane>.ph:first-child{margin:-20px -20px 0!important;padding:8px 20px!important}
+.sec>h2:first-child *,.card>.cardhd:first-child *,.pane>.ph:first-child *{color:#fff!important}
+.pane>.ph:first-child h2{font-size:1.05rem!important}
+.pane>.ph:first-child .cue{opacity:.85}
+.out h3,.rec h3{color:var(--ehr-band2)}
+h1.step{font-size:1.25rem!important}
+main.wrap>h2,main>h2{font-size:1.05rem!important;color:var(--ehr-band2)}
+h1.step .k{color:var(--ehr-mark)!important}
+
+/* Step tabs (three patterns across the apps) all become flat tabs with an orange marker */
+nav.rail button,.steps button,.stepbtn{border-radius:0!important;border:0!important;border-bottom:3px solid transparent!important;background:transparent!important;color:#2B3B4C!important;box-shadow:none!important}
+nav.rail button.cur,.steps button.cur,.stepbtn[aria-current="step"]{background:#fff!important;color:var(--ink)!important;font-weight:700!important;border-bottom-color:var(--ehr-mark)!important;box-shadow:0 0 0 1px var(--line)!important}
+nav.rail button.cur::after{background:var(--ehr-mark)!important}
+.steps{gap:2px!important;background:#E7ECF1!important;border-bottom:1px solid var(--line)}
+nav.rail{gap:2px!important}
+.stepbtn[aria-current="step"] .n{color:var(--ehr-mark)!important}
+
+/* Buttons: beveled; primary keeps a solid fill */
+.btn,a.btn{border-radius:3px!important;border:1px solid #9FB0C1!important;background:linear-gradient(#FFFFFF,#E6EBF0)!important;color:var(--ink)!important;font-weight:600!important}
+.btn:hover{border-color:#6A8BAD!important}
+.btn.primary,a.btn.primary{background:linear-gradient(#2E70B8,#1F5FA8)!important;border-color:#1A4F8C!important;color:#fff!important}
+.btn.ghost{background:transparent!important;border-color:transparent!important}
+.btn.danger{color:#B3261E!important}
+
+/* Chips: square toggle buttons; selected = blue with a check */
+.chip{border-radius:3px!important;border:1px solid #AEBCCA!important;background:linear-gradient(#FFFFFF,#EEF2F5)!important;color:var(--ink)!important}
+.chip.on,.chip[aria-pressed="true"]{background:var(--accent)!important;border-color:#1A4F8C!important;color:#fff!important}
+.chip.pos{background:#FBE7E5!important;border-color:#A8261C!important;color:#A8261C!important}
+.chip.neg{background:#E1F2E9!important;border-color:#1D6E49!important;color:#1D6E49!important}
+.seg{border-radius:3px!important}
+.seg button.on{background:var(--accent)!important;color:#fff!important}
+
+/* Entry fields: pale yellow, square */
+input[type=text],input[type=number],input[type=search],input[type=date],input:not([type]),select,textarea,.in input,.in textarea{border-radius:2px!important;background:#FFFDE8!important;border:1px solid var(--line)!important}
+input:focus,select:focus,textarea:focus{outline:2px solid #8DB4DB!important;outline-offset:0!important;border-color:#6A9BCB!important}
+
+/* Bottom bars and toasts */
+footer.bar,.bar{background:linear-gradient(#EEF2F6,#DCE3EA)!important;border-top:1px solid var(--line)!important}
+.toast{border-radius:3px!important}
+.banner,.info,.ok{border-radius:3px!important}
+.top:has(.titlerow){background:none!important}
+
+/* Fixes found while checking every app */
+.pane>.ph:first-child .btn,.pane>.ph:first-child .btn *{color:var(--ink)!important}
+.box:has(>input){background:#FFFDE8!important;border-radius:2px!important}
+.box>input{background:transparent!important;border:0!important;outline:0!important}
+.box:has(>input:focus){outline:2px solid #8DB4DB}
+a.tile,a.svc,.tile,.svc{border-radius:3px!important}
+.tile:hover,.svc:hover{background:#E6F0FA!important}
