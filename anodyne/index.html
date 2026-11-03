@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Anodyne">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Anodyne</title>
+<style>
+/* Anodyne: refractory acute pain in the ED. Next step by cause, by what has failed (switching class, titrating opioids), and by patient factors; sources cited per agent.
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--amber:#8A5A00;--amber-soft:#FCF0D6;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.top h1{margin:0;font-size:1.5rem}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:38px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding-block:8px;margin-top:10px}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.stepbtn .n{font-size:.7rem;font-weight:700;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .sh{display:none}
+.mbar{display:none}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:3px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.3rem}
+.ph .cue{margin:0;color:var(--muted);font-size:.9rem}
+.sec h3{margin:0 0 8px;font-size:.98rem}
+.sec{display:flex;flex-direction:column;gap:8px}
+.flab{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:.88rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip small{display:block;font-size:.72rem;opacity:.8;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.in{display:flex;flex-direction:column;gap:3px;min-width:92px;flex:1 1 92px;max-width:150px}
+.in>span{font-size:.74rem;font-weight:700;color:var(--muted)}
+.in input,.in select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--paper);font-size:16px;width:100%;min-height:38px}
+.in input:focus,.in select:focus{outline:2px solid var(--accent);outline-offset:0}
+.in.wide{max-width:none;flex:2 1 180px}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:#F4F6F8;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.kpi.bad{background:var(--warn-soft)}.kpi.bad b{color:var(--warn)}
+.kpi.mid{background:var(--amber-soft)}.kpi.mid b{color:var(--amber)}
+.kpi.good{background:var(--ok-soft)}.kpi.good b{color:var(--ok)}
+table.set{width:100%;border-collapse:collapse;font-size:.92rem}
+table.set th,table.set td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.set th{width:34%;color:var(--muted);font-weight:700;font-size:.8rem}
+table.set td b{font-size:1.02rem}
+table.set td small{display:block;color:var(--muted)}
+.cite{font-size:.72rem;color:var(--muted);font-style:italic}
+.note-box{background:#F4F6F8;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px;text-align:left;cursor:pointer}
+.tcard b{display:block}.tcard span{font-size:.8rem;color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow{border-left:3px solid var(--accent);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.flow h4{margin:6px 0 0;font-size:.9rem}
+.out{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 90px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rec{border-radius:10px;padding:9px 11px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rec .h{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.rec .h b{font-size:.95rem}
+.rec p{margin:0;font-size:.86rem}
+.pri{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
+.rec.now{border-color:#E5A69F;background:#FFF7F6}.rec.now .pri{background:var(--warn-soft);color:var(--warn)}
+.rec.next{border-color:#EBCB86;background:#FFFCF4}.rec.next .pri{background:var(--amber-soft);color:var(--amber)}
+.rec.con .pri{background:var(--accent-soft);color:var(--accent)}
+.rec.ok{border-color:#A9D6BE;background:#F6FBF8}.rec.ok .pri{background:var(--ok-soft);color:var(--ok)}
+.miss{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.miss li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;cursor:pointer}
+.miss .bx{flex:none;width:18px;height:18px;border:1.5px solid #9AA9B8;border-radius:4px;margin-top:1px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.miss li.done .bx{background:var(--ok);border-color:var(--ok)}
+.miss li.done .tx{color:var(--muted);text-decoration:line-through}
+.miss .tx small{display:block;color:var(--muted);font-size:.74rem}
+pre.dict{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#F4F6F8;border-radius:10px;padding:10px;margin:0}
+.empty{color:var(--muted);font-size:.9rem;background:#F4F6F8;border-radius:10px;padding:10px 12px}
+.pfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fine{font-size:.76rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepbtn{padding:6px}
+  .stepbtn .t{font-size:.8rem}
+  .stepbtn .lg{display:none}.stepbtn .sh{display:inline}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:10px;align-items:center}
+  .mbar .mid{flex:1;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .mbar .mid b{color:var(--warn)}
+  .wrap{padding-bottom:80px}
+  .out{scroll-margin-top:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.steps{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.rx{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--paper);display:flex;flex-direction:column;gap:3px}
+.rx+.rx{margin-top:6px}
+.rx .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.rx .h b{font-size:.95rem}
+.rx .cl{font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.rx .tier{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px;background:var(--accent-soft);color:var(--accent)}
+.rx p{margin:0;font-size:.87rem}
+.rx .dose{font-weight:600}
+.rx .why{color:var(--muted)}
+.rx.bad{border-color:#E5A69F;background:#FFF7F6}
+.rx.tried{border-color:#A9C4E8}
+p.av{color:var(--warn);font-weight:600}
+p.ca{color:var(--amber)}
+.rec p.ca{font-size:.82rem}
+.resp{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px}
+.resp>span{font-size:.74rem;font-weight:700;color:var(--muted);margin-right:2px}
+.chip.sm{min-height:28px;padding:3px 10px;font-size:.8rem}
+details.more summary{cursor:pointer;font-weight:700;font-size:.95rem;padding:4px 0}
+details.more[open] summary{margin-bottom:6px}
+.tcards{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Anodyne</h1></div>
+      <p>Pain that isn’t improving: the next evidence-based step, by cause, by what’s failed, and by who he is.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <nav class="steps" aria-label="Steps" id="steps"></nav>
+  <div class="grid">
+    <section class="pane" id="pane"></section>
+    <aside class="out" id="out" aria-label="Next step"></aside>
+  </div>
+</div>
+<div class="mbar" id="mbar"><span class="mid" id="mbarmid"></span><button class="btn primary" type="button" id="seeRecs">Next step ↓</button></div>
+<script>
+const APP={
+ causeH:'Type of pain',causeCue:'The cause decides the ladder: blocks for fractures, NSAIDs for colic, antiemetics for migraine.',
+ nextCue:'The next step from a different class, multimodal where it can be, with what to avoid in this patient.',
+ escalate:'reconsider the diagnosis (pain out of proportion), consult acute pain or anesthesia for a block or infusion, and admit for pain control if needed.',
+ empty:'Pick the type of pain, mark what he has had, and the next step appears here.',
+ noteH:'Acute pain',noteRefr:'Inadequate relief with',reassess:'Reassess pain and sedation in 30 min',
+ fine:'Doses are typical adult ED doses; adjust for weight, age, renal and hepatic function, and check your formulary. It does not replace clinical judgment.',
+ scores:{h:'Pain score',a:'On arrival (0–10)',b:'Now (0–10)',note:(a,b)=>`Pain ${a}/10 on arrival${b!==''?`, ${b}/10 now`:''}.`},
+ causeMod:{}
+};
+const CLS={apap:{n:'Acetaminophen'},nsaid:{n:'NSAID'},topical:{n:'Topical'},opioid:{n:'Opioid',titr:true},ketamine:{n:'Ketamine (sub-dissociative)'},lido:{n:'IV lidocaine'},
+ block:{n:'Regional anesthesia'},d2:{n:'Dopamine antagonist'},triptan:{n:'Triptan'},ergot:{n:'Ergot'},steroid:{n:'Corticosteroid'},mg:{n:'Magnesium'},colch:{n:'Colchicine'},alpha:{n:'Alpha-blocker'},phys:{n:'Physical measures'}};
+const NS={ckd:'CrCl under 30 or AKI',gib:'Ulcer or GI bleeding history',liver:'Cirrhosis: renal failure and bleeding',preg:'Avoid at 20 weeks or later (FDA 2020)'};
+const NSC={old:'Beers: short course only; watch renal function and GI risk',anticoag:'Adds bleeding risk',chf:'Fluid retention; can worsen HF',cad:'CV risk with longer courses'};
+const OP={old:'Start at 25–50% of the usual dose',resp:'Respiratory depression: monitor SpO2 and EtCO2',bup:'Buprenorphine blocks it: higher doses of a high-affinity agonist needed',tolerant:'Higher doses needed; dose from baseline use',liver:'Reduce dose, lengthen interval'};
+const D2A={pd:'Dopamine blockade worsens parkinsonism'};
+const RX={
+ apap:{n:'Acetaminophen',cls:'apap',dose:'1 g PO (or IV if he can’t swallow); max 4 g/day, 2 g/day in cirrhosis or heavy alcohol use',why:'Base of every multimodal plan. IV is no better than PO in a patient who can swallow.',cite:'Chang, JAMA 2017',caut:{liver:'Max 2 g/day'},adj:true},
+ ibu:{n:'Ibuprofen',cls:'nsaid',dose:'400 mg PO',why:'400, 600 and 800 mg give the same relief: there is a ceiling.',cite:'Motov, Ann Emerg Med 2019',avoid:NS,caut:NSC},
+ napr:{n:'Naproxen',cls:'nsaid',dose:'500 mg PO, then 250 mg q8h (gout) or 500 mg BID',cite:'Janssen, Lancet 2008 (gout)',avoid:NS,caut:NSC},
+ ketor:{n:'Ketorolac',cls:'nsaid',dose:'10 mg IV (or 15 mg IM)',why:'10, 15 and 30 mg give the same relief: there is a ceiling.',cite:'Motov, Ann Emerg Med 2017',avoid:NS,caut:NSC},
+ diclo:{n:'Diclofenac gel 1%',cls:'topical',short:'Topical diclofenac',dose:'Apply 2–4 g to the painful area QID',why:'Strains and sprains, with little systemic exposure.',cite:'Derry, Cochrane 2015',adj:true},
+ phys:{n:'Splint, ice, elevation; heat for spasm',cls:'phys',short:'Splint, ice, elevation',dose:'Immobilize fractures early; ice 20 min; heat for back spasm',why:'Splinting a fracture is analgesia.',adj:true},
+ oxy:{n:'Oxycodone',cls:'opioid',dose:'5 mg PO',why:'For moderate pain when NSAID plus acetaminophen isn’t enough; shortest course.',cite:'Chang, JAMA 2017',caut:OP,redose:'Oral: repeat in 60 min if partial relief.'},
+ mor:{n:'Morphine',cls:'opioid',dose:'0.1 mg/kg IV (about 4–8 mg); 0.05 mg/kg if older',why:'Titrate to effect.',cite:'',avoid:{ckd:'Active metabolites accumulate in renal failure'},caut:OP,redose:'Titrate: half the starting dose every 15–20 min IV until relief or side effects.'},
+ hm:{n:'Hydromorphone',cls:'opioid',dose:'0.5–1 mg IV (0.2–0.5 mg if older); “1+1”: 1 mg, then 1 mg at 15 min if wanted',why:'1+1 relieved pain faster than usual care.',cite:'Chang, Ann Emerg Med 2009',caut:{...OP,ckd:'Reduce dose and lengthen interval'},redose:'Titrate: 0.5–1 mg IV every 15 min until relief or side effects.'},
+ fent:{n:'Fentanyl',cls:'opioid',dose:'1 mcg/kg IV, or 1.5 mcg/kg intranasal',why:'Fast, short, no active metabolites: good in renal failure and without IV access.',cite:'',caut:OP,redose:'Titrate: 0.5 mcg/kg IV every 10 min until relief.'},
+ ket:{n:'Ketamine, sub-dissociative',cls:'ketamine',short:'Ketamine',dose:'0.15–0.3 mg/kg IV over 10–15 min, or 0.5–1 mg/kg intranasal; infusion 0.1–0.3 mg/kg/h',why:'Equal to morphine for acute pain; a short infusion causes less dysphoria than a push.',cite:'Motov, Ann Emerg Med 2015; Motov, Am J Emerg Med 2017',
+  avoid:{psych:'Can worsen psychosis'},caut:{cad:'Raises HR and BP',old:'Start at 0.1–0.15 mg/kg',preg:'Limited data'},redose:'Repeat 0.15 mg/kg once at 20–30 min, or start an infusion at 0.1–0.3 mg/kg/h.'},
+ lido:{n:'Lidocaine IV',cls:'lido',dose:'1.5 mg/kg IV over 10 min (max 200 mg), on a monitor',why:'Evidence mixed: helped renal colic in one trial, no better than standard care in others.',cite:'Soleimanpour, BMC Urol 2012; later trials mixed',
+  avoid:{brady:'AV block or arrhythmia'},caut:{liver:'Hepatic clearance; reduce',chf:'Reduce dose',sz:'Toxicity can cause seizures'}},
+ fic:{n:'Fascia iliaca or PENG block',cls:'block',short:'Fascia iliaca or PENG block',dose:'Ultrasound-guided; e.g., bupivacaine 0.25% 30–40 mL (max 2.5 mg/kg)',why:'Hip and femur fractures: less pain, less opioid, less delirium.',cite:'AAOS hip fracture guideline (2021); Guay, Cochrane 2020',caut:{anticoag:'Fascial plane block: compressible, generally acceptable'}},
+ sap:{n:'Serratus anterior or erector spinae block',cls:'block',short:'Serratus or ESP block',dose:'Ultrasound-guided; bupivacaine 0.25% 20–30 mL',why:'Rib fractures: better breathing and less opioid.',cite:'EAST guideline (Galvagno, J Trauma Acute Care Surg 2016)',caut:{anticoag:'Fascial plane block: generally acceptable'}},
+ hem:{n:'Hematoma block',cls:'block',dose:'Lidocaine 1% 10–15 mL into the fracture hematoma',why:'Distal radius fracture reduction.',cite:''},
+ nb:{n:'Nerve block for the injured region',cls:'block',short:'Regional nerve block',dose:'Digital, femoral, forearm, ankle, intercostal, dental: by site and training',why:'Regional anesthesia gives complete relief without sedation.',cite:'ACEP policy statement on ultrasound-guided nerve blocks',caut:{anticoag:'Prefer superficial or compressible sites'}},
+ dent:{n:'Dental block',cls:'block',dose:'Bupivacaine 0.5% with epi, supraperiosteal or inferior alveolar',why:'Hours of relief until he sees a dentist.',cite:''},
+ meto:{n:'Metoclopramide',cls:'d2',dose:'10–20 mg IV over 15 min (+ diphenhydramine 25 mg)',why:'Treats the migraine, not just the nausea.',cite:'AHS ED migraine guideline (Orr, Headache 2016)',avoid:D2A,caut:{old:'EPS',sz:'Lowers the seizure threshold'}},
+ pcz:{n:'Prochlorperazine',cls:'d2',dose:'10 mg IV over 15 min + diphenhydramine 25 mg IV',why:'Beat hydromorphone for ED migraine.',cite:'Friedman, Neurology 2017',avoid:D2A,caut:{qt:'Some QT prolongation',old:'Lower dose; EPS'}},
+ dro:{n:'Droperidol',cls:'d2',dose:'2.5 mg IV or IM',why:'Effective for refractory migraine; akathisia is common.',cite:'Miner, Acad Emerg Med 2001; Silberstein, Neurology 2003',avoid:{...D2A,qt:'QTc over 500 ms'},caut:{old:'Use 1.25 mg'}},
+ halo:{n:'Haloperidol',cls:'d2',dose:'2.5–5 mg IV',why:'Gastroparesis and cannabinoid hyperemesis pain.',cite:'Roldan, Am J Emerg Med 2017; Ruberto, Ann Emerg Med 2021',avoid:{...D2A,qt:'QTc over 500 ms'}},
+ suma:{n:'Sumatriptan',cls:'triptan',dose:'6 mg SC',cite:'AHS ED migraine guideline (Orr, Headache 2016)',avoid:{cad:'Coronary disease or uncontrolled HTN'},caut:{preg:'Data reassuring, but discuss'},why:'Not within 24 h of DHE or another triptan.'},
+ dhe:{n:'Dihydroergotamine',cls:'ergot',dose:'1 mg IV over 2 min, after an antiemetic',why:'Refractory migraine and status migrainosus; not within 24 h of a triptan.',cite:'AHS ED migraine guideline (Orr, Headache 2016)',avoid:{cad:'Coronary disease or uncontrolled HTN',preg:'Contraindicated in pregnancy',cyp:'Strong CYP3A4 inhibitors: ergotism'}},
+ mg:{n:'Magnesium sulfate',cls:'mg',dose:'1–2 g IV over 15 min',why:'Evidence mixed; may help migraine with aura.',cite:'Orr, Headache 2016',caut:{ckd:'Reduce dose'}},
+ gon:{n:'Greater occipital nerve block',cls:'block',dose:'Bupivacaine 0.5% 3 mL each side',why:'Evidence mixed: no better than sham in an ED RCT.',cite:'Friedman, ED RCT 2018'},
+ dexmig:{n:'Dexamethasone',cls:'steroid',dose:'10 mg IV before discharge',why:'Doesn’t treat the headache today; reduces recurrence over the next 72 h.',cite:'Colman, BMJ 2008',caut:{dm:'Raises glucose'},adj:true},
+ dexthroat:{n:'Dexamethasone',cls:'steroid',dose:'10 mg PO, single dose',why:'More complete resolution of sore throat at 48 h.',cite:'Hayward, JAMA 2017; BMJ Rapid Recommendation 2017',caut:{dm:'Raises glucose'}},
+ dexback:{n:'Corticosteroid for radicular pain',cls:'steroid',short:'Corticosteroid',dose:'Dexamethasone 8–10 mg IV, or prednisone 60 mg/day tapered over 15 days',why:'Modest benefit at best: some function gain, little pain relief.',cite:'Goldberg, JAMA 2015',caut:{dm:'Raises glucose'}},
+ pred:{n:'Prednisone',cls:'steroid',dose:'30–40 mg/day for 5 days',why:'As effective as NSAIDs for gout, with fewer side effects in some.',cite:'Rainer, Ann Intern Med 2016; Janssen, Lancet 2008',caut:{dm:'Raises glucose'}},
+ iac:{n:'Intra-articular corticosteroid',cls:'steroid',short:'Joint injection',dose:'Triamcinolone 40 mg (knee) after aspiration',why:'One or two large joints, once septic arthritis is excluded.',cite:'ACR gout guideline (FitzGerald, Arthritis Care Res 2020)'},
+ colch:{n:'Colchicine',cls:'colch',dose:'1.2 mg PO, then 0.6 mg 1 h later; within 36 h of onset',why:'Low dose works as well as high dose with less diarrhea.',cite:'AGREE (Terkeltaub, Arthritis Rheum 2010); ACR 2020',avoid:{ckd:'Severe renal impairment',cyp:'Strong CYP3A4 or P-gp inhibitors: fatal toxicity'},caut:{liver:'Reduce dose'}},
+ tams:{n:'Tamsulosin',cls:'alpha',dose:'0.4 mg PO daily',why:'For stone passage (distal stones 5–10 mm), not analgesia today.',cite:'AUA surgical management of stones guideline (2016); Meltzer, JAMA Intern Med 2018',adj:true},
+ cool:{n:'Cool the burn, cover it',cls:'phys',short:'Cool and cover',dose:'Cool running water for 20 min within 3 h; then cover with plastic film',why:'Cooling reduces pain and depth; covering exposed nerve endings relieves pain.',cite:'ISBI burn care guidelines (2016)',adj:true}
+};
+const CAUSES=[
+ ['msk','Musculoskeletal or extremity injury','Sprain, strain, contusion, soft tissue'],
+ ['fx','Fracture or dislocation','Hip, femur, ribs, distal radius'],
+ ['back','Low back pain','With or without sciatica'],
+ ['renal','Renal colic','Ureteral stone'],
+ ['mig','Migraine','Or other primary headache'],
+ ['abd','Abdominal pain','Undifferentiated, biliary colic, gastroparesis'],
+ ['scd','Sickle cell vaso-occlusive crisis',''],
+ ['gout','Gout flare',''],
+ ['dental','Dental pain',''],
+ ['throat','Sore throat','Pharyngitis'],
+ ['burn','Burn','']
+];
+const MODS=[
+ ['old','Age 65 or older',''],['ckd','CrCl under 30 or AKI',''],['liver','Cirrhosis or severe liver disease',''],['gib','Peptic ulcer or GI bleed history',''],
+ ['anticoag','Anticoagulated or bleeding risk',''],['chf','Heart failure',''],['cad','Coronary disease or uncontrolled hypertension',''],['preg','Pregnant',''],
+ ['resp','OSA, COPD or other respiratory risk',''],['psych','Schizophrenia or active psychosis',''],['bup','On buprenorphine',''],['tolerant','Opioid-tolerant','Daily opioids, methadone'],
+ ['oud','Opioid use disorder history',''],['noiv','No IV access',''],['qt','QTc over 500 ms',''],['pd','Parkinson’s disease',''],
+ ['brady','AV block or arrhythmia',''],['cyp','On a strong CYP3A4 or P-gp inhibitor','Clarithromycin, ritonavir, azoles, cyclosporine'],['sz','Seizure disorder',''],['dm','Diabetes','']
+];
+const T1='First line',T2='If that fails',T3='Refractory';
+const LAD={
+ msk:[[T1,['ibu','apap','diclo','phys']],[T2,['nb','oxy','mor']],[T3,['ket','hm']]],
+ fx:[[T1,['fic','sap','hem','nb','apap','phys']],[T2,['fent','mor','hm']],[T3,['ket']]],
+ back:[[T1,['ibu','ketor','apap','phys']],[T2,['dexback','ket']],[T3,['hm','oxy']]],
+ renal:[[T1,['ketor','ibu','apap','tams']],[T2,['mor','hm','fent']],[T3,['ket','lido']]],
+ mig:[[T1,['pcz','meto','ketor','dexmig']],[T2,['dro','suma','dhe']],[T3,['mg','gon']]],
+ abd:[[T1,['ketor','apap']],[T2,['mor','hm','fent']],[T3,['ket','halo']]],
+ scd:[[T1,['hm','mor','ketor','apap']],[T2,['ket']],[T3,['nb']]],
+ gout:[[T1,['colch','napr','pred']],[T2,['iac']],[T3,['ketor','oxy']]],
+ dental:[[T1,['ibu','apap','dent']],[T2,['ketor']],[T3,['oxy']]],
+ throat:[[T1,['ibu','apap','dexthroat']],[T2,['ketor']],[T3,['oxy']]],
+ burn:[[T1,['cool','apap','fent','mor']],[T2,['hm','ket']],[T3,['nb']]]
+};
+const INFO={
+ msk:{tips:['Ibuprofen with acetaminophen relieved acute extremity pain as well as three opioid combinations.','NSAIDs have a ceiling: escalate the class, not the dose.','A block for the injured region beats more systemic drugs.'],cite:'Chang, JAMA 2017; Motov, Ann Emerg Med 2019',
+  flags:[['Compartment syndrome','Pain out of proportion, pain with passive stretch'],['Occult fracture or dislocation','Image if pain doesn’t fit']]},
+ fx:{tips:['Hip fracture: fascia iliaca or PENG block early, before the X-ray result if the exam is clear.','Rib fractures: serratus or erector spinae plane block helps breathing.','Splint early. Give opioids by titration while the block is set up.'],cite:'AAOS hip fracture guideline (2021); EAST guideline (Galvagno, J Trauma Acute Care Surg 2016)',
+  flags:[['Neurovascular check before any block','Document distal pulses and sensation'],['Compartment syndrome','Tibia and forearm fractures, crush injury'],['Rib fractures in older adults','Incentive spirometry; a low threshold to admit']]},
+ back:{tips:['Adding oxycodone/acetaminophen or cyclobenzaprine to naproxen didn’t improve outcomes at 1 week; neither did diazepam.','Heat and staying active help.','Opioids for back pain: only if severe, and the shortest course.'],cite:'Friedman, JAMA 2015; Friedman, Ann Emerg Med 2017',
+  flags:[['Cauda equina','Saddle anesthesia, retention, bilateral deficits'],['Epidural abscess','Fever, IV drug use, recent bacteremia'],['Aortic aneurysm or dissection','Older, vascular risk, hypotension'],['Cancer or fracture','Weight loss, known malignancy, steroids, older age']]},
+ renal:{tips:['NSAIDs are first-line: they relieve pain better than opioids and need less rescue.','Opioids are the rescue, not the start.','Tamsulosin helps distal stones of 5–10 mm pass; it is not analgesia.'],cite:'Pathan, Lancet 2016; AUA guideline 2016',
+  flags:[['Infected obstructed stone','Fever with obstruction: urology for decompression now'],['AAA','First “renal colic” over 60: ultrasound the aorta'],['Single kidney or AKI','Urology now']]},
+ mig:{tips:['Metoclopramide, prochlorperazine and sumatriptan are the recommended first-line drugs; dexamethasone prevents recurrence.','Avoid opioids: they worked worse than prochlorperazine and drive return visits.','Valproate did worse than metoclopramide or ketorolac.'],cite:'AHS ED migraine guideline (Orr, Headache 2016); Friedman, Neurology 2017; Friedman, Neurology 2014',
+  flags:[['Subarachnoid hemorrhage','Thunderclap or worst ever: CT, consider LP or CTA'],['Secondary headache red flags','Fever, neuro deficit, papilledema, new over 50, pregnancy or postpartum'],['Cervical artery dissection','Neck pain, Horner’s, recent neck trauma']]},
+ abd:{tips:['Opioids don’t mask the diagnosis; treat the pain while you work it up.','Biliary colic: NSAIDs work as well as opioids.','Gastroparesis or cannabinoid hyperemesis pain: haloperidol.'],cite:'Manterola, Cochrane 2011; Fraquelli, Cochrane 2016; Roldan, Am J Emerg Med 2017',
+  flags:[['Mesenteric ischemia','Pain out of proportion, AF, older, lactate'],['Aortic aneurysm or dissection','Older, back or flank pain, hypotension'],['Ectopic pregnancy','Pregnancy test'],['ACS','Epigastric pain in older or diabetic patients: ECG'],['Torsion','Testicular or ovarian']]},
+ scd:{tips:['First opioid within 60 min of arrival, per his individualized plan if he has one; reassess and redose every 30–60 min.','Ketamine infusion as an adjunct for pain refractory to opioids.','Short NSAID course if renal function allows.'],cite:'ASH sickle cell pain guideline (Brandow, Blood Adv 2020)',
+  flags:[['Acute chest syndrome','New infiltrate, chest pain, hypoxia, fever'],['Splenic sequestration or aplastic crisis','Hb drop from baseline, reticulocytes'],['Stroke','Any neuro deficit'],['Priapism and avascular necrosis','Ask and examine']]},
+ gout:{tips:['NSAIDs, colchicine and steroids are equally first-line; choose by comorbidity.','Colchicine works best started within 36 h.','Don’t stop allopurinol during a flare.'],cite:'ACR gout guideline (FitzGerald, Arthritis Care Res 2020)',
+  flags:[['Septic arthritis','Fever, one hot joint, prosthesis: aspirate'],['Fracture','Trauma or osteoporosis']]},
+ dental:{tips:['Ibuprofen plus acetaminophen beats opioid combinations for dental pain.','A dental block gives hours of relief.','Antibiotics only for spreading infection.'],cite:'Moore, J Am Dent Assoc 2018',
+  flags:[['Ludwig’s angina','Floor of mouth swelling, trismus, drooling'],['Deep space infection','Neck swelling, fever']]},
+ throat:{tips:['One dose of dexamethasone shortens painful sore throat.','Antibiotics only if strep is likely or proven.'],cite:'Hayward, JAMA 2017',
+  flags:[['Peritonsillar or retropharyngeal abscess','Trismus, uvular deviation, neck stiffness'],['Epiglottitis','Drooling, stridor, pain out of proportion to exam']]},
+ burn:{tips:['Cool for 20 min, cover with plastic film; exposed burns hurt more.','Opioids IV, titrated; ketamine for dressing changes.','Estimate size and depth early: it decides transfer.'],cite:'ISBI burn care guidelines (2016)',
+  flags:[['Inhalation injury','Facial burns, carbonaceous sputum, hoarseness'],['Circumferential burns','Escharotomy for chest or limb compromise'],['Burn center criteria','Size, face, hands, genitals, joints, electrical, chemical']]}
+};
+const MODNOTE={
+ bup:'On buprenorphine: keep it going. Split the daily dose every 6–8 h for analgesia, maximize non-opioids and blocks; if a full agonist is needed, use high-affinity ones (hydromorphone, fentanyl) at higher doses with monitoring. (Kohan, Reg Anesth Pain Med 2021)',
+ tolerant:'Opioid-tolerant: confirm and continue the baseline opioid, then treat the acute pain on top; each IV dose can start at 10–20% of the daily MME. Ketamine is a good adjunct.',
+ oud:'Opioid use disorder: treat the pain; undertreatment drives return to use. Non-opioids and blocks first; if opioids are needed, give them, and offer buprenorphine and naloxone at discharge.',
+ noiv:'No IV: intranasal fentanyl 1.5 mcg/kg or intranasal ketamine 0.5–1 mg/kg (atomizer), IM ketorolac, PO ibuprofen and acetaminophen, or a block.',
+ old:'Older adult: start opioids at 25–50% of the usual dose and titrate; avoid meperidine, codeine and tramadol; acetaminophen first. (AGS Beers 2023)',
+ ckd:'Renal failure: no NSAIDs; fentanyl or reduced-dose hydromorphone; avoid morphine, codeine, tramadol and meperidine.'
+};
+const GEN=['Multimodal: acetaminophen plus an NSAID as the base, unless contraindicated.','NSAIDs have a ceiling (ibuprofen 400 mg, ketorolac 10 mg): change class instead of the dose.','Opioids titrate: repeat a smaller dose every 15–30 min until relief, not a fixed single dose.','Regional anesthesia for localized pain whenever it’s available.','Reassess and document pain at 30–60 min.','Pain that won’t respond: is the diagnosis wrong?','Discharge with opioids: shortest supply, naloxone, and a bowel regimen.'];
+const FLAGS=[['Pain out of proportion','Compartment syndrome, necrotizing infection, mesenteric ischemia'],['Tearing chest, back or abdominal pain','Aortic dissection or AAA'],['Septic joint, epidural abscess','Fever with joint or spine pain'],['Testicular or ovarian torsion','Sudden pelvic or scrotal pain']];
+/* ---------- Ladder engine (shared by Ballast and Anodyne) ----------
+   Data each app defines: APP, CLS (classes), RX (agents), CAUSES, MODS, LAD (ladder by cause),
+   INFO (by cause: flags, tips, cite), GEN (principles), MODNOTE (by modifier), FLAGS (universal don't-miss).
+   Next step: the first agent on the cause's ladder that hasn't been tried, isn't contraindicated,
+   and isn't the same class as one that already failed. Re-dosing is offered first for agents that titrate. */
+const STEPS=[['cause','Cause','Cause'],['pt','Patient','Patient'],['tried','Tried','Tried'],['next','Next','Next']];
+const RESP=[['none','No relief'],['partial','Partial'],['side','Side effect']];
+const blank=()=>({step:'cause',cause:'',mods:[],tried:{},order:[],score0:'',score1:'',done:{}});
+let S=blank();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const has=m=>S.mods.includes(m);
+const lc=t=>String(t).replace(/\b([A-Z])([a-z]+)\b/g,(m,a,b)=>a.toLowerCase()+b); // lowercase plain words, keep CrCl, QTc, ED
+
+function ladder(){return S.cause?LAD[S.cause]:[]}
+function inLadder(){return ladder().flatMap(([,ids])=>ids)}
+function flags(id){const r=RX[id],a=[],c=[];
+  for(const m of S.mods){if(r.avoid&&r.avoid[m])a.push(r.avoid[m]);if(r.caut&&r.caut[m])c.push(r.caut[m])}
+  return {a,c}}
+function plan(){
+  const T=S.tried,failed=new Set(Object.keys(T).filter(k=>T[k]==='none').map(k=>RX[k].cls));
+  const out={redo:[],next:null,alts:[],adj:[],avoid:[],same:[]};
+  if(!S.cause)return out;
+  Object.keys(T).filter(k=>T[k]==='partial'&&RX[k].redose&&!flags(k).a.length).forEach(k=>out.redo.push(k));
+  const redoCls=new Set(out.redo.map(k=>RX[k].cls)),later=[];
+  const seen=new Set();
+  ladder().forEach(([tier,ids],ti)=>ids.forEach(id=>{
+    if(seen.has(id))return;seen.add(id);
+    const r=RX[id],f=flags(id);
+    if(T[id])return;
+    if(f.a.length){out.avoid.push(id);return}
+    if(r.adj){out.adj.push(id);return}
+    if(failed.has(r.cls)&&!CLS[r.cls].titr){out.same.push(id);return}
+    const tierId=ti;
+    if(redoCls.has(r.cls)){later.push({id,tier,ti});return} // already titrating this class
+    if(!out.next)out.next={id,tier,ti:tierId};else out.alts.push({id,tier,ti:tierId});
+  }));
+  if(!out.next&&later.length)out.next=later.shift();
+  out.alts.push(...later);
+  return out;
+}
+
+/* ---------- UI bits ---------- */
+function renderSteps(){$('steps').innerHTML=STEPS.map(([k,t,sh],i)=>{const n=k==='pt'?S.mods.length:k==='tried'?Object.keys(S.tried).length:0;return`<button type="button" class="stepbtn" data-step="${k}" ${S.step===k?'aria-current="step"':''}><span class="n">${i+1}${n?` · ${n}`:''}</span><span class="t"><span class="lg">${t}</span><span class="sh">${sh}</span></span></button>`}).join('')}
+const ph=(n,t,cue)=>`<div class="ph"><span class="eb">${n}</span><h2>${t}</h2><p class="cue">${cue}</p></div>`;
+const foot=(prev,next)=>`<div class="pfoot">${prev?`<button class="btn" data-step="${prev[0]}" type="button">← ${prev[1]}</button>`:'<span></span>'}${next?`<button class="btn primary" data-step="${next[0]}" type="button">${next[1]} →</button>`:'<span></span>'}</div>`;
+function rxCard(id,opt={}){const r=RX[id],f=flags(id),st=S.tried[id];
+  return `<div class="rx${f.a.length?' bad':''}${st?' tried':''}">
+   <div class="h"><b>${esc(r.n)}</b><span class="cl">${esc(CLS[r.cls].n)}</span>${opt.tier?`<span class="tier">${esc(opt.tier)}</span>`:''}</div>
+   <p class="dose">${esc(r.dose)}</p>${r.why?`<p class="why">${esc(r.why)}</p>`:''}
+   ${f.a.map(x=>`<p class="av">Avoid: ${esc(x)}</p>`).join('')}${f.c.map(x=>`<p class="ca">Caution: ${esc(x)}</p>`).join('')}
+   ${opt.note?`<p class="ca">${esc(opt.note)}</p>`:''}
+   ${opt.resp!==false?`<div class="resp" role="group" aria-label="Response to ${esc(r.n)}"><span>${st?'Response:':'Tried it?'}</span>${RESP.map(([k,l])=>`<button type="button" class="chip sm" data-tried="${id}" data-v="${k}" aria-pressed="${st===k}">${l}</button>`).join('')}</div>`:''}
+   ${r.cite?`<span class="cite">${esc(r.cite)}</span>`:''}</div>`}
+
+function paneCause(){
+  return ph(1,APP.causeH,APP.causeCue)+`<div class="tcards">${CAUSES.map(([k,t,s])=>`<button type="button" class="tcard" data-cause="${k}" aria-pressed="${S.cause===k}"><b>${esc(t)}</b><span>${esc(s)}</span></button>`).join('')}</div>`+
+  (S.cause&&INFO[S.cause].tips?`<div class="sec"><h3>${esc(CAUSES.find(c=>c[0]===S.cause)[1])}</h3><ul class="list">${INFO[S.cause].tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul><span class="cite">${esc(INFO[S.cause].cite||'')}</span></div>`:'')+
+  foot(null,S.cause?['pt','Patient']:null)}
+function panePt(){
+  return ph(2,'Patient','These rule agents out, or call for a lower dose. Mark what applies.')+
+  `<div class="chips">${MODS.map(([k,t,s])=>`<button type="button" class="chip" data-mod="${k}" aria-pressed="${has(k)}">${esc(t)}${s?`<small>${esc(s)}</small>`:''}</button>`).join('')}</div>`+
+  (APP.scores?`<div class="sec"><h3>${APP.scores.h}</h3><div class="row"><label class="in"><span>${APP.scores.a}</span><input inputmode="numeric" data-k="score0" value="${esc(S.score0)}" placeholder="0–10"></label><label class="in"><span>${APP.scores.b}</span><input inputmode="numeric" data-k="score1" value="${esc(S.score1)}" placeholder="0–10"></label></div></div>`:'')+
+  foot(['cause','Cause'],['tried','Tried'])}
+function paneTried(){
+  if(!S.cause)return ph(3,'What’s been tried','Pick a cause first.')+foot(['cause','Cause'],null);
+  const lad=inLadder(),others=Object.keys(RX).filter(k=>!lad.includes(k));
+  return ph(3,'What’s been tried','Mark each agent he has had and how it went. Nothing needed for ones he hasn’t.')+
+  ladder().map(([tier,ids])=>`<div class="sec"><h3>${esc(tier)}</h3>${ids.map(id=>rxCard(id,{})).join('')}</div>`).join('')+
+  `<details class="sec more"${others.some(k=>S.tried[k])?' open':''}><summary>Other agents</summary>${others.map(id=>rxCard(id,{})).join('')}</details>`+
+  foot(['pt','Patient'],['next','Next step'])}
+function paneNext(){
+  if(!S.cause)return ph(4,'Next step','Pick a cause first.')+foot(['cause','Cause'],null);
+  const P=plan(),info=INFO[S.cause];
+  let h=ph(4,'Next step',APP.nextCue);
+  const mn=S.mods.filter(m=>MODNOTE[m]);
+  if(mn.length)h+=`<div class="sec"><h3>For this patient</h3>${mn.map(m=>`<p class="note-box">${esc(MODNOTE[m])}</p>`).join('')}</div>`;
+  if(P.redo.length)h+=`<div class="sec"><h3>Re-dose first</h3>${P.redo.map(id=>rxCard(id,{note:RX[id].redose,resp:false})).join('')}</div>`;
+  h+=P.next?`<div class="sec"><h3>Next</h3>${rxCard(P.next.id,{tier:P.next.tier})}</div>`:`<p class="empty">Every agent on this ladder has been tried or is ruled out. Reconsider the diagnosis (Don’t miss, right) and get help: ${esc(APP.escalate)}</p>`;
+  if(P.alts.length)h+=`<div class="sec"><h3>Also reasonable</h3>${P.alts.map(a=>rxCard(a.id,{tier:a.tier})).join('')}</div>`;
+  if(P.adj.length)h+=`<div class="sec"><h3>Add alongside</h3>${P.adj.map(id=>rxCard(id,{})).join('')}</div>`;
+  if(P.same.length)h+=`<div class="sec"><h3>Same class as one that failed</h3><p class="fine">Switching class works better than another drug from the class that didn’t work.</p>${P.same.map(id=>rxCard(id,{})).join('')}</div>`;
+  if(P.avoid.length)h+=`<div class="sec"><h3>Avoid in this patient</h3>${P.avoid.map(id=>rxCard(id,{resp:false})).join('')}</div>`;
+  h+=`<div class="sec"><h3>Principles</h3><ul class="list">${GEN.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>`;
+  return h+foot(['tried','Tried'],null);
+}
+
+/* ---------- Output ---------- */
+function misses(){const m=[];if(S.cause)INFO[S.cause].flags.forEach(([t,s],i)=>m.push(['c'+i,t,s]));FLAGS.forEach(([t,s],i)=>m.push(['u'+i,t,s]));return m}
+function noteText(){
+  if(!S.cause)return '';
+  const P=plan(),c=CAUSES.find(x=>x[0]===S.cause)[1],T=S.tried,resp={none:'no relief',partial:'partial relief',side:'side effects'};
+  const nm=k=>lc(RX[k].short||RX[k].n);
+  const tried=S.order.filter(k=>T[k]).map(k=>`${nm(k)} (${resp[T[k]]})`);
+  let t=`# ${APP.noteH} (${lc(c)})\n`;
+  if(tried.length)t+=`${APP.noteRefr} ${tried.join(', ')}.`+(APP.scores&&S.score0!==''?` ${APP.scores.note(S.score0,S.score1)}`:'')+'\n';
+  else if(APP.scores&&S.score0!=='')t+=APP.scores.note(S.score0,S.score1)+'\n';
+  const mods=S.mods.map(m=>lc(MODS.find(x=>x[0]===m)[1]));if(mods.length)t+=`Considerations: ${mods.join('; ')}.\n`;
+  const pl=[...P.redo.map(k=>`Re-dose ${lc(RX[k].short||RX[k].n)}: ${RX[k].redose}`),P.next?`${RX[P.next.id].short||RX[P.next.id].n}: ${RX[P.next.id].dose}`:'',...P.adj.slice(0,2).map(k=>`${RX[k].short||RX[k].n}: ${RX[k].dose}`)].filter(Boolean);
+  t+=`Plan:\n`+pl.map(x=>`- ${x}`).join('\n')+(pl.length?'\n':'')+`- ${APP.reassess}`;
+  return t;
+}
+function renderPane(){$('pane').innerHTML={cause:paneCause,pt:panePt,tried:paneTried,next:paneNext}[S.step]()}
+function renderOut(){
+  const P=plan();let h=`<h3>Next step</h3>`;
+  if(!S.cause)h+=`<p class="empty">${esc(APP.empty)}</p>`;
+  else{
+    if(P.redo.length)h+=P.redo.map(id=>`<div class="rec next"><div class="h"><span class="pri">Re-dose</span><b>${esc(RX[id].n)}</b></div><p>${esc(RX[id].redose)}</p></div>`).join('');
+    if(P.next){const r=RX[P.next.id],f=flags(P.next.id);h+=`<div class="rec now"><div class="h"><span class="pri">Next</span><b>${esc(r.n)}</b></div><p>${esc(r.dose)}</p>${f.c.map(x=>`<p class="ca">Caution: ${esc(x)}</p>`).join('')}<span class="cite">${esc(CLS[r.cls].n)} · ${esc(P.next.tier)}</span></div>`}
+    else h+=`<p class="empty">Ladder exhausted. Reconsider the diagnosis and escalate: ${esc(APP.escalate)}</p>`;
+    if(P.alts.length)h+=`<div class="rec con"><div class="h"><span class="pri">Or</span><b>${P.alts.slice(0,3).map(a=>esc(RX[a.id].short||RX[a.id].n)).join(' · ')}</b></div></div>`;
+    if(P.adj.length)h+=`<div class="rec ok"><div class="h"><span class="pri">Add</span><b>${P.adj.slice(0,3).map(id=>esc(RX[id].short||RX[id].n)).join(' · ')}</b></div></div>`;
+    if(P.avoid.length)h+=`<p class="fine"><b>Avoid here:</b> ${P.avoid.map(id=>esc(RX[id].short||RX[id].n)).join(', ')}</p>`;
+  }
+  const M=misses();
+  h+=`<h3>Don’t miss</h3><ul class="miss">${M.map(([id,t,s])=>`<li data-done="${id}" class="${S.done[id]?'done':''}"><span class="bx">${S.done[id]?'✓':''}</span><span class="tx">${esc(t)}<small>${esc(s)}</small></span></li>`).join('')}</ul>`;
+  const n=noteText();if(n)h+=`<h3>ED course</h3><pre class="dict">${esc(n)}</pre><button class="btn primary" id="copy" type="button">Copy</button>`;
+  h+=`<p class="fine">${esc(APP.fine)}</p>`;
+  $('out').innerHTML=h;
+  $('mbarmid').innerHTML=!S.cause?'Pick a cause':P.next?`<b>Next:</b> ${esc(RX[P.next.id].short||RX[P.next.id].n)}`:'Ladder exhausted';
+}
+function render(keep){const y=window.scrollY;renderSteps();renderPane();renderOut();if(keep)window.scrollTo(0,y)}
+
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');if(st){S.step=st.dataset.step;render();window.scrollTo(0,0);return}
+  const ca=e.target.closest('[data-cause]');if(ca){const v=ca.dataset.cause;S.cause=S.cause===v?'':v;if(APP.causeMod&&APP.causeMod[S.cause]&&!has(APP.causeMod[S.cause]))S.mods.push(APP.causeMod[S.cause]);render(true);return}
+  const md=e.target.closest('[data-mod]');if(md){const v=md.dataset.mod;S.mods=has(v)?S.mods.filter(x=>x!==v):[...S.mods,v];render(true);return}
+  const tr=e.target.closest('[data-tried]');if(tr){const id=tr.dataset.tried,v=tr.dataset.v;if(S.tried[id]===v){delete S.tried[id];S.order=S.order.filter(x=>x!==id)}else{S.tried[id]=v;if(!S.order.includes(id))S.order.push(id)}render(true);return}
+  const dn=e.target.closest('[data-done]');if(dn){S.done[dn.dataset.done]=!S.done[dn.dataset.done];renderOut();return}
+  if(e.target.closest('#copy')){copy(noteText());return}
+  if(e.target.closest('#seeRecs')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(e.target.closest('#reset')){const b=$('reset');if(b.dataset.armed){S=blank();render();window.scrollTo(0,0)}else{b.dataset.armed='1';b.textContent='Tap again to clear';setTimeout(()=>{delete b.dataset.armed;b.textContent='New patient'},2500)}return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(!t.dataset.k)return;S[t.dataset.k]=t.value;renderOut();});
+async function copy(t){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  const el=document.createElement('div');el.className='toast';el.textContent=ok?'Copied.':'Couldn’t copy on this device.';document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+render();
+
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>

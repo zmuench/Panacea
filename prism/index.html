@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Prism">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Prism</title>
+<style>
+/* Prism: differentiate undifferentiated shock by history, bedside exam, labs and ECG, POCUS (RUSH) and hemodynamics, then treat the leading cause. Weights are teaching heuristics; sources are cited inline.
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--amber:#8A5A00;--amber-soft:#FCF0D6;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.top h1{margin:0;font-size:1.5rem}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:38px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding-block:8px;margin-top:10px}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.stepbtn .n{font-size:.7rem;font-weight:700;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .sh{display:none}
+.mbar{display:none}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:3px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.3rem}
+.ph .cue{margin:0;color:var(--muted);font-size:.9rem}
+.sec h3{margin:0 0 8px;font-size:.98rem}
+.sec{display:flex;flex-direction:column;gap:8px}
+.flab{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:.88rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip small{display:block;font-size:.72rem;opacity:.8;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.in{display:flex;flex-direction:column;gap:3px;min-width:92px;flex:1 1 92px;max-width:150px}
+.in>span{font-size:.74rem;font-weight:700;color:var(--muted)}
+.in input,.in select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--paper);font-size:16px;width:100%;min-height:38px}
+.in input:focus,.in select:focus{outline:2px solid var(--accent);outline-offset:0}
+.in.wide{max-width:none;flex:2 1 180px}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:#F4F6F8;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.kpi.bad{background:var(--warn-soft)}.kpi.bad b{color:var(--warn)}
+.kpi.mid{background:var(--amber-soft)}.kpi.mid b{color:var(--amber)}
+.kpi.good{background:var(--ok-soft)}.kpi.good b{color:var(--ok)}
+table.set{width:100%;border-collapse:collapse;font-size:.92rem}
+table.set th,table.set td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.set th{width:34%;color:var(--muted);font-weight:700;font-size:.8rem}
+table.set td b{font-size:1.02rem}
+table.set td small{display:block;color:var(--muted)}
+.cite{font-size:.72rem;color:var(--muted);font-style:italic}
+.note-box{background:#F4F6F8;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px;text-align:left;cursor:pointer}
+.tcard b{display:block}.tcard span{font-size:.8rem;color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow{border-left:3px solid var(--accent);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.flow h4{margin:6px 0 0;font-size:.9rem}
+.out{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 90px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rec{border-radius:10px;padding:9px 11px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rec .h{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.rec .h b{font-size:.95rem}
+.rec p{margin:0;font-size:.86rem}
+.pri{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
+.rec.now{border-color:#E5A69F;background:#FFF7F6}.rec.now .pri{background:var(--warn-soft);color:var(--warn)}
+.rec.next{border-color:#EBCB86;background:#FFFCF4}.rec.next .pri{background:var(--amber-soft);color:var(--amber)}
+.rec.con .pri{background:var(--accent-soft);color:var(--accent)}
+.rec.ok{border-color:#A9D6BE;background:#F6FBF8}.rec.ok .pri{background:var(--ok-soft);color:var(--ok)}
+.miss{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.miss li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;cursor:pointer}
+.miss .bx{flex:none;width:18px;height:18px;border:1.5px solid #9AA9B8;border-radius:4px;margin-top:1px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.miss li.done .bx{background:var(--ok);border-color:var(--ok)}
+.miss li.done .tx{color:var(--muted);text-decoration:line-through}
+.miss .tx small{display:block;color:var(--muted);font-size:.74rem}
+pre.dict{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#F4F6F8;border-radius:10px;padding:10px;margin:0}
+.empty{color:var(--muted);font-size:.9rem;background:#F4F6F8;border-radius:10px;padding:10px 12px}
+.pfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fine{font-size:.76rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepbtn{padding:6px}
+  .stepbtn .t{font-size:.8rem}
+  .stepbtn .lg{display:none}.stepbtn .sh{display:inline}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:10px;align-items:center}
+  .mbar .mid{flex:1;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .mbar .mid b{color:var(--warn)}
+  .wrap{padding-bottom:80px}
+  .out{scroll-margin-top:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.steps{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:900px){.steps{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp+.grp{margin-top:6px}
+.chip.ag{border-style:dashed}
+.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.cat{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:var(--paper)}
+.cat span{display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.cat b{font-size:.92rem}
+.cat.lead{border-color:var(--accent);background:var(--accent-soft)}
+.ddx{display:flex;flex-direction:column;gap:6px}
+.dx{border:1px solid var(--line);border-radius:10px;padding:7px 9px;cursor:pointer;background:var(--surface);text-align:left;width:100%}
+.dx.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.dx .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.dx .h b{font-size:.92rem}
+.dx .h small{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:#E4E9EE;margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.dx.strong .bar i{background:var(--warn)}
+.why{margin:5px 0 0;padding:0;list-style:none;font-size:.8rem;display:flex;flex-wrap:wrap;gap:4px}
+.why li{border-radius:4px;padding:1px 6px;background:var(--ok-soft);color:var(--ok)}
+.why li.neg{background:#EEF1F4;color:var(--muted);text-decoration:line-through}
+.tx h4{margin:4px 0 2px;font-size:.88rem}
+.tx .list li b{font-weight:700}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:.88rem;font-weight:600}
+.ambox{background:var(--amber-soft);color:var(--amber);border-radius:10px;padding:9px 12px;font-size:.88rem}
+.pick{display:flex;flex-wrap:wrap;gap:6px}
+a.inl{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Prism</h1></div>
+      <p>Split undifferentiated shock into its causes: history, bedside, labs, POCUS and hemodynamics, weighed together.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <nav class="steps" aria-label="Steps" id="steps"></nav>
+  <div class="grid">
+    <section class="pane" id="pane"></section>
+    <aside class="out" id="out" aria-label="Differential"></aside>
+  </div>
+</div>
+<div class="mbar" id="mbar"><span class="mid" id="mbarmid"></span><button class="btn primary" type="button" id="seeRecs">Differential ↓</button></div>
+<script>
+/* ---------- Etiologies ---------- */
+const CATS={HYPO:'Hypovolemic',CARD:'Cardiogenic',OBST:'Obstructive',DIST:'Distributive'};
+const E={
+ hem:['Hemorrhage','HYPO'],fluid:['Volume loss (non-hemorrhagic)','HYPO'],
+ lv:['LV failure / ischemia','CARD'],rv:['RV failure','CARD'],arr:['Arrhythmia','CARD'],valve:['Acute valve lesion or LVOT obstruction','CARD'],
+ tamp:['Tamponade','OBST'],pe:['Massive PE','OBST'],ptx:['Tension pneumothorax','OBST'],dhi:['Auto-PEEP (dynamic hyperinflation)','OBST'],acs:['Abdominal compartment syndrome','OBST'],
+ sep:['Septic','DIST'],ana:['Anaphylaxis','DIST'],neuro:['Neurogenic','DIST'],adr:['Adrenal crisis','DIST'],tox:['Toxicologic','DIST'],vaso:['Other vasoplegia (liver failure, post-bypass, pancreatitis, post-arrest)','DIST']
+};
+const GRP={HYPO:['hem','fluid'],CARD:['lv','rv','arr','valve'],OBST:['tamp','pe','ptx','dhi','acs'],DIST:['sep','ana','neuro','adr','tox','vaso']};
+GRP.LOW=[...GRP.HYPO,...GRP.CARD,...GRP.OBST];
+/* Weights: group tokens (HYPO, CARD, OBST, DIST, LOW) are pattern evidence; etiology tokens are specific. Each etiology gets [specific, pattern]. Toxicologic shock can look like any type, so pattern evidence skips it. */
+const W=s=>{const o={};s.trim().split(/\s+/).forEach(t=>{const[k,v]=t.split(':'),g=!!GRP[k];(GRP[k]||[k]).forEach(e=>{if(g&&e==='tox')return;o[e]=o[e]||[0,0];o[e][g?1:0]+=parseFloat(v)})});return o};
+
+/* ---------- Findings: [id, label, hint, weights] by step and group ---------- */
+const F={
+ ctx:[
+  ['Setting',[
+   ['infx','Suspected infection','Source, fever, rigors, recent culture','sep:3'],
+   ['immuno','Immunocompromised or neutropenic','','sep:1'],
+   ['trauma','Trauma','Blunt or penetrating','hem:3 ptx:1.5 tamp:1 neuro:1'],
+   ['gib','GI bleeding','Hematemesis, melena, hematochezia','hem:4'],
+   ['anticoag','Anticoagulated or coagulopathic','','hem:1.5 tamp:0.5'],
+   ['postproc','Recent procedure or surgery','Line, thoracentesis, biopsy, laparotomy','hem:1.5 ptx:1 tamp:0.5 sep:0.5'],
+   ['cardsurg','Recent cardiac surgery, PCI, ablation or lead','','tamp:3 lv:1 vaso:1'],
+   ['arrest','Post cardiac arrest (ROSC)','','lv:1.5 vaso:1.5'],
+   ['preg','Pregnant or postpartum','','hem:1.5 pe:1 lv:0.5']]],
+  ['History',[
+   ['losses','Vomiting, diarrhea, polyuria, burns or poor intake','','fluid:3'],
+   ['dka','Hyperglycemic crisis (DKA or HHS)','','fluid:2.5'],
+   ['cp','Chest pain or anginal equivalent','','lv:2 pe:1 tamp:0.5 valve:0.5'],
+   ['hf','Known HFrEF, orthopnea or recent HF admission','','lv:2.5'],
+   ['vte','VTE risk','Immobility, cancer, recent surgery, estrogen, prior VTE','pe:2.5'],
+   ['allergen','Allergen exposure with rapid onset','Food, sting, drug, contrast','ana:4'],
+   ['sci','Spinal cord injury above T6, or high neuraxial block','','neuro:4'],
+   ['steroid','Chronic steroids, known adrenal insufficiency, or steroids stopped','','adr:3.5'],
+   ['ingest','Overdose or new cardioactive drug','Beta-blocker, CCB, antihypertensive, TCA, sedative','tox:3.5'],
+   ['cirrh','Cirrhosis or acute liver failure','','vaso:2.5 sep:1 hem:1'],
+   ['panc','Pancreatitis, massive resuscitation or abdominal surgery','','acs:2 vaso:1'],
+   ['malig','Active malignancy','','pe:1 tamp:1 sep:1 adr:0.5']]],
+  ['Ventilator',[
+   ['vent','On positive-pressure ventilation','','ptx:1 dhi:1 fluid:0.5'],
+   ['obstr','Asthma or COPD','','dhi:2 ptx:0.5'],
+   ['pplat','Rising peak and plateau pressures','','ptx:2 dhi:2'],
+   ['autopeep','Expiratory flow not returning to zero, or measured auto-PEEP','','dhi:4']]]
+ ],
+ bed:[
+  ['Perfusion',[
+   ['cold','Cold, clammy extremities','','LOW:1.5 DIST:-1'],
+   ['warm','Warm, flushed extremities','','DIST:1.5 LOW:-1'],
+   ['crt','Capillary refill over 3 s or mottling','Severity, not type','']]],
+  ['Neck, lungs, heart',[
+   ['jvd','JVP elevated','','OBST:2 CARD:1.5 HYPO:-2 DIST:-1'],
+   ['jvflat','Flat neck veins','','HYPO:2 DIST:1 OBST:-2 CARD:-1.5'],
+   ['crackles','Crackles, pulmonary edema','','lv:2.5 valve:1.5 rv:-0.5 HYPO:-1'],
+   ['unilat','Absent breath sounds on one side, tracheal deviation','','ptx:4'],
+   ['wheeze','Wheeze or stridor','','ana:2 dhi:1.5'],
+   ['murmur','New murmur','','valve:3 lv:0.5'],
+   ['muffled','Muffled heart sounds or pulsus paradoxus over 10','','tamp:3.5 dhi:0.5']]],
+  ['Vitals and skin',[
+   ['fever','Temp over 38.3 °C or under 36 °C','','sep:2'],
+   ['brady','Heart rate under 60 despite hypotension','','neuro:2.5 tox:2 arr:2 rv:0.5'],
+   ['tachyarr','Heart rate over 150 or irregular','','arr:2.5'],
+   ['widepp','Wide pulse pressure, diastolic under 40','','sep:1.5 vaso:1.5 ana:1 neuro:0.5 valve:0.5'],
+   ['narrowpp','Narrow pulse pressure (under 25% of SBP)','','LOW:1 DIST:-1'],
+   ['urtic','Urticaria, flushing or angioedema','','ana:4'],
+   ['pale','Pallor or visible bleeding','','hem:2'],
+   ['abd','Tense, distended abdomen','','acs:2.5 hem:1'],
+   ['leg','Unilateral leg swelling','','pe:2'],
+   ['pigment','Hyperpigmentation','','adr:1.5']]]
+ ],
+ labs:[
+  ['Labs',[
+   ['hgb','Hemoglobin drop of 2 g/dL or more, or under 7','','hem:3'],
+   ['conc','Hemoconcentration, BUN:Cr over 20','','fluid:2 hem:0.5'],
+   ['trop','Troponin high or rising steeply','','lv:2 rv:1 pe:1'],
+   ['bnp','BNP or NT-proBNP markedly elevated','','lv:1.5 rv:1 pe:1 HYPO:-1'],
+   ['wbc','Leukocytosis, bandemia, high procalcitonin or positive cultures','','sep:2.5'],
+   ['nak','Hyponatremia with hyperkalemia','','adr:3'],
+   ['hypogly','Hypoglycemia','','adr:1.5 vaso:1 tox:0.5 sep:0.5'],
+   ['hyperk','Potassium over 6.5','','arr:1.5 adr:1 tox:0.5'],
+   ['toxlab','Unexplained gap, osmolar gap or positive drug level','','tox:2'],
+   ['liver','INR and bilirubin markedly up (liver failure)','','vaso:1.5'],
+   ['lipase','Lipase over 3× normal','','vaso:1.5 acs:0.5'],
+   ['bladder','Bladder pressure over 20 mmHg','','acs:4'],
+   ['tryptase','Elevated tryptase','Retrospective; draw within 2 h','ana:2']]],
+  ['ECG',[
+   ['stemi','STEMI, new LBBB or ischemic changes','','lv:3.5 rv:1 arr:0.5'],
+   ['rvmi','Inferior STEMI with ST elevation in V4R','','rv:3.5'],
+   ['strain','Right heart strain','S1Q3T3, new RBBB, T inversion V1–V4','pe:2.5 rv:1'],
+   ['alternans','Low voltage or electrical alternans','','tamp:3'],
+   ['block','High-grade AV block or junctional bradycardia','','arr:3 tox:1.5'],
+   ['tachy','VT, SVT, or AF/flutter at 150 or faster','','arr:3'],
+   ['wideqrs','QRS over 100 ms with terminal R in aVR','Sodium-channel blockade','tox:3 arr:1']]]
+ ],
+ pocus:[
+  ['Pump (heart)',[
+   ['lvhyper','Hyperdynamic LV, small cavity','Kissing walls','HYPO:2.5 DIST:1.5 CARD:-2'],
+   ['lvpoor','Severely reduced LV function','','lv:4 tox:1 sep:0.5 HYPO:-2'],
+   ['wma','Regional wall motion abnormality','','lv:2'],
+   ['rvdil','RV as big as or bigger than LV, septal flattening','D-sign','pe:3 rv:3 tamp:-1 HYPO:-2'],
+   ['mcconnell','McConnell’s sign','RV free wall akinesis, apical sparing','pe:1.5'],
+   ['effcol','Pericardial effusion with RA or RV diastolic collapse','','tamp:5'],
+   ['eff','Pericardial effusion without collapse','','tamp:1'],
+   ['sam','Systolic anterior motion, LVOT obstruction','','valve:4'],
+   ['valvedx','Severe valve lesion','Flail leaflet, severe MR, AR or AS','valve:3.5']]],
+  ['Tank (volume)',[
+   ['ivcsmall','IVC under 1.5 cm, collapses over 50%','','HYPO:2.5 DIST:1.5 OBST:-2.5 lv:-1.5 rv:-1.5'],
+   ['ivcplet','IVC over 2.1 cm, collapses under 50%','Less reliable on the vent','OBST:2 CARD:1.5 HYPO:-2.5 DIST:-1 tamp:0.5'],
+   ['blines','Diffuse bilateral B-lines','','lv:3 valve:1.5 HYPO:-1'],
+   ['nosliding','Absent lung sliding with a lung point','','ptx:5'],
+   ['fast','Free intraperitoneal fluid (FAST)','In cirrhosis, may be ascites','hem:3.5 acs:0.5'],
+   ['hemothorax','Large pleural effusion or hemothorax','','hem:1.5']]],
+  ['Pipes (vessels)',[
+   ['aaa','Aorta over 3 cm, or dissection flap','','hem:4 valve:1 tamp:1'],
+   ['dvt','Proximal DVT on compression','','pe:3']]]
+ ]
+};
+const FX={};for(const st in F)F[st].forEach(([g,items])=>items.forEach(([id,l,h,w])=>FX[id]={l,w:w?W(w):{}}));
+const EXCL=[['cold','warm'],['jvd','jvflat'],['widepp','narrowpp'],['lvhyper','lvpoor'],['ivcsmall','ivcplet'],['effcol','eff'],['brady','tachyarr']];
+
+/* ---------- Treatment by etiology ---------- */
+const TX={
+ hem:{now:['Control the source: pressure, tourniquet, pelvic binder; call surgery, IR or GI now','Massive transfusion, 1:1:1 plasma:platelets:RBC; limit crystalloid','Trauma within 3 h: TXA 1 g IV over 10 min, then 1 g over 8 h. Not for GI bleeding','Reverse anticoagulation: 4F-PCC + vitamin K (warfarin); andexanet or 4F-PCC (factor Xa); idarucizumab (dabigatran)','Give calcium; keep ionized Ca over 1.1 mmol/L'],
+  next:['Penetrating trauma without TBI: permissive SBP 80–90 until bleeding is controlled','TBI: no permissive hypotension; SBP 100 or more (age 50–69) or 110 or more (15–49, over 70)','Variceal bleed: octreotide, ceftriaxone, endoscopy within 12 h; restrictive transfusion (Hb 7)','Ruptured AAA: vascular surgery now; permissive hypotension en route'],
+  avoid:['Large crystalloid volumes','Vasopressors in place of blood'],cite:'ATLS 10th ed.; PROPPR (JAMA 2015); CRASH-2 (Lancet 2010); HALT-IT (Lancet 2020); Brain Trauma Foundation 4th ed.; Villanueva (NEJM 2013)'},
+ fluid:{now:['Balanced crystalloid 500–1000 mL boluses, reassessing after each','Replace ongoing losses; follow K, Mg, phosphate','DKA/HHS: isotonic fluid 1–1.5 L in the first hour, then insulin once K is 3.5 or more'],
+  next:['Thiamine before dextrose if malnourished or alcohol use','Look for a hidden bleed if the Hb falls as you dilute'],
+  avoid:['Vasopressors before the tank is filled (bridge only)'],cite:'SMART (NEJM 2018); ADA/EASD hyperglycemic crises consensus (2024)'},
+ lv:{now:['Norepinephrine first-line to MAP 65','Add dobutamine (2.5–5 mcg/kg/min) or milrinone for low output once MAP is supported','ECG now; ACS → emergent cath, culprit-lesion PCI only','Shock team; stage it (SCAI A–E); consider a PA catheter'],
+  next:['STEMI with cardiogenic shock: microaxial flow pump in selected patients','Diurese once perfusing; NIV or intubation with pressors ready (induction can collapse him)','Look for a mechanical complication: papillary rupture, VSD, free wall rupture'],
+  avoid:['Dopamine (more arrhythmia; higher mortality in the cardiogenic subgroup)','Routine VA-ECMO in infarct-related shock','Empiric large fluid boluses; nitrates, beta-blockers or CCBs while hypotensive'],cite:'SHOCK (NEJM 1999); SOAP II (NEJM 2010); CULPRIT-SHOCK (NEJM 2017); DOREMI (NEJM 2021); ECLS-SHOCK (NEJM 2023); DanGer Shock (NEJM 2024); SCAI shock classification (2022)'},
+ rv:{now:['Treat the cause: RV infarct → reperfusion; PE → see Massive PE','Preload: one small bolus (250 mL) only if CVP is low; stop if CVP rises; diurese if plethoric','Norepinephrine ± vasopressin to keep systemic above pulmonary pressure','Inotrope: dobutamine or milrinone'],
+  next:['Inhaled pulmonary vasodilator (nitric oxide or epoprostenol)','Restore AV synchrony; pace for heart block (RV infarct)','Avoid hypoxia, hypercapnia, acidosis and high PEEP/plateau'],
+  avoid:['Large fluid boluses','Nitrates and diuretics in preload-dependent RV infarct','Intubation without a plan: induction and positive pressure can arrest a failing RV'],cite:'AHA Scientific Statement on RV failure (Circulation 2018)'},
+ arr:{now:['Unstable tachyarrhythmia: synchronized cardioversion','Unstable bradycardia: atropine 1 mg IV q3–5 min (max 3 mg)','Then epinephrine 2–10 mcg/min or dopamine 5–20 mcg/kg/min, and transcutaneous → transvenous pacing'],
+  next:['Check K, Mg, Ca and digoxin, beta-blocker or CCB exposure','Sinus tachycardia is compensation: treat the cause, not the rate'],
+  avoid:['Rate control (diltiazem, beta-blocker) in a patient whose tachycardia is compensatory'],cite:'AHA ACLS guidelines (2020, 2025 update)'},
+ valve:{now:['Acute MR or AR (papillary rupture, endocarditis, dissection): emergent cardiac surgery','Acute MR: afterload reduction if MAP allows, inotrope, IABP as bridge','Severe AS: keep afterload up and HR slow-normal (phenylephrine or norepinephrine); BAV or TAVR as bridge','Dynamic LVOT obstruction: stop inotropes, give fluid, phenylephrine, then a beta-blocker'],
+  next:['Formal echo now; blood cultures if endocarditis is possible'],
+  avoid:['IABP in aortic regurgitation','Vasodilators and tachycardia in severe AS','Inotropes and diuretics in LVOT obstruction'],cite:'ACC/AHA valvular heart disease guideline (2020); AHA/ACC HCM guideline (2024)'},
+ tamp:{now:['Echo-guided pericardiocentesis now','Temporize: 250–500 mL fluid bolus and norepinephrine','Surgical drainage instead of a needle: aortic dissection, post-cardiac surgery clot, trauma'],
+  next:['Send fluid studies; look for the cause (malignancy, uremia, dissection, post-procedure)'],
+  avoid:['Intubation and positive pressure if at all possible: induction can cause arrest','Diuretics and vasodilators'],cite:'ESC pericardial disease guidelines (2015)'},
+ pe:{now:['High-risk PE: systemic thrombolysis, alteplase 100 mg over 2 h (0.6 mg/kg, max 50 mg, over 15 min if peri-arrest)','Unfractionated heparin 80 U/kg bolus','Norepinephrine first; add dobutamine for low cardiac index','Activate the PE response team'],
+  next:['Thrombolysis contraindicated or failed: surgical embolectomy or catheter-directed therapy','VA-ECMO as a bridge in refractory shock or arrest'],
+  avoid:['Fluid over 500 mL','Intubation unless unavoidable (ketamine or etomidate, pressor running)'],cite:'ESC acute PE guidelines (2019)'},
+ ptx:{now:['Decompress now on clinical grounds; don’t wait for imaging','Needle at the 4th–5th ICS anterior to mid-axillary line (adults), or finger thoracostomy if on the vent','Then a chest tube'],
+  next:['Check tube position and lung re-expansion','On the vent: lower the plateau pressure'],avoid:['Delaying for a chest X-ray'],cite:'ATLS 10th ed.'},
+ dhi:{now:['Disconnect the circuit for 30–60 s and let him exhale','Then lower the rate (10–12), Vt 6–8 mL/kg PBW, I:E 1:4 or longer, faster inspiratory flow','Bronchodilators; deepen sedation'],
+  next:['Measure auto-PEEP and plateau with holds','Tidal can set the vent from here'],avoid:['Bagging fast','More PEEP in asthma'],cite:'Owens, The Ventilator Book, ch. 15'},
+ acs:{now:['Measure bladder pressure: over 20 mmHg with new organ failure is ACS','Decompress: NG and rectal tubes, drain ascites, loosen dressings','Sedation and analgesia; brief neuromuscular blockade if needed'],
+  next:['Avoid a positive fluid balance','Refractory: surgical decompressive laparotomy'],avoid:['More fluid to chase a falling urine output'],cite:'WSACS consensus (Intensive Care Med 2013)'},
+ sep:{now:['Antibiotics within 1 h; blood cultures first if that doesn’t delay them','30 mL/kg balanced crystalloid within 3 h for hypoperfusion, reassessing as you go','Norepinephrine first-line to MAP 65; start peripherally rather than wait for a central line','Source control within 6–12 h'],
+  next:['Add vasopressin 0.03 U/min when norepinephrine is 0.25–0.5 mcg/kg/min','Hydrocortisone 200 mg/day (50 mg q6h) when norepinephrine or epinephrine is 0.25 or more for at least 4 h','Cardiac dysfunction with persistent hypoperfusion: add dobutamine or switch to epinephrine','Follow capillary refill and lactate'],
+  avoid:['Starches and gelatins','Dopamine','ScvO2-targeted protocols'],cite:'Surviving Sepsis Campaign (2021); ANDROMEDA-SHOCK (JAMA 2019); ProCESS, ARISE, ProMISe (2014–15)'},
+ ana:{now:['Epinephrine IM 0.01 mg/kg (max 0.5 mg) to the anterolateral thigh; repeat every 5–15 min','Rapid crystalloid, 1–2 L (20 mL/kg)','Early airway if angioedema or stridor'],
+  next:['Still in shock after 2 IM doses: epinephrine infusion (1–10 mcg/min)','On a beta-blocker: glucagon 1–5 mg IV over 5 min, then 5–15 mcg/min','H1/H2 blockers and steroids are adjuncts only','Observe for a biphasic reaction'],
+  avoid:['Antihistamines or steroids in place of epinephrine','IV epinephrine bolus outside of arrest'],cite:'WAO anaphylaxis guidance (2020); AAAAI/ACAAI anaphylaxis practice parameter (2023)'},
+ neuro:{now:['Rule out hemorrhage first: trauma patients bleed','Fluid to euvolemia, then norepinephrine (alpha and beta)','Bradycardia: atropine, pacing if it persists'],
+  next:['Acute SCI MAP target: traditionally 85–90 for 7 days; the 2024 AO Spine/Praxis guideline suggests at least 75–80, not over 90–95, for 3–7 days','Spine precautions; early surgical decompression'],
+  avoid:['Phenylephrine alone in cervical SCI (reflex bradycardia)'],cite:'AANS/CNS acute cervical SCI guideline (2013); AO Spine/Praxis SCI hemodynamics guideline (2024)'},
+ adr:{now:['Hydrocortisone 100 mg IV now; draw cortisol and ACTH only if it doesn’t delay the dose','Then hydrocortisone 200 mg/24 h (50 mg q6h or infusion)','1 L isotonic saline in the first hour; dextrose for hypoglycemia'],
+  next:['Treat the trigger (infection is most common)','Dexamethasone only if hydrocortisone is unavailable'],avoid:['Waiting for a stimulation test'],cite:'Endocrine Society primary adrenal insufficiency guideline (2016); ESE/Endocrine Society glucocorticoid-induced AI guideline (2024)'},
+ tox:{now:['Call Poison Control (1-800-222-1222)','Beta-blocker/CCB: calcium (CaCl 1 g or Ca gluconate 3 g IV, repeat), vasopressors, and high-dose insulin 1 U/kg then 1 U/kg/h (titrate up to 10) with dextrose and K','Sodium-channel blockade: sodium bicarbonate 1–2 mEq/kg to QRS under 120 ms, pH 7.45–7.55','Opioid toxidrome: naloxone'],
+  next:['Beta-blocker: glucagon 3–5 mg IV then infusion','Pacing for bradycardia','Refractory: lipid emulsion for lipophilic drugs; methylene blue for vasoplegia; VA-ECMO'],avoid:['Stopping at one pressor in a CCB overdose: escalate early to insulin'],cite:'AHA focused update on poisoning (Circulation 2023)'},
+ vaso:{now:['Norepinephrine, then vasopressin','Look for infection and bleeding: cirrhotic shock is often septic or hemorrhagic','Cirrhosis: albumin for SBP or HRS; hydrocortisone if refractory'],
+  next:['Post-bypass vasoplegia: methylene blue, hydroxocobalamin or angiotensin II','Pancreatitis: moderate goal-directed fluid, not aggressive','Post-arrest: MAP 65 or more, treat the cause, temperature control'],avoid:['Aggressive fluid in pancreatitis'],cite:'Surviving Sepsis Campaign (2021); WATERFALL (NEJM 2022); AASLD guidance'}
+};
+
+const STEPS=[['ctx','History','Hx'],['bed','Bedside','Exam'],['labs','Labs & ECG','Labs'],['pocus','POCUS','POCUS'],['hemo','Hemodynamics','Hemo'],['treat','Treat','Treat']];
+
+/* ---------- State: blank on every visit ---------- */
+const blank=()=>({step:'ctx',f:{},v:{sbp:'',dbp:'',hr:'',lac:'',ne:'',cvp:'',pcwp:'',co:'',ci:'',scv:'',scvco2:'',paco2:'',vti:''},focus:'',done:{}});
+let S=blank();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(v===''||v==null)return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:null};
+const lc=t=>String(t).replace(/\b([A-Z])(?=[a-z])/g,c=>c.toLowerCase()); // lowercase words, keep acronyms (RV, PE)
+const r0=n=>Math.round(n),r1=n=>Math.round(n*10)/10,r2=n=>Math.round(n*100)/100;
+
+/* ---------- Numbers ---------- */
+function D(){
+  const v=S.v,sbp=num(v.sbp),dbp=num(v.dbp),hr=num(v.hr),cvp=num(v.cvp),pcwp=num(v.pcwp),co=num(v.co),ci=num(v.ci);
+  const d={sbp,dbp,hr,cvp,pcwp,co,ci,lac:num(v.lac),ne:num(v.ne),scv:num(v.scv),vti:num(v.vti)};
+  d.map=sbp!=null&&dbp!=null?(sbp+2*dbp)/3:null;
+  d.si=hr&&sbp?hr/sbp:null;
+  d.dsi=hr&&dbp?hr/dbp:null;
+  d.svr=d.map!=null&&co?(d.map-(cvp??0))*80/co:null;
+  const sc=num(v.scvco2),pa=num(v.paco2);d.gap=sc!=null&&pa!=null?sc-pa:null;
+  return d;
+}
+/* Numbers that weigh in, as [label, weights] */
+function numFindings(d){
+  const o=[];
+  if(d.ci!=null){if(d.ci<2.2)o.push([`CI ${r1(d.ci)} (low)`,W('LOW:1.5 DIST:-1.5')]);else if(d.ci>3.5)o.push([`CI ${r1(d.ci)} (high)`,W('DIST:2 LOW:-1.5 tox:-2')])}
+  else if(d.co!=null){if(d.co<4)o.push([`CO ${r1(d.co)} (low)`,W('LOW:1 DIST:-1')]);else if(d.co>8)o.push([`CO ${r1(d.co)} (high)`,W('DIST:1.5 LOW:-1 tox:-1.5')])}
+  if(d.pcwp!=null){if(d.pcwp>18)o.push([`PCWP ${d.pcwp} (high)`,W('lv:2.5 valve:1.5 tamp:1 HYPO:-2 DIST:-1')]);else if(d.pcwp<10)o.push([`PCWP ${d.pcwp} (low)`,W('HYPO:1.5 DIST:1 lv:-2')])}
+  if(d.cvp!=null){if(d.cvp>12)o.push([`CVP ${d.cvp} (high)`,W('OBST:1.5 CARD:0.5 rv:1.5 HYPO:-2')]);else if(d.cvp<5)o.push([`CVP ${d.cvp} (low)`,W('HYPO:2 DIST:1 OBST:-2 rv:-1.5')])}
+  if(d.cvp!=null&&d.pcwp!=null){
+    if(d.cvp>15&&d.pcwp>15&&Math.abs(d.cvp-d.pcwp)<=4)o.push(['CVP ≈ PCWP, both high (equalized)',W('tamp:2.5')]);
+    else if(d.cvp>=d.pcwp&&d.cvp>8)o.push(['CVP at or above PCWP',W('rv:2 pe:1.5')]);
+  }
+  if(d.svr!=null){if(d.svr>1400)o.push([`SVR ${r0(d.svr)} (high)`,W('LOW:1 DIST:-1.5')]);else if(d.svr<800)o.push([`SVR ${r0(d.svr)} (low)`,W('DIST:2.5 LOW:-1.5')])}
+  if(d.scv!=null){if(d.scv<65)o.push([`ScvO2 ${d.scv}% (low)`,W('LOW:1.5 DIST:-1')]);else if(d.scv>75)o.push([`ScvO2 ${d.scv}% (high)`,W('DIST:1.5 LOW:-1')])}
+  if(d.gap!=null&&d.gap>6)o.push([`PCO2 gap ${r1(d.gap)} (over 6)`,W('LOW:1')]);
+  if(d.vti!=null){if(d.vti<18)o.push([`LVOT VTI ${d.vti} cm (low)`,W('LOW:1 DIST:-0.5')]);else if(d.vti>22)o.push([`LVOT VTI ${d.vti} cm (normal or high)`,W('DIST:1 LOW:-0.5')])}
+  if(d.ne!=null&&d.ne>=0.25)o.push([`Norepinephrine ${d.ne} mcg/kg/min (refractory)`,W('adr:1')]);
+  return o;
+}
+
+/* ---------- Scoring ---------- */
+function score(){
+  const sp={},pt={},why={};for(const e in E){sp[e]=0;pt[e]=0;why[e]=[]}
+  const add=(l,w)=>{for(const e in w){const[a,b]=w[e];if(!a&&!b)continue;sp[e]+=a;pt[e]+=b;why[e].push([l,a+b])}};
+  for(const id in S.f)if(S.f[id])add(FX[id].l,FX[id].w);
+  numFindings(D()).forEach(([l,w])=>add(l,w));
+  // A cause ranks on its specific findings plus half the pattern evidence; a type ranks on the full pattern plus its best specific cause.
+  const list=Object.keys(E).map(e=>({e,sp:sp[e],s:r1(sp[e]+0.5*pt[e]),why:why[e].sort((a,b)=>b[1]-a[1])})).sort((a,b)=>b.s-a.s);
+  const cat={};for(const c in CATS){const m=GRP[c],pat=pt[m[0]],best=Math.max(0,...m.map(e=>sp[e]));cat[c]={s:r1(pat+best),pat}}
+  return {list,cat,n:Object.values(S.f).filter(Boolean).length+numFindings(D()).length};
+}
+const strength=s=>s>=6?'Strong':s>=3.5?'Moderate':s>0?'Weak':'—';
+
+/* ---------- UI bits ---------- */
+function renderSteps(){$('steps').innerHTML=STEPS.map(([k,t,sh],i)=>{const cnt=k in F?F[k].reduce((n,[,it])=>n+it.filter(x=>S.f[x[0]]).length,0):0;return`<button type="button" class="stepbtn" data-step="${k}" ${S.step===k?'aria-current="step"':''}><span class="n">${i+1}${cnt?` · ${cnt}`:''}</span><span class="t"><span class="lg">${t}</span><span class="sh">${sh}</span></span></button>`}).join('')}
+const chipF=([id,l,h])=>`<button type="button" class="chip" data-f="${id}" aria-pressed="${!!S.f[id]}">${esc(l)}${h?`<small>${esc(h)}</small>`:''}</button>`;
+const inp=(k,l,ph)=>`<label class="in"><span>${l}</span><input inputmode="decimal" data-k="${k}" value="${esc(S.v[k])}" placeholder="${ph||''}"></label>`;
+const groups=st=>F[st].map(([g,items])=>`<div class="sec grp"><h3>${g}</h3><div class="chips">${items.map(chipF).join('')}</div></div>`).join('');
+const ph=(n,t,cue)=>`<div class="ph"><span class="eb">${n}</span><h2>${t}</h2><p class="cue">${cue}</p></div>`;
+const foot=(prev,next)=>`<div class="pfoot">${prev?`<button class="btn" data-step="${prev[0]}" type="button">← ${prev[1]}</button>`:'<span></span>'}${next?`<button class="btn primary" data-step="${next[0]}" type="button">${next[1]} →</button>`:'<span></span>'}</div>`;
+
+function paneCtx(){return ph(1,'History and setting','Mark what you know. Each finding weighs for some causes and against others; nothing is required.')+groups('ctx')+foot(null,['bed','Bedside'])}
+function paneBed(){
+  const d=D();
+  return ph(2,'Bedside','Warm or cold, wet or dry, and the clues that point to one cause.')+
+  `<div class="sec"><h3>Vitals</h3><div class="row">${inp('sbp','SBP','mmHg')}${inp('dbp','DBP','mmHg')}${inp('hr','HR','/min')}</div>
+  ${d.map!=null||d.si!=null?`<div class="calc">${d.map!=null?`<div class="kpi ${d.map<65?'bad':'good'}"><span>MAP</span><b>${r0(d.map)}</b></div>`:''}${d.si!=null?`<div class="kpi ${d.si>=1?'bad':d.si>=0.7?'mid':'good'}"><span>Shock index</span><b>${r2(d.si)}</b></div>`:''}${d.dsi!=null?`<div class="kpi"><span>Diastolic SI</span><b>${r2(d.dsi)}</b></div>`:''}${d.sbp&&d.dbp?`<div class="kpi ${(d.sbp-d.dbp)/d.sbp<0.25?'mid':''}"><span>Pulse pressure</span><b>${r0(d.sbp-d.dbp)}</b></div>`:''}</div>
+  ${d.dbp!=null&&d.dbp<50?`<p class="note-box">A low diastolic pressure (and a high diastolic shock index, HR/DBP) marks low vascular tone; it carries higher mortality in septic shock and argues for an early vasopressor. <span class="cite">Ospina-Tascón, Ann Intensive Care 2020</span></p>`:''}`:''}</div>`+
+  groups('bed')+foot(['ctx','History'],['labs','Labs & ECG'])}
+function paneLabs(){
+  const lac=num(S.v.lac);
+  return ph(3,'Labs and ECG','Lactate sets the severity; the rest points to a cause.')+
+  `<div class="sec"><h3>Lactate</h3><div class="row">${inp('lac','Lactate (mmol/L)','e.g. 4.2')}</div>${lac!=null?`<p class="note-box">${lac>=4?'Lactate 4 or more: high mortality; treat as shock even if the pressure looks OK. Repeat in 2 h.':lac>=2?'Lactate 2–4: hypoperfusion likely. Repeat in 2 h and follow capillary refill.':'Lactate under 2 doesn’t exclude shock; follow perfusion at the bedside.'} <span class="cite">Surviving Sepsis Campaign 2021</span></p>`:''}</div>`+
+  groups('labs')+foot(['bed','Bedside'],['pocus','POCUS'])}
+function panePocus(){
+  const done=F.pocus.reduce((n,[,it])=>n+it.filter(x=>S.f[x[0]]).length,0);
+  return ph(4,'POCUS (RUSH)','Pump, tank, pipes. A focused exam separates the four types faster than anything else.')+
+  (done?'':`<p class="ambox">Nothing marked yet. A RUSH exam takes minutes and rules in or out tamponade, tension pneumothorax, massive PE and hemorrhage. <span class="cite">Perera, Emerg Med Clin N Am 2010</span></p>`)+
+  groups('pocus')+`<p class="fine">IVC size is a weak guide to fluid responsiveness, especially on the vent; use it for the extremes.</p>`+foot(['labs','Labs & ECG'],['hemo','Hemodynamics'])}
+function paneHemo(){
+  const d=D();
+  return ph(5,'Hemodynamics','Optional: art line, central line, PA catheter or echo numbers. Leave blank what you don’t have.')+
+  `<div class="sec"><h3>Pressures and flow</h3><div class="row">${inp('cvp','CVP (mmHg)')}${inp('pcwp','PCWP (mmHg)')}${inp('co','CO (L/min)')}${inp('ci','CI (L/min/m²)')}${inp('vti','LVOT VTI (cm)')}</div></div>
+  <div class="sec"><h3>Oxygen and CO2</h3><div class="row">${inp('scv','ScvO2 or SvO2 (%)')}${inp('scvco2','Central venous PCO2')}${inp('paco2','Arterial PaCO2')}${inp('ne','Norepinephrine (mcg/kg/min)')}</div></div>
+  <div class="calc">${d.map!=null?`<div class="kpi"><span>MAP</span><b>${r0(d.map)}</b></div>`:''}${d.svr!=null?`<div class="kpi ${d.svr<800?'bad':d.svr>1400?'mid':'good'}"><span>SVR</span><b>${r0(d.svr)}</b></div>`:''}${d.gap!=null?`<div class="kpi ${d.gap>6?'bad':'good'}"><span>PCO2 gap</span><b>${r1(d.gap)}</b></div>`:''}${d.ci!=null?`<div class="kpi ${d.ci<2.2?'bad':'good'}"><span>CI</span><b>${r1(d.ci)}</b></div>`:''}</div>
+  ${d.svr==null&&d.co!=null?'<p class="fine">Enter SBP and DBP on the Bedside step to calculate SVR.</p>':''}
+  <div class="sec"><h3>Classic profiles</h3><table class="set"><tr><th></th><td><b>CO</b></td><td><b>PCWP</b></td><td><b>CVP</b></td><td><b>SVR</b></td><td><b>SvO2</b></td></tr>
+  <tr><th>Hypovolemic</th><td>↓</td><td>↓</td><td>↓</td><td>↑</td><td>↓</td></tr>
+  <tr><th>Cardiogenic (LV)</th><td>↓</td><td>↑</td><td>↑ or –</td><td>↑</td><td>↓</td></tr>
+  <tr><th>Obstructive</th><td>↓</td><td>– or ↓ (equal in tamponade)</td><td>↑</td><td>↑</td><td>↓</td></tr>
+  <tr><th>Distributive</th><td>↑ or –</td><td>↓ or –</td><td>↓ or –</td><td>↓</td><td>↑ or –</td></tr></table>
+  <span class="cite">Vincent & De Backer, NEJM 2013</span></div>`+foot(['pocus','POCUS'],['treat','Treat'])}
+
+function paneTreat(){
+  const R=score(),top=R.list.find(x=>x.sp>=1.5&&x.s>0),f=S.focus||(top?top.e:'');
+  const pick=`<div class="sec"><h3>Treat</h3><div class="pick">${R.list.filter(x=>x.s>0&&x.sp>=1.5).slice(0,6).map(x=>`<button type="button" class="chip" data-focus="${x.e}" aria-pressed="${x.e===f}">${esc(E[x.e][0])}</button>`).join('')}<button type="button" class="chip" data-focus="__all" aria-pressed="false">Other cause…</button></div>
+  ${S.showAll?`<div class="pick" style="margin-top:6px">${Object.keys(E).map(e=>`<button type="button" class="chip ag" data-focus="${e}" aria-pressed="${e===f}">${esc(E[e][0])}</button>`).join('')}</div>`:''}</div>`;
+  const universal=`<div class="sec tx"><h3>Every patient in shock</h3><ul class="list"><li>Two large-bore IVs or IO; monitor, ECG; arterial line once on pressors</li><li>Lactate, CBC, BMP, LFTs, coags, troponin, type and screen, VBG; cultures if any chance of infection</li><li>MAP 65 or more for most; age 65 or older can run 60–65 (65 trial)</li><li>Norepinephrine is first-line for most shock; start it peripherally rather than delay</li><li>Fluid only while he responds: passive leg raise with VTI or CO up 10–15%, or a 100 mL mini-bolus. Pulse pressure variation needs sinus rhythm, a passive patient and Vt 8 mL/kg</li><li>Shock is often mixed (septic plus cardiomyopathy, hemorrhage plus vasoplegia); recheck after each intervention</li></ul><span class="cite">Surviving Sepsis Campaign 2021; Lamontagne, JAMA 2020 (65 trial); Monnet & Teboul, Crit Care 2015</span></div>`;
+  let body='';
+  if(f&&TX[f]){const t=TX[f];
+    body=`<div class="sec tx"><h3>${esc(E[f][0])} <span class="cite">· ${CATS[E[f][1]]}</span></h3>
+    <h4>Now</h4><ul class="list">${t.now.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    <h4>Next</h4><ul class="list">${t.next.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    <h4>Avoid</h4><ul class="list">${t.avoid.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    ${f==='dhi'?'<p class="fine"><a class="inl" href="../tidal/">Open Tidal</a> for vent settings.</p>':''}
+    <span class="cite">${esc(t.cite)}</span></div>`}
+  else body=`<p class="empty">Mark findings on steps 1–5, or pick a cause above, to see its treatment.</p>`;
+  return ph(6,'Treat','Start with what every shocked patient needs, then treat the leading cause.')+pick+body+universal+foot(['hemo','Hemodynamics'],null);
+}
+
+/* ---------- Don't miss ---------- */
+function misses(R){
+  const m=[],f=S.f,sc=Object.fromEntries(R.list.map(x=>[x.e,x.sp]));
+  const pocusDone=F.pocus.some(([,it])=>it.some(x=>f[x[0]]));
+  if(!pocusDone)m.push(['pocus','Do a RUSH exam','Tamponade, tension pneumothorax, RV dilation and free fluid are each treatable in minutes']);
+  if(!f.effcol&&!f.eff&&(sc.tamp>=2||f.cardsurg||f.malig))m.push(['peri','Look at the pericardium','Effusion with diastolic collapse is tamponade']);
+  if(!f.nosliding&&(f.vent||f.trauma||f.postproc)&&!f.unilat)m.push(['slide','Check lung sliding both sides','Ventilated, trauma or post-procedure patients get tension pneumothorax']);
+  if(sc.hem>0||f.anticoag)m.push(['occult','Look for occult bleeding','Rectal exam, Hb trend, retroperitoneum, thigh, chest; type and screen']);
+  if(!f.stemi&&!f.strain&&!f.block&&!f.tachy&&!f.alternans&&!f.wideqrs&&!f.rvmi)m.push(['ecg','12-lead ECG','STEMI, RV strain, heart block, alternans and sodium-channel blockade all change management']);
+  const d=D();
+  if((d.ne!=null&&d.ne>=0.25)||sc.adr>=2)m.push(['cort','Steroids for refractory shock','Hydrocortisone 200 mg/day; draw a cortisol first if it doesn’t delay it']);
+  if(f.abd||f.panc)m.push(['iap','Measure bladder pressure','Over 20 mmHg with new organ failure is abdominal compartment syndrome']);
+  if(sc.sep>=2)m.push(['abx','Antibiotics within the hour','And name the source; plan source control']);
+  if(f.lvhyper&&(sc.valve>0||f.murmur))m.push(['lvoto','Check for LVOT obstruction','A hyperdynamic LV on inotropes can obstruct; stop them if SAM is present']);
+  const top2=R.list.filter(x=>x.s>=3.5&&x.sp>=1.5);if(top2.length>1&&E[top2[0].e][1]!==E[top2[1].e][1]&&top2[1].s>=top2[0].s*0.7)m.push(['mixed','Consider mixed shock',`${E[top2[0].e][0]} and ${E[top2[1].e][0]} both fit`]);
+  m.push(['reass','Reassess after every intervention','Perfusion, lactate at 2 h, POCUS again if he worsens']);
+  return m;
+}
+
+/* ---------- Note ---------- */
+function noteText(R){
+  const top=R.list.filter(x=>x.s>=3&&x.sp>=1.5);if(!top.length)return '';
+  const d=D(),lead=top[0],cat=CATS[E[lead.e][1]].toLowerCase();
+  const pos=lead.why.filter(w=>w[1]>0).map(w=>lc(w[0])),neg=lead.why.filter(w=>w[1]<0).map(w=>lc(w[0]));
+  const nums=[d.map!=null?`MAP ${r0(d.map)}`:'',d.si!=null?`shock index ${r2(d.si)}`:'',d.lac!=null?`lactate ${d.lac}`:'',d.ci!=null?`CI ${r1(d.ci)}`:'',d.svr!=null?`SVR ${r0(d.svr)}`:'',d.scv!=null?`ScvO2 ${d.scv}%`:'',d.ne!=null?`norepinephrine ${d.ne} mcg/kg/min`:''].filter(Boolean);
+  let t=`# Shock, most consistent with ${cat} shock (${lc(E[lead.e][0])})\n`;
+  t+=`Supported by ${pos.join(', ')}.`+(neg.length?` Against: ${neg.join(', ')}.`:'')+'\n';
+  if(nums.length)t+=`Hemodynamics: ${nums.join(', ')}.\n`;
+  const alt=top.slice(1,4).map(x=>lc(E[x.e][0]));
+  if(alt.length)t+=`Also considered: ${alt.join('; ')}.\n`;
+  t+=`Plan:\n`+TX[lead.e].now.slice(0,3).map(x=>`- ${x}`).join('\n')+`\n- MAP goal 65 or more; reassess perfusion and lactate in 2 h`;
+  return t;
+}
+
+/* ---------- Render ---------- */
+function renderPane(){$('pane').innerHTML={ctx:paneCtx,bed:paneBed,labs:paneLabs,pocus:panePocus,hemo:paneHemo,treat:paneTreat}[S.step]()}
+function renderOut(){
+  const R=score(),max=Math.max(8,R.list[0].s),pos=R.list.filter(x=>x.s>0&&x.sp>=1.5);
+  let h=`<h3>Shock type</h3>`;
+  if(!R.n){h+=`<p class="empty">Mark findings as you go. The causes that fit rise to the top, with what supports each and what argues against it.</p>`}
+  else{
+    const leadCat=Object.keys(CATS).sort((a,b)=>R.cat[b].s-R.cat[a].s)[0];
+    h+=`<div class="cats">${Object.keys(CATS).map(c=>{const b=R.cat[c];return`<div class="cat${c===leadCat?' lead':''}"><span>${CATS[c]}</span><b>${b.s>0?strength(b.s):'—'}</b></div>`}).join('')}</div>`;
+    h+=`<h3>Causes</h3><div class="ddx">`+(pos.length?pos.slice(0,7).map((x,i)=>`<button type="button" class="dx${x.s>=6?' strong':''}${(S.focus||pos[0].e)===x.e?' on':''}" data-focus="${x.e}" data-go="1"><div class="h"><b>${esc(E[x.e][0])}</b><small>${strength(x.s)} · ${CATS[E[x.e][1]]}</small></div><div class="bar"><i style="width:${Math.min(100,x.s/max*100)}%"></i></div><ul class="why">${x.why.slice(0,6).map(w=>`<li class="${w[1]<0?'neg':''}">${esc(w[0])}</li>`).join('')}</ul></button>`).join(''):`<p class="empty">${R.cat[leadCat].s>0?`The pattern fits ${CATS[leadCat].toLowerCase()} shock. Add history, labs or POCUS findings to name the cause.`:'What you’ve marked argues against every cause more than for one. Add more findings.'}</p>`)+`</div>`;
+    if(pos.length&&TX[pos[0].e])h+=`<h3>Do now: ${esc(E[pos[0].e][0])}</h3><ul class="list">${TX[pos[0].e].now.slice(0,3).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  }
+  const M=misses(R);
+  h+=`<h3>Don’t miss</h3><ul class="miss">${M.map(([id,t,s])=>`<li data-done="${id}" class="${S.done[id]?'done':''}"><span class="bx">${S.done[id]?'✓':''}</span><span class="tx">${esc(t)}<small>${esc(s)}</small></span></li>`).join('')}</ul>`;
+  const n=noteText(R);
+  if(n)h+=`<h3>Note</h3><pre class="dict">${esc(n)}</pre><button class="btn primary" id="copy" type="button">Copy note</button>`;
+  h+=`<p class="fine">Weights are teaching heuristics drawn from the cited guidelines and trials, not validated probabilities. Shock is often mixed. It does not replace bedside judgment.</p>`;
+  $('out').innerHTML=h;
+  $('mbarmid').innerHTML=pos.length?`<b>${esc(E[pos[0].e][0])}</b> · ${strength(pos[0].s)}`:'Mark findings to start';
+}
+function render(keep){const y=window.scrollY;renderSteps();renderPane();renderOut();if(keep)window.scrollTo(0,y)}
+
+/* ---------- Events ---------- */
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');if(st){S.step=st.dataset.step;render();window.scrollTo(0,0);return}
+  const fc=e.target.closest('[data-f]');if(fc){const id=fc.dataset.f,on=!S.f[id];S.f[id]=on;if(on)EXCL.forEach(p=>{if(p.includes(id))p.forEach(x=>{if(x!==id)S.f[x]=false})});render(true);return}
+  const fo=e.target.closest('[data-focus]');if(fo){const v=fo.dataset.focus;if(v==='__all'){S.showAll=!S.showAll}else{S.focus=v;S.showAll=false;if(fo.dataset.go){S.step='treat';render();window.scrollTo(0,0);return}}render(true);return}
+  const dn=e.target.closest('[data-done]');if(dn){S.done[dn.dataset.done]=!S.done[dn.dataset.done];renderOut();return}
+  if(e.target.closest('#copy')){copy(noteText(score()));return}
+  if(e.target.closest('#seeRecs')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(e.target.closest('#reset')){const b=$('reset');if(b.dataset.armed){S=blank();render();window.scrollTo(0,0)}else{b.dataset.armed='1';b.textContent='Tap again to clear';setTimeout(()=>{delete b.dataset.armed;b.textContent='New patient'},2500)}return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(!t.dataset.k)return;S.v[t.dataset.k]=t.value;renderOut();renderSteps();
+  const pos=t.selectionStart,key=t.dataset.k;renderPane();const n=document.querySelector(`[data-k="${key}"]`);if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}});
+async function copy(t){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  const el=document.createElement('div');el.className='toast';el.textContent=ok?'Note copied.':'Couldn’t copy on this device.';document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+render();
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>

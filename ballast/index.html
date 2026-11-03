@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ballast">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Ballast</title>
+<style>
+/* Ballast: refractory nausea and vomiting in the ED. Next agent by cause, by what has failed (switching class), and by patient factors; sources cited per agent.
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--amber:#8A5A00;--amber-soft:#FCF0D6;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.top h1{margin:0;font-size:1.5rem}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:38px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding-block:8px;margin-top:10px}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.stepbtn .n{font-size:.7rem;font-weight:700;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .sh{display:none}
+.mbar{display:none}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:3px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.3rem}
+.ph .cue{margin:0;color:var(--muted);font-size:.9rem}
+.sec h3{margin:0 0 8px;font-size:.98rem}
+.sec{display:flex;flex-direction:column;gap:8px}
+.flab{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:.88rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip small{display:block;font-size:.72rem;opacity:.8;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.in{display:flex;flex-direction:column;gap:3px;min-width:92px;flex:1 1 92px;max-width:150px}
+.in>span{font-size:.74rem;font-weight:700;color:var(--muted)}
+.in input,.in select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--paper);font-size:16px;width:100%;min-height:38px}
+.in input:focus,.in select:focus{outline:2px solid var(--accent);outline-offset:0}
+.in.wide{max-width:none;flex:2 1 180px}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:#F4F6F8;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.kpi.bad{background:var(--warn-soft)}.kpi.bad b{color:var(--warn)}
+.kpi.mid{background:var(--amber-soft)}.kpi.mid b{color:var(--amber)}
+.kpi.good{background:var(--ok-soft)}.kpi.good b{color:var(--ok)}
+table.set{width:100%;border-collapse:collapse;font-size:.92rem}
+table.set th,table.set td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.set th{width:34%;color:var(--muted);font-weight:700;font-size:.8rem}
+table.set td b{font-size:1.02rem}
+table.set td small{display:block;color:var(--muted)}
+.cite{font-size:.72rem;color:var(--muted);font-style:italic}
+.note-box{background:#F4F6F8;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px;text-align:left;cursor:pointer}
+.tcard b{display:block}.tcard span{font-size:.8rem;color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow{border-left:3px solid var(--accent);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.flow h4{margin:6px 0 0;font-size:.9rem}
+.out{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 90px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rec{border-radius:10px;padding:9px 11px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rec .h{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.rec .h b{font-size:.95rem}
+.rec p{margin:0;font-size:.86rem}
+.pri{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
+.rec.now{border-color:#E5A69F;background:#FFF7F6}.rec.now .pri{background:var(--warn-soft);color:var(--warn)}
+.rec.next{border-color:#EBCB86;background:#FFFCF4}.rec.next .pri{background:var(--amber-soft);color:var(--amber)}
+.rec.con .pri{background:var(--accent-soft);color:var(--accent)}
+.rec.ok{border-color:#A9D6BE;background:#F6FBF8}.rec.ok .pri{background:var(--ok-soft);color:var(--ok)}
+.miss{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.miss li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;cursor:pointer}
+.miss .bx{flex:none;width:18px;height:18px;border:1.5px solid #9AA9B8;border-radius:4px;margin-top:1px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.miss li.done .bx{background:var(--ok);border-color:var(--ok)}
+.miss li.done .tx{color:var(--muted);text-decoration:line-through}
+.miss .tx small{display:block;color:var(--muted);font-size:.74rem}
+pre.dict{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#F4F6F8;border-radius:10px;padding:10px;margin:0}
+.empty{color:var(--muted);font-size:.9rem;background:#F4F6F8;border-radius:10px;padding:10px 12px}
+.pfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fine{font-size:.76rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepbtn{padding:6px}
+  .stepbtn .t{font-size:.8rem}
+  .stepbtn .lg{display:none}.stepbtn .sh{display:inline}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:10px;align-items:center}
+  .mbar .mid{flex:1;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .mbar .mid b{color:var(--warn)}
+  .wrap{padding-bottom:80px}
+  .out{scroll-margin-top:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.steps{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.rx{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--paper);display:flex;flex-direction:column;gap:3px}
+.rx+.rx{margin-top:6px}
+.rx .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.rx .h b{font-size:.95rem}
+.rx .cl{font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.rx .tier{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px;background:var(--accent-soft);color:var(--accent)}
+.rx p{margin:0;font-size:.87rem}
+.rx .dose{font-weight:600}
+.rx .why{color:var(--muted)}
+.rx.bad{border-color:#E5A69F;background:#FFF7F6}
+.rx.tried{border-color:#A9C4E8}
+p.av{color:var(--warn);font-weight:600}
+p.ca{color:var(--amber)}
+.rec p.ca{font-size:.82rem}
+.resp{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px}
+.resp>span{font-size:.74rem;font-weight:700;color:var(--muted);margin-right:2px}
+.chip.sm{min-height:28px;padding:3px 10px;font-size:.8rem}
+details.more summary{cursor:pointer;font-weight:700;font-size:.95rem;padding:4px 0}
+details.more[open] summary{margin-bottom:6px}
+.tcards{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Ballast</h1></div>
+      <p>Nausea that isn’t settling: what to give next, by cause, by what’s failed, and by who he is.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <nav class="steps" aria-label="Steps" id="steps"></nav>
+  <div class="grid">
+    <section class="pane" id="pane"></section>
+    <aside class="out" id="out" aria-label="Next step"></aside>
+  </div>
+</div>
+<div class="mbar" id="mbar"><span class="mid" id="mbarmid"></span><button class="btn primary" type="button" id="seeRecs">Next step ↓</button></div>
+<script>
+const APP={
+ causeH:'Likely cause',causeCue:'The cause decides the ladder. Undifferentiated is fine while you work it up.',
+ nextCue:'The next agent from a different class, with what to add and what to avoid in this patient.',
+ escalate:'treat the cause (decompress, insulin, cannabis cessation), and consider admission for refractory vomiting.',
+ empty:'Pick a cause, mark what he has had, and the next agent appears here.',
+ noteH:'Intractable nausea and vomiting',noteRefr:'Refractory to',reassess:'Reassess nausea in 30 min; PO challenge before discharge',
+ fine:'Doses are typical adult ED doses; check your formulary and the patient’s QTc, allergies and weight. It does not replace clinical judgment.',
+ causeMod:{preg:'preg',sbo:'obstr'}
+};
+const CLS={
+ '5ht3':{n:'5-HT3 antagonist'},benz:{n:'Dopamine antagonist (benzamide)'},pheno:{n:'Dopamine antagonist (phenothiazine)'},butyro:{n:'Dopamine antagonist (butyrophenone)'},
+ h1:{n:'Antihistamine'},antichol:{n:'Anticholinergic'},atyp:{n:'Atypical antipsychotic'},steroid:{n:'Corticosteroid'},nk1:{n:'NK1 antagonist'},
+ benzo:{n:'Benzodiazepine'},trpv1:{n:'TRPV1 agonist (topical)'},aroma:{n:'Inhaled (nonpharmacologic)'},fluid:{n:'Fluid and vitamins'},opioid:{n:'Opioid agonist treatment'},a2:{n:'Alpha-2 agonist'},decomp:{n:'Decompression'}
+};
+const QT='QTc over 500 ms: avoid unless monitored, or choose another class';
+const PD='Dopamine blockade worsens parkinsonism';
+const RX={
+ ond:{n:'Ondansetron',cls:'5ht3',dose:'4 mg IV or ODT; may repeat once',why:'In undifferentiated adult ED nausea it did no better than metoclopramide or saline (Egerton-Warburton 2014). A second dose of the same drug adds little; switch class.',cite:'Egerton-Warburton, Ann Emerg Med 2014',
+  caut:{qt:'Prolongs QT (dose-dependent)',sero:'Serotonin syndrome reported with serotonergic drugs',preg:'Possible small first-trimester risk of oral clefts; ACOG reserves it for after first-line agents'}},
+ meto:{n:'Metoclopramide',cls:'benz',dose:'10 mg IV over 15 min',why:'Slow infusion over 15 min halves akathisia compared with a push.',cite:'Parlak, Emerg Med J 2005; Egerton-Warburton, Ann Emerg Med 2014',
+  avoid:{pd:PD,obstr:'Prokinetic: contraindicated in mechanical obstruction'},caut:{old:'Beers: avoid unless gastroparesis (EPS, tardive dyskinesia)',akath:'Give over 15 min with diphenhydramine 25 mg',sz:'Lowers the seizure threshold',sero:'Serotonin syndrome reported'}},
+ pcz:{n:'Prochlorperazine',cls:'pheno',dose:'10 mg IV over 15 min, or 10 mg IM',cite:'Braude, Am J Emerg Med 2006',
+  avoid:{pd:PD},caut:{qt:'Some QT prolongation',old:'Lower dose (5 mg); sedation, EPS',akath:'Give over 15 min with diphenhydramine 25 mg',sz:'Lowers the seizure threshold'}},
+ dro:{n:'Droperidol',cls:'butyro',dose:'0.625–1.25 mg IV (or IM)',why:'More effective than metoclopramide or prochlorperazine in an ED trial. The boxed QT warning was based on much higher doses; arrhythmia at these doses is rare.',cite:'Braude, Am J Emerg Med 2006; Calver, Ann Emerg Med 2015 (QT safety)',
+  avoid:{qt:QT,pd:PD},caut:{old:'Use 0.625 mg',akath:'Can cause akathisia; diphenhydramine treats it',sed:'Sedating'}},
+ halo:{n:'Haloperidol',cls:'butyro',dose:'0.5–1 mg IV for nausea; 0.05–0.1 mg/kg IV (about 5 mg) for cannabinoid hyperemesis',why:'Beat ondansetron for cannabinoid hyperemesis in an ED RCT (HaVOC); helps refractory gastroparesis.',cite:'Ruberto, Ann Emerg Med 2021 (HaVOC); Roldan, Am J Emerg Med 2017',
+  avoid:{qt:QT,pd:PD},caut:{old:'Use 0.5 mg',akath:'Akathisia and dystonia; diphenhydramine treats it',sz:'Lowers the seizure threshold'}},
+ prom:{n:'Promethazine',cls:'h1',dose:'12.5–25 mg deep IM or PO. If IV is unavoidable: 12.5 mg diluted, through a running large-vein line',why:'Boxed warning (FDA 2023): severe tissue injury and gangrene, especially IV.',cite:'FDA Drug Safety Communication, Dec 2023',
+  avoid:{old:'Beers: strongly anticholinergic; avoid'},caut:{qt:'Some QT prolongation',sed:'Additive respiratory depression with opioids and sedatives',glauc:'Anticholinergic',pd:'Weak dopamine blockade'}},
+ diph:{n:'Diphenhydramine',cls:'h1',dose:'25–50 mg IV',why:'Most useful in vestibular nausea, and to prevent or treat akathisia from dopamine antagonists.',
+  caut:{old:'Beers: anticholinergic; delirium',sed:'Additive sedation',glauc:'Anticholinergic'}},
+ mecl:{n:'Meclizine',cls:'h1',dose:'25 mg PO',why:'Vestibular nausea; use short-term only.',cite:'AAO-HNS BPPV guideline 2017',caut:{old:'Anticholinergic; falls'}},
+ doxpyr:{n:'Doxylamine–pyridoxine',cls:'h1',dose:'10 mg/10 mg PO at bedtime, up to 4 tablets a day',why:'First-line pharmacotherapy for nausea of pregnancy.',cite:'ACOG Practice Bulletin 189 (2018)'},
+ scop:{n:'Scopolamine patch',cls:'antichol',dose:'1.5 mg transdermal behind the ear; onset about 4 h',why:'Motion sickness and postoperative nausea.',cite:'Gan, Anesth Analg 2020 (PONV consensus)',
+  avoid:{old:'Beers: anticholinergic; delirium',glauc:'Angle-closure glaucoma'}},
+ olz:{n:'Olanzapine',cls:'atyp',dose:'5–10 mg PO or ODT (2.5 mg if older)',why:'Preferred rescue agent for breakthrough chemotherapy nausea.',cite:'ASCO antiemetics guideline (Hesketh, J Clin Oncol 2020)',
+  caut:{old:'Use 2.5 mg; boxed warning in dementia',sed:'Sedating',pd:'Less parkinsonism than typicals, but still some',qt:'Mild QT effect'}},
+ dex:{n:'Dexamethasone',cls:'steroid',dose:'4–8 mg IV',why:'Slow onset: a preventive and adjunct (chemotherapy, postoperative), not a rescue drug on its own.',cite:'Gan, Anesth Analg 2020; Hesketh, J Clin Oncol 2020',caut:{dm:'Raises glucose'}},
+ nk1:{n:'Aprepitant or fosaprepitant',cls:'nk1',dose:'Per oncology (e.g., fosaprepitant 150 mg IV)',why:'For chemotherapy-induced nausea, with oncology.',cite:'Hesketh, J Clin Oncol 2020'},
+ lzp:{n:'Lorazepam',cls:'benzo',dose:'0.5–1 mg IV',why:'Anticipatory chemotherapy nausea, cannabinoid hyperemesis adjunct, alcohol withdrawal. Not an antiemetic on its own.',
+  caut:{old:'Beers: falls, delirium',sed:'Respiratory depression with opioids'}},
+ cap:{n:'Capsaicin cream',cls:'trpv1',dose:'0.075–0.1% to the abdomen (gloves; keep off face and mucosa)',why:'Mimics the hot-shower relief of cannabinoid hyperemesis.',cite:'Dean, Acad Emerg Med 2020 (pilot RCT)'},
+ ipa:{n:'Isopropyl alcohol pad, inhaled',cls:'aroma',short:'Inhaled isopropyl alcohol',dose:'Sniff an alcohol pad 1–2 cm from the nose, 3 deep breaths; repeat every 2 min up to 3 times',why:'Faster relief than placebo, and better than oral ondansetron alone. Free, no IV.',cite:'Beadle, Ann Emerg Med 2016; April, Ann Emerg Med 2018',adj:true},
+ ivf:{n:'IV fluid, thiamine first',cls:'fluid',short:'IV fluid',dose:'Balanced crystalloid 1 L if dry. Thiamine 100 mg IV before dextrose after prolonged vomiting',why:'Rehydration; thiamine prevents Wernicke encephalopathy in hyperemesis and alcohol use.',cite:'ACOG Practice Bulletin 189 (2018)',adj:true},
+ mpred:{n:'Methylprednisolone',cls:'steroid',dose:'16 mg IV or PO q8h for 3 days, then taper',why:'Last resort for severe hyperemesis gravidarum, with obstetrics.',cite:'ACOG Practice Bulletin 189 (2018)',caut:{preg:'Avoid before 10 weeks (oral cleft risk)',dm:'Raises glucose'}},
+ bup:{n:'Buprenorphine',cls:'opioid',dose:'4–8 mg SL once COWS is 8 or more; repeat to 16–24 mg',why:'Treats the withdrawal that causes the vomiting.',cite:'ASAM National Practice Guideline (2020)'},
+ clon:{n:'Clonidine',cls:'a2',dose:'0.1 mg PO',why:'Withdrawal symptoms when buprenorphine is declined.',cite:'ASAM National Practice Guideline (2020)'},
+ ng:{n:'Nasogastric decompression',cls:'decomp',short:'NG tube',dose:'NG tube to low intermittent suction',why:'Obstruction is treated by emptying the stomach, not by more antiemetics.',adj:true}
+};
+const CAUSES=[
+ ['undiff','Undifferentiated or gastroenteritis','No single clear cause yet'],
+ ['preg','Pregnancy','Nausea of pregnancy or hyperemesis gravidarum'],
+ ['chs','Cannabinoid hyperemesis','Heavy daily cannabis, relief with hot showers'],
+ ['gp','Gastroparesis','Diabetic or idiopathic'],
+ ['mig','Migraine','Nausea with a migraine headache'],
+ ['vest','Vertigo','Vestibular neuritis, BPPV, motion'],
+ ['opw','Opioid withdrawal','Vomiting, diarrhea, yawning, mydriasis'],
+ ['cinv','Chemotherapy','Breakthrough nausea after chemotherapy'],
+ ['ponv','Postoperative','After anesthesia; check what prophylaxis he had'],
+ ['sbo','Possible bowel obstruction','Distension, obstipation, prior surgery'],
+ ['alc','Alcohol','Intoxication, withdrawal, alcoholic ketoacidosis']
+];
+const MODS=[
+ ['qt','QTc over 500 ms or known long QT',''],['pd','Parkinson’s or Lewy body dementia',''],['old','Age 65 or older',''],['preg','Pregnant',''],
+ ['obstr','Possible mechanical obstruction',''],['akath','Prior akathisia or dystonia',''],['sed','On opioids or sedatives',''],['sero','On serotonergic drugs','SSRIs, SNRIs, tramadol'],
+ ['sz','Seizure disorder',''],['glauc','Angle-closure glaucoma',''],['dm','Diabetes','']
+];
+const T1='First line',T2='If that fails',T3='Refractory';
+const LAD={
+ undiff:[[T1,['ond','ipa','ivf']],[T2,['dro','meto','pcz']],[T3,['halo','prom','olz']]],
+ preg:[[T1,['doxpyr','ivf']],[T2,['diph','meto','prom','pcz']],[T3,['ond','mpred']]],
+ chs:[[T1,['halo','cap','dro']],[T2,['lzp','ivf']],[T3,['olz','ond']]],
+ gp:[[T1,['meto','ivf']],[T2,['halo','dro','pcz']],[T3,['ond','olz']]],
+ mig:[[T1,['meto','pcz']],[T2,['dro','diph']],[T3,['ond','dex']]],
+ vest:[[T1,['mecl','diph']],[T2,['lzp','pcz']],[T3,['ond','dro']]],
+ opw:[[T1,['bup','ond']],[T2,['clon','ivf']],[T3,['lzp','pcz']]],
+ cinv:[[T1,['olz']],[T2,['pcz','meto','dro','ond']],[T3,['dex','lzp','nk1']]],
+ ponv:[[T1,['ond','dro']],[T2,['pcz','prom','scop']],[T3,['halo','meto']]],
+ sbo:[[T1,['ng','ond']],[T2,['pcz','dro']],[T3,['halo']]],
+ alc:[[T1,['ivf','ond']],[T2,['dro','lzp']],[T3,['halo','pcz']]]
+};
+const INFO={
+ undiff:{tips:['Ondansetron, metoclopramide and saline performed alike for undifferentiated adult ED nausea; much nausea settles with time and fluid.','Droperidol was the most effective single agent in a head-to-head ED trial.','If one class fails, switch class.'],cite:'Egerton-Warburton, Ann Emerg Med 2014; Braude, Am J Emerg Med 2006',
+  flags:[]},
+ preg:{tips:['Pyridoxine with doxylamine is first-line; then antihistamines and dopamine antagonists; ondansetron after weighing the small first-trimester risk.','Thiamine before dextrose after prolonged vomiting.','Methylprednisolone only for refractory hyperemesis, not before 10 weeks.'],cite:'ACOG Practice Bulletin 189 (2018)',
+  flags:[['Ketones, electrolytes, weight loss','Hyperemesis gravidarum: over 5% weight loss, ketonuria'],['Ultrasound if not done','Molar pregnancy and multiples raise hCG and nausea'],['Thiamine','Wernicke encephalopathy after weeks of vomiting']]},
+ chs:{tips:['Haloperidol beat ondansetron in the only ED RCT (HaVOC); ondansetron often fails.','Topical capsaicin and hot showers act on the same TRPV1 receptor.','The only cure is stopping cannabis; relief takes weeks, so say so plainly.'],cite:'Ruberto, Ann Emerg Med 2021; Dean, Acad Emerg Med 2020',
+  flags:[['Potassium and creatinine','Prolonged vomiting: hypokalemia, AKI'],['Lipase and LFTs','Don’t anchor: pancreatitis and biliary disease look alike']]},
+ gp:{tips:['Metoclopramide is the only FDA-approved drug for gastroparesis; limit to 12 weeks.','Haloperidol helps refractory gastroparesis nausea and pain.','Correct the glucose; hyperglycemia slows emptying.'],cite:'ACG gastroparesis guideline (Camilleri, Am J Gastroenterol 2022); Roldan, Am J Emerg Med 2017',
+  flags:[['Glucose and ketones','DKA can present as a gastroparesis flare'],['Obstruction series if distended','Rule out mechanical obstruction before a prokinetic']]},
+ mig:{tips:['Metoclopramide and prochlorperazine treat the headache and the nausea.','Dexamethasone reduces recurrence after discharge.','Avoid opioids for migraine.'],cite:'AHS ED migraine guideline (Orr, Headache 2016)',
+  flags:[['Red flags for secondary headache','Thunderclap, worst ever, fever, neuro deficit, papilledema, over 50 and new']]},
+ vest:{tips:['Short course only: vestibular suppressants delay compensation.','BPPV: canalith repositioning (Epley) beats any drug.','HINTS exam in continuous vertigo.'],cite:'AAO-HNS BPPV guideline 2017',
+  flags:[['HINTS plus or neuro deficit','Posterior circulation stroke presents as vertigo and vomiting'],['Ataxia, can’t walk','Cerebellar stroke or hemorrhage']]},
+ opw:{tips:['Treat the withdrawal: buprenorphine relieves vomiting faster than antiemetics.','Precipitated withdrawal is uncommon when COWS is 8 or more.','Offer to continue buprenorphine at discharge, with naloxone.'],cite:'ASAM National Practice Guideline (2020)',
+  flags:[['Fentanyl exposure','Some use low-dose or high-dose initiation strategies; follow local protocol']]},
+ cinv:{tips:['Olanzapine is the preferred rescue for breakthrough nausea.','Otherwise add a class he isn’t already taking for prophylaxis.','Anticipatory nausea responds to lorazepam.'],cite:'ASCO antiemetics guideline (Hesketh, J Clin Oncol 2020)',
+  flags:[['Neutropenic fever','Check the ANC and temperature'],['Bowel obstruction or brain metastases','Cancer patients vomit for reasons other than chemo'],['Hypercalcemia','Malignancy-related; nausea and confusion']]},
+ ponv:{tips:['Rescue with a class different from the prophylaxis; repeating the same drug within 6 h adds little.','Dexamethasone is too slow to rescue.','Look for pain, hypotension and opioids as drivers.'],cite:'Fourth PONV consensus (Gan, Anesth Analg 2020)',
+  flags:[['Ileus or obstruction','Distension, no flatus'],['Anastomotic leak or bleeding','Fever, tachycardia, peritonitis']]},
+ sbo:{tips:['Decompression treats the vomiting; antiemetics only help symptoms.','No metoclopramide or other prokinetic.','CT and surgical consult.'],cite:'Bologna guidelines (ten Broek, World J Emerg Surg 2018)',
+  flags:[['Strangulation','Fever, peritonitis, lactate, pain out of proportion'],['Closed loop or volvulus','CT now; surgery']]},
+ alc:{tips:['Thiamine before dextrose.','Alcoholic ketoacidosis: dextrose-containing fluid and thiamine, not insulin.','Benzodiazepines treat withdrawal vomiting; droperidol also treats agitation.'],cite:'',
+  flags:[['Pancreatitis','Lipase'],['Withdrawal severity','Seizure, hallucinations, delirium tremens'],['Toxic alcohol','Anion and osmolar gaps']]}
+};
+const MODNOTE={qt:'QTc over 500: avoid droperidol and haloperidol; choose agents with less QT effect, and correct K and Mg.',pd:'Parkinson’s: avoid every dopamine antagonist (metoclopramide, prochlorperazine, droperidol, haloperidol, promethazine). Ondansetron is the usual choice (not with apomorphine).',old:'Older adult: lowest doses, and avoid promethazine and scopolamine (Beers 2023).',akath:'Prior akathisia: give dopamine antagonists over 15 min with diphenhydramine 25 mg IV.'};
+const GEN=['Switch class when one fails; a repeat dose of the same agent rarely helps.','Reassess at 30 min after each agent.','Fix the driver: dehydration, ketosis, pain, constipation, opioids, withdrawal.','Add inhaled isopropyl alcohol while the IV drug works.','Before discharge: PO challenge, and a plan for the cause.'];
+const FLAGS=[['Pregnancy test in women of childbearing age',''],['Glucose, electrolytes, anion gap','DKA, uremia, hypercalcemia'],['ECG','ACS, especially older, diabetic and female patients'],['Neuro exam','Increased ICP, posterior stroke'],['Abdominal exam','Obstruction, mesenteric ischemia, pancreatitis, biliary'],['Toxins','Acetaminophen, salicylate, digoxin, lithium'],['Testicular or ovarian torsion','Vomiting with pelvic or scrotal pain']];
+/* ---------- Ladder engine (shared by Ballast and Anodyne) ----------
+   Data each app defines: APP, CLS (classes), RX (agents), CAUSES, MODS, LAD (ladder by cause),
+   INFO (by cause: flags, tips, cite), GEN (principles), MODNOTE (by modifier), FLAGS (universal don't-miss).
+   Next step: the first agent on the cause's ladder that hasn't been tried, isn't contraindicated,
+   and isn't the same class as one that already failed. Re-dosing is offered first for agents that titrate. */
+const STEPS=[['cause','Cause','Cause'],['pt','Patient','Patient'],['tried','Tried','Tried'],['next','Next','Next']];
+const RESP=[['none','No relief'],['partial','Partial'],['side','Side effect']];
+const blank=()=>({step:'cause',cause:'',mods:[],tried:{},order:[],score0:'',score1:'',done:{}});
+let S=blank();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const has=m=>S.mods.includes(m);
+const lc=t=>String(t).replace(/\b([A-Z])([a-z]+)\b/g,(m,a,b)=>a.toLowerCase()+b); // lowercase plain words, keep CrCl, QTc, ED
+
+function ladder(){return S.cause?LAD[S.cause]:[]}
+function inLadder(){return ladder().flatMap(([,ids])=>ids)}
+function flags(id){const r=RX[id],a=[],c=[];
+  for(const m of S.mods){if(r.avoid&&r.avoid[m])a.push(r.avoid[m]);if(r.caut&&r.caut[m])c.push(r.caut[m])}
+  return {a,c}}
+function plan(){
+  const T=S.tried,failed=new Set(Object.keys(T).filter(k=>T[k]==='none').map(k=>RX[k].cls));
+  const out={redo:[],next:null,alts:[],adj:[],avoid:[],same:[]};
+  if(!S.cause)return out;
+  Object.keys(T).filter(k=>T[k]==='partial'&&RX[k].redose&&!flags(k).a.length).forEach(k=>out.redo.push(k));
+  const redoCls=new Set(out.redo.map(k=>RX[k].cls)),later=[];
+  const seen=new Set();
+  ladder().forEach(([tier,ids],ti)=>ids.forEach(id=>{
+    if(seen.has(id))return;seen.add(id);
+    const r=RX[id],f=flags(id);
+    if(T[id])return;
+    if(f.a.length){out.avoid.push(id);return}
+    if(r.adj){out.adj.push(id);return}
+    if(failed.has(r.cls)&&!CLS[r.cls].titr){out.same.push(id);return}
+    const tierId=ti;
+    if(redoCls.has(r.cls)){later.push({id,tier,ti});return} // already titrating this class
+    if(!out.next)out.next={id,tier,ti:tierId};else out.alts.push({id,tier,ti:tierId});
+  }));
+  if(!out.next&&later.length)out.next=later.shift();
+  out.alts.push(...later);
+  return out;
+}
+
+/* ---------- UI bits ---------- */
+function renderSteps(){$('steps').innerHTML=STEPS.map(([k,t,sh],i)=>{const n=k==='pt'?S.mods.length:k==='tried'?Object.keys(S.tried).length:0;return`<button type="button" class="stepbtn" data-step="${k}" ${S.step===k?'aria-current="step"':''}><span class="n">${i+1}${n?` · ${n}`:''}</span><span class="t"><span class="lg">${t}</span><span class="sh">${sh}</span></span></button>`}).join('')}
+const ph=(n,t,cue)=>`<div class="ph"><span class="eb">${n}</span><h2>${t}</h2><p class="cue">${cue}</p></div>`;
+const foot=(prev,next)=>`<div class="pfoot">${prev?`<button class="btn" data-step="${prev[0]}" type="button">← ${prev[1]}</button>`:'<span></span>'}${next?`<button class="btn primary" data-step="${next[0]}" type="button">${next[1]} →</button>`:'<span></span>'}</div>`;
+function rxCard(id,opt={}){const r=RX[id],f=flags(id),st=S.tried[id];
+  return `<div class="rx${f.a.length?' bad':''}${st?' tried':''}">
+   <div class="h"><b>${esc(r.n)}</b><span class="cl">${esc(CLS[r.cls].n)}</span>${opt.tier?`<span class="tier">${esc(opt.tier)}</span>`:''}</div>
+   <p class="dose">${esc(r.dose)}</p>${r.why?`<p class="why">${esc(r.why)}</p>`:''}
+   ${f.a.map(x=>`<p class="av">Avoid: ${esc(x)}</p>`).join('')}${f.c.map(x=>`<p class="ca">Caution: ${esc(x)}</p>`).join('')}
+   ${opt.note?`<p class="ca">${esc(opt.note)}</p>`:''}
+   ${opt.resp!==false?`<div class="resp" role="group" aria-label="Response to ${esc(r.n)}"><span>${st?'Response:':'Tried it?'}</span>${RESP.map(([k,l])=>`<button type="button" class="chip sm" data-tried="${id}" data-v="${k}" aria-pressed="${st===k}">${l}</button>`).join('')}</div>`:''}
+   ${r.cite?`<span class="cite">${esc(r.cite)}</span>`:''}</div>`}
+
+function paneCause(){
+  return ph(1,APP.causeH,APP.causeCue)+`<div class="tcards">${CAUSES.map(([k,t,s])=>`<button type="button" class="tcard" data-cause="${k}" aria-pressed="${S.cause===k}"><b>${esc(t)}</b><span>${esc(s)}</span></button>`).join('')}</div>`+
+  (S.cause&&INFO[S.cause].tips?`<div class="sec"><h3>${esc(CAUSES.find(c=>c[0]===S.cause)[1])}</h3><ul class="list">${INFO[S.cause].tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul><span class="cite">${esc(INFO[S.cause].cite||'')}</span></div>`:'')+
+  foot(null,S.cause?['pt','Patient']:null)}
+function panePt(){
+  return ph(2,'Patient','These rule agents out, or call for a lower dose. Mark what applies.')+
+  `<div class="chips">${MODS.map(([k,t,s])=>`<button type="button" class="chip" data-mod="${k}" aria-pressed="${has(k)}">${esc(t)}${s?`<small>${esc(s)}</small>`:''}</button>`).join('')}</div>`+
+  (APP.scores?`<div class="sec"><h3>${APP.scores.h}</h3><div class="row"><label class="in"><span>${APP.scores.a}</span><input inputmode="numeric" data-k="score0" value="${esc(S.score0)}" placeholder="0–10"></label><label class="in"><span>${APP.scores.b}</span><input inputmode="numeric" data-k="score1" value="${esc(S.score1)}" placeholder="0–10"></label></div></div>`:'')+
+  foot(['cause','Cause'],['tried','Tried'])}
+function paneTried(){
+  if(!S.cause)return ph(3,'What’s been tried','Pick a cause first.')+foot(['cause','Cause'],null);
+  const lad=inLadder(),others=Object.keys(RX).filter(k=>!lad.includes(k));
+  return ph(3,'What’s been tried','Mark each agent he has had and how it went. Nothing needed for ones he hasn’t.')+
+  ladder().map(([tier,ids])=>`<div class="sec"><h3>${esc(tier)}</h3>${ids.map(id=>rxCard(id,{})).join('')}</div>`).join('')+
+  `<details class="sec more"${others.some(k=>S.tried[k])?' open':''}><summary>Other agents</summary>${others.map(id=>rxCard(id,{})).join('')}</details>`+
+  foot(['pt','Patient'],['next','Next step'])}
+function paneNext(){
+  if(!S.cause)return ph(4,'Next step','Pick a cause first.')+foot(['cause','Cause'],null);
+  const P=plan(),info=INFO[S.cause];
+  let h=ph(4,'Next step',APP.nextCue);
+  const mn=S.mods.filter(m=>MODNOTE[m]);
+  if(mn.length)h+=`<div class="sec"><h3>For this patient</h3>${mn.map(m=>`<p class="note-box">${esc(MODNOTE[m])}</p>`).join('')}</div>`;
+  if(P.redo.length)h+=`<div class="sec"><h3>Re-dose first</h3>${P.redo.map(id=>rxCard(id,{note:RX[id].redose,resp:false})).join('')}</div>`;
+  h+=P.next?`<div class="sec"><h3>Next</h3>${rxCard(P.next.id,{tier:P.next.tier})}</div>`:`<p class="empty">Every agent on this ladder has been tried or is ruled out. Reconsider the diagnosis (Don’t miss, right) and get help: ${esc(APP.escalate)}</p>`;
+  if(P.alts.length)h+=`<div class="sec"><h3>Also reasonable</h3>${P.alts.map(a=>rxCard(a.id,{tier:a.tier})).join('')}</div>`;
+  if(P.adj.length)h+=`<div class="sec"><h3>Add alongside</h3>${P.adj.map(id=>rxCard(id,{})).join('')}</div>`;
+  if(P.same.length)h+=`<div class="sec"><h3>Same class as one that failed</h3><p class="fine">Switching class works better than another drug from the class that didn’t work.</p>${P.same.map(id=>rxCard(id,{})).join('')}</div>`;
+  if(P.avoid.length)h+=`<div class="sec"><h3>Avoid in this patient</h3>${P.avoid.map(id=>rxCard(id,{resp:false})).join('')}</div>`;
+  h+=`<div class="sec"><h3>Principles</h3><ul class="list">${GEN.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>`;
+  return h+foot(['tried','Tried'],null);
+}
+
+/* ---------- Output ---------- */
+function misses(){const m=[];if(S.cause)INFO[S.cause].flags.forEach(([t,s],i)=>m.push(['c'+i,t,s]));FLAGS.forEach(([t,s],i)=>m.push(['u'+i,t,s]));return m}
+function noteText(){
+  if(!S.cause)return '';
+  const P=plan(),c=CAUSES.find(x=>x[0]===S.cause)[1],T=S.tried,resp={none:'no relief',partial:'partial relief',side:'side effects'};
+  const nm=k=>lc(RX[k].short||RX[k].n);
+  const tried=S.order.filter(k=>T[k]).map(k=>`${nm(k)} (${resp[T[k]]})`);
+  let t=`# ${APP.noteH} (${lc(c)})\n`;
+  if(tried.length)t+=`${APP.noteRefr} ${tried.join(', ')}.`+(APP.scores&&S.score0!==''?` ${APP.scores.note(S.score0,S.score1)}`:'')+'\n';
+  else if(APP.scores&&S.score0!=='')t+=APP.scores.note(S.score0,S.score1)+'\n';
+  const mods=S.mods.map(m=>lc(MODS.find(x=>x[0]===m)[1]));if(mods.length)t+=`Considerations: ${mods.join('; ')}.\n`;
+  const pl=[...P.redo.map(k=>`Re-dose ${lc(RX[k].short||RX[k].n)}: ${RX[k].redose}`),P.next?`${RX[P.next.id].short||RX[P.next.id].n}: ${RX[P.next.id].dose}`:'',...P.adj.slice(0,2).map(k=>`${RX[k].short||RX[k].n}: ${RX[k].dose}`)].filter(Boolean);
+  t+=`Plan:\n`+pl.map(x=>`- ${x}`).join('\n')+(pl.length?'\n':'')+`- ${APP.reassess}`;
+  return t;
+}
+function renderPane(){$('pane').innerHTML={cause:paneCause,pt:panePt,tried:paneTried,next:paneNext}[S.step]()}
+function renderOut(){
+  const P=plan();let h=`<h3>Next step</h3>`;
+  if(!S.cause)h+=`<p class="empty">${esc(APP.empty)}</p>`;
+  else{
+    if(P.redo.length)h+=P.redo.map(id=>`<div class="rec next"><div class="h"><span class="pri">Re-dose</span><b>${esc(RX[id].n)}</b></div><p>${esc(RX[id].redose)}</p></div>`).join('');
+    if(P.next){const r=RX[P.next.id],f=flags(P.next.id);h+=`<div class="rec now"><div class="h"><span class="pri">Next</span><b>${esc(r.n)}</b></div><p>${esc(r.dose)}</p>${f.c.map(x=>`<p class="ca">Caution: ${esc(x)}</p>`).join('')}<span class="cite">${esc(CLS[r.cls].n)} · ${esc(P.next.tier)}</span></div>`}
+    else h+=`<p class="empty">Ladder exhausted. Reconsider the diagnosis and escalate: ${esc(APP.escalate)}</p>`;
+    if(P.alts.length)h+=`<div class="rec con"><div class="h"><span class="pri">Or</span><b>${P.alts.slice(0,3).map(a=>esc(RX[a.id].short||RX[a.id].n)).join(' · ')}</b></div></div>`;
+    if(P.adj.length)h+=`<div class="rec ok"><div class="h"><span class="pri">Add</span><b>${P.adj.slice(0,3).map(id=>esc(RX[id].short||RX[id].n)).join(' · ')}</b></div></div>`;
+    if(P.avoid.length)h+=`<p class="fine"><b>Avoid here:</b> ${P.avoid.map(id=>esc(RX[id].short||RX[id].n)).join(', ')}</p>`;
+  }
+  const M=misses();
+  h+=`<h3>Don’t miss</h3><ul class="miss">${M.map(([id,t,s])=>`<li data-done="${id}" class="${S.done[id]?'done':''}"><span class="bx">${S.done[id]?'✓':''}</span><span class="tx">${esc(t)}<small>${esc(s)}</small></span></li>`).join('')}</ul>`;
+  const n=noteText();if(n)h+=`<h3>ED course</h3><pre class="dict">${esc(n)}</pre><button class="btn primary" id="copy" type="button">Copy</button>`;
+  h+=`<p class="fine">${esc(APP.fine)}</p>`;
+  $('out').innerHTML=h;
+  $('mbarmid').innerHTML=!S.cause?'Pick a cause':P.next?`<b>Next:</b> ${esc(RX[P.next.id].short||RX[P.next.id].n)}`:'Ladder exhausted';
+}
+function render(keep){const y=window.scrollY;renderSteps();renderPane();renderOut();if(keep)window.scrollTo(0,y)}
+
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');if(st){S.step=st.dataset.step;render();window.scrollTo(0,0);return}
+  const ca=e.target.closest('[data-cause]');if(ca){const v=ca.dataset.cause;S.cause=S.cause===v?'':v;if(APP.causeMod&&APP.causeMod[S.cause]&&!has(APP.causeMod[S.cause]))S.mods.push(APP.causeMod[S.cause]);render(true);return}
+  const md=e.target.closest('[data-mod]');if(md){const v=md.dataset.mod;S.mods=has(v)?S.mods.filter(x=>x!==v):[...S.mods,v];render(true);return}
+  const tr=e.target.closest('[data-tried]');if(tr){const id=tr.dataset.tried,v=tr.dataset.v;if(S.tried[id]===v){delete S.tried[id];S.order=S.order.filter(x=>x!==id)}else{S.tried[id]=v;if(!S.order.includes(id))S.order.push(id)}render(true);return}
+  const dn=e.target.closest('[data-done]');if(dn){S.done[dn.dataset.done]=!S.done[dn.dataset.done];renderOut();return}
+  if(e.target.closest('#copy')){copy(noteText());return}
+  if(e.target.closest('#seeRecs')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(e.target.closest('#reset')){const b=$('reset');if(b.dataset.armed){S=blank();render();window.scrollTo(0,0)}else{b.dataset.armed='1';b.textContent='Tap again to clear';setTimeout(()=>{delete b.dataset.armed;b.textContent='New patient'},2500)}return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(!t.dataset.k)return;S[t.dataset.k]=t.value;renderOut();});
+async function copy(t){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  const el=document.createElement('div');el.className='toast';el.textContent=ok?'Copied.':'Couldn’t copy on this device.';document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+render();
+
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>
