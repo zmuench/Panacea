@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mithridate">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Mithridate</title>
+<style>
+/* Mithridate: poisoning. Toxidrome from the exam, agents from ECG and lab clues, acetaminophen nomogram and NAC, weight-based antidote doses, decontamination and enhanced elimination (EXTRIP); sources cited per agent.
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--amber:#8A5A00;--amber-soft:#FCF0D6;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.top h1{margin:0;font-size:1.5rem}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:38px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding-block:8px;margin-top:10px}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.stepbtn .n{font-size:.7rem;font-weight:700;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .sh{display:none}
+.mbar{display:none}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:3px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.3rem}
+.ph .cue{margin:0;color:var(--muted);font-size:.9rem}
+.sec h3{margin:0 0 8px;font-size:.98rem}
+.sec{display:flex;flex-direction:column;gap:8px}
+.flab{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:.88rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip small{display:block;font-size:.72rem;opacity:.8;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.in{display:flex;flex-direction:column;gap:3px;min-width:92px;flex:1 1 92px;max-width:150px}
+.in>span{font-size:.74rem;font-weight:700;color:var(--muted)}
+.in input,.in select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--paper);font-size:16px;width:100%;min-height:38px}
+.in input:focus,.in select:focus{outline:2px solid var(--accent);outline-offset:0}
+.in.wide{max-width:none;flex:2 1 180px}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:#F4F6F8;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.kpi.bad{background:var(--warn-soft)}.kpi.bad b{color:var(--warn)}
+.kpi.mid{background:var(--amber-soft)}.kpi.mid b{color:var(--amber)}
+.kpi.good{background:var(--ok-soft)}.kpi.good b{color:var(--ok)}
+table.set{width:100%;border-collapse:collapse;font-size:.92rem}
+table.set th,table.set td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.set th{width:34%;color:var(--muted);font-weight:700;font-size:.8rem}
+table.set td b{font-size:1.02rem}
+table.set td small{display:block;color:var(--muted)}
+.cite{font-size:.72rem;color:var(--muted);font-style:italic}
+.note-box{background:#F4F6F8;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px;text-align:left;cursor:pointer}
+.tcard b{display:block}.tcard span{font-size:.8rem;color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow{border-left:3px solid var(--accent);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.flow h4{margin:6px 0 0;font-size:.9rem}
+.out{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 90px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rec{border-radius:10px;padding:9px 11px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rec .h{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.rec .h b{font-size:.95rem}
+.rec p{margin:0;font-size:.86rem}
+.pri{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
+.rec.now{border-color:#E5A69F;background:#FFF7F6}.rec.now .pri{background:var(--warn-soft);color:var(--warn)}
+.rec.next{border-color:#EBCB86;background:#FFFCF4}.rec.next .pri{background:var(--amber-soft);color:var(--amber)}
+.rec.con .pri{background:var(--accent-soft);color:var(--accent)}
+.rec.ok{border-color:#A9D6BE;background:#F6FBF8}.rec.ok .pri{background:var(--ok-soft);color:var(--ok)}
+.miss{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.miss li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;cursor:pointer}
+.miss .bx{flex:none;width:18px;height:18px;border:1.5px solid #9AA9B8;border-radius:4px;margin-top:1px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.miss li.done .bx{background:var(--ok);border-color:var(--ok)}
+.miss li.done .tx{color:var(--muted);text-decoration:line-through}
+.miss .tx small{display:block;color:var(--muted);font-size:.74rem}
+pre.dict{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#F4F6F8;border-radius:10px;padding:10px;margin:0}
+.empty{color:var(--muted);font-size:.9rem;background:#F4F6F8;border-radius:10px;padding:10px 12px}
+.pfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fine{font-size:.76rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepbtn{padding:6px}
+  .stepbtn .t{font-size:.8rem}
+  .stepbtn .lg{display:none}.stepbtn .sh{display:inline}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:10px;align-items:center}
+  .mbar .mid{flex:1;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .mbar .mid b{color:var(--warn)}
+  .wrap{padding-bottom:80px}
+  .out{scroll-margin-top:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.steps{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.chip.known[aria-pressed="true"]{background:#8A2B1F;border-color:#8A2B1F}
+.ddx{display:flex;flex-direction:column;gap:6px}
+.dx{border:1px solid var(--line);border-radius:10px;padding:7px 9px;cursor:pointer;background:var(--surface);text-align:left;width:100%}
+.dx.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.dx .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.dx .h b{font-size:.92rem}
+.dx .h small{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:#E4E9EE;margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.why{margin:5px 0 0;padding:0;list-style:none;font-size:.78rem;display:flex;flex-wrap:wrap;gap:4px}
+.why li{border-radius:4px;padding:1px 6px;background:var(--ok-soft);color:var(--ok)}
+.why li.neg{background:#EEF1F4;color:var(--muted);text-decoration:line-through}
+.tx h4{margin:6px 0 2px;font-size:.88rem}
+.tx p{margin:0;font-size:.88rem}
+.dose{background:#F4F6F8;border-radius:8px;padding:6px 9px;font-size:.88rem;margin:3px 0}
+.dose b{color:var(--ink)}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:.88rem;font-weight:600}
+.okbox{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:9px 12px;font-size:.88rem;font-weight:600}
+.pick{display:flex;flex-wrap:wrap;gap:6px}
+.pc{font-weight:700;font-size:1.05rem;color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Mithridate</h1></div>
+      <p>Poisoning: name the toxidrome, find the agent from the ECG and labs, and dose the antidote. Poison Control <b>1-800-222-1222</b>.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <nav class="steps" aria-label="Steps" id="steps"></nav>
+  <div class="grid">
+    <section class="pane" id="pane"></section>
+    <aside class="out" id="out" aria-label="Assessment"></aside>
+  </div>
+</div>
+<div class="mbar" id="mbar"><span class="mid" id="mbarmid"></span><button class="btn primary" type="button" id="seeRecs">Assessment ↓</button></div>
+<script>
+const STEPS=[['exp','Exposure','Exposure'],['exam','Toxidrome','Exam'],['work','ECG & labs','Labs'],['treat','Treat','Treat']];
+const blank=()=>({step:'exp',known:[],f:{},v:{wt:'',hrs:'',apap:'',ast:'',asa:'',dig:'',li:'',fe:'',meoh:'',mg:''},prot:'',focus:'',done:{}});
+let S=blank();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(v===''||v==null)return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:null};
+const r0=n=>Math.round(n),r1=n=>Math.round(n*10)/10;
+const lc=t=>String(t).replace(/\b([A-Z])([a-z]{2,})\b/g,(m,a,b)=>a.toLowerCase()+b);
+const W=()=>num(S.v.wt);
+/* Weight-based dose: mg/kg (or unit/kg) with an optional cap, shown for this patient when weight is known */
+const dr=(lo,hi,unit)=>{const w=W();return w?`${lo}–${hi} ${unit}/kg = <b>${r1(lo*w)}–${r1(hi*w)} ${unit}</b>`:`${lo}–${hi} ${unit}/kg`};
+const dk=(per,unit,cap)=>{const w=W();if(!w)return `${per} ${unit}/kg${cap?` (max ${cap} ${unit})`:''}`;let d=per*w;const capped=cap&&d>cap;if(capped)d=cap;return `${per} ${unit}/kg = <b>${r1(d)} ${unit}</b>${capped?' (capped)':''}`};
+
+/* ---------- Toxidromes and exam findings ---------- */
+const TD={symp:['Sympathomimetic',['symp']],antichol:['Anticholinergic',['antichol','nachan']],chol:['Cholinergic',['ops']],opi:['Opioid',['opioid','clon']],sed:['Sedative-hypnotic',['sedhyp']],
+ ss:['Serotonin toxicity',['ss']],nms:['Neuroleptic malignant syndrome',['nms']],wd:['Alcohol or sedative withdrawal',['etohwd']],owd:['Opioid withdrawal',['owd']],sal:['Salicylism',['asa']],symlyt:['Sympatholytic',['bb','ccb','clon','dig']]};
+const EX=[
+ ['Mental status',[['agit','Agitated or hyperalert','symp:2 antichol:1 ss:1.5 wd:2 sal:0.5'],['delir','Delirium, mumbling, picking','antichol:2.5 wd:1 nms:1 ss:0.5'],['depr','Depressed or comatose','opi:2 sed:2.5 nms:1 symlyt:1 chol:0.5 sal:0.5'],['alert','Alert and anxious, not confused','owd:2 wd:0.5']]],
+ ['Eyes',[['myd','Mydriasis','symp:2 antichol:2 ss:1 owd:2 wd:0.5'],['mio','Miosis','opi:3 chol:2.5 symlyt:1 sed:0.5'],['nyst','Nystagmus','sed:2']]],
+ ['Vitals',[['tachy','Tachycardia','symp:1.5 antichol:1.5 ss:1 wd:1.5 sal:1 owd:0.5'],['brady','Bradycardia','symlyt:3 chol:1.5 opi:0.5'],['htn','Hypertension','symp:2 wd:1.5 ss:0.5 nms:1'],['hypot','Hypotension','symlyt:2.5 opi:0.5 sed:0.5'],
+  ['hyperth','Temp over 38.5 °C','symp:1.5 antichol:1.5 ss:1.5 nms:2 sal:1 wd:0.5'],['hypoth','Hypothermia','opi:0.5 sed:1 symlyt:0.5'],['rrhi','Tachypnea or deep breathing','sal:3 symp:0.5'],['rrlo','RR under 12 or shallow','opi:3 sed:1.5 symlyt:0.5']]],
+ ['Skin',[['diaph','Diaphoretic','symp:2.5 chol:1.5 ss:1.5 wd:2 nms:1 sal:1 owd:1 antichol:-3'],['dry','Dry, flushed skin','antichol:3 symp:-2 wd:-1'],['pilo','Piloerection','owd:2.5 symp:0.5']]],
+ ['GI and GU',[['bsabs','Bowel sounds decreased','antichol:2.5 opi:1'],['bshi','Hyperactive bowel, vomiting, diarrhea','chol:2 ss:1.5 owd:2'],['retent','Urinary retention','antichol:2.5 opi:0.5'],['sludge','Salivation, lacrimation, bronchorrhea','chol:4']]],
+ ['Neuromuscular',[['clonus','Inducible or ocular clonus','ss:4 nms:-1'],['hyperref','Hyperreflexia','ss:2.5 symp:0.5 wd:1'],['rigid','Lead-pipe rigidity','nms:4 ss:1'],['tremor','Tremor','ss:1.5 wd:2.5 symp:1'],
+  ['fasc','Fasciculations or weakness','chol:3'],['seiz','Seizure','symp:1 wd:1.5 sal:0.5 antichol:0.5'],['halluc','Hallucinations','antichol:1.5 wd:1.5 symp:1'],['ataxia','Ataxia, slurred speech','sed:2']]],
+ ['History',[['tinn','Tinnitus or hearing loss','sal:4'],['yawn','Yawning, rhinorrhea, tearing','owd:4'],['onhrs','Onset within hours of a new or increased drug','ss:2'],['ondays','Onset over days','nms:3 ss:-1']]]
+];
+/* ---------- ECG and lab clues → agents ---------- */
+const CL=[
+ ['ECG',[['qrs','QRS over 100 ms','nachan:3 antichol:0.5'],['termr','Terminal R in aVR over 3 mm','nachan:3'],['qtc','QTc over 500 ms','opioid:0.5 nms:0.5'],['avb','Bradycardia or AV block','bb:2 ccb:2 dig:2 clon:1.5 ops:1'],['bidir','Bidirectional VT, or PVCs with scooped ST','dig:4']]],
+ ['Chemistry',[['hypogly','Glucose under 70','su:3 bb:1 asa:0.5'],['hypergly','Hyperglycemia without diabetes','ccb:2.5 iron:1'],['hyperk','K over 5.5','dig:2.5'],['agacid','Anion gap acidosis','asa:2 toxalc:2 mtf:1.5 iron:1.5 inh:1.5 cn:1.5 co:1'],
+  ['ralkag','Respiratory alkalosis with a gap acidosis','asa:4'],['osm','Osmolar gap over 10','toxalc:4'],['lact','Lactate over 8','cn:2.5 mtf:2 co:1 inh:1'],['hypoca','Hypocalcemia','toxalc:2'],['transam','AST or ALT rising','apap:3 iron:1'],['aki','Acute kidney injury','toxalc:1.5 li:1'],['ck','CK over 5× normal','symp:1 nms:1.5 ss:0.5']]],
+ ['Other',[['satgap','SpO2 about 85% despite O2, chocolate blood','methb:5'],['cohb','COHb elevated','co:5'],['cluster','Headache cluster, several people, or a fire','co:3 cn:1.5'],['crystals','Calcium oxalate crystals in urine','toxalc:4'],['vision','Visual blurring with acidosis','toxalc:3'],['xray','Radiopaque pills on X-ray','iron:2.5']]]
+];
+const PW=s=>{const o={};s.trim().split(/\s+/).forEach(t=>{const[k,v]=t.split(':');o[k]=parseFloat(v)});return o};
+const FX={};EX.forEach(([,it])=>it.forEach(([id,l,w])=>FX[id]={l,w:PW(w),kind:'ex'}));CL.forEach(([,it])=>it.forEach(([id,l,w])=>FX[id]={l,w:PW(w),kind:'cl'}));
+const EXCL=[['myd','mio'],['tachy','brady'],['htn','hypot'],['hyperth','hypoth'],['rrhi','rrlo'],['diaph','dry'],['bsabs','bshi'],['agit','depr'],['hypogly','hypergly'],['onhrs','ondays']];
+
+/* ---------- Agents ----------
+   ac: activated charcoal (yes, no, mdac, wbi). Each card: rec (recognize), work, tx (lines; may use dk()), elim, dispo, cite. */
+const AG={
+ apap:{n:'Acetaminophen',g:'Analgesics',ac:'yes',rec:'Often asymptomatic for 24 h; then nausea, RUQ pain, rising AST/ALT, liver failure at 3–5 days.',work:'4-h level (or at presentation if later), AST/ALT, INR, creatinine, glucose, lactate.',
+  tx:()=>[`NAC IV, 21-h regimen (weight capped at 100 kg): ${dk(150,'mg',15000)} over 1 h, then ${dk(50,'mg',5000)} over 4 h, then ${dk(100,'mg',10000)} over 16 h`,`Two-bag alternative: ${dk(200,'mg',20000)} over 4 h, then ${dk(100,'mg',10000)} over 16 h`,'Level at or above the 300 line (double the treatment line): increase the third bag; call toxicology','Continue NAC past 20–21 h until APAP is undetectable, AST is normal or falling, and INR is under 2','Fomepizole and hemodialysis are considered for massive ingestions with acidosis and coma'],
+  elim:'Hemodialysis for massive ingestion with altered mental status, acidosis or very high levels (EXTRIP).',dispo:'Medically clear when the stop criteria are met.',cite:'US/Canada acetaminophen consensus (Dart, JAMA Netw Open 2023); EXTRIP acetaminophen (Gosselin, Clin Toxicol 2014)'},
+ asa:{n:'Salicylate',g:'Analgesics',ac:'yes',rec:'Tinnitus, vomiting, tachypnea; respiratory alkalosis with gap acidosis; hyperthermia, AMS and pulmonary edema when severe.',work:'Salicylate level every 2 h until falling twice, VBG, BMP, glucose (CNS glucose can be low with a normal serum value).',
+  tx:()=>[`Sodium bicarbonate ${dr(1,2,'mEq')} IV bolus, then 150 mEq in 1 L D5W at 1.5–2× maintenance; urine pH 7.5–8, serum pH under 7.55`,'Keep K at 4 or more (the urine won’t alkalinize otherwise)','Dextrose for AMS even with a normal glucose','Avoid intubation if possible; if needed, match his minute ventilation and give bicarbonate first'],
+  elim:'Hemodialysis (EXTRIP): level over 100 mg/dL; over 90 with impaired kidneys; AMS; new hypoxemia; pH 7.20 or less; or failing standard therapy.',dispo:'ICU if levels rising, AMS, or acidosis.',cite:'EXTRIP salicylates (Juurlink, Ann Emerg Med 2015)'},
+ opioid:{n:'Opioids',g:'Analgesics',ac:'no',rec:'Depressed mental status, RR under 12, miosis. Fentanyl analogues, methadone and ER products last longer.',work:'Glucose, APAP level, ECG (methadone: QTc).',
+  tx:()=>['Ventilate with a bag-valve mask first','Naloxone 0.04–0.4 mg IV, titrated to breathing, not waking; 2–4 mg intranasal or 0.4 mg IM without IV','Infusion if it recurs: two-thirds of the effective bolus per hour'],elim:'',dispo:'Short-acting IV/inhaled: observe about 1 h after naloxone if walking, normal vitals and mental status; methadone or ER products: longer (often 24 h). Offer buprenorphine and naloxone.',cite:'AHA focused update on poisoning (Lavonas, Circulation 2023); Christenson, Acad Emerg Med 2000'},
+ owd:{n:'Opioid withdrawal',g:'Analgesics',ac:'no',rec:'Yawning, rhinorrhea, mydriasis, piloerection, vomiting, diarrhea; alert.',work:'COWS score.',tx:()=>['Buprenorphine 4–8 mg SL once COWS is 8 or more; repeat to 16–24 mg','Adjuncts: clonidine 0.1 mg, ondansetron, loperamide'],elim:'',dispo:'Discharge on buprenorphine with naloxone and a bridge appointment.',cite:'ASAM National Practice Guideline (2020)'},
+ bb:{n:'Beta-blocker',g:'Cardiovascular',ac:'yes',rec:'Bradycardia, hypotension, hypoglycemia; propranolol: seizures and wide QRS.',work:'ECG, glucose, BMP.',
+  tx:()=>['Fluids, atropine, then vasopressors (norepinephrine, epinephrine)',`High-dose insulin: ${dk(1,'U')} bolus, then 1 U/kg/h (up to 10), with dextrose to keep glucose 100–250 and K 2.5–2.8 or more`,`Glucagon ${dk(0.05,'mg')} (3–5 mg) IV, repeat once, then infusion (vomiting is common)`,'Calcium may help; pacing; propranolol with wide QRS: sodium bicarbonate','Refractory: lipid emulsion, VA-ECMO'],elim:'',dispo:'ICU if symptomatic; asymptomatic after 6 h (immediate release) or 24 h (sotalol, ER) may be cleared.',cite:'AHA focused update on poisoning (Lavonas, Circulation 2023)'},
+ ccb:{n:'Calcium channel blocker',g:'Cardiovascular',ac:'wbi',rec:'Hypotension, bradycardia (verapamil, diltiazem) or reflex tachycardia (dihydropyridines), hyperglycemia, normal mental status until late.',work:'ECG, glucose (higher glucose tracks severity), BMP, lactate.',
+  tx:()=>['Calcium: CaCl 10% 10–20 mL central or Ca gluconate 30–60 mL, repeat (target iCa about twice normal)','Vasopressors (norepinephrine, epinephrine)',`High-dose insulin early: ${dk(1,'U')} bolus, then 1 U/kg/h (titrate up to 10) with dextrose and K`,'Refractory: methylene blue, lipid emulsion, pacing, VA-ECMO'],elim:'',dispo:'Sustained-release: admit and monitor 24 h even if asymptomatic.',cite:'Expert consensus on CCB poisoning (St-Onge, Crit Care Med 2017); Lavonas, Circulation 2023'},
+ dig:{n:'Digoxin',g:'Cardiovascular',ac:'yes',rec:'Nausea, visual changes, any dysrhythmia (bidirectional VT, AV block with ectopy); hyperkalemia in acute toxicity.',work:'Digoxin level (6 h after the dose for meaning), K, creatinine, ECG.',
+  tx:()=>{const w=W(),lv=num(S.v.dig);return['Digoxin Fab indications: life-threatening dysrhythmia, K over 5 (acute), acute ingestion over 10 mg, level over 15 ng/mL or over 10 at 6 h, AMS',lv!=null&&w?`From the level: ${lv} × ${w} / 100 = <b>${Math.ceil(lv*w/100)} vials</b>`:'From a level: vials = level (ng/mL) × weight (kg) / 100','From the amount ingested: vials = mg × 0.8 / 0.5. Empiric: 10 vials acute, 3–6 chronic','Don’t treat hyperkalemia with calcium first; Fab corrects it. Atropine for bradycardia']},elim:'Not dialyzable.',dispo:'ICU for dysrhythmia; levels after Fab are uninterpretable.',cite:'Lavonas, Circulation 2023; DigiFab label'},
+ clon:{n:'Clonidine or other imidazoline',g:'Cardiovascular',ac:'yes',rec:'Opioid-like: depressed, miosis, bradycardia, early hypertension then hypotension, apnea.',work:'ECG, glucose.',tx:()=>['Supportive; stimulation often keeps him breathing','Naloxone (higher doses) helps some','Atropine for bradycardia; fluids, vasopressors'],elim:'',dispo:'Observe until mental status and vitals normalize; admit patches or ER.',cite:''},
+ nachan:{n:'TCA or other sodium-channel blocker',g:'Psych and neuro',ac:'yes',rec:'Anticholinergic signs, seizures, hypotension; QRS over 100 ms, terminal R in aVR. Also diphenhydramine, cocaine, flecainide, lamotrigine, bupropion.',work:'Serial ECGs, VBG, BMP.',
+  tx:()=>[`Sodium bicarbonate ${dr(1,2,'mEq')} IV boluses until QRS under 110 ms; target pH 7.45–7.55`,'Benzodiazepines for seizures','Norepinephrine for refractory hypotension','Refractory dysrhythmia: hypertonic saline, lidocaine; lipid emulsion; ECMO','Avoid physostigmine, class IA and IC antiarrhythmics'],elim:'',dispo:'6 h of observation with serial ECGs if asymptomatic; otherwise ICU.',cite:'Lavonas, Circulation 2023; Bruccoleri & Burns, J Med Toxicol 2016'},
+ li:{n:'Lithium',g:'Psych and neuro',ac:'no',rec:'Acute: GI first, neuro later. Chronic: tremor, ataxia, confusion, seizures at lower levels.',work:'Level every 2–4 h, creatinine, Na, TSH, calcium, ECG.',tx:()=>['Isotonic fluids to restore kidney perfusion; stop diuretics, ACE inhibitors, NSAIDs','Whole bowel irrigation for sustained-release (charcoal doesn’t bind it)'],
+  elim:'Hemodialysis (EXTRIP): level over 4.0 with impaired kidneys, or reduced consciousness, seizures or dysrhythmia; suggested over 5.0, with confusion, or if clearance to under 1.0 will take over 36 h.',dispo:'Admit symptomatic or rising levels.',cite:'EXTRIP lithium (Decker, Clin J Am Soc Nephrol 2015)'},
+ ss:{n:'Serotonin toxicity',g:'Psych and neuro',ac:'no',rec:'Within hours of a serotonergic drug: clonus (inducible, ocular), hyperreflexia, tremor, agitation, diaphoresis, hyperthermia. Hunter criteria.',work:'CK, BMP, temperature.',
+  tx:()=>['Stop serotonergic drugs','Benzodiazepines for agitation and tremor; avoid restraints','Cyproheptadine 12 mg PO or NG, then 2 mg q2h while symptomatic (max 32 mg/day)','Temp over 41 °C: sedation, paralysis with a non-depolarizer, intubation; antipyretics don’t work'],elim:'',dispo:'Usually resolves in 24 h; ICU if hyperthermic.',cite:'Dunkley, QJM 2003 (Hunter criteria); Boyer & Shannon, NEJM 2005'},
+ nms:{n:'Neuroleptic malignant syndrome',g:'Psych and neuro',ac:'no',rec:'Days after starting or increasing a dopamine antagonist (or stopping levodopa): lead-pipe rigidity, hyperthermia, altered mental status, autonomic instability.',work:'CK, BMP, creatinine, urinalysis (myoglobin).',
+  tx:()=>['Stop the dopamine antagonist (or restart levodopa)','Cooling, fluids, benzodiazepines',`Severe: bromocriptine 2.5 mg PO q8h, or dantrolene ${dr(1,2.5,'mg')} IV`],elim:'',dispo:'ICU.',cite:'Strawn, Am J Psychiatry 2007 (review)'},
+ antichol:{n:'Anticholinergic',g:'Psych and neuro',ac:'yes',rec:'Delirium with picking and mumbling, dry flushed skin, mydriasis, tachycardia, urinary retention, absent bowel sounds.',work:'ECG before physostigmine (QRS, rhythm).',
+  tx:()=>['Benzodiazepines for agitation; bladder catheter; cooling',`Physostigmine ${dk(0.02,'mg',1)} (0.5–1 mg adult) slow IV over 5 min, repeat every 10–15 min to 2 mg; atropine at the bedside`,'Not with QRS over 100 ms or a suspected TCA'],elim:'',dispo:'Observe until delirium clears.',cite:''},
+ sedhyp:{n:'Sedative-hypnotic',g:'Psych and neuro',ac:'yes',rec:'Depressed mental status with near-normal vitals, ataxia, nystagmus. Benzodiazepines, barbiturates, GHB, z-drugs.',work:'Glucose, APAP and salicylate, ethanol, ECG.',tx:()=>['Supportive: airway, breathing','Flumazenil is not routine: seizures in benzodiazepine-dependent patients or with TCA co-ingestion'],elim:'Phenobarbital: multiple-dose charcoal; hemodialysis if severe (EXTRIP).',dispo:'Observe until awake and ambulating.',cite:'Lavonas, Circulation 2023'},
+ vpa:{n:'Valproate',g:'Psych and neuro',ac:'yes',rec:'CNS depression, hyperammonemia, hypernatremia, metabolic acidosis, cerebral edema at very high levels.',work:'Level, ammonia, LFTs, BMP, lactate.',tx:()=>[`L-carnitine ${dk(100,'mg',6000)} IV, then 15 mg/kg q4h, for hyperammonemia, hepatotoxicity or coma`],elim:'Hemodialysis (EXTRIP) for very high levels, shock or cerebral edema.',dispo:'ICU if CNS depression.',cite:'EXTRIP valproic acid (Ghannoum, Clin Toxicol 2015)'},
+ inh:{n:'Isoniazid',g:'Psych and neuro',ac:'yes',rec:'Refractory seizures, metabolic acidosis, coma.',work:'Lactate, BMP.',tx:()=>['Pyridoxine 1 g per gram ingested (max 5 g) IV; unknown amount: 5 g (70 mg/kg)','Benzodiazepines with it'],elim:'',dispo:'Observe 6 h if asymptomatic.',cite:'Lavonas, Circulation 2023'},
+ symp:{n:'Sympathomimetic (cocaine, amphetamines)',g:'Stimulants',ac:'no',rec:'Agitation, tachycardia, hypertension, hyperthermia, mydriasis, diaphoresis.',work:'ECG, troponin if chest pain, CK, BMP, temperature.',
+  tx:()=>['Benzodiazepines, titrated generously (diazepam 10 mg or lorazepam 2 mg IV every 5–10 min)','Temp over 40 °C: ice-water immersion or aggressive cooling now','Hypertension after benzodiazepines: phentolamine or nitroglycerin','Cocaine with wide QRS: sodium bicarbonate'],elim:'',dispo:'ICU for hyperthermia, ischemia, or persistent agitation.',cite:'Lavonas, Circulation 2023'},
+ etohwd:{n:'Alcohol or sedative withdrawal',g:'Alcohols',ac:'no',rec:'Tremor, anxiety, tachycardia, hypertension, diaphoresis 6–24 h after the last drink; seizures; delirium tremens at 48–96 h.',work:'CIWA-Ar, BMP, Mg, phosphate, glucose, lipase.',
+  tx:()=>['Benzodiazepines, symptom-triggered (diazepam 10–20 mg or lorazepam 2–4 mg IV)',`Phenobarbital ${dk(10,'mg')} IV over 30 min, alone or as an adjunct for benzodiazepine-resistant withdrawal`,'Thiamine 100–500 mg IV before glucose; replace Mg and phosphate'],elim:'',dispo:'Admit for seizures, delirium, high doses or high-risk history.',cite:'ASAM alcohol withdrawal guideline (2020)'},
+ toxalc:{n:'Methanol or ethylene glycol',g:'Alcohols',ac:'no',rec:'Inebriation, then gap acidosis after hours; methanol: visual change; EG: AKI, hypocalcemia, oxalate crystals. Early: osmolar gap without acidosis.',work:'Osmolality, ethanol, BMP, VBG, lactate, levels if available, urinalysis.',
+  tx:()=>[`Fomepizole ${dk(15,'mg')} IV, then 10 mg/kg q12h ×4, then 15 mg/kg q12h (q4h during dialysis)`,'Sodium bicarbonate for pH under 7.3','Folate (methanol); thiamine and pyridoxine (ethylene glycol)'],
+  elim:'Hemodialysis (EXTRIP methanol): level over 70 mg/dL with fomepizole, AG over 24, visual changes, coma or seizures; ethylene glycol: severe acidosis, AKI, or high level.',dispo:'ICU; call nephrology early.',cite:'EXTRIP methanol (Roberts, Crit Care Med 2015); AACT ethylene glycol guideline'},
+ su:{n:'Sulfonylurea or insulin',g:'Metabolic',ac:'yes',rec:'Recurrent hypoglycemia; sulfonylureas for 24 h or more.',work:'Glucose every hour, K.',tx:()=>['Dextrose to correct; then feed',`Octreotide 50–100 mcg SC or IV q6–8h (1 mcg/kg in children) for recurrent sulfonylurea hypoglycemia`],elim:'',dispo:'Admit sulfonylurea ingestions; a child with one pill needs observation.',cite:''},
+ mtf:{n:'Metformin',g:'Metabolic',ac:'yes',rec:'Vomiting, abdominal pain, severe lactic acidosis, shock; often with AKI.',work:'Lactate, VBG, creatinine.',tx:()=>['Supportive; bicarbonate for severe acidemia'],elim:'Hemodialysis (EXTRIP): lactate over 20, pH 7.0 or less, shock, failed standard care, or decreased consciousness.',dispo:'ICU.',cite:'EXTRIP metformin (Calello, Crit Care Med 2015)'},
+ iron:{n:'Iron',g:'Metabolic',ac:'no',rec:'Vomiting and GI bleeding within 6 h, then a latent phase, then shock, acidosis, liver failure.',work:'Serum iron at 4–6 h, VBG, CBC, LFTs, abdominal X-ray.',tx:()=>['Whole bowel irrigation for pills on X-ray',`Deferoxamine 15 mg/kg/h IV${W()?` = <b>${r0(15*W())} mg/h</b>`:''} for iron over 500 mcg/dL, shock, acidosis or AMS; watch for hypotension`],elim:'',dispo:'Asymptomatic at 6 h with no acidosis: low risk.',cite:'Lavonas, Circulation 2023'},
+ co:{n:'Carbon monoxide',g:'Gases',ac:'no',rec:'Headache, nausea, confusion, syncope; several people from one house; SpO2 falsely normal.',work:'COHb by co-oximetry, ECG, troponin, lactate, pregnancy test.',tx:()=>['100% oxygen by non-rebreather','Hyperbaric oxygen commonly for LOC, neuro deficits, COHb over 25% (over 15% pregnant), ischemia, severe acidosis','Consider cyanide too after a fire'],elim:'',dispo:'Discharge when symptoms clear on O2; look at the source.',cite:'ACEP clinical policy on CO (2017); Weaver, NEJM 2002'},
+ cn:{n:'Cyanide',g:'Gases',ac:'no',rec:'Smoke inhalation or exposure, then sudden coma, seizures, shock, apnea; lactate 8 or more.',work:'Lactate, VBG.',tx:()=>[`Hydroxocobalamin ${dk(70,'mg',5000)} IV over 15 min (5 g adult); may repeat once`,'Sodium thiosulfate as an adjunct','100% oxygen'],elim:'',dispo:'ICU.',cite:'Lavonas, Circulation 2023; Baud, NEJM 1991'},
+ methb:{n:'Methemoglobinemia',g:'Gases',ac:'no',rec:'Cyanosis and SpO2 about 85% unresponsive to O2, chocolate-brown blood: dapsone, benzocaine, nitrites, nitrates.',work:'Co-oximetry (MetHb %).',tx:()=>[`Methylene blue ${dr(1,2,'mg')} IV over 5 min if symptomatic or MetHb over 20%; repeat in 1 h if needed`,'G6PD deficiency or failure: exchange transfusion or hyperbaric oxygen','Not with serotonergic drugs if avoidable'],elim:'',dispo:'Dapsone recurs: observe and recheck.',cite:'Lavonas, Circulation 2023'},
+ ops:{n:'Organophosphate or carbamate',g:'Gases',ac:'no',rec:'SLUDGE and the killer Bs: bronchorrhea, bronchospasm, bradycardia; fasciculations, weakness.',work:'RBC cholinesterase (doesn’t guide acute care).',
+  tx:()=>['Decontaminate: remove clothing, wash skin; staff PPE','Atropine 1–2 mg IV, doubling every 5 min until the chest is dry (not until pupils dilate)',`Pralidoxime ${dk(30,'mg',2000)} IV over 30 min, then 8 mg/kg/h (organophosphates)`,'Benzodiazepines for seizures; avoid succinylcholine'],elim:'',dispo:'ICU; intermediate syndrome at 1–4 days.',cite:'Eddleston, Lancet 2008; Lavonas, Circulation 2023'},
+ last:{n:'Local anesthetic systemic toxicity',g:'Stimulants',ac:'no',rec:'During or after a block: perioral numbness, tinnitus, seizures, then bradycardia, wide QRS, arrest.',work:'ECG, monitor.',
+  tx:()=>{const w=W();return['Stop the injection; airway; benzodiazepines for seizures',`Lipid emulsion 20%: ${w?(w>=70?'<b>100 mL</b> over 2–3 min':`1.5 mL/kg = <b>${r0(1.5*w)} mL</b> over 2–3 min`):'100 mL (over 70 kg) or 1.5 mL/kg over 2–3 min'}, then 200–250 mL over 15–20 min (0.25 mL/kg/min); max about 12 mL/kg`,'In arrest: epinephrine 1 mcg/kg or less; avoid vasopressin, CCBs, beta-blockers, more local anesthetic']},elim:'',dispo:'Monitor 4–6 h after a cardiovascular event, 2 h after CNS-only symptoms.',cite:'ASRA LAST checklist (2020); Neal, Reg Anesth Pain Med 2018'}
+};
+const AC={yes:'Activated charcoal binds it',no:'Charcoal doesn’t help',wbi:'Whole bowel irrigation for sustained-release'};
+const NOAC=['li','iron','toxalc'];
+
+/* ---------- Scoring ---------- */
+function toxScore(){const sc={},why={};for(const t in TD){sc[t]=0;why[t]=[]}
+  for(const id in S.f)if(S.f[id]&&FX[id].kind==='ex')for(const t in FX[id].w){sc[t]+=FX[id].w[t];why[t].push([FX[id].l,FX[id].w[t]])}
+  return Object.keys(TD).map(t=>({t,s:r1(sc[t]),why:why[t].sort((a,b)=>b[1]-a[1])})).sort((a,b)=>b.s-a.s)}
+function agentScore(){const sc={},why={};for(const a in AG){sc[a]=0;why[a]=[]}
+  const add=(a,w,l)=>{sc[a]+=w;why[a].push([l,w])};
+  S.known.forEach(a=>add(a,10,'Known exposure'));
+  for(const id in S.f)if(S.f[id]&&FX[id].kind==='cl')for(const a in FX[id].w)add(a,FX[id].w[a],FX[id].l);
+  toxScore().filter(x=>x.s>=3).forEach(x=>TD[x.t][1].forEach((a,i)=>add(a,x.s*(i?0.35:0.6),TD[x.t][0]+' toxidrome')));
+  const v=S.v,lv=(k,a,thr,l)=>{const n=num(v[k]);if(n!=null&&n>thr)add(a,5,l)};
+  lv('apap','apap',10,'Acetaminophen detected');lv('asa','asa',30,'Salicylate level');lv('dig','dig',2,'Digoxin level high');lv('li','li',1.5,'Lithium level high');lv('fe','iron',350,'Iron level high');lv('meoh','toxalc',20,'Toxic alcohol level');
+  return Object.keys(AG).map(a=>({a,s:r1(sc[a]),why:why[a]})).filter(x=>x.s>=2).sort((a,b)=>b.s-a.s)}
+
+/* ---------- Acetaminophen nomogram ---------- */
+function apapRead(){const lv=num(S.v.apap),h=num(S.v.hrs),ast=num(S.v.ast);if(lv==null)return null;
+  if(h==null)return{t:'warn',m:`APAP ${lv} mcg/mL, time unknown: treat if detectable or AST is elevated.`+(lv>=10||(ast??0)>40?' <b>Start NAC.</b>':'')};
+  if(h<4)return{t:'mid',m:`Under 4 h: the level can’t be plotted. Redraw at 4 h${lv>=150?'; a level of 150 or more this early: start NAC now':''}.`};
+  if(h>24)return{t:'warn',m:'Over 24 h: the nomogram doesn’t apply. Treat if APAP is detectable or AST is elevated.'+(lv>=10||(ast??0)>40?' <b>Start NAC.</b>':'')};
+  const line=150*Math.pow(0.5,(h-4)/4),hi=2*line;
+  return lv>=line?{t:'warn',m:`At ${h} h the treatment line is ${r0(line)} mcg/mL. Level ${lv}: <b>above the line, start NAC.</b>${lv>=hi?` Above the 300 line (${r0(hi)}): increase the third bag; call toxicology.`:''}`}:{t:'ok',m:`At ${h} h the treatment line is ${r0(line)} mcg/mL. Level ${lv}: below the line; NAC not needed for a single acute ingestion with a known time${(ast??0)>40?', but AST is up: treat':''}.`}}
+
+/* ---------- Decontamination ---------- */
+function decon(top){const h=num(S.v.hrs),list=[...new Set([...S.known,...top.slice(0,3).map(x=>x.a)])].filter(a=>AG[a]);
+  if(!list.length)return'';const ing=list.filter(a=>!['co','cn','methb','ops','last','ss','nms','etohwd','owd'].includes(a));if(!ing.length)return'';
+  const ok=ing.filter(a=>AG[a].ac==='yes'||AG[a].ac==='wbi'),no=ing.filter(a=>AG[a].ac==='no'),wbi=ing.filter(a=>AG[a].ac==='wbi'||a==='li'||a==='iron');
+  let p=[];
+  if(ok.length){if(S.prot==='no')p.push('Activated charcoal: <b>not with an unprotected airway</b>.');
+    else if(h!=null&&h>2)p.push(`Activated charcoal: ${h} h out; little benefit unless sustained-release or a drug that slows the gut (anticholinergics, opioids).`);
+    else p.push(`Activated charcoal ${dk(1,'g',50)} PO for ${ok.map(a=>AG[a].n.toLowerCase()).join(', ')}${h==null?' if within 1–2 h':''}, if he is alert or intubated and there’s no obstruction.`)}
+  if(no.length)p.push(`Charcoal doesn’t bind ${no.map(a=>AG[a].n.toLowerCase()).join(', ')}.`);
+  if(wbi.length)p.push(`Whole bowel irrigation (PEG 1.5–2 L/h) for sustained-release ${wbi.map(a=>AG[a].n.toLowerCase()).join(', ')}, iron or packets.`);
+  return p.join(' ')}
+
+/* ---------- UI ---------- */
+const ph=(n,t,cue)=>`<div class="ph"><span class="eb">${n}</span><h2>${t}</h2><p class="cue">${cue}</p></div>`;
+const inp=(k,l,phd)=>`<label class="in"><span>${l}</span><input inputmode="decimal" data-k="${k}" value="${esc(S.v[k])}" placeholder="${phd||''}"></label>`;
+const foot=(prev,next)=>`<div class="pfoot">${prev?`<button class="btn" data-step="${prev[0]}" type="button">← ${prev[1]}</button>`:'<span></span>'}${next?`<button class="btn primary" data-step="${next[0]}" type="button">${next[1]} →</button>`:'<span></span>'}</div>`;
+const chipF=([id,l])=>`<button type="button" class="chip" data-f="${id}" aria-pressed="${!!S.f[id]}">${esc(l)}</button>`;
+function renderSteps(){const n={exp:S.known.length,exam:Object.keys(S.f).filter(k=>S.f[k]&&FX[k].kind==='ex').length,work:Object.keys(S.f).filter(k=>S.f[k]&&FX[k].kind==='cl').length,treat:0};
+  $('steps').innerHTML=STEPS.map(([k,t,sh],i)=>`<button type="button" class="stepbtn" data-step="${k}" ${S.step===k?'aria-current="step"':''}><span class="n">${i+1}${n[k]?` · ${n[k]}`:''}</span><span class="t"><span class="lg">${t}</span><span class="sh">${sh}</span></span></button>`).join('')}
+function paneExp(){const groups=[...new Set(Object.values(AG).map(a=>a.g))];
+  return ph(1,'Exposure','Weight and timing drive the doses. Mark any agent you know he took; leave it blank to work from the exam.')+
+  `<div class="sec"><div class="row">${inp('wt','Weight (kg)')}${inp('hrs','Hours since ingestion')}</div></div>
+  <div class="sec"><h3>Airway</h3><div class="chips"><button type="button" class="chip" data-prot="yes" aria-pressed="${S.prot==='yes'}">Alert, or intubated</button><button type="button" class="chip" data-prot="no" aria-pressed="${S.prot==='no'}">Depressed, airway unprotected</button></div></div>`+
+  groups.map(g=>`<div class="sec"><h3>${g}</h3><div class="chips">${Object.keys(AG).filter(a=>AG[a].g===g).map(a=>`<button type="button" class="chip known" data-known="${a}" aria-pressed="${S.known.includes(a)}">${esc(AG[a].n)}</button>`).join('')}</div></div>`).join('')+foot(null,['exam','Toxidrome'])}
+function paneExam(){return ph(2,'Toxidrome','Skin, pupils, bowel sounds and clonus separate most of them. Sweating versus dry skin is the fastest split between sympathomimetic and anticholinergic.')+
+  EX.map(([g,it])=>`<div class="sec"><h3>${g}</h3><div class="chips">${it.map(chipF).join('')}</div></div>`).join('')+foot(['exp','Exposure'],['work','ECG & labs'])}
+function paneWork(){const a=apapRead();return ph(3,'ECG and labs','The ECG and a few labs point to specific agents.')+
+  CL.map(([g,it])=>`<div class="sec"><h3>${g}</h3><div class="chips">${it.map(chipF).join('')}</div></div>`).join('')+
+  `<div class="sec"><h3>Levels</h3><div class="row">${inp('apap','Acetaminophen (mcg/mL)')}${inp('ast','AST')}${inp('asa','Salicylate (mg/dL)')}${inp('dig','Digoxin (ng/mL)')}${inp('li','Lithium (mEq/L)')}${inp('fe','Iron (mcg/dL)')}${inp('meoh','Methanol or EG (mg/dL)')}</div>
+  ${a?`<p class="${a.t==='ok'?'okbox':a.t==='mid'?'note-box':'warnbox'}">${a.m}</p><span class="cite">Rumack–Matthew nomogram, 150 line; Dart, JAMA Netw Open 2023</span>`:''}
+  <p class="fine">Hours since ingestion is on the Exposure step. Send acetaminophen and salicylate levels in every intentional ingestion.</p></div>`+foot(['exam','Toxidrome'],['treat','Treat'])}
+function paneTreat(){const A=agentScore(),f=S.focus||(A[0]&&A[0].a)||'';
+  const pick=`<div class="sec"><h3>Agent</h3><div class="pick">${A.slice(0,8).map(x=>`<button type="button" class="chip" data-focus="${x.a}" aria-pressed="${x.a===f}">${esc(AG[x.a].n)}</button>`).join('')}<button type="button" class="chip" data-focus="__all" aria-pressed="false">Other…</button></div>
+  ${S.showAll?`<div class="pick" style="margin-top:6px">${Object.keys(AG).map(a=>`<button type="button" class="chip" data-focus="${a}" aria-pressed="${a===f}">${esc(AG[a].n)}</button>`).join('')}</div>`:''}</div>`;
+  let body='';
+  if(f){const g=AG[f];body=`<div class="sec tx"><h3>${esc(g.n)}</h3><h4>Recognize</h4><p>${esc(g.rec)}</p><h4>Workup</h4><p>${esc(g.work)}</p><h4>Treat</h4>${g.tx().map(x=>`<div class="dose">${x}</div>`).join('')}
+    ${f==='apap'&&apapRead()?`<p class="${apapRead().t==='ok'?'okbox':'warnbox'}">${apapRead().m}</p>`:''}
+    ${g.elim?`<h4>Enhanced elimination</h4><p>${esc(g.elim)}</p>`:''}<h4>Decontamination</h4><p>${esc(AC[g.ac])}.</p><h4>Disposition</h4><p>${esc(g.dispo)}</p><span class="cite">${esc(g.cite)}</span></div>`}
+  else body='<p class="empty">Mark an exposure, exam findings or labs, or pick an agent above.</p>';
+  const dc=decon(A);
+  return ph(4,'Treat','Supportive care first, then the antidote, decontamination and elimination.')+pick+body+
+  (dc?`<div class="sec"><h3>Decontamination for this patient</h3><p class="note-box">${dc}</p><span class="cite">AACT/EAPCCT position statements (Chyka, Clin Toxicol 2005; Thanacoody, Clin Toxicol 2015)</span></div>`:'')+
+  `<div class="sec"><h3>Every poisoning</h3><ul class="list"><li>Airway, breathing, circulation; glucose now</li><li>ECG; acetaminophen, salicylate and ethanol levels; BMP, VBG, pregnancy test; CK if down a long time</li><li>Benzodiazepines for seizures and agitation</li><li>Poison Control: 1-800-222-1222</li><li>Intentional: suicide risk assessment and a safe setting</li></ul></div>`+foot(['work','ECG & labs'],null)}
+
+/* ---------- Output ---------- */
+function misses(A,T){const m=[],f=S.f;
+  m.push(['levels','Acetaminophen and salicylate levels','Co-ingestions are silent early']);
+  if(!f.qrs&&!f.qtc&&!f.avb&&!f.termr&&!f.bidir)m.push(['ecg','ECG','QRS, QTc, AV block, terminal R in aVR']);
+  m.push(['glu','Fingerstick glucose','']);
+  if(f.hyperth||T.some(x=>(x.t==='ss'||x.t==='nms'||x.t==='symp')&&x.s>=3))m.push(['temp','Core temperature','Over 41 °C: cool and paralyze now']);
+  if(f.agacid&&!f.osm)m.push(['osm','Serum osmolality','Osmolar gap for toxic alcohols']);
+  if(f.depr)m.push(['mimic','Mimics','Hypoglycemia, head injury, CNS infection, postictal state, hypercapnia']);
+  if(S.known.includes('apap')&&num(S.v.apap)==null)m.push(['apap4','4-h acetaminophen level','Plot on the nomogram']);
+  m.push(['pcc','Call Poison Control','1-800-222-1222']);
+  return m}
+function noteText(A,T){if(!A.length&&!T.some(x=>x.s>=3))return '';
+  const t=T.filter(x=>x.s>=3).slice(0,2),lead=A[0],w=W(),h=num(S.v.hrs);
+  let s=`# Toxic ingestion${lead?`, most consistent with ${lc(AG[lead.a].n)}`:''}\n`;
+  const ex=S.known.map(a=>lc(AG[a].n));if(ex.length)s+=`Reported exposure: ${ex.join(', ')}${h!=null?`, about ${h} h ago`:''}.\n`;
+  const fs=Object.keys(S.f).filter(k=>S.f[k]).map(k=>lc(FX[k].l));if(fs.length)s+=`Findings: ${fs.join('; ')}.\n`;
+  if(t.length)s+=`Toxidrome: ${t.map(x=>lc(TD[x.t][0])).join(', ')}.\n`;
+  const also=A.slice(1,4).filter(x=>x.s>=4).map(x=>lc(AG[x.a].n));if(also.length)s+=`Also consider: ${also.join('; ')}.\n`;
+  const ap=apapRead();if(ap)s+=`Acetaminophen: ${ap.m.replace(/<[^>]+>/g,'')}\n`;
+  if(lead){s+=`Plan:\n`+AG[lead.a].tx().slice(0,3).map(x=>`- ${x.replace(/<[^>]+>/g,'')}`).join('\n')+`\n- Poison Control consulted; acetaminophen and salicylate levels, ECG`}
+  return s}
+function renderOut(){const T=toxScore(),A=agentScore(),max=Math.max(8,T[0].s);let h='';
+  const tt=T.filter(x=>x.s>0);
+  h+=`<h3>Toxidrome</h3>`+(tt.length?`<div class="ddx">${tt.slice(0,3).map(x=>`<div class="dx"><div class="h"><b>${esc(TD[x.t][0])}</b><small>${x.s>=6?'Strong':x.s>=3?'Moderate':'Weak'}</small></div><div class="bar"><i style="width:${Math.min(100,x.s/max*100)}%"></i></div><ul class="why">${x.why.slice(0,5).map(w=>`<li class="${w[1]<0?'neg':''}">${esc(w[0])}</li>`).join('')}</ul></div>`).join('')}</div>`:`<p class="empty">Mark exam findings on step 2.</p>`);
+  h+=`<h3>Agents to consider</h3>`+(A.length?`<div class="ddx">${A.slice(0,5).map(x=>`<button type="button" class="dx${(S.focus||A[0].a)===x.a?' on':''}" data-focus="${x.a}" data-go="1"><div class="h"><b>${esc(AG[x.a].n)}</b><small>${S.known.includes(x.a)?'Known':x.s>=5?'Likely':'Possible'}</small></div><ul class="why">${x.why.filter(w=>w[0]!=='Known exposure').slice(0,4).map(w=>`<li>${esc(w[0])}</li>`).join('')}</ul></button>`).join('')}</div>`:`<p class="empty">Known exposures, the toxidrome, and ECG and lab clues add up here.</p>`);
+  const ap=apapRead();if(ap)h+=`<h3>Acetaminophen</h3><p class="${ap.t==='ok'?'okbox':ap.t==='mid'?'note-box':'warnbox'}">${ap.m}</p>`;
+  if(A[0]){const g=AG[A[0].a];h+=`<h3>Do now: ${esc(g.n)}</h3><ul class="list">${g.tx().slice(0,2).map(x=>`<li>${x}</li>`).join('')}</ul>`}
+  const M=misses(A,T);h+=`<h3>Don’t miss</h3><ul class="miss">${M.map(([id,t,s])=>`<li data-done="${id}" class="${S.done[id]?'done':''}"><span class="bx">${S.done[id]?'✓':''}</span><span class="tx">${esc(t)}<small>${esc(s)}</small></span></li>`).join('')}</ul>`;
+  const n=noteText(A,T);if(n)h+=`<h3>Note</h3><pre class="dict">${esc(n)}</pre><button class="btn primary" id="copy" type="button">Copy note</button>`;
+  h+=`<p class="fine">Toxidromes overlap and co-ingestions are common; weights are teaching heuristics. Doses are adult unless shown per kg. Call Poison Control (1-800-222-1222) or your toxicologist.</p>`;
+  $('out').innerHTML=h;
+  $('mbarmid').innerHTML=A.length?`<b>${esc(AG[A[0].a].n)}</b>`:tt.length?esc(TD[tt[0].t][0]):'Start with the exposure or exam';
+}
+function renderPane(){$('pane').innerHTML={exp:paneExp,exam:paneExam,work:paneWork,treat:paneTreat}[S.step]()}
+function render(keep){const y=window.scrollY;renderSteps();renderPane();renderOut();if(keep)window.scrollTo(0,y)}
+
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');if(st){S.step=st.dataset.step;render();window.scrollTo(0,0);return}
+  const kn=e.target.closest('[data-known]');if(kn){const a=kn.dataset.known;S.known=S.known.includes(a)?S.known.filter(x=>x!==a):[...S.known,a];render(true);return}
+  const pr=e.target.closest('[data-prot]');if(pr){S.prot=S.prot===pr.dataset.prot?'':pr.dataset.prot;render(true);return}
+  const fc=e.target.closest('[data-f]');if(fc){const id=fc.dataset.f,on=!S.f[id];S.f[id]=on;if(on)EXCL.forEach(p=>{if(p.includes(id))p.forEach(x=>{if(x!==id)S.f[x]=false})});render(true);return}
+  const fo=e.target.closest('[data-focus]');if(fo){const v=fo.dataset.focus;if(v==='__all')S.showAll=!S.showAll;else{S.focus=v;S.showAll=false;if(fo.dataset.go){S.step='treat';render();window.scrollTo(0,0);return}}render(true);return}
+  const dn=e.target.closest('[data-done]');if(dn){S.done[dn.dataset.done]=!S.done[dn.dataset.done];renderOut();return}
+  if(e.target.closest('#copy')){copy(noteText(agentScore(),toxScore()));return}
+  if(e.target.closest('#seeRecs')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(e.target.closest('#reset')){const b=$('reset');if(b.dataset.armed){S=blank();render();window.scrollTo(0,0)}else{b.dataset.armed='1';b.textContent='Tap again to clear';setTimeout(()=>{delete b.dataset.armed;b.textContent='New patient'},2500)}return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(!t.dataset.k)return;S.v[t.dataset.k]=t.value;renderOut();
+  if(S.step==='work'){const pos=t.selectionStart,key=t.dataset.k;renderPane();const n=document.querySelector(`[data-k="${key}"]`);if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}}});
+async function copy(t){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  const el=document.createElement('div');el.className='toast';el.textContent=ok?'Note copied.':'Couldn’t copy on this device.';document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+render();
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>
