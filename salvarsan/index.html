@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Salvarsan">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Salvarsan</title>
+<style>
+/* Salvarsan: empiric antibiotics by source (region or complaint), adjusted for setting, a four-level beta-lactam allergy, risk factors and weight; coverage check against the likely organisms, pre-antibiotic workup, source control, duration, and a note line. Sources cited per syndrome.
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--amber:#8A5A00;--amber-soft:#FCF0D6;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.top h1{margin:0;font-size:1.5rem}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:38px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding-block:8px;margin-top:10px}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.stepbtn .n{font-size:.7rem;font-weight:700;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .sh{display:none}
+.mbar{display:none}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:3px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.3rem}
+.ph .cue{margin:0;color:var(--muted);font-size:.9rem}
+.sec h3{margin:0 0 8px;font-size:.98rem}
+.sec{display:flex;flex-direction:column;gap:8px}
+.flab{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:.88rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip small{display:block;font-size:.72rem;opacity:.8;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.in{display:flex;flex-direction:column;gap:3px;min-width:92px;flex:1 1 92px;max-width:150px}
+.in>span{font-size:.74rem;font-weight:700;color:var(--muted)}
+.in input,.in select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--paper);font-size:16px;width:100%;min-height:38px}
+.in input:focus,.in select:focus{outline:2px solid var(--accent);outline-offset:0}
+.in.wide{max-width:none;flex:2 1 180px}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:#F4F6F8;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.kpi.bad{background:var(--warn-soft)}.kpi.bad b{color:var(--warn)}
+.kpi.mid{background:var(--amber-soft)}.kpi.mid b{color:var(--amber)}
+.kpi.good{background:var(--ok-soft)}.kpi.good b{color:var(--ok)}
+table.set{width:100%;border-collapse:collapse;font-size:.92rem}
+table.set th,table.set td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.set th{width:34%;color:var(--muted);font-weight:700;font-size:.8rem}
+table.set td b{font-size:1.02rem}
+table.set td small{display:block;color:var(--muted)}
+.cite{font-size:.72rem;color:var(--muted);font-style:italic}
+.note-box{background:#F4F6F8;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px;text-align:left;cursor:pointer}
+.tcard b{display:block}.tcard span{font-size:.8rem;color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow{border-left:3px solid var(--accent);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.flow h4{margin:6px 0 0;font-size:.9rem}
+.out{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 90px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rec{border-radius:10px;padding:9px 11px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rec .h{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.rec .h b{font-size:.95rem}
+.rec p{margin:0;font-size:.86rem}
+.pri{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
+.rec.now{border-color:#E5A69F;background:#FFF7F6}.rec.now .pri{background:var(--warn-soft);color:var(--warn)}
+.rec.next{border-color:#EBCB86;background:#FFFCF4}.rec.next .pri{background:var(--amber-soft);color:var(--amber)}
+.rec.con .pri{background:var(--accent-soft);color:var(--accent)}
+.rec.ok{border-color:#A9D6BE;background:#F6FBF8}.rec.ok .pri{background:var(--ok-soft);color:var(--ok)}
+.miss{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.miss li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;cursor:pointer}
+.miss .bx{flex:none;width:18px;height:18px;border:1.5px solid #9AA9B8;border-radius:4px;margin-top:1px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.miss li.done .bx{background:var(--ok);border-color:var(--ok)}
+.miss li.done .tx{color:var(--muted);text-decoration:line-through}
+.miss .tx small{display:block;color:var(--muted);font-size:.74rem}
+pre.dict{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#F4F6F8;border-radius:10px;padding:10px;margin:0}
+.empty{color:var(--muted);font-size:.9rem;background:#F4F6F8;border-radius:10px;padding:10px 12px}
+.pfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fine{font-size:.76rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepbtn{padding:6px}
+  .stepbtn .t{font-size:.8rem}
+  .stepbtn .lg{display:none}.stepbtn .sh{display:inline}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:10px;align-items:center}
+  .mbar .mid{flex:1;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .mbar .mid b{color:var(--warn)}
+  .wrap{padding-bottom:80px}
+  .out{scroll-margin-top:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;align-self:flex-start}
+.seg button{border:0;background:var(--paper);padding:7px 14px;min-height:36px;cursor:pointer;font-weight:700;font-size:.88rem}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:#fff}
+.srch{display:flex;flex-direction:column;gap:3px}
+.srch input{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--paper);font-size:16px;width:100%;min-height:40px}
+.tcard small{display:block;font-size:.72rem;color:var(--muted);margin-top:2px}
+.tcard .rg{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.chip.chg{border-color:#8FA9D6}
+.chip.al[aria-pressed="true"]{background:#8A2B1F;border-color:#8A2B1F}
+.rx{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.rx li{background:#F4F6F8;border-radius:8px;padding:7px 10px;font-size:.9rem}
+.rx li small{display:block;color:var(--muted);font-size:.76rem;margin-top:1px}
+.rx.opt li{background:#fff;border:1px dashed var(--line)}
+.cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px}
+.cov span{border-radius:6px;padding:4px 8px;font-size:.8rem;font-weight:700}
+.cov .y{background:var(--ok-soft);color:var(--ok)}
+.cov .n{background:var(--amber-soft);color:var(--amber)}
+.also{font-size:.78rem;color:var(--muted);margin:0}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:.88rem;font-weight:600}
+.ambox{background:var(--amber-soft);color:var(--amber);border-radius:10px;padding:8px 12px;font-size:.84rem;font-weight:600}
+.okbox{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:9px 12px;font-size:.88rem;font-weight:600}
+.pill{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:4px;padding:2px 7px;background:var(--accent-soft);color:var(--accent)}
+.oh{display:flex;flex-direction:column;gap:4px}
+.oh b{font-size:1.02rem}
+.kv{margin:0;font-size:.9rem}
+.kv b{color:var(--muted);font-size:.78rem;letter-spacing:.03em;text-transform:uppercase;display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Salvarsan</h1></div>
+      <p>Empiric antibiotics: pick the source by region or complaint, set the allergy, risks and setting, and get the regimen, what it covers, and what to send first.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <nav class="steps" aria-label="Steps" id="steps"></nav>
+  <div class="grid">
+    <section class="pane" id="pane"></section>
+    <aside class="out" id="out" aria-label="Regimen"></aside>
+  </div>
+</div>
+<div class="mbar" id="mbar"><span class="mid" id="mbarmid"></span><button class="btn primary" type="button" id="seeRecs">Regimen ↓</button></div>
+<script>
+/* ---------- State and helpers ---------- */
+const STEPS=[['src','Source','Source'],['pt','Patient','Patient'],['rx','Regimen','Regimen']];
+const blank=()=>({step:'src',view:'region',q:'',cc:'',syn:'',opt:'',optManual:false,set:'',A:0,r:{},wt:'',done:{}});
+let S=blank();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(v===''||v==null)return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)&&n>0?n:null};
+const strip=s=>String(s).replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+const W=()=>num(S.wt);
+const r250=n=>Math.round(n/250)*250;
+/* weight-based doses: shown for this patient once weight is entered */
+function kg(lo,hi,unit,cap,round){const w=W();const lab=hi?`${lo}–${hi} ${unit}/kg`:`${lo} ${unit}/kg`;if(!w)return lab+(cap?` (max ${cap} ${unit})`:'');
+  const rd=n=>{n=round?Math.round(n/round)*round:Math.round(n);return cap?Math.min(cap,n):n};const a=rd(lo*w),b=hi?rd(hi*w):null;
+  return `${lab} = <b>${b&&b!==a?a+'–'+b:a} ${unit}</b>`}
+function vancT(){const w=W();let s='Vancomycin IV, load 20–25 mg/kg';if(w){const a=Math.min(3000,r250(20*w)),b=Math.min(3000,r250(25*w));s+=` = <b>${a===b?a:a+'–'+b} mg</b>`}return s+' (max 3 g), then AUC-guided dosing per pharmacy'}
+const L=(t,...d)=>({t,d});
+const VANC=why=>L(vancT()+(why?`<small>${why}</small>`:''),'vanc');
+const ADDV=why=>L('+ '+vancT()+(why?`<small>${why}</small>`:''),'vanc');
+const PTZ='Piperacillin-tazobactam 4.5 g IV q6h (extended infusion after the first dose)';
+/* Anti-pseudomonal beta-lactam by allergy and ESBL; an = needs anaerobes */
+function apBL(c,an,plus){const p=plus?'+ ':'';
+  if(c.A===3)return L(p+'Aztreonam 2 g IV q8h'+(an?' + metronidazole 500 mg IV q8h':'')+'<small>No beta-lactams: aztreonam has no gram-positive activity, so a gram-positive agent is needed alongside.</small>','azt',...(an?['mtz']:[]));
+  if(c.r.esbl)return L(p+'Meropenem 1 g IV q8h (extended infusion)<small>ESBL history</small>','mero');
+  if(c.A>=1)return an?L(p+'Cefepime 2 g IV q8h + metronidazole 500 mg IV q8h (or meropenem 1 g IV q8h)','cfp','mtz'):L(p+'Cefepime 2 g IV q8h','cfp');
+  return an?L(p+PTZ,'ptz'):L(p+PTZ+', or cefepime 2 g IV q8h','ptz')}
+const flex=(c,base,ks=['mrsa','pseudo','esbl'])=>[...new Set(base.concat(ks.filter(k=>c.r[k])))];
+const R=o=>Object.assign({rx:[],alt:[],opt:[],adj:[],work:[],ctl:[],dur:'',dispo:'',pearl:[],ref:'',need:[],time:''},o);
+
+/* ---------- What each drug covers (for the coverage check) ---------- */
+const COV={
+ vanc:['strep','drsp','mssa','mrsa','entero'],
+ cro:['strep','hflu','mssa','gnr','gc','past','vibrio','borr','enteric'],
+ cfp:['strep','hflu','mssa','gnr','pseudo','aero'],
+ ptz:['strep','hflu','mssa','gnr','pseudo','anaer','entero','past','aero'],
+ mero:['strep','hflu','mssa','gnr','pseudo','esbl','anaer','listeria','past','aero'],
+ erta:['strep','hflu','mssa','gnr','esbl','anaer','past'],
+ azt:['hflu','gnr','pseudo','aero'],
+ mtz:['anaer','cdiff','trich'],
+ azi:['atyp','ct','enteric','borr'],
+ doxy:['strep','hflu','mssa','atyp','mrsa','ct','rick','vibrio','past','borr'],
+ levo:['strep','drsp','hflu','mssa','gnr','pseudo','atyp','ct','enteric','aero'],
+ moxi:['strep','drsp','hflu','mssa','gnr','atyp','anaer','past'],
+ cipro:['hflu','gnr','pseudo','enteric','aero'],
+ lzd:['strep','drsp','mssa','mrsa','entero','toxin'],
+ clinda:['strep','mssa','anaer','toxin'],
+ tmp:['mssa','mrsa','gnr','aero'],
+ tmpL:['mssa','mrsa','gnr','listeria'],
+ cex:['strep','mssa'],cfz:['strep','mssa'],
+ cefur:['strep','hflu','mssa','borr'],
+ cefpo:['strep','hflu','gnr'],
+ amx:['strep','hflu','entero','listeria','borr'],
+ amc:['strep','hflu','mssa','gnr','anaer','entero','past'],
+ ams:['strep','hflu','mssa','gnr','anaer','entero','past'],
+ amp:['strep','entero','listeria'],
+ pcng:['strep','anaer'],
+ gent:['gnr','pseudo','gc'],
+ nitro:['gnr','entero','esbl'],fos:['gnr','entero','esbl'],
+ acv:['hsv'],osel:['flu'],mica:['candida'],fidax:['cdiff'],vancpo:['cdiff']
+};
+const BUG={strep:'Streptococci',drsp:'Resistant pneumococcus',hflu:'H. influenzae / Neisseria',mssa:'MSSA',mrsa:'MRSA',gnr:'Enteric gram-negatives',pseudo:'Pseudomonas',esbl:'ESBL producers',anaer:'Anaerobes',atyp:'Atypicals',entero:'Enterococcus',listeria:'Listeria',hsv:'HSV',flu:'Influenza',gc:'N. gonorrhoeae',ct:'Chlamydia',rick:'Rickettsia / Ehrlichia',borr:'Borrelia (Lyme)',candida:'Candida',toxin:'Toxin suppression',cdiff:'C. difficile',trich:'Trichomonas',vibrio:'Vibrio',aero:'Aeromonas',past:'Pasteurella / Eikenella',enteric:'Shigella / Campylobacter / Salmonella'};
+const BROAD=['mrsa','pseudo','esbl','anaer','entero'];
+
+/* ---------- Patient factors ---------- */
+const SETL={out:'Discharge (oral)',ward:'Admit, ward',icu:'ICU / septic shock'};
+const ALG=[[0,'No beta-lactam allergy',''],[1,'Penicillin, low-risk','Rash, GI upset, remote or unknown'],[2,'Penicillin anaphylaxis','Hives, angioedema, bronchospasm, hypotension'],[3,'No beta-lactams','SJS/TEN, DRESS, or cephalosporin anaphylaxis']];
+const ALGNOTE={1:'Low-risk penicillin history: penicillins avoided; any cephalosporin or carbapenem can be given without testing (AAAAI/ACAAI 2022). Most such labels are wrong; PEN-FAST <3 supports delabeling.',
+ 2:'Penicillin anaphylaxis: penicillins avoided, and so are cephalosporins sharing amoxicillin’s side chain (cephalexin, cefadroxil, cefaclor). Cefazolin, ceftriaxone, cefepime, cefuroxime, cefpodoxime and carbapenems are fine (<1% cross-reactivity; AAAAI/ACAAI 2022).',
+ 3:'No beta-lactams: aztreonam is safe unless the reaction was to ceftazidime (shared side chain).'};
+const RISK=[['mrsa','MRSA risk','Prior MRSA isolate or colonization, injection drug use, dialysis, recent hospitalization with IV antibiotics, incarceration, contact sports, or purulence.'],
+ ['pseudo','Pseudomonas risk','Prior Pseudomonas isolate, structural lung disease (bronchiectasis, CF, FEV1 <30%), neutropenia, recent IV antibiotics, chronic wounds.'],
+ ['esbl','ESBL history','Prior ESBL-producing isolate, or recent travel or healthcare in a high-prevalence region.'],
+ ['recent','Hospitalized or IV antibiotics in 90 days','Healthcare exposure that shifts the flora toward resistant gram-negatives and MRSA.'],
+ ['immuno','Immunocompromised','Transplant, chemotherapy, prednisone ≥20 mg/day for ≥3 weeks or other immunosuppressants, HIV with CD4 <200.'],
+ ['idu','Injection drug use',''],['hw','Prosthetic valve, joint, shunt or hardware',''],['old','Age ≥50','Listeria in meningitis; enteric organisms in epididymitis.'],
+ ['sti','STI risk','Sexually active with new or multiple partners, or a partner with an STI.'],['asplenia','Asplenia',''],['preg','Pregnant',''],
+ ['qt','Prolonged QTc','QTc >470 ms (men) or >480 ms (women), or on other QT-prolonging drugs.'],['renal','CrCl <30 or dialysis','']];
+
+/* ---------- Sources ---------- */
+const RG=[['cns','Head, neck & CNS'],['resp','Chest'],['card','Heart & lines'],['abd','Abdomen'],['gu','GU & pelvis'],['skin','Skin & soft tissue'],['bone','Bone & joint'],['sys','Systemic']];
+const SY={
+/* Head, neck & CNS */
+mening:{g:'cns',n:'Bacterial meningitis',sh:'Pneumococcus, meningococcus, H. influenzae, Listeria',kw:'headache neck stiffness fever altered mental status encephalitis',set:['ward','icu'],def:'icu',f:c=>{
+  const lis=c.r.old||c.r.immuno||c.r.preg,hc=c.r.recent||c.r.hw,rx=[];
+  if(c.A===3)rx.push(hc?L('Aztreonam 2 g IV q6h','azt'):L('Moxifloxacin 400 mg IV daily (or aztreonam 2 g IV q6h)','moxi'));
+  else rx.push(hc?L('Cefepime 2 g IV q8h (or meropenem 2 g IV q8h)<small>Healthcare-associated: neurosurgery, shunt, penetrating head trauma</small>','cfp'):L('Ceftriaxone 2 g IV q12h','cro'));
+  rx.push(ADDV('Ceftriaxone-resistant pneumococcus'+(hc?' and staphylococci':'')));
+  if(lis)rx.push(c.A===0?L('+ Ampicillin 2 g IV q4h<small>Listeria: age ≥50, immunocompromised, pregnancy, alcohol use disorder</small>','amp'):L(`+ TMP-SMX ${kg(5,0,'mg')} (trimethoprim) IV q8h for Listeria, in place of ampicillin`,'tmpL'));
+  return R({rx,need:['strep','drsp','hflu'].concat(lis?['listeria']:[]).concat(hc?['mssa','mrsa','gnr','pseudo']:[]),
+  adj:[`Dexamethasone 0.15 mg/kg IV q6h ×4 days (10 mg in adults), first dose 10–20 min before or with the first antibiotic; stop if not pneumococcal`],
+  opt:[L(`?+ Acyclovir ${kg(10,0,'mg')} IV q8h (dose on ideal body weight in obesity) if encephalitis is possible: altered behavior, seizures, focal deficits`,'acv'),L('?+ Doxycycline 100 mg IV q12h if rickettsial disease is possible (tick exposure, petechial rash, thrombocytopenia)','doxy')],
+  time:'Within 1 hour of arrival. Don’t wait for CT or LP.',
+  work:['Blood cultures ×2, then antibiotics immediately','CT head before LP only if immunocompromised, new seizure, papilledema, focal deficit, or GCS <10','LP: opening pressure, cell count, glucose with serum glucose, protein, Gram stain and culture, HSV PCR or meningitis/encephalitis panel','Droplet precautions until meningococcus is excluded'],
+  dur:'By organism: meningococcus and H. influenzae 7 days, pneumococcus 10–14 days, Listeria ≥21 days',
+  dispo:'ICU or step-down. Close contacts of meningococcal disease need prophylaxis (ciprofloxacin 500 mg PO once, rifampin, or ceftriaxone 250 mg IM).',
+  pearl:['The full triad of fever, neck stiffness and altered mental status is present in under half of patients, but nearly all have at least two of headache, fever, neck stiffness and altered mental status.','Kernig and Brudzinski signs are insensitive; a normal exam does not exclude meningitis.'],
+  ref:'IDSA 2004 bacterial meningitis; ESCMID 2016; IDSA 2017 healthcare-associated ventriculitis and meningitis'})}},
+orbital:{g:'cns',n:'Orbital or periorbital cellulitis',sh:'Strep, S. aureus, H. influenzae; sinus anaerobes',kw:'eye swelling preseptal postseptal proptosis lid',set:['out','ward','icu'],def:'ward',setL:{out:'Preseptal (discharge)',ward:'Orbital / postseptal',icu:'Orbital with sepsis or intracranial spread'},f:c=>{
+  if(c.set==='out'){const rx=[c.A===0?L('Amoxicillin-clavulanate 875/125 mg PO BID ×5–7 days','amc'):c.A===3?L('Levofloxacin 750 mg PO daily + clindamycin 300–450 mg PO TID ×5–7 days','levo','clinda'):L('Cefpodoxime 400 mg PO BID + clindamycin 300–450 mg PO TID ×5–7 days','cefpo','clinda')];
+    if(c.r.mrsa&&c.A===0)rx.push(L('+ TMP-SMX 1–2 DS tabs PO BID or doxycycline 100 mg PO BID (MRSA risk)','tmp'));
+    return R({rx,need:flex(c,['strep','mssa','hflu'],['mrsa']),
+    work:['Check acuity, pupils, extraocular movements and pain with eye movement; any abnormality means postseptal','CT orbits and sinuses with contrast if proptosis, ophthalmoplegia, pain with eye movement, vision change, or no improvement in 24–48 h'],
+    dur:'5–7 days',dispo:'Discharge only for preseptal cellulitis with a normal eye exam and follow-up within 24–48 h.',
+    pearl:['Postseptal signs: proptosis, painful or limited eye movements, diplopia, reduced acuity, afferent pupillary defect.'],ref:'IDSA 2014 SSTI; expert consensus (ophthalmology, ENT)'})}
+  const rx=c.A===3?[L('Moxifloxacin 400 mg IV daily','moxi'),ADDV()]:[L('Ceftriaxone 2 g IV q24h (q12h if intracranial extension)','cro'),ADDV()];
+  return R({rx,need:['strep','mssa','mrsa','hflu'],opt:c.A===3?[]:[L('?+ Metronidazole 500 mg IV q8h if intracranial extension, odontogenic source, or chronic sinusitis','mtz')],
+  work:['CT orbits and sinuses with contrast (MRI if cavernous sinus thrombosis is a concern)','Ophthalmology and ENT consults','Blood cultures if toxic'],
+  ctl:['ENT drainage of a subperiosteal or orbital abscess that is large, vision-threatening, or not improving in 24–48 h'],
+  dur:'Usually 2–3 weeks total, with oral step-down once improving',dispo:'Admit; serial vision and pupil checks.',
+  pearl:['Cavernous sinus thrombosis: bilateral findings, CN III, IV and VI palsies, V1/V2 numbness.'],ref:'IDSA 2014 SSTI; expert consensus (ophthalmology, ENT)'})}},
+deepneck:{g:'cns',n:'Deep neck or odontogenic infection',sh:'Peritonsillar, Ludwig’s, retropharyngeal, dental: strep and oral anaerobes',kw:'sore throat trismus neck swelling dental abscess tooth ludwig peritonsillar retropharyngeal',set:['out','ward','icu'],def:'ward',setL:{out:'Drained PTA or dental abscess (discharge)'},f:c=>{
+  if(c.set==='out')return R({rx:[c.A===0?L('Amoxicillin-clavulanate 875/125 mg PO BID ×10 days (dental abscess: amoxicillin 500 mg TID ×3–7 days)','amc'):L('Clindamycin 300–450 mg PO TID ×10 days','clinda')],need:['strep','anaer'],
+    ctl:['Peritonsillar abscess: needle aspiration or incision and drainage','Dental abscess: dental drainage or extraction is the treatment; antibiotics only for spreading infection or systemic signs'],
+    work:['Airway check: trismus, drooling, stridor, voice change, floor-of-mouth swelling mean admission'],dur:'PTA 10 days total',
+    dispo:'Discharge after drainage if tolerating PO, airway safe, and follow-up with ENT or dentistry.',pearl:['A single dose of dexamethasone 10 mg speeds pain relief after PTA drainage.'],ref:'Expert consensus (ENT, OMFS); ADA 2019 dental pain and swelling'});
+  const deep=c.set==='icu'||c.r.immuno||c.r.recent,rx=[];
+  if(deep){rx.push(VANC(),apBL(c,true,true))}
+  else{rx.push(c.A===0?L('Ampicillin-sulbactam 3 g IV q6h','ams'):c.A===3?L('Moxifloxacin 400 mg IV daily (or clindamycin 900 mg IV q8h + levofloxacin 750 mg IV daily)','moxi'):L('Ceftriaxone 2 g IV q24h + metronidazole 500 mg IV q8h','cro','mtz'));if(c.r.mrsa)rx.push(ADDV('MRSA risk'))}
+  return R({rx,need:flex(c,deep?['strep','anaer','mssa','mrsa','gnr','pseudo']:['strep','anaer','mssa'],['mrsa']),
+  time:'Airway first.',work:['Airway assessment before anything else; don’t lay a Ludwig’s patient flat for CT','CT neck with IV contrast if a deep space infection is suspected and the airway is safe','Blood cultures if toxic'],
+  ctl:['ENT or OMFS for drainage','Ludwig’s or threatened airway: awake fiberoptic intubation in the OR with surgical airway backup'],
+  dur:'2–3 weeks for deep space infections, guided by drainage and response',dispo:'Admit; ICU if airway is threatened.',
+  pearl:['Lemierre’s syndrome: pharyngitis followed by septic pulmonary emboli and internal jugular thrombophlebitis (Fusobacterium).','Clindamycin resistance is rising in group A strep and oral anaerobes; avoid clindamycin alone for severe infection.'],ref:'Expert consensus (ENT, OMFS); IDSA 2014 SSTI'})}},
+/* Chest */
+cap:{g:'resp',n:'Community-acquired pneumonia',sh:'Pneumococcus, H. influenzae, atypicals',kw:'cough fever dyspnea pneumonia infiltrate',set:['out','ward','icu'],def:'ward',opts:[['healthy','No comorbidities'],['comorb','Comorbidities']],optSet:['out'],optDef:'healthy',optTip:'Chronic heart, lung, liver or renal disease, diabetes, alcohol use disorder, malignancy, or asplenia',f:c=>{
+  const osel=L('?+ Oseltamivir 75 mg PO BID ×5 days if influenza is positive or circulating (every admitted patient; outpatients who are high-risk or within 48 h)','osel');
+  if(c.set==='out'){
+    if(c.opt==='healthy')return R({rx:[c.A===0&&!c.r.preg?L('Amoxicillin 1 g PO TID ×5 days','amx'):c.r.preg?L('Azithromycin 500 mg PO day 1, then 250 mg daily ×4 days<small>Only where pneumococcal macrolide resistance is <25%</small>','azi'):L('Doxycycline 100 mg PO BID ×5 days','doxy')],
+      need:['strep','hflu'],alt:['Doxycycline 100 mg PO BID ×5 days','Azithromycin 500 mg day 1 then 250 mg daily ×4 days, only where pneumococcal macrolide resistance is <25%'],opt:[osel],
+      work:['Chest X-ray','Influenza and COVID testing when circulating'],dur:'5 days, if afebrile ≥48 h and clinically stable',dispo:'CURB-65 0–1 or PSI I–II: outpatient is usually appropriate.',
+      pearl:['Amoxicillin alone is guideline-concordant for healthy outpatients even though it misses atypicals.'],ref:'ATS/IDSA 2019 CAP guideline'});
+    const rx=[];
+    if(c.A===3)rx.push(L('Levofloxacin 750 mg PO daily ×5 days (or moxifloxacin 400 mg daily)','levo'));
+    else{rx.push(c.A===0?L('Amoxicillin-clavulanate 875/125 mg PO BID (or 2 g ER BID) ×5 days','amc'):L('Cefpodoxime 200 mg PO BID (or cefuroxime 500 mg BID) ×5 days','cefpo'));
+      rx.push(c.r.qt||c.r.preg?(c.r.preg?L('+ Azithromycin 500 mg PO day 1, then 250 mg daily ×4 days','azi'):L('+ Doxycycline 100 mg PO BID ×5 days','doxy')):L('+ Azithromycin 500 mg PO day 1, then 250 mg daily ×4 days (or doxycycline 100 mg BID)','azi'))}
+    return R({rx,need:['strep','hflu','atyp'],alt:['Respiratory fluoroquinolone alone: levofloxacin 750 mg daily or moxifloxacin 400 mg daily ×5 days'],opt:[osel],
+      work:['Chest X-ray','Influenza and COVID testing when circulating'],dur:'5 days, if afebrile ≥48 h and clinically stable',dispo:'CURB-65 0–1 or PSI I–II: outpatient is usually appropriate.',ref:'ATS/IDSA 2019 CAP guideline'})}
+  const icu=c.set==='icu',broad=c.r.pseudo||(icu&&c.r.recent),rx=[];
+  if(broad){rx.push(apBL(c,false));if(c.A===3)rx.push(L('+ Levofloxacin 750 mg IV daily','levo'))}
+  else if(c.A===3)rx.push(icu?L('Aztreonam 2 g IV q8h + levofloxacin 750 mg IV daily','azt','levo'):L('Levofloxacin 750 mg IV/PO daily (or moxifloxacin 400 mg daily)','levo'));
+  else rx.push(L(`Ceftriaxone ${icu?'2 g':'1–2 g'} IV q24h`,'cro'));
+  if(c.A!==3)rx.push(icu?L('+ Azithromycin 500 mg IV daily'+(c.r.qt?'<small>Monitor QTc; doxycycline 100 mg IV BID if QT is prohibitive</small>':''),'azi'):c.r.qt?L('+ Doxycycline 100 mg PO/IV BID','doxy'):L('+ Azithromycin 500 mg IV/PO daily ×3 days (or doxycycline 100 mg BID)','azi'));
+  if(c.r.mrsa||(icu&&c.r.recent))rx.push(ADDV('or linezolid 600 mg IV q12h; stop at 48 h if MRSA nares PCR and cultures are negative'));
+  return R({rx,need:flex(c,['strep','hflu','atyp','mssa'].concat(icu&&c.r.recent?['mrsa','pseudo']:[])),opt:[osel],
+  adj:icu?['Hydrocortisone 200 mg/day IV (50 mg q6h) for severe CAP, not with influenza or aspiration (CAPE COD 2023)']:[],
+  time:icu?'Within 1 hour if septic shock.':'',
+  work:['Chest X-ray','Influenza and COVID PCR'].concat(icu||c.r.mrsa||c.r.pseudo||c.r.recent?['Blood cultures and sputum Gram stain/culture before antibiotics','MRSA nares PCR (high negative predictive value; stop MRSA coverage if negative)']:[]).concat(icu?['Legionella and pneumococcal urinary antigens']:[]),
+  dur:'Minimum 5 days and clinically stable; 7 days if MRSA or Pseudomonas is treated',
+  dispo:'ICU for septic shock, mechanical ventilation, or ≥3 minor criteria: RR ≥30, P/F ≤250, multilobar, confusion, BUN ≥20, WBC <4, platelets <100, T <36, hypotension needing fluids.',
+  pearl:c.r.recent&&!icu?['Hospitalized with IV antibiotics in 90 days but not severe: send cultures and MRSA nares, and add MRSA or Pseudomonas coverage only for a positive result or locally validated risk.']:['Procalcitonin is not a reason to withhold initial antibiotics in suspected bacterial CAP.'],
+  ref:'ATS/IDSA 2019 CAP guideline; CAPE COD (NEJM 2023)'})}},
+hap:{g:'resp',n:'Pneumonia after recent hospitalization, or HAP',sh:'MRSA, Pseudomonas, resistant gram-negatives',kw:'hospital acquired nursing home recent admission pneumonia cough',set:['ward','icu'],def:'ward',f:c=>{
+  const v=c.r.mrsa||c.set==='icu'||c.r.recent||c.A===3,rx=[apBL(c,false)];if(v)rx.push(ADDV('or linezolid 600 mg q12h; stop if MRSA nares PCR and cultures are negative'));
+  return R({rx,need:flex(c,['strep','mssa','gnr','pseudo'].concat(v?['mrsa']:[])),
+  opt:c.set==='icu'?[L('?+ Second gram-negative agent (tobramycin/amikacin or levofloxacin) only with septic shock, IV antibiotics in 90 days, or unit gram-negative resistance >10%','gent')]:[],
+  work:['Sputum or endotracheal culture, blood cultures','MRSA nares PCR','Respiratory viral panel'],dur:'7 days; narrow to cultures',ref:'IDSA/ATS 2016 HAP/VAP guideline'})}},
+asp:{g:'resp',n:'Aspiration pneumonia',sh:'Oral flora and community pathogens; anaerobes only with abscess or empyema',kw:'aspiration vomiting overdose seizure dysphagia nursing home',set:['out','ward','icu'],def:'ward',f:c=>{
+  const rx=[];
+  if(c.set==='out')rx.push(c.A===0?L('Amoxicillin-clavulanate 875/125 mg PO BID ×5 days','amc'):c.A===3?L('Levofloxacin 750 mg PO daily ×5 days (or moxifloxacin 400 mg daily)','levo'):L('Cefpodoxime 200 mg PO BID ×5 days','cefpo'));
+  else if(c.r.recent||c.r.pseudo){rx.push(apBL(c,false));if(c.A===3)rx.push(L('+ Levofloxacin 750 mg IV daily','levo'))}
+  else rx.push(c.A===3?L('Levofloxacin 750 mg IV/PO daily','levo'):L(`Ceftriaxone ${c.set==='icu'?'2 g':'1–2 g'} IV q24h, treated as CAP`,'cro'));
+  if(c.set!=='out'&&(c.r.mrsa||(c.set==='icu'&&c.r.recent)))rx.push(ADDV('MRSA risk'));
+  return R({rx,need:flex(c,['strep','hflu','gnr']),alt:c.A===0?['Ampicillin-sulbactam 3 g IV q6h if a lung abscess or empyema is suspected']:[],
+  work:['Chest X-ray (dependent segments)','SLP swallow evaluation; aspiration precautions; head of bed ≥30°'],dur:'5 days',
+  pearl:['Aspiration pneumonitis after a witnessed event (overdose, seizure, anesthesia) usually needs no antibiotics in the first 24–48 h unless it persists or worsens.','Don’t add anaerobic coverage routinely; reserve it for lung abscess or empyema.'],ref:'ATS/IDSA 2019 CAP guideline; NEJM 2019 aspiration pneumonia review'})}},
+lungabs:{g:'resp',n:'Lung abscess or empyema',sh:'Oral anaerobes, strep, S. aureus, gram-negatives',kw:'cavity pleural effusion empyema abscess',set:['ward','icu'],def:'ward',f:c=>{
+  const deep=c.set==='icu'||c.r.recent,rx=[];
+  if(deep)rx.push(VANC(),apBL(c,true,true));else{rx.push(c.A===0?L('Ampicillin-sulbactam 3 g IV q6h','ams'):c.A===3?L('Moxifloxacin 400 mg IV daily','moxi'):L('Ceftriaxone 2 g IV q24h + metronidazole 500 mg IV q8h','cro','mtz'));if(c.r.mrsa)rx.push(ADDV('MRSA risk'))}
+  return R({rx,need:flex(c,['strep','anaer','mssa','gnr'].concat(deep?['mrsa','pseudo']:[])),
+  work:['CT chest with contrast','Diagnostic thoracentesis: pH, glucose, LDH, Gram stain, culture in blood-culture bottles','Blood cultures'],
+  ctl:['Chest tube for empyema or complicated effusion (pus, positive Gram stain, pH <7.2, glucose <60)','Intrapleural tPA with DNase for loculated empyema (MIST-2)'],
+  dur:'Empyema 2–6 weeks; lung abscess usually ≥3 weeks, until imaging improves',ref:'BTS 2023 pleural disease guideline; ATS/IDSA 2019'})}},
+copd:{g:'resp',n:'COPD exacerbation needing antibiotics',sh:'H. influenzae, M. catarrhalis, pneumococcus',kw:'copd emphysema wheeze sputum dyspnea',set:['out','ward','icu'],def:'out',setL:{icu:'NIV or ventilated'},f:c=>{
+  const rx=[];
+  if(c.set==='icu'){if(c.r.pseudo)rx.push(apBL(c,false));else rx.push(c.A===3?L('Levofloxacin 750 mg IV daily','levo'):L('Ceftriaxone 1–2 g IV q24h','cro'));if(c.A!==3&&!c.r.qt)rx.push(L('+ Azithromycin 500 mg IV daily','azi'))}
+  else rx.push(c.r.pseudo?L('Levofloxacin 750 mg PO daily ×5 days<small>Pseudomonas risk: FEV1 <30%, frequent antibiotics or steroids, prior isolate, bronchiectasis</small>','levo'):c.r.preg?(c.A===0?L('Amoxicillin-clavulanate 875/125 mg PO BID ×5 days','amc'):L('Azithromycin 500 mg PO daily ×3 days','azi')):L('Doxycycline 100 mg PO BID ×5 days'+(c.set==='ward'?' (or ceftriaxone 1 g IV q24h if not taking PO)':''),'doxy'));
+  return R({rx,need:flex(c,['strep','hflu'],['pseudo']),alt:c.set==='icu'?[]:['Azithromycin 500 mg PO daily ×3 days','Amoxicillin-clavulanate 875/125 mg PO BID ×5 days'],
+  adj:['Prednisone 40 mg PO daily ×5 days (REDUCE)','Short-acting bronchodilators; NIV for pH <7.35 with hypercapnia'],
+  work:['Antibiotics are indicated for increased sputum purulence plus more dyspnea or sputum volume, or any patient on NIV or a ventilator','Chest X-ray; VBG','Viral testing; sputum culture if Pseudomonas risk or frequent exacerbations'],
+  dur:'5 days',ref:'GOLD 2025 report'})}},
+/* Heart & lines */
+endo:{g:'card',n:'Endocarditis',sh:'S. aureus, streptococci, enterococci; HACEK',kw:'murmur bacteremia injection drug use valve emboli',set:['ward','icu'],def:'ward',f:c=>{
+  const gn=c.r.idu||c.r.recent||c.r.hw,rx=[VANC()];
+  if(c.A===3)rx.push(L('+ Aztreonam 2 g IV q8h if gram-negatives are a concern<small>Gentamicin is the alternative</small>','azt'));
+  else rx.push(gn?L('+ Cefepime 2 g IV q8h','cfp'):L('+ Ceftriaxone 2 g IV q24h','cro'));
+  if(c.r.hw)rx.push(L('+ Gentamicin 1 mg/kg IV q8h for synergy<small>Prosthetic valve; rifampin is added later, once cultures clear, per ID</small>','gent'));
+  return R({rx,need:['strep','mssa','mrsa','entero'].concat(gn?['gnr','pseudo']:[]),alt:['Daptomycin 8–10 mg/kg IV daily in place of vancomycin (AKI, vancomycin MIC ≥2, or intolerance)'],
+  time:'Unstable, acute or embolic: start right after cultures. Stable and subacute: 3 sets of cultures first; antibiotics can wait for them.',
+  work:['3 sets of blood cultures from separate venipunctures','ECG: new PR prolongation or heart block suggests a perivalvular abscess','TTE, then TEE','CT head if any neurologic finding','HIV and hepatitis C testing with injection drug use'],
+  dispo:'Admit to telemetry; ID and cardiology. Cardiac surgery for heart failure, abscess, large vegetation, embolic events, or prosthetic valve.',
+  dur:'4–6 weeks from the first negative culture; partial oral regimens per ID (POET)',ref:'AHA 2015 scientific statement; ESC 2023 endocarditis guideline; Duke-ISCVID 2023 criteria'})}},
+line:{g:'card',n:'Line infection (central line, port, HD catheter)',sh:'Coagulase-negative staph, S. aureus, gram-negatives, Candida',kw:'catheter port dialysis picc central line fever bacteremia',set:['ward','icu'],def:'ward',f:c=>R({rx:[VANC(),apBL(c,false,true)],need:flex(c,['mssa','mrsa','gnr','pseudo']),
+  opt:[L('?+ Micafungin 100 mg IV daily if TPN, femoral line, prolonged broad antibiotics, hematologic malignancy or transplant, or Candida at multiple sites','mica')],
+  work:['Paired blood cultures: one through each lumen and one peripheral (catheter positive >2 h earlier suggests the line)','Examine the exit site and tunnel'],
+  ctl:['Remove the catheter for septic shock, tunnel or pocket infection, endocarditis, bacteremia persisting >72 h, or S. aureus, Pseudomonas, Candida or mycobacteria'],
+  dur:'By organism and whether the line is removed (S. aureus ≥14 days from first negative culture)',ref:'IDSA 2009 catheter-related bloodstream infection guideline'})},
+/* Abdomen */
+iai:{g:'abd',n:'Intra-abdominal infection',sh:'Perforated appendicitis, diverticulitis, abscess, peritonitis: gram-negatives and anaerobes',kw:'abdominal pain fever appendicitis diverticulitis perforation peritonitis abscess',set:['out','ward','icu'],def:'ward',setL:{out:'Uncomplicated diverticulitis (discharge)',ward:'Mild–moderate, community',icu:'Severe or healthcare-associated'},f:c=>{
+  if(c.set==='out')return R({rx:[c.A===0?L('Amoxicillin-clavulanate 875/125 mg PO BID ×4–7 days, if antibiotics are needed','amc'):L('Ciprofloxacin 500 mg PO BID + metronidazole 500 mg PO TID ×4–7 days (or TMP-SMX DS BID + metronidazole), if antibiotics are needed','cipro','mtz')],need:['gnr','anaer'],
+    work:['CT abdomen/pelvis with IV contrast if first episode, severe, or immunocompromised'],dur:'4–7 days',dispo:'Discharge if tolerating PO, pain controlled, no abscess or perforation, and follow-up arranged.',
+    pearl:['Immunocompetent patients with uncomplicated diverticulitis and no systemic signs can be observed without antibiotics (AGA 2021; DIABOLO, AVOD).'],ref:'AGA 2021 diverticulitis guideline'});
+  const hi=c.set==='icu'||c.r.recent,rx=[];
+  if(hi){rx.push(apBL(c,true));if(c.A>=1||c.r.mrsa)rx.push(ADDV(c.A>=1?'Enterococcus and MRSA (the regimen above has no enterococcal activity)':'MRSA risk'))}
+  else{rx.push(c.A===3?L('Ciprofloxacin 400 mg IV q12h (or levofloxacin 750 mg daily) + metronidazole 500 mg IV q8h<small>Check local E. coli fluoroquinolone resistance</small>','cipro','mtz'):c.r.esbl?L('Ertapenem 1 g IV q24h<small>ESBL history</small>','erta'):L('Ceftriaxone 2 g IV q24h + metronidazole 500 mg IV/PO q8h','cro','mtz'));if(c.r.mrsa)rx.push(ADDV('MRSA risk'))}
+  return R({rx,need:flex(c,['gnr','anaer'].concat(hi?['strep','entero','pseudo']:[])),alt:hi?[]:['Ertapenem 1 g IV q24h','Avoid ampicillin-sulbactam (E. coli resistance) and cefotetan or clindamycin (B. fragilis resistance)'],
+  opt:hi?[L('?+ Micafungin 100 mg IV daily for healthcare-associated infection with upper GI perforation, recurrent perforation, or immunosuppression','mica')]:[],
+  time:c.set==='icu'?'Within 1 hour if septic shock.':'',work:['CT abdomen/pelvis with IV contrast','Lactate; blood cultures if septic','Intraoperative or drain cultures for healthcare-associated or severe infection'],
+  ctl:['Source control as early as possible (within 6–12 h when septic): surgery or IR drainage. Abscesses under ~3 cm often resolve with antibiotics alone.'],
+  dur:'4 days after adequate source control (STOP-IT); none after appendectomy for uncomplicated appendicitis',
+  pearl:['Uncomplicated appendicitis: antibiotics first is noninferior for many patients, though about 3 in 10 have appendectomy by 90 days, more with an appendicolith (CODA).'],
+  ref:'SIS/IDSA 2010 and SIS 2017 intra-abdominal infection guidelines; STOP-IT (NEJM 2015); CODA (NEJM 2020)'})}},
+biliary:{g:'abd',n:'Cholecystitis or cholangitis',sh:'E. coli, Klebsiella, enterococci; anaerobes with biliary-enteric anastomosis',kw:'ruq pain jaundice gallbladder murphy charcot biliary',set:['ward','icu'],def:'ward',opts:[['chole','Acute cholecystitis'],['chol','Cholangitis']],optDef:'chole',setL:{ward:'Grade I–II, community',icu:'Grade III or healthcare-associated'},f:c=>{
+  const hi=c.set==='icu'||c.r.recent,rx=[];
+  if(hi){rx.push(apBL(c,true));rx.push(ADDV('Tokyo grade III or healthcare-associated: enterococcus'))}
+  else rx.push(c.A===3?L('Ciprofloxacin 400 mg IV q12h + metronidazole 500 mg IV q8h','cipro','mtz'):c.r.esbl?L('Ertapenem 1 g IV q24h<small>ESBL history</small>','erta'):L('Ceftriaxone 2 g IV q24h + metronidazole 500 mg IV q8h<small>Metronidazole is essential with a biliary-enteric anastomosis</small>','cro','mtz'));
+  const ch=c.opt==='chol';
+  return R({rx,need:flex(c,['gnr','anaer'].concat(hi?['strep','entero','pseudo']:[])),
+  work:['RUQ ultrasound','LFTs, lipase, CBC, lactate','Blood cultures'+(ch?'':' (grade II–III)')],
+  ctl:ch?['ERCP: as soon as possible after resuscitation if severe, within 24 h if moderate','Percutaneous transhepatic drainage if ERCP fails or isn’t possible']:['Laparoscopic cholecystectomy within 72 h, ideally the same admission','Percutaneous cholecystostomy if too sick for surgery'],
+  dur:ch?'4–7 days after source control; 2 weeks with enterococcal or streptococcal bacteremia':'Stop within 24 h after cholecystectomy for grade I–II; 4–7 days if gangrenous, perforated or emphysematous',
+  pearl:['Charcot’s triad (fever, RUQ pain, jaundice) is present in about half of cholangitis; Reynolds’ pentad adds shock and confusion.'],ref:'Tokyo Guidelines 2018'})}},
+sbp:{g:'abd',n:'Spontaneous bacterial peritonitis',sh:'E. coli, Klebsiella, streptococci',kw:'cirrhosis ascites paracentesis fever abdominal pain encephalopathy',set:['ward','icu'],def:'ward',f:c=>{
+  const noso=c.r.recent||c.set==='icu',rx=[];
+  if(c.A===3)rx.push(noso?L('Aztreonam 2 g IV q8h','azt'):L('Ciprofloxacin 400 mg IV q12h<small>Not if on fluoroquinolone prophylaxis</small>','cipro'));
+  else if(c.r.esbl||(noso&&c.A>=1))rx.push(L('Meropenem 1 g IV q8h','mero'));
+  else rx.push(noso?L(PTZ+'<small>Nosocomial or recent beta-lactam exposure</small>','ptz'):L('Ceftriaxone 2 g IV q24h','cro'));
+  if(c.set==='icu'||c.r.mrsa||(noso&&c.A===3))rx.push(ADDV('Septic shock or nosocomial: MRSA and enterococcus'));
+  const w=W(),alb=n=>w?` = <b>${Math.round(n*w/12.5)*12.5} g</b>`:'';
+  return R({rx,need:flex(c,['gnr','strep'].concat(noso?['pseudo','entero']:[])),
+  adj:[`Albumin 1.5 g/kg${alb(1.5)} on day 1 and 1 g/kg${alb(1)} on day 3 if Cr >1, BUN >30 or bilirubin >4`,'Hold NSAIDs, nephrotoxins and, if hypotensive, nonselective beta-blockers'],
+  work:['Diagnostic paracentesis before antibiotics if it won’t delay them: cell count (PMN ≥250 is SBP), inoculate blood culture bottles at the bedside, total protein, glucose, LDH, Gram stain','Blood cultures, UA, chest X-ray','Runyon’s criteria (total protein >1, glucose <50, LDH above serum normal) or polymicrobial Gram stain: CT for secondary peritonitis'],
+  dur:'5–7 days',dispo:'After recovery, long-term prophylaxis (ciprofloxacin 500 mg daily or TMP-SMX DS daily).',ref:'AASLD 2021 ascites, SBP and hepatorenal syndrome guidance'})}},
+cirrhgi:{g:'abd',n:'Cirrhosis with GI bleeding (prophylaxis)',sh:'Prevents SBP and bacteremia from gut gram-negatives',kw:'hematemesis melena varices cirrhosis bleed',set:['ward','icu'],def:'icu',f:c=>R({rx:[c.A===3?L('Ciprofloxacin 400 mg IV q12h (or 500 mg PO BID)','cipro'):L('Ceftriaxone 1 g IV q24h','cro')],need:['gnr'],
+  adj:['Octreotide 50 mcg IV bolus, then 50 mcg/h','Restrictive transfusion (hemoglobin goal 7–8)','IV PPI until endoscopy'],time:'At presentation, before endoscopy.',
+  work:['EGD within 12 h','Diagnostic paracentesis if ascites'],dur:'Up to 7 days (stop at discharge)',pearl:['Prophylaxis reduces infection, rebleeding and death.'],ref:'AASLD 2024 portal hypertension guidance; Baveno VII (2022)'})},
+diarrhea:{g:'abd',n:'Infectious diarrhea or dysentery',sh:'Shigella, Campylobacter, Salmonella, ETEC',kw:'diarrhea bloody dysentery travelers gastroenteritis food poisoning',set:['out','ward','icu'],def:'out',f:c=>{
+  const rx=c.set==='out'?[L('Azithromycin 1 g PO once (or 500 mg daily ×3 days)<small>Only for dysentery, fever with severe illness, immunocompromise, or severe travelers’ diarrhea</small>','azi')]:
+    c.A===3?[L('Azithromycin 500 mg IV/PO daily','azi')]:[L('Ceftriaxone 1–2 g IV q24h<small>Sepsis or suspected enteric fever</small>','cro'),L('+ Azithromycin 500 mg IV/PO daily','azi')];
+  return R({rx,need:['enteric'],alt:['Ciprofloxacin 500 mg PO BID ×3 days, except after travel to South or Southeast Asia (Campylobacter resistance)'],
+  work:['Stool multiplex PCR or culture if fever, blood, severe illness, immunocompromise, or >7 days','Shiga toxin (STEC) testing for bloody diarrhea','C. difficile testing after recent antibiotics or hospitalization','Blood cultures if septic or enteric fever is possible'],
+  dur:'1–3 days',pearl:['Most patients need fluids only.','Avoid antibiotics in suspected STEC (bloody stools with little or no fever): they raise HUS risk.','Loperamide is fine without fever or blood.'],ref:'IDSA 2017 infectious diarrhea guideline'})}},
+cdi:{g:'abd',n:'C. difficile infection',sh:'Toxigenic C. difficile',kw:'diarrhea antibiotics colitis cdiff',set:['out','ward','icu'],def:'ward',setL:{out:'Non-severe (discharge)',ward:'Severe (WBC ≥15k or Cr >1.5)',icu:'Fulminant (shock, ileus, megacolon)'},f:c=>{
+  const rx=c.set==='icu'?[L('Vancomycin 500 mg PO/NG QID','vancpo'),L('+ Metronidazole 500 mg IV q8h','mtz'),L('+ Rectal vancomycin 500 mg in 100 mL saline q6h if ileus','vancpo')]:[L('Fidaxomicin 200 mg PO BID ×10 days (preferred)','fidax')];
+  return R({rx,need:['cdiff'],alt:c.set==='icu'?[]:['Vancomycin 125 mg PO QID ×10 days'],
+  work:['Test only with ≥3 unformed stools in 24 h and no laxatives in 48 h','CBC, creatinine, lactate','CT abdomen/pelvis if fulminant'],ctl:c.set==='icu'?['Surgery consult early: colectomy or loop ileostomy with colonic lavage']:[],
+  dur:'10 days',pearl:['Stop other antibiotics when possible and review PPIs.','Contact precautions; soap and water (alcohol gel doesn’t kill spores).'],ref:'IDSA/SHEA 2021 focused update'})}},
+/* GU & pelvis */
+cystitis:{g:'gu',n:'Cystitis (afebrile, bladder only)',sh:'E. coli, Klebsiella, S. saprophyticus',kw:'dysuria frequency urgency uti bladder',set:['out'],def:'out',f:c=>{
+  const rx=[c.r.preg?(c.A<2?L('Cephalexin 500 mg PO BID ×5–7 days','cex'):L('Nitrofurantoin monohydrate/macrocrystals 100 mg PO BID ×5–7 days','nitro')):c.r.renal?L('Fosfomycin 3 g PO once','fos'):L('Nitrofurantoin monohydrate/macrocrystals 100 mg PO BID ×5 days','nitro')];
+  return R({rx,need:flex(c,['gnr'],['esbl']),
+  alt:['TMP-SMX DS 1 tab PO BID ×3 days, if local resistance <20% and not used in 3 months','Fosfomycin 3 g PO once'].concat(c.A===0?['Pivmecillinam 185 mg PO TID ×3–7 days']:[]).concat(['Beta-lactams (cefpodoxime 100 mg BID ×5–7 days) work less well','Avoid fluoroquinolones for cystitis']),
+  work:['UA','Urine culture if pregnant, male, recurrent, recent antibiotics, or atypical','Pregnancy test'],
+  dur:c.r.preg?'5–7 days; culture after treatment':'3–5 days (5 for nitrofurantoin, 3 for TMP-SMX)',
+  pearl:['Men without fever: 7 days of TMP-SMX or a fluoroquinolone; nitrofurantoin and fosfomycin don’t reach the prostate.','Fever, flank pain or systemic signs: treat as pyelonephritis.','Treat asymptomatic bacteriuria only in pregnancy or before urologic procedures.'],
+  ref:'IDSA 2010 uncomplicated cystitis and pyelonephritis; ACOG 2023 UTI in pregnancy'})}},
+pyelo:{g:'gu',n:'Pyelonephritis or complicated UTI',sh:'E. coli, Klebsiella, Proteus; Pseudomonas and enterococci with healthcare exposure',kw:'flank pain fever uti pyelonephritis cva tenderness catheter urosepsis',set:['out','ward','icu'],def:'ward',f:c=>{
+  const rx=[];
+  if(c.set==='out'){
+    rx.push(c.A===3?L(`Gentamicin ${kg(5,0,'mg')} IV once in the ED`,'gent'):c.r.esbl?L('Ertapenem 1 g IV once in the ED<small>ESBL history; oral step-down from prior susceptibilities</small>','erta'):L('Ceftriaxone 1 g IV once in the ED','cro'));
+    rx.push(c.r.qt||c.r.preg?L('Then cefpodoxime 200 mg PO BID ×7 days (or TMP-SMX DS BID ×7 days if susceptible and not pregnant)','cefpo'):L('Then ciprofloxacin 500 mg PO BID ×7 days (or levofloxacin 750 mg daily ×5–7 days)','cipro'))}
+  else if(c.set==='icu'){rx.push(apBL(c,false));if(c.A===3)rx.push(ADDV('No beta-lactams: gram-positive coverage'))}
+  else rx.push(c.A===3?L(`Aztreonam 2 g IV q8h (or gentamicin ${kg(5,7,'mg')} IV q24h)`,'azt'):c.r.esbl?L('Ertapenem 1 g IV q24h<small>ESBL history</small>','erta'):c.r.pseudo||c.r.recent?L('Cefepime 2 g IV q8h','cfp'):L('Ceftriaxone 1 g IV q24h','cro'));
+  return R({rx,need:flex(c,['gnr'].concat(c.set==='icu'||c.r.recent?['pseudo']:[])),
+  opt:[L('?+ Ampicillin 2 g IV q6h or vancomycin if gram-positive cocci on the urine Gram stain (enterococcus: catheter, recent instrumentation)','amp')],
+  time:c.set==='icu'?'Within 1 hour if septic shock.':'',
+  work:['Urine culture before antibiotics; review prior urine isolates and pick an agent they were susceptible to','Blood cultures if septic','Pregnancy test','Renal ultrasound or CT if septic, stone history, or not improving in 48–72 h','Catheter in place >2 weeks: replace it and culture from the new one'],
+  ctl:['Infected obstructing stone: emergent decompression (ureteral stent or nephrostomy)'],
+  dur:'7 days total with a non-fluoroquinolone the isolate is susceptible to; 5–7 days with a fluoroquinolone',
+  dispo:c.r.preg?'Pregnant: admit for IV ceftriaxone.':'Discharge if tolerating PO, not septic, not pregnant, no obstruction, and reliable follow-up.',
+  pearl:['Oral fluoroquinolone alone is reasonable when local resistance is ≤10%; otherwise give the IV dose first.','Nitrofurantoin and oral fosfomycin don’t treat pyelonephritis.'],ref:'IDSA 2025 complicated UTI guideline'})}},
+prost:{g:'gu',n:'Acute bacterial prostatitis',sh:'E. coli and enteric gram-negatives; gonorrhea and chlamydia in younger men',kw:'perineal pain dysuria retention prostate fever',set:['out','ward','icu'],def:'out',f:c=>{
+  const rx=[];
+  if(c.set==='out')rx.push(c.r.sti?L('Ceftriaxone 500 mg IM once + doxycycline 100 mg PO BID ×10 days<small>STI risk</small>','cro','doxy'):c.r.qt?L('TMP-SMX DS 1 tab PO BID ×2–4 weeks (if susceptible)','tmp'):L('Ciprofloxacin 500 mg PO BID (or levofloxacin 500–750 mg daily) ×2–4 weeks','cipro'));
+  else if(c.set==='icu'||c.r.recent)rx.push(apBL(c,false));
+  else rx.push(c.A===3?L('Ciprofloxacin 400 mg IV q12h','cipro'):L('Ceftriaxone 1–2 g IV q24h','cro'));
+  return R({rx,need:flex(c,['gnr'].concat(c.r.sti?['gc','ct']:[])),
+  work:['UA and urine culture','Bladder scan for retention (catheter or suprapubic tube if needed)','No prostatic massage','CT or transrectal ultrasound if not improving in 48 h (abscess)'],
+  dur:'2–4 weeks',ref:'EAU 2024 urological infections guideline'})}},
+pid:{g:'gu',n:'PID or tubo-ovarian abscess',sh:'Gonorrhea, chlamydia, anaerobes, enteric gram-negatives',kw:'pelvic pain cervical motion tenderness vaginal discharge adnexal',set:['out','ward','icu'],def:'out',f:c=>{
+  const w=W(),big=w&&w>=150,rx=[];
+  if(c.set==='out'){if(c.A===3)rx.push(L('Levofloxacin 500 mg PO daily + metronidazole 500 mg PO BID ×14 days<small>Only if gonorrhea is unlikely; test of cure</small>','levo','mtz'));
+    else rx.push(L(`Ceftriaxone ${big?'1 g':'500 mg'} IM once${big?' (≥150 kg)':''}`,'cro'),L('+ Doxycycline 100 mg PO BID ×14 days','doxy'),L('+ Metronidazole 500 mg PO BID ×14 days','mtz'))}
+  else{if(c.A===3)rx.push(L(`Clindamycin 900 mg IV q8h + gentamicin ${kg(2,0,'mg')} IV load, then 1.5 mg/kg q8h (or 3–5 mg/kg q24h)`,'clinda','gent'),L('Then doxycycline 100 mg PO BID to complete 14 days','doxy'));
+    else rx.push(L('Ceftriaxone 1 g IV q24h','cro'),L('+ Doxycycline 100 mg PO/IV q12h (PO when possible)','doxy'),L('+ Metronidazole 500 mg PO/IV q12h','mtz'))}
+  return R({rx,need:['gc','ct','anaer','gnr','strep'],alt:c.A===3?[]:['Cefoxitin 2 g IV q6h + doxycycline 100 mg q12h'],
+  work:['Pregnancy test (ectopic first)','NAAT for gonorrhea, chlamydia and trichomonas; HIV and syphilis','Pelvic ultrasound if severe or a TOA is suspected','Consider appendicitis and ovarian torsion'],
+  ctl:['TOA: IR drainage if large (≥7–8 cm) or no response in 48–72 h; ruptured TOA needs surgery'],
+  dur:'14 days total',dispo:'Admit for TOA, pregnancy, severe illness or high fever, vomiting, a surgical emergency not excluded, or failed or unreliable oral therapy. Reassess within 72 h.',
+  pearl:['An IUD doesn’t need to be removed.','Treat partners from the past 60 days.'],ref:'CDC STI Treatment Guidelines 2021'})}},
+sti:{g:'gu',n:'Cervicitis or urethritis (gonorrhea, chlamydia)',sh:'N. gonorrhoeae, C. trachomatis',kw:'discharge dysuria std sti urethritis cervicitis gonorrhea chlamydia',set:['out'],def:'out',f:c=>{
+  const w=W(),big=w&&w>=150;
+  const rx=c.A===3?[L('Gentamicin 240 mg IM once + azithromycin 2 g PO once','gent','azi')]:[L(`Ceftriaxone ${big?'1 g':'500 mg'} IM once${big?' (≥150 kg)':''}`,'cro'),c.r.preg?L('+ Azithromycin 1 g PO once<small>Pregnancy: in place of doxycycline</small>','azi'):L('+ Doxycycline 100 mg PO BID ×7 days, if chlamydia isn’t excluded','doxy')];
+  return R({rx,need:['gc','ct'],opt:[L('?+ Metronidazole 500 mg PO BID ×7 days (women) or 2 g once (men) for trichomoniasis','mtz')],
+  work:['NAAT at each exposed site (urine or vaginal, rectal, pharyngeal)','HIV and syphilis testing; pregnancy test','HIV PEP or PrEP assessment'],
+  dur:'Single dose (doxycycline 7 days)',dispo:'No sex for 7 days after treatment and until partners are treated; expedited partner therapy; retest in 3 months.',
+  pearl:['Pharyngeal gonorrhea: test of cure 7–14 days after treatment.'],ref:'CDC STI Treatment Guidelines 2021 (gonorrhea update 2020)'})}},
+epid:{g:'gu',n:'Epididymitis or orchitis',sh:'Gonorrhea and chlamydia; enteric organisms with no STI risk',kw:'scrotal pain testicle swelling epididymis',set:['out','ward'],def:'out',opts:[['sti','Likely STI'],['anal','STI, with insertive anal sex'],['ent','Enteric only (no STI risk)']],optDef:c=>c.r.old&&!c.r.sti?'ent':'sti',f:c=>{
+  const rx=c.opt==='ent'?[L('Levofloxacin 500 mg PO daily ×10 days','levo')]:c.opt==='anal'?[L('Ceftriaxone 500 mg IM once','cro'),L('+ Levofloxacin 500 mg PO daily ×10 days','levo')]:
+    c.A===3?[L('Gentamicin 240 mg IM once + azithromycin 2 g PO once<small>Discuss with ID</small>','gent','azi')]:[L('Ceftriaxone 500 mg IM once','cro'),L('+ Doxycycline 100 mg PO BID ×10 days','doxy')];
+  return R({rx,need:c.opt==='ent'?['gnr']:c.opt==='anal'?['gc','ct','gnr']:['gc','ct'],
+  work:['Scrotal Doppler ultrasound if torsion is possible','NAAT for gonorrhea and chlamydia','UA and urine culture'],dur:'10 days',
+  dispo:'Admit for abscess, sepsis, or failure of oral therapy.',ref:'CDC STI Treatment Guidelines 2021'})}},
+endomet:{g:'gu',n:'Postpartum endometritis',sh:'Polymicrobial: streptococci, gram-negatives, anaerobes',kw:'postpartum fever uterine tenderness cesarean lochia',set:['ward','icu'],def:'ward',f:c=>{
+  const rx=c.set==='icu'?[apBL(c,true),ADDV('Postpartum sepsis: group A strep and MRSA'),L('+ Clindamycin 900 mg IV q8h (toxin suppression if group A strep is possible)','clinda')]:[L(`Clindamycin 900 mg IV q8h + gentamicin ${kg(5,0,'mg')} IV q24h`,'clinda','gent')];
+  return R({rx,need:['strep','gnr','anaer'].concat(c.set==='icu'?['mrsa','toxin']:[]),
+  opt:c.set==='icu'||c.A>0?[]:[L('?+ Ampicillin 2 g IV q6h if no improvement in 24–48 h or GBS-colonized','amp')],alt:c.A===0?['Ampicillin-sulbactam 3 g IV q6h']:[],
+  work:['Blood cultures, CBC, lactate','Pelvic ultrasound for retained products'],ctl:['Retained products: uterine evacuation','Abscess or infected hematoma: drainage'],
+  dur:'Until afebrile 24–48 h; no oral step-down unless bacteremic',pearl:['Intra-amniotic infection: ampicillin 2 g IV q6h + gentamicin 5 mg/kg q24h; add clindamycin or metronidazole after cesarean.','Fever persisting despite antibiotics: septic pelvic thrombophlebitis.'],
+  ref:'ACOG Committee Opinion 712; Cochrane 2015 antibiotic regimens for endometritis after delivery'})}},
+/* Skin & soft tissue */
+cell:{g:'skin',n:'Cellulitis or erysipelas (non-purulent)',sh:'Beta-hemolytic streptococci, MSSA',kw:'red swollen leg skin infection erysipelas warm',set:['out','ward','icu'],def:'out',f:c=>{
+  const m=c.r.mrsa||c.r.idu,rx=[];
+  if(c.set==='out'){const cl=c.A===3;rx.push(cl?L('Clindamycin 300–450 mg PO TID ×5 days (or linezolid 600 mg BID)','clinda'):c.A===2?L('Cefuroxime 500 mg PO BID ×5 days<small>Side chain unlike amoxicillin’s; clindamycin 300–450 mg TID is the alternative</small>','cefur'):L('Cephalexin 500 mg PO QID ×5 days','cex'));
+    if(m&&!cl)rx.push(L('+ TMP-SMX 1–2 DS tabs PO BID or doxycycline 100 mg PO BID<small>MRSA risk or penetrating trauma (or clindamycin alone)</small>','tmp'))}
+  else if(c.set==='icu')rx.push(VANC(),apBL(c,false,true));
+  else rx.push(m||c.A===3?VANC(m?'MRSA risk, injection drug use or penetrating trauma':''):L(`Cefazolin ${W()>=120?'3 g':'2 g'} IV q8h`,'cfz'));
+  return R({rx,need:['strep','mssa'].concat(m||c.set==='icu'?['mrsa']:[]).concat(c.set==='icu'?['gnr']:[]),alt:c.set==='out'&&c.A===0?['Dicloxacillin 500 mg PO QID','Penicillin VK 500 mg PO QID for classic erysipelas']:[],
+  work:['Mark the borders','Blood cultures only with systemic toxicity, immunocompromise, immersion or animal bite','Bedside ultrasound for an occult abscess'],
+  dur:'5 days; extend if not improving',dispo:c.set==='icu'?'Systemic toxicity or rapid spread: think necrotizing infection.':'',
+  pearl:['Elevate the limb; treat tinea pedis, edema and venous stasis.','Redness can spread in the first 24–48 h despite effective therapy.','Bilateral “cellulitis” is usually stasis dermatitis.','Adding TMP-SMX to cephalexin doesn’t help non-purulent cellulitis (Moran, JAMA 2017).'],ref:'IDSA 2014 SSTI guideline'})}},
+abscess:{g:'skin',n:'Abscess or purulent cellulitis',sh:'S. aureus, including MRSA',kw:'boil abscess pus furuncle carbuncle fluctuant',set:['out','ward','icu'],def:'out',f:c=>{
+  const rx=c.set==='out'?[c.r.preg?L('Clindamycin 300–450 mg PO TID ×5–7 days','clinda'):L(`TMP-SMX ${W()>=100?'2 DS tabs':'1–2 DS tabs'} PO BID ×5–7 days`,'tmp')]:c.set==='icu'?[VANC(),apBL(c,false,true)]:[VANC()];
+  return R({rx,need:['mrsa','mssa'].concat(c.set==='icu'?['strep','gnr']:[]),alt:c.set==='out'?['Doxycycline 100 mg PO BID','Clindamycin 300–450 mg PO TID']:['Linezolid 600 mg IV/PO q12h','Daptomycin 4 mg/kg IV daily'],
+  ctl:['Incision and drainage is the treatment'],
+  work:['Antibiotics after drainage for: abscess ≥2 cm, multiple lesions, extensive cellulitis, systemic signs, immunocompromise, extremes of age, face, hand or genitals, or failed drainage','Wound culture from the drainage'],
+  dur:'5–7 days',pearl:['After drainage, TMP-SMX or clindamycin raises cure rates over placebo, even for small abscesses (Talan NEJM 2016; Daum NEJM 2017).'],ref:'IDSA 2014 SSTI guideline'})}},
+nec:{g:'skin',n:'Necrotizing soft-tissue infection',sh:'Group A strep, polymicrobial, Clostridium, Vibrio; includes Fournier’s',kw:'necrotizing fasciitis pain out of proportion crepitus bullae fournier gangrene',set:['icu'],def:'icu',f:c=>R({rx:[VANC(),apBL(c,true,true),L('+ Clindamycin 900 mg IV q8h for toxin suppression','clinda')],need:['strep','mssa','mrsa','gnr','anaer','toxin'],
+  alt:['Linezolid 600 mg IV q12h can replace both vancomycin and clindamycin'],adj:['IVIG can be considered for streptococcal toxic shock'],time:'Immediately. Surgery is the treatment.',
+  ctl:['Emergent surgical debridement; don’t delay for imaging. Planned re-look in 24–36 h'],
+  work:['Lactate, CK, CBC, BMP, blood cultures','LRINEC is not a rule-out tool','CT only if it won’t delay the OR; gas on imaging is a late finding'],
+  dur:'Until no further debridement is needed and the patient is improving, plus 48–72 h afebrile',
+  pearl:['Pain out of proportion, rapid spread, tense edema, bullae, crepitus, skin anesthesia, hypotension.','Saltwater exposure or cirrhosis: add doxycycline for Vibrio.'],ref:'IDSA 2014 SSTI guideline; WSES 2018 NSTI guideline'})},
+bite:{g:'skin',n:'Animal or human bite',sh:'Pasteurella, Capnocytophaga, Eikenella, strep, S. aureus, anaerobes',kw:'dog cat human bite clenched fist wound',set:['out','ward','icu'],def:'out',opts:[['dog','Dog'],['cat','Cat'],['human','Human']],optDef:'dog',f:c=>{
+  const rx=[];
+  if(c.set==='out')rx.push(c.A===0?L('Amoxicillin-clavulanate 875/125 mg PO BID: 3–5 days for prophylaxis, 5–14 days for infection','amc'):L('Doxycycline 100 mg PO BID (or TMP-SMX DS BID) + metronidazole 500 mg PO TID (or clindamycin 300–450 mg TID)','doxy','mtz'));
+  else{rx.push(c.A===0?L('Ampicillin-sulbactam 3 g IV q6h','ams'):c.A===3?L('Moxifloxacin 400 mg IV daily (or ciprofloxacin + metronidazole)','moxi'):L('Ceftriaxone 1 g IV q24h + metronidazole 500 mg IV q8h (or ertapenem 1 g IV q24h)','cro','mtz'));if(c.set==='icu'||c.r.mrsa)rx.push(ADDV('MRSA risk or severe infection'))}
+  return R({rx,need:['strep','mssa','anaer','past'].concat(c.set==='icu'||c.r.mrsa?['mrsa']:[]),alt:c.set==='out'&&c.A>0&&c.A<3?['Moxifloxacin 400 mg PO daily alone']:[],
+  adj:['Tetanus: Tdap if >5 years since the last dose (TIG too if <3 doses)',`Rabies PEP for bats, raccoons, skunks, foxes, or a dog, cat or ferret not available for 10-day observation: rabies immune globulin ${kg(20,0,'IU')} infiltrated into the wound, plus vaccine on days 0, 3, 7, 14 (and 28 if immunocompromised)`],
+  work:['Irrigate, explore and debride','X-ray for fracture, foreign body or tooth','Hand: check tendons and joint; clenched-fist injuries go to hand surgery','Leave most wounds open; facial wounds can be closed after irrigation'],
+  dur:'Prophylaxis 3–5 days; established infection 5–14 days',
+  dispo:{cat:'Cat bites: high infection risk; give prophylaxis to all.',human:'Human bites: prophylaxis for all; clenched-fist injuries need hand surgery evaluation.',dog:'Dog bites: prophylaxis for moderate–severe wounds, punctures, hand or face, or a high-risk host.'}[c.opt]||'',
+  pearl:['Prophylaxis indications: cat or human bites, punctures, crush injuries, hand, face or genitals, near a bone or joint, edema, immunocompromise, asplenia, advanced liver disease.','Asplenia or alcohol use: Capnocytophaga sepsis; amoxicillin-clavulanate covers it.'],
+  ref:'IDSA 2014 SSTI guideline; CDC/ACIP rabies PEP'})}},
+water:{g:'skin',n:'Water-exposure wound infection',sh:'Vibrio (saltwater), Aeromonas (freshwater), plus strep and staph',kw:'ocean lake river fishing oyster saltwater freshwater wound vibrio',set:['out','ward','icu'],def:'out',opts:[['salt','Saltwater, brackish, or raw seafood'],['fresh','Freshwater']],optDef:'salt',f:c=>{
+  const salt=c.opt!=='fresh',rx=[];
+  if(c.set==='out'){rx.push(c.A===3?L('Clindamycin 300–450 mg PO TID','clinda'):c.A===2?L('Cefuroxime 500 mg PO BID','cefur'):L('Cephalexin 500 mg PO QID','cex'));
+    rx.push(salt?L('+ Doxycycline 100 mg PO BID (Vibrio)','doxy'):L('+ Ciprofloxacin 750 mg PO BID (Aeromonas; or levofloxacin 750 mg daily)','cipro'))}
+  else{if(salt)rx.push(c.A===3?L('Ciprofloxacin 400 mg IV q12h','cipro'):L('Ceftriaxone 1–2 g IV q24h (or ceftazidime 2 g IV q8h)','cro'),L('+ Doxycycline 100 mg IV/PO q12h (Vibrio)','doxy'));
+    else rx.push(L('Ciprofloxacin 400 mg IV q12h (Aeromonas; or levofloxacin 750 mg daily)','cipro'),c.A===3?ADDV():L(`+ Cefazolin ${W()>=120?'3 g':'2 g'} IV q8h for strep and S. aureus`,'cfz'));
+    if(c.set==='icu')rx.push(ADDV('Severe or necrotizing'))}
+  return R({rx,need:['strep','mssa',salt?'vibrio':'aero'].concat(c.set==='icu'?['mrsa']:[]),
+  work:['Wound culture: tell the lab about the water exposure','Blood cultures if febrile or hemorrhagic bullae'],ctl:['Surgical evaluation for bullae, rapid spread, or necrosis'],dur:'7–14 days',
+  pearl:['Vibrio vulnificus with liver disease, hemochromatosis or immunocompromise: hemorrhagic bullae and sepsis, with mortality near 50%. ICU and surgery early.'],ref:'IDSA 2014 SSTI guideline'})}},
+dfi:{g:'skin',n:'Diabetic foot infection',sh:'Staph and strep; gram-negatives and anaerobes when moderate or severe',kw:'diabetic foot ulcer wound osteomyelitis toe',set:['out','ward','icu'],def:'ward',setL:{out:'Mild (discharge)',ward:'Moderate (admit)',icu:'Severe / septic'},f:c=>{
+  const rx=[];let need;
+  if(c.set==='out'){rx.push(c.A===3?L('Clindamycin 300–450 mg PO TID','clinda'):c.A===2?L('Cefuroxime 500 mg PO BID','cefur'):c.A===1?L('Cephalexin 500 mg PO QID','cex'):L('Cephalexin 500 mg PO QID (or amoxicillin-clavulanate 875/125 mg BID after recent antibiotics or for a chronic wound)','cex'));
+    if(c.r.mrsa&&c.A!==3)rx.push(L('+ Doxycycline 100 mg PO BID or TMP-SMX 1–2 DS tabs BID (MRSA risk)','doxy'));need=['strep','mssa']}
+  else if(c.set==='icu'||c.r.pseudo){rx.push(VANC(),apBL(c,true,true));need=['strep','mssa','mrsa','gnr','anaer','pseudo']}
+  else{rx.push(c.A===0?L('Ampicillin-sulbactam 3 g IV q6h','ams'):c.A===3?L('Moxifloxacin 400 mg IV daily','moxi'):c.r.esbl?L('Ertapenem 1 g IV q24h','erta'):L('Ceftriaxone 2 g IV q24h + metronidazole 500 mg IV q8h','cro','mtz'));if(c.r.mrsa||c.r.recent)rx.push(ADDV('MRSA risk'));need=['strep','mssa','gnr','anaer']}
+  return R({rx,need:flex(c,need,['mrsa','esbl']),
+  work:['Deep tissue or bone specimen for culture (not a swab)','Probe-to-bone test; foot X-ray; MRI if osteomyelitis is suspected','ESR and CRP (ESR >70 suggests osteomyelitis)','ABI or toe pressures; glucose control'],
+  ctl:['Urgent surgery for abscess, gas, necrosis, or compartment syndrome','Vascular surgery for ischemia'],
+  dur:'Soft tissue 1–2 weeks; osteomyelitis 6 weeks (about 3 weeks after resection)',pearl:['Don’t treat clinically uninfected ulcers with antibiotics.','Cover Pseudomonas only with risk factors (prior isolate, maceration, warm climate).'],ref:'IWGDF/IDSA 2023 diabetic foot infection guideline'})}},
+/* Bone & joint */
+joint:{g:'bone',n:'Septic arthritis',sh:'S. aureus, streptococci; gram-negatives, gonococcus',kw:'hot swollen joint knee monoarthritis arthrocentesis prosthetic',set:['ward','icu'],def:'ward',opts:[['native','Native joint'],['pji','Prosthetic joint']],optDef:c=>c.r.hw?'pji':'native',f:c=>{
+  const pji=c.opt==='pji',gn=c.r.idu||c.r.immuno||c.r.recent||c.r.pseudo||pji,rx=[VANC()];
+  rx.push(c.A===3?L('+ Aztreonam 2 g IV q8h (or ciprofloxacin 400 mg IV q12h)','azt'):gn?L('+ Cefepime 2 g IV q8h','cfp'):L('+ Ceftriaxone 2 g IV q24h','cro'));
+  return R({rx,need:['strep','mssa','mrsa','gnr'].concat(gn?['pseudo']:[]).concat(c.r.sti?['gc']:[]),
+  time:pji?'If stable, hold antibiotics until orthopedics aspirates the joint; treat now if septic.':'Aspirate first if it won’t delay antibiotics in a septic patient.',
+  work:['Arthrocentesis: cell count with differential, Gram stain, culture, crystals','Blood cultures ×2; ESR, CRP; X-ray','Gonorrhea and chlamydia NAAT (urine, pharynx, rectum) if sexually active'],
+  ctl:['Orthopedics for washout (arthroscopic or open)'],dur:pji?'Per orthopedics and ID (depends on retention vs exchange)':'2–4 weeks after drainage',
+  pearl:['Synovial WBC >50,000 strongly suggests infection, but lower counts don’t exclude it; crystals don’t either.'].concat(c.r.sti?['Disseminated gonococcal infection: ceftriaxone 1 g IV q24h (plus doxycycline if chlamydia isn’t excluded); stop vancomycin once the Gram stain and cultures argue against S. aureus.']:[]),
+  ref:'BSR hot swollen joint guideline; IDSA 2013 prosthetic joint infection; CDC STI Treatment Guidelines 2021 (DGI)'})}},
+spine:{g:'bone',n:'Vertebral osteomyelitis or spinal epidural abscess',sh:'S. aureus (most), streptococci, gram-negatives',kw:'back pain fever injection drug use epidural abscess discitis',set:['ward','icu'],def:'ward',opts:[['vo','Osteomyelitis, neuro intact'],['sea','Epidural abscess or neuro deficit']],optDef:'sea',f:c=>{
+  const gn=c.r.idu||c.r.recent||c.r.pseudo||c.r.hw,rx=[VANC()];
+  rx.push(c.A===3?L('+ Aztreonam 2 g IV q8h (or levofloxacin 750 mg daily)','azt'):gn?L('+ Cefepime 2 g IV q8h','cfp'):L('+ Ceftriaxone 2 g IV q24h','cro'));
+  const sea=c.opt==='sea';
+  return R({rx,need:['mssa','mrsa','strep','gnr'].concat(gn?['pseudo']:[]),
+  time:sea?'Start now, after blood cultures.':'Stable with a normal neuro exam: hold antibiotics until blood cultures (and an image-guided biopsy if cultures are negative).',
+  work:['MRI of the whole spine with and without contrast','ESR, CRP, blood cultures ×2','Serial neuro checks','TTE if S. aureus bacteremia'],
+  ctl:sea?['Emergent neurosurgery for decompression']:['IR-guided biopsy if blood cultures are negative'],dur:'6 weeks (oral step-down acceptable per OVIVA)',ref:'IDSA 2015 native vertebral osteomyelitis guideline'})}},
+openfx:{g:'bone',n:'Open fracture',sh:'Skin flora; gram-negatives with severe wounds; Clostridium with soil',kw:'open fracture compound trauma bone exposed',set:['ward','icu'],def:'ward',opts:[['g12','Gustilo I–II'],['g3','Gustilo III'],['farm','III with soil, farm or fecal contamination']],optDef:'g12',optTip:'I: wound <1 cm, clean. II: 1–10 cm, moderate soft-tissue injury. III: >10 cm, extensive soft-tissue damage, high energy, or vascular injury',f:c=>{
+  const g3=c.opt!=='g12',rx=[];
+  if(!g3)rx.push(c.A===3?L('Clindamycin 900 mg IV q8h','clinda'):L(`Cefazolin ${W()>=120?'3 g':'2 g'} IV q8h`,'cfz'));
+  else rx.push(c.A===3?L('Clindamycin 900 mg IV q8h + aztreonam 2 g IV q8h','clinda','azt'):L('Ceftriaxone 2 g IV q24h','cro'));
+  if(c.opt==='farm')rx.push(c.A===0?L('+ Penicillin G 4 million units IV q4h (Clostridium)','pcng'):L('+ Metronidazole 500 mg IV q8h (Clostridium)','mtz'));
+  if(c.r.mrsa)rx.push(ADDV('MRSA colonization'));
+  return R({rx,need:['strep','mssa'].concat(g3?['gnr']:[]).concat(c.opt==='farm'?['anaer']:[]).concat(c.r.mrsa?['mrsa']:[]),
+  alt:g3&&c.A<3?['Cefazolin + gentamicin 5 mg/kg IV q24h']:[],adj:['Tetanus: Tdap if not up to date; TIG if <3 lifetime doses or unknown with a dirty wound'],
+  time:'Within 1 hour of arrival.',work:['Neurovascular exam; X-rays','Photograph the wound, remove gross contamination, saline-moistened sterile dressing, splint'],
+  ctl:['Orthopedics for irrigation and debridement (within 24 h)'],
+  dur:g3?'Up to 72 h after injury, and no more than 24 h after wound closure':'24 h after wound closure',
+  pearl:['Fresh or saltwater contamination: add coverage for Aeromonas or Vibrio.'],ref:'ACS TQIP Best Practices in Orthopaedic Trauma (2015); EAST 2011 open fracture guideline'})}},
+/* Systemic */
+sepsis:{g:'sys',n:'Sepsis, source unknown',sh:'Broad gram-positive, gram-negative and anaerobic coverage until a source declares',kw:'sepsis septic shock fever hypotension unknown source lactate',set:['ward','icu'],def:'icu',f:c=>{
+  const v=c.set==='icu'||c.r.mrsa||c.r.recent||c.r.immuno||c.r.idu||c.r.hw||c.A===3,rx=[apBL(c,true)];
+  if(v)rx.push(ADDV('Stop at 48–72 h if cultures don’t grow MRSA'));
+  const w=W();
+  return R({rx,need:flex(c,['strep','mssa','gnr','pseudo','anaer'].concat(v?['mrsa']:[])),
+  opt:(v?[]:[L('?+ Vancomycin if MRSA risk, a skin, line or bone source, or deterioration','vanc')]).concat([L('?+ Doxycycline 100 mg IV q12h with tick exposure, rash, or thrombocytopenia (rickettsial disease)','doxy'),L('?+ Clindamycin 900 mg IV q8h if toxin-mediated shock (erythroderma, necrotizing infection)','clinda'),L('?+ Micafungin 100 mg IV daily with Candida risk (TPN, femoral line, abdominal surgery, prolonged broad antibiotics)','mica')]),
+  adj:[`Balanced crystalloid 30 mL/kg${w?` = <b>${Math.round(w*30/250)*250} mL</b>`:''} for hypotension or lactate ≥4, then reassess`,'Norepinephrine for MAP <65 despite fluids','Hydrocortisone 50 mg IV q6h with ongoing vasopressor need'],
+  time:c.set==='icu'?'Within 1 hour (septic shock or probable sepsis).':'Within 1 hour if sepsis is probable; within 3 hours if possible and there is no shock.',
+  work:['Blood cultures ×2 before antibiotics (don’t delay antibiotics more than ~45 min for them)','Lactate; UA and urine culture; chest X-ray','Imaging by exam to find the source'],
+  dur:'Define the source and narrow at 48–72 h',
+  pearl:['Extended-infusion beta-lactams after the first dose (BLING III).','Cefepime and piperacillin-tazobactam caused similar AKI; cefepime caused more neurologic dysfunction (ACORN).'].concat(c.r.asplenia?['Asplenia: fulminant pneumococcal, meningococcal and Capnocytophaga sepsis; use meningitic ceftriaxone doses if meningitis is possible.']:[]),
+  ref:'Surviving Sepsis Campaign 2021; ACORN (JAMA 2023); BLING III (JAMA 2024)'})}},
+neut:{g:'sys',n:'Neutropenic fever',sh:'Gram-negatives including Pseudomonas; gram-positives from lines and mucositis',kw:'chemotherapy neutropenia anc fever cancer',set:['out','ward','icu'],def:'ward',setL:{out:'Low risk, MASCC ≥21 (discharge)'},f:c=>{
+  const rx=[];
+  if(c.set==='out')rx.push(c.A===0?L('Ciprofloxacin 750 mg PO BID + amoxicillin-clavulanate 875/125 mg PO BID','cipro','amc'):L('Ciprofloxacin 750 mg PO BID + clindamycin 300 mg PO q6h','cipro','clinda'));
+  else{rx.push(c.A===3?L('Aztreonam 2 g IV q8h','azt'):c.r.esbl?L('Meropenem 1 g IV q8h<small>ESBL history</small>','mero'):L('Cefepime 2 g IV q8h (or piperacillin-tazobactam 4.5 g q6h, or meropenem 1 g q8h)','cfp'));
+    if(c.set==='icu'||c.r.mrsa||c.A===3)rx.push(ADDV(c.A===3?'No beta-lactams: gram-positive coverage':'Instability, line or skin infection, pneumonia, or MRSA colonization'))}
+  const v=rx.some(l=>l.d.includes('vanc'));
+  return R({rx,need:flex(c,['gnr','pseudo','strep','mssa'].concat(v?['mrsa']:[])),
+  opt:c.set==='out'||v?[]:[L('?+ Vancomycin for hemodynamic instability, catheter or skin infection, pneumonia, or MRSA colonization','vanc')],
+  time:'Within 60 minutes of triage.',
+  work:['Blood cultures from each lumen of any line plus one peripheral','UA and urine culture, chest X-ray','CBC with differential, CMP, lactate'],
+  dur:'Until ANC >500 and afebrile, or per oncology',
+  dispo:c.set==='out'?'Outpatient only if MASCC ≥21 (or CISNE low), first dose in the ED, ≥4 h of observation, reliable 24-h access to care, and not on fluoroquinolone prophylaxis.':'Neutropenic precautions; oncology consult.',
+  pearl:['Antifungal coverage if fever persists after 4–7 days of antibiotics.'],ref:'IDSA 2010 febrile neutropenia guideline; ASCO/IDSA 2018 outpatient management'})}},
+tss:{g:'sys',n:'Toxic shock syndrome',sh:'Group A strep, S. aureus (toxin-mediated)',kw:'erythroderma rash hypotension tampon packing desquamation',set:['icu'],def:'icu',f:c=>R({rx:[VANC(),apBL(c,false,true),L('+ Clindamycin 900 mg IV q8h for toxin suppression','clinda')],need:['strep','mssa','mrsa','gnr','toxin'],
+  alt:['Linezolid 600 mg IV q12h can replace both vancomycin and clindamycin'],adj:['IVIG can be considered for streptococcal TSS'],time:'Immediately.',
+  ctl:['Remove tampons, nasal packing and other foreign bodies','Look for and debride a necrotizing focus'],work:['Blood cultures; cultures of any focus','CK, lactate, CMP, CBC, coagulation studies'],
+  dur:'10–14 days; clindamycin until hemodynamically stable',ref:'IDSA 2014 SSTI guideline'})},
+tick:{g:'sys',n:'Tick-borne illness',sh:'RMSF, ehrlichiosis, anaplasmosis, Lyme',kw:'tick rash fever rmsf ehrlichia anaplasma lyme erythema migrans camping',set:['out','ward','icu'],def:'out',opts:[['rick','Rickettsial (RMSF, ehrlichiosis, anaplasmosis)'],['lyme','Lyme, erythema migrans'],['lymed','Lyme carditis or meningitis']],optDef:'rick',f:c=>{
+  if(c.opt==='lyme')return R({rx:[c.r.preg?(c.A===0?L('Amoxicillin 500 mg PO TID ×14 days','amx'):c.A===3?L('Azithromycin 500 mg PO daily ×7 days','azi'):L('Cefuroxime 500 mg PO BID ×14 days','cefur')):L('Doxycycline 100 mg PO BID ×10 days','doxy')],need:['borr'],
+    alt:['Amoxicillin 500 mg PO TID ×14 days','Cefuroxime 500 mg PO BID ×14 days'],work:['Erythema migrans is a clinical diagnosis; serology is often negative early','ECG if palpitations, syncope or dyspnea (heart block)'],dur:'10 days (doxycycline) or 14 days',ref:'IDSA/AAN/ACR 2020 Lyme disease guideline'});
+  if(c.opt==='lymed')return R({rx:[c.A===3?L('Doxycycline 100 mg IV/PO BID','doxy'):L('Ceftriaxone 2 g IV q24h','cro')],need:['borr'],
+    work:['ECG: admit for PR >300 ms, second- or third-degree block, or symptoms; temporary pacing if needed','LP for meningitis'],dur:'14–21 days; switch to oral doxycycline once improving',ref:'IDSA/AAN/ACR 2020 Lyme disease guideline'});
+  return R({rx:[L('Doxycycline 100 mg PO/IV BID<small>For every age, and in pregnancy, when RMSF is suspected</small>','doxy')],need:['rick'],doxyOK:true,
+  time:'Start on suspicion; don’t wait for testing. Delay beyond day 5 raises RMSF mortality.',
+  work:['CBC (thrombocytopenia, leukopenia), CMP (hyponatremia, transaminases)','Serologies and PCR don’t change acute management'],
+  dur:'At least 3 days after fever resolves, usually 5–7 days (10 days if Lyme co-infection is possible)',
+  pearl:['The rash may be absent early, or never appear; RMSF classically spreads from the wrists and ankles to the trunk and involves the palms and soles.'],ref:'CDC 2016 tick-borne rickettsial disease guidance (MMWR)'})}}
+};
+
+/* Complaints mapped to sources */
+const CC=[['Fever, no clear source',['sepsis','neut','line','endo','tick','tss']],['Fever and cough or dyspnea',['cap','hap','asp','copd','lungabs']],['Headache, fever, stiff neck, confusion',['mening']],
+ ['Sore throat, neck or facial swelling, dental pain',['deepneck','orbital']],['Eye or lid swelling',['orbital']],['Abdominal pain and fever',['iai','biliary','sbp']],['Diarrhea',['diarrhea','cdi']],
+ ['Dysuria or urinary symptoms',['cystitis','pyelo','prost']],['Flank pain and fever',['pyelo']],['Pelvic pain or vaginal discharge',['pid','sti','endomet']],['Penile discharge or scrotal pain',['sti','epid','prost']],
+ ['Red, swollen, painful skin',['cell','abscess','nec','water','dfi']],['Bite or wound',['bite','water','openfx']],['Diabetic foot ulcer',['dfi']],['Hot, swollen joint',['joint']],['Back pain and fever',['spine','pyelo']],
+ ['Rash and fever',['tick','tss','mening','nec']],['Bleeding in cirrhosis',['cirrhgi']],['Fever with a new murmur or injection drug use',['endo','spine','joint']],['Fever after chemotherapy',['neut']],['Postpartum fever',['endomet','pyelo','cell']]];
+
+/* ---------- Compute ---------- */
+function optDefault(s,r){const d=s.optDef;return typeof d==='function'?d({r}):d||''}
+function ctx(syn,over){const s=SY[syn],r=Object.assign({},S.r,over||{});return {set:S.set,A:S.A,r,opt:s&&s.opts&&(!s.optSet||s.optSet.includes(S.set))?(S.optManual?S.opt:optDefault(s,r)):'',w:W()}}
+function warns(Rx,c){const ds=new Set(Rx.rx.flatMap(l=>l.d)),w=[],fq=['levo','moxi','cipro'].some(d=>ds.has(d));
+  if(c.r.preg){if(ds.has('doxy')&&!Rx.doxyOK)w.push('Pregnancy: doxycycline is avoided except for suspected rickettsial disease.');if(fq)w.push('Pregnancy: fluoroquinolones are generally avoided; use only without a safer option.');if(ds.has('tmp')||ds.has('tmpL'))w.push('Pregnancy: avoid TMP-SMX in the first trimester and near term.');if(ds.has('gent'))w.push('Pregnancy: aminoglycosides carry fetal ototoxicity risk; use when the benefit is clear.');if(ds.has('nitro'))w.push('Pregnancy: avoid nitrofurantoin at term and, when alternatives exist, in the first trimester.')}
+  if(c.r.qt){if(fq)w.push('QTc: fluoroquinolones prolong the QT; replete K and Mg and repeat the ECG, or choose another agent.');if(ds.has('azi'))w.push('QTc: azithromycin prolongs the QT; replete K and Mg and repeat the ECG.')}
+  if(c.r.renal){w.push('CrCl <30 or dialysis: doses shown are for normal renal function; pharmacy to adjust (cefepime accumulates and causes neurotoxicity).');if(ds.has('nitro'))w.push('Nitrofurantoin: avoid with CrCl <30.');if(ds.has('tmp'))w.push('TMP-SMX: watch for hyperkalemia.')}
+  if(ds.has('lzd'))w.push('Linezolid: serotonin toxicity with SSRIs and other serotonergic drugs.');
+  return w}
+function calc(syn,over){const s=SY[syn];if(!s)return null;const c=ctx(syn,over);const Rx=s.f(c);Rx.warn=warns(Rx,c);Rx.c=c;
+  const cov=new Set(Rx.rx.flatMap(l=>l.d.flatMap(d=>COV[d]||[])));Rx.cov=cov;Rx.gaps=Rx.need.filter(k=>!cov.has(k));Rx.extra=BROAD.filter(k=>cov.has(k)&&!Rx.need.includes(k));return Rx}
+const sig=x=>JSON.stringify([x.rx,x.opt,x.adj,x.need,x.warn,x.time,x.alt,x.dur,x.dispo,x.pearl,x.ctl]);
+
+/* ---------- Render ---------- */
+const ph=(n,t,cue)=>`<div class="ph"><span class="eb">${n}</span><h2>${t}</h2><p class="cue">${cue}</p></div>`;
+const foot=(prev,next)=>`<div class="pfoot">${prev?`<button class="btn" data-step="${prev[0]}" type="button">← ${prev[1]}</button>`:'<span></span>'}${next?`<button class="btn primary" data-step="${next[0]}" type="button">${next[1]} →</button>`:'<span></span>'}</div>`;
+const setLab=(s,k)=>(s.setL&&s.setL[k])||SETL[k];
+const rgLab=g=>(RG.find(x=>x[0]===g)||[])[1]||'';
+function renderSteps(){const n={src:S.syn?1:0,pt:Object.keys(S.r).filter(k=>S.r[k]).length+(S.A?1:0),rx:0};
+  $('steps').innerHTML=STEPS.map(([k,t,sh],i)=>`<button type="button" class="stepbtn" data-step="${k}" ${S.step===k?'aria-current="step"':''}><span class="n">${i+1}${n[k]?` · ${n[k]}`:''}</span><span class="t"><span class="lg">${t}</span><span class="sh">${sh}</span></span></button>`).join('')}
+const tcard=(k,showRg)=>{const s=SY[k];return `<button type="button" class="tcard" data-syn="${k}" aria-pressed="${S.syn===k}">${showRg?`<span class="rg">${esc(rgLab(s.g))}</span>`:''}<b>${esc(s.n)}</b><span>${esc(s.sh)}</span></button>`};
+function matches(){const w=S.q.toLowerCase().split(/\s+/).filter(Boolean);return Object.keys(SY).filter(k=>{const s=SY[k],h=(s.n+' '+s.sh+' '+s.kw+' '+rgLab(s.g)).toLowerCase();return w.every(x=>h.includes(x))})}
+function paneSrc(){let h=ph(1,'Source','Pick the presumed source by body region, or start from the complaint. Search covers names, organisms and common terms.')+
+  `<div class="sec"><div class="seg" role="group" aria-label="Browse by"><button type="button" data-view="region" class="${S.view==='region'?'on':''}">By region</button><button type="button" data-view="cc" class="${S.view==='cc'?'on':''}">By complaint</button></div>
+  <label class="srch"><span class="flab">Search</span><input id="q" type="search" value="${esc(S.q)}" placeholder="e.g. cellulitis, dysuria, tick, ESBL" autocomplete="off"></label></div>`;
+  if(S.q.trim()){const m=matches();h+=`<div class="sec"><h3>${m.length} match${m.length===1?'':'es'}</h3>${m.length?`<div class="tcards">${m.map(k=>tcard(k,true)).join('')}</div>`:'<p class="empty">Nothing matches. Try a body region or organism.</p>'}</div>`}
+  else if(S.view==='region')h+=RG.map(([g,l])=>`<div class="sec"><h3>${l}</h3><div class="tcards">${Object.keys(SY).filter(k=>SY[k].g===g).map(k=>tcard(k)).join('')}</div></div>`).join('');
+  else{h+=`<div class="sec"><h3>Complaint</h3><div class="chips">${CC.map(([l],i)=>`<button type="button" class="chip" data-cc="${i}" aria-pressed="${S.cc===String(i)}">${esc(l)}</button>`).join('')}</div></div>`;
+    if(S.cc!=='')h+=`<div class="sec"><h3>Likely sources</h3><div class="tcards">${CC[+S.cc][1].map(k=>tcard(k,true)).join('')}</div></div>`}
+  return h+foot(null,S.syn?['pt','Patient']:null)}
+function panePt(){const s=SY[S.syn];if(!s)return ph(2,'Patient','Pick a source first.')+`<p class="empty">Choose the presumed source on step 1.</p>`+foot(['src','Source'],null);
+  const base=calc(S.syn),chg=[],oth=[];
+  RISK.forEach(([k,l,t])=>{const alt=calc(S.syn,{[k]:!S.r[k]});(sig(alt)!==sig(base)?chg:oth).push(`<button type="button" class="chip${sig(alt)!==sig(base)?' chg':''}" data-risk="${k}" aria-pressed="${!!S.r[k]}"${t?` title="${esc(t)}"`:''}>${esc(l)}</button>`)});
+  const showOpt=s.opts&&(!s.optSet||s.optSet.includes(S.set)),cur=ctx(S.syn).opt;
+  return ph(2,'Patient',`${esc(s.n)}. Setting, allergy and risk factors change the regimen; weight fills in the weight-based doses.`)+
+  `<div class="sec"><h3>Setting</h3><div class="chips">${s.set.map(k=>`<button type="button" class="chip" data-set="${k}" aria-pressed="${S.set===k}">${esc(setLab(s,k))}</button>`).join('')}</div></div>`+
+  (showOpt?`<div class="sec"><h3>Type</h3><div class="chips">${s.opts.map(([k,l])=>`<button type="button" class="chip" data-opt="${k}" aria-pressed="${cur===k}">${esc(l)}</button>`).join('')}</div>${s.optTip?`<p class="fine">${esc(s.optTip)}</p>`:''}</div>`:'')+
+  `<div class="sec"><h3>Beta-lactam allergy</h3><div class="chips">${ALG.map(([k,l,t])=>`<button type="button" class="chip al" data-al="${k}" aria-pressed="${S.A===k}">${esc(l)}${t?`<small>${esc(t)}</small>`:''}</button>`).join('')}</div></div>
+  <div class="sec"><h3>Risks that change this regimen</h3>${chg.length?`<div class="chips">${chg.join('')}</div>`:'<p class="fine">None of the risk factors change this regimen.</p>'}</div>
+  ${oth.length?`<div class="sec"><h3>Other risks</h3><div class="chips">${oth.join('')}</div></div>`:''}
+  <div class="sec"><div class="row"><label class="in"><span>Weight (kg)</span><input inputmode="decimal" data-k="wt" value="${esc(S.wt)}" placeholder="kg"></label></div></div>`+foot(['src','Source'],['rx','Regimen'])}
+const lis=a=>a.length?`<ul class="list">${a.map(x=>`<li>${x}</li>`).join('')}</ul>`:'';
+const rxl=(a,cls)=>a.length?`<ul class="rx${cls?' '+cls:''}">${a.map(l=>`<li>${typeof l==='string'?l:l.t}</li>`).join('')}</ul>`:'';
+function paneRx(){const s=SY[S.syn];if(!s)return ph(3,'Regimen','Pick a source first.')+`<p class="empty">Choose the presumed source on step 1.</p>`+foot(['src','Source'],null);
+  const x=calc(S.syn),blk=(t,b)=>b?`<div class="sec"><h3>${t}</h3>${b}</div>`:'';
+  return ph(3,esc(s.n),`${esc(s.sh)}. ${esc(setLab(s,S.set))}${x.c.opt&&s.opts?' · '+esc(s.opts.find(o=>o[0]===x.c.opt)[1]):''}.`)+
+  (x.time?`<div class="${S.set==='icu'?'warnbox':'ambox'}">${esc(x.time)}</div>`:'')+
+  blk('First line',rxl(x.rx))+blk('Alternatives',lis(x.alt))+blk('Consider adding',rxl(x.opt,'opt'))+blk('Alongside the antibiotics',lis(x.adj))+
+  blk('Before the first dose',lis(x.work))+blk('Source control',lis(x.ctl))+(x.dur?blk('Duration',`<p class="kv">${x.dur}</p>`):'')+(x.dispo?blk('Disposition',`<p class="kv">${x.dispo}</p>`):'')+
+  blk('Pearls',lis(x.pearl))+(x.ref?`<p class="cite">${esc(x.ref)}</p>`:'')+foot(['pt','Patient'],null)}
+function noteText(x){const s=SY[S.syn],o=x.c.opt&&s.opts?s.opts.find(q=>q[0]===x.c.opt)[1].toLowerCase():'';
+  let t=`Empiric antibiotics for presumed ${s.n.charAt(0).toLowerCase()+s.n.slice(1)}${o?` (${o})`:''}; ${setLab(s,S.set).toLowerCase()}.\n`;
+  t+=x.rx.map(l=>'- '+strip(l.t.replace(/<small>.*?<\/small>/g,''))).join('\n')+'\n';
+  const cov=x.need.filter(k=>x.cov.has(k)).map(k=>BUG[k]);if(cov.length)t+=`Covers: ${cov.join(', ')}.\n`;
+  const dn=x.work.filter((w,i)=>S.done[i]).map(strip);if(dn.length)t+=`Obtained before antibiotics: ${dn.join('; ')}.\n`;
+  if(S.A)t+=`Allergy: ${ALG[S.A][1].toLowerCase()}; regimen chosen accordingly.\n`;
+  if(x.dur)t+=`Planned duration: ${strip(x.dur)}.${S.set==='out'?'':' Reassess with cultures at 48–72 h and narrow.'}`;return t.trim()}
+function renderOut(){const s=SY[S.syn];
+  if(!s){$('out').innerHTML=`<h3>Regimen</h3><p class="empty">Pick a source to see the empiric regimen, what it covers, and what to send first.</p><p class="fine">Adult doses, normal renal function. Use your local antibiogram and the patient’s prior cultures.</p>`;$('mbarmid').textContent='Pick a source';return}
+  const x=calc(S.syn);let h=`<div class="oh"><span class="pill">${esc(setLab(s,S.set))}</span><b>${esc(s.n)}</b></div>`;
+  if(x.time)h+=`<div class="${S.set==='icu'?'warnbox':'ambox'}">${esc(x.time)}</div>`;
+  h+=`<h3>Empiric regimen</h3>${rxl(x.rx)}`;
+  x.warn.forEach(w=>h+=`<div class="ambox">${esc(w)}</div>`);
+  if(S.A)h+=`<p class="fine">${esc(ALGNOTE[S.A])}</p>`;
+  h+=`<h3>Coverage</h3><div class="cov">${x.need.map(k=>`<span class="${x.cov.has(k)?'y':'n'}">${x.cov.has(k)?'✓':'Gap:'} ${esc(BUG[k])}</span>`).join('')}</div>`;
+  if(x.gaps.length)h+=`<p class="also">Gaps are expected when a guideline accepts them (e.g. amoxicillin for healthy outpatients with CAP); otherwise, check the alternatives.</p>`;
+  if(x.extra.length)h+=`<p class="also">Broader than this source needs: ${x.extra.map(k=>esc(BUG[k])).join(', ')}. Narrow with cultures.</p>`;
+  if(x.work.length)h+=`<h3>Before the first dose</h3><ul class="miss">${x.work.map((w,i)=>`<li data-done="${i}" class="${S.done[i]?'done':''}"><span class="bx">${S.done[i]?'✓':''}</span><span class="tx">${w}</span></li>`).join('')}</ul>`;
+  h+=`<h3>Note</h3><pre class="dict">${esc(noteText(x))}</pre><button class="btn primary" id="copy" type="button">Copy note</button>`;
+  h+=`<p class="fine">Adult doses, normal renal function. Empiric starting points from the cited guidelines: use your local antibiogram and prior cultures, and narrow at 48–72 h.</p>`;
+  $('out').innerHTML=h;$('mbarmid').innerHTML=`<b style="color:var(--ink)">${esc(s.n)}</b>`}
+function renderPane(){$('pane').innerHTML={src:paneSrc,pt:panePt,rx:paneRx}[S.step]()}
+function render(keep){const y=window.scrollY;renderSteps();renderPane();renderOut();if(keep)window.scrollTo(0,y)}
+
+/* ---------- Events ---------- */
+function pick(k){const s=SY[k];S.syn=k;if(!s.set.includes(S.set))S.set=s.def;S.optManual=false;S.opt=optDefault(s,S.r);S.done={};S.step='pt';render();window.scrollTo(0,0)}
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');if(st){S.step=st.dataset.step;render();window.scrollTo(0,0);return}
+  const vw=e.target.closest('[data-view]');if(vw){S.view=vw.dataset.view;render(true);return}
+  const cc=e.target.closest('[data-cc]');if(cc){S.cc=S.cc===cc.dataset.cc?'':cc.dataset.cc;render(true);return}
+  const sy=e.target.closest('[data-syn]');if(sy){pick(sy.dataset.syn);return}
+  const se=e.target.closest('[data-set]');if(se){S.set=se.dataset.set;S.done={};render(true);return}
+  const op=e.target.closest('[data-opt]');if(op){S.opt=op.dataset.opt;S.optManual=true;S.done={};render(true);return}
+  const al=e.target.closest('[data-al]');if(al){S.A=+al.dataset.al;render(true);return}
+  const rk=e.target.closest('[data-risk]');if(rk){const k=rk.dataset.risk;S.r[k]=!S.r[k];render(true);return}
+  const dn=e.target.closest('[data-done]');if(dn){S.done[dn.dataset.done]=!S.done[dn.dataset.done];renderOut();return}
+  if(e.target.closest('#copy')){copy(noteText(calc(S.syn)));return}
+  if(e.target.closest('#seeRecs')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(e.target.closest('#reset')){const b=$('reset');if(b.dataset.armed){S=blank();render();window.scrollTo(0,0)}else{b.dataset.armed='1';b.textContent='Tap again to clear';setTimeout(()=>{delete b.dataset.armed;b.textContent='New patient'},2500)}return}
+});
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='q'){S.q=t.value;const pos=t.selectionStart;renderPane();const n=$('q');n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}return}
+  if(t.dataset.k==='wt'){S.wt=t.value;renderOut()}});
+async function copy(t){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  const el=document.createElement('div');el.className='toast';el.textContent=ok?'Note copied.':'Couldn’t copy on this device.';document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+render();
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>
