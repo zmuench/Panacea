@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Willis">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EBEFF2">
+<title>Willis</title>
+<style>
+/* Willis: stroke localization. Deficits marked by side are matched against vascular syndromes (hemispheric, lacunar, brainstem, cerebellar, retinal, cord), lesion side computed, with structure-by-finding explanations.
+   Base palette matches PANACEA; ehr.css (loaded last) applies the shared EHR look. */
+:root{
+  --bg:#EBEFF2;--surface:#FFFFFF;--ink:#14233A;--muted:#5A6A7E;--line:#D2DAE1;
+  --accent:#1D4ED0;--accent-ink:#FFFFFF;--accent-soft:#E1E9FB;
+  --warn:#A8261C;--warn-soft:#FBE7E5;--amber:#8A5A00;--amber-soft:#FCF0D6;--ok:#1D6E49;--ok-soft:#E1F2E9;--paper:#FBFCFD;
+  --f-body:"Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light only;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.titlerow{display:flex;align-items:center;gap:8px}
+.top h1{margin:0;font-size:1.5rem}
+.top p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.homebtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:-6px;border-radius:10px;color:var(--muted);text-decoration:none}
+.homebtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;min-height:38px;cursor:pointer;font-weight:700;font-size:.9rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{min-height:30px;padding:4px 10px;font-size:.82rem}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:var(--bg);padding-block:8px;margin-top:10px}
+.stepbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+.stepbtn .n{font-size:.7rem;font-weight:700;color:var(--muted)}
+.stepbtn .t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stepbtn .sh{display:none}
+.mbar{display:none}
+.stepbtn[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;flex-direction:column;gap:3px}
+.ph .eb{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.ph h2{margin:0;font-size:1.3rem}
+.ph .cue{margin:0;color:var(--muted);font-size:.9rem}
+.sec h3{margin:0 0 8px;font-size:.98rem}
+.sec{display:flex;flex-direction:column;gap:8px}
+.flab{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:.88rem;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.chip small{display:block;font-size:.72rem;opacity:.8;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.in{display:flex;flex-direction:column;gap:3px;min-width:92px;flex:1 1 92px;max-width:150px}
+.in>span{font-size:.74rem;font-weight:700;color:var(--muted)}
+.in input,.in select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:var(--paper);font-size:16px;width:100%;min-height:38px}
+.in input:focus,.in select:focus{outline:2px solid var(--accent);outline-offset:0}
+.in.wide{max-width:none;flex:2 1 180px}
+.calc{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.kpi{background:#F4F6F8;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.kpi.bad{background:var(--warn-soft)}.kpi.bad b{color:var(--warn)}
+.kpi.mid{background:var(--amber-soft)}.kpi.mid b{color:var(--amber)}
+.kpi.good{background:var(--ok-soft)}.kpi.good b{color:var(--ok)}
+table.set{width:100%;border-collapse:collapse;font-size:.92rem}
+table.set th,table.set td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.set th{width:34%;color:var(--muted);font-weight:700;font-size:.8rem}
+table.set td b{font-size:1.02rem}
+table.set td small{display:block;color:var(--muted)}
+.cite{font-size:.72rem;color:var(--muted);font-style:italic}
+.note-box{background:#F4F6F8;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px;text-align:left;cursor:pointer}
+.tcard b{display:block}.tcard span{font-size:.8rem;color:var(--muted)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow{border-left:3px solid var(--accent);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.flow h4{margin:6px 0 0;font-size:.9rem}
+.out{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-height:calc(100vh - 90px);overflow:auto}
+.out h3{margin:0;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rec{border-radius:10px;padding:9px 11px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.rec .h{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.rec .h b{font-size:.95rem}
+.rec p{margin:0;font-size:.86rem}
+.pri{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px}
+.rec.now{border-color:#E5A69F;background:#FFF7F6}.rec.now .pri{background:var(--warn-soft);color:var(--warn)}
+.rec.next{border-color:#EBCB86;background:#FFFCF4}.rec.next .pri{background:var(--amber-soft);color:var(--amber)}
+.rec.con .pri{background:var(--accent-soft);color:var(--accent)}
+.rec.ok{border-color:#A9D6BE;background:#F6FBF8}.rec.ok .pri{background:var(--ok-soft);color:var(--ok)}
+.miss{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.miss li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;cursor:pointer}
+.miss .bx{flex:none;width:18px;height:18px;border:1.5px solid #9AA9B8;border-radius:4px;margin-top:1px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700}
+.miss li.done .bx{background:var(--ok);border-color:var(--ok)}
+.miss li.done .tx{color:var(--muted);text-decoration:line-through}
+.miss .tx small{display:block;color:var(--muted);font-size:.74rem}
+pre.dict{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:#F4F6F8;border-radius:10px;padding:10px;margin:0}
+.empty{color:var(--muted);font-size:.9rem;background:#F4F6F8;border-radius:10px;padding:10px 12px}
+.pfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fine{font-size:.76rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:.9rem;z-index:40}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .out{position:static;max-height:none}
+  .steps{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepbtn{padding:6px}
+  .stepbtn .t{font-size:.8rem}
+  .stepbtn .lg{display:none}.stepbtn .sh{display:inline}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:10px;align-items:center}
+  .mbar .mid{flex:1;font-size:.85rem;font-weight:700;color:var(--muted)}
+  .mbar .mid b{color:var(--warn)}
+  .wrap{padding-bottom:80px}
+  .out{scroll-margin-top:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.steps{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.chip.known[aria-pressed="true"]{background:#8A2B1F;border-color:#8A2B1F}
+.ddx{display:flex;flex-direction:column;gap:6px}
+.dx{border:1px solid var(--line);border-radius:10px;padding:7px 9px;cursor:pointer;background:var(--surface);text-align:left;width:100%}
+.dx.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.dx .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.dx .h b{font-size:.92rem}
+.dx .h small{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:#E4E9EE;margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.why{margin:5px 0 0;padding:0;list-style:none;font-size:.78rem;display:flex;flex-wrap:wrap;gap:4px}
+.why li{border-radius:4px;padding:1px 6px;background:var(--ok-soft);color:var(--ok)}
+.why li.neg{background:#EEF1F4;color:var(--muted);text-decoration:line-through}
+.tx h4{margin:6px 0 2px;font-size:.88rem}
+.tx p{margin:0;font-size:.88rem}
+.dose{background:#F4F6F8;border-radius:8px;padding:6px 9px;font-size:.88rem;margin:3px 0}
+.dose b{color:var(--ink)}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:.88rem;font-weight:600}
+.okbox{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:9px 12px;font-size:.88rem;font-weight:600}
+.pick{display:flex;flex-wrap:wrap;gap:6px}
+.pc{font-weight:700;font-size:1.05rem;color:var(--warn)}
+
+/* Willis */
+.lrs{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.lr{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--paper);border-top:1px solid var(--line)}
+.lr:first-child{border-top:0}
+.lr.set{background:#F2F6FD}
+.lrl{flex:1;min-width:0}
+.lrl b{display:block;font-size:.9rem}
+.lrl small{display:block;font-size:.74rem;color:var(--muted)}
+.seg3{display:flex;flex:none;border:1px solid #AEBCCA;border-radius:6px;overflow:hidden}
+.seg3 button{border:0;border-left:1px solid #AEBCCA;background:#fff;min-width:44px;min-height:34px;padding:0 8px;font-weight:700;font-size:.85rem;cursor:pointer;color:var(--ink)}
+.seg3 button:first-child{border-left:0}
+.seg3 button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.seg{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper);margin-bottom:6px}
+.seg .sl{flex:0 0 120px;padding:0 10px;font-size:.8rem;font-weight:700;color:var(--muted)}
+.seg button{flex:1;border:0;border-left:1px solid var(--line);background:transparent;min-height:36px;cursor:pointer;font-weight:600;font-size:.88rem}
+.seg button.on{background:var(--accent);color:#fff}
+.aphout{min-height:30px;display:flex;align-items:center;gap:8px}
+.aphout b{color:var(--accent)}
+.hero{border-left:4px solid var(--accent);padding:2px 0 2px 12px}
+.hero h3{margin:2px 0 0;font-size:1.2rem}
+.hero p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.hero p.side{color:var(--ink);font-weight:700}
+.eb2{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tag{display:inline-block;margin:6px 6px 0 0;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 7px;background:var(--accent-soft);color:var(--accent)}
+.tag.lvo,.lvoi{background:var(--warn-soft);color:var(--warn)}
+.lvoi{font-weight:700;font-size:.7rem;border-radius:3px;padding:0 4px}
+table.cls{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:4px}
+table.cls th{text-align:left;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:5px 6px;border-bottom:1px solid var(--line)}
+table.cls td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.cls tr.hit td{background:var(--ok-soft)}
+table.cls tr.hit td:first-child{color:var(--ok);font-weight:700}
+table.cls td:first-child{width:18px;color:var(--muted)}
+.refb table.cls td:first-child{width:auto;color:var(--ink)}
+.clues{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.clues li{font-size:.86rem;background:#F4F6F8;border-radius:8px;padding:7px 9px}
+.clues li b{display:block;font-size:.84rem}
+.dx .sub{font-size:.78rem;color:var(--muted);margin-top:1px}
+.dx .sub b{color:var(--ink)}
+.refc{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.refh{width:100%;display:flex;justify-content:space-between;align-items:center;border:0;background:var(--paper);padding:9px 12px;font-weight:700;cursor:pointer;text-align:left}
+.refh span{color:var(--muted);font-size:1.1rem}
+.refb{padding:4px 12px 12px;display:flex;flex-direction:column;gap:6px}
+p.tx{margin:0;font-size:.92rem}
+@media (max-width:520px){.seg .sl{flex-basis:96px}.seg3 button{min-width:40px;padding:0 6px}}
+@media (max-width:340px){.lr{flex-wrap:wrap}.seg3{width:100%}.seg3 button{flex:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="titlerow"><a class="homebtn" href="../#clinical" aria-label="Back to Panacea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a><h1>Willis</h1></div>
+      <p>Stroke localization: mark the deficits by side, and see the lesion, the vessel and the syndrome, from the lacunes to Wallenberg.</p>
+    </div>
+    <button class="btn" id="reset" type="button">New patient</button>
+  </header>
+  <nav class="steps" aria-label="Steps" id="steps"></nav>
+  <div class="grid">
+    <section class="pane" id="pane"></section>
+    <aside class="out" id="out" aria-label="Localization"></aside>
+  </div>
+</div>
+<div class="mbar" id="mbar"><span class="mid" id="mbarmid"></span><button class="btn primary" type="button" id="seeRecs">Localization ↓</button></div>
+<script>
+const STEPS=[['body','Motor & sensory','Body'],['cn','Eyes & cranial nerves','CNs'],['cort','Cortex & cerebellum','Cortex'],['loc','Localize','Localize']];
+const blank=()=>({step:'body',dom:'L',f:{},aph:{flu:'',comp:'',rep:''},focus:'',done:{},ref:''});
+let S=blank();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const opp=x=>x==='L'?'R':'L';
+const SW={L:'left',R:'right',B:'bilateral'};
+const cap=t=>t?t[0].toUpperCase()+t.slice(1):t;
+
+/* ---------- Findings ----------
+   lr: marked Left / Right / Both. The side always means where the finding is on the patient
+   (the side of the weak limb, the side of the field that is lost, the eye that cannot adduct, the way the eyes look).
+   u: penalty when a syndrome leaves this finding unexplained. */
+const FX={
+ fw:{l:'Face weakness, lower face only',h:'Central (UMN): forehead spared',lr:1,n:'{s} lower facial weakness (forehead spared)',st:'body'},
+ aw:{l:'Arm weakness',lr:1,n:'{s} arm weakness',st:'body'},
+ lw:{l:'Leg weakness',lr:1,n:'{s} leg weakness',st:'body'},
+ fal:{l:'Face and arm worse than leg',g:'pat',n:'face and arm worse than leg',st:'body',u:.3},
+ lga:{l:'Leg worse than arm',g:'pat',n:'leg worse than arm',st:'body',u:.3},
+ eq:{l:'Face, arm and leg equally',g:'pat',n:'face, arm and leg equally affected',st:'body',u:.3},
+ prox:{l:'Proximal worse than distal',h:'Shoulder and hip; hands and feet spared',n:'proximal more than distal weakness',st:'body',u:.4},
+ ch:{l:'Clumsy hand',h:'Poor dexterity with little weakness',lr:1,n:'{s} hand clumsiness',st:'body'},
+ hb:{l:'Hemiballismus',h:'Flinging, large-amplitude movements',lr:1,n:'{s} hemiballismus',st:'body'},
+ sf:{l:'Face numbness',h:'All modalities',lr:1,n:'{s} facial numbness',st:'body'},
+ sfpt:{l:'Face pain and temperature loss',h:'Light touch spared (spinal trigeminal)',lr:1,n:'{s} facial pain and temperature loss',st:'body'},
+ sb:{l:'Arm and leg numbness',h:'All modalities',lr:1,n:'{s} arm and leg numbness',st:'body'},
+ sbpt:{l:'Body pain and temperature loss',h:'Pinprick and cold lost; vibration intact',lr:1,n:'{s} body pain and temperature loss',st:'body'},
+ sbdc:{l:'Body vibration and position loss',h:'Pinprick intact (medial lemniscus or dorsal columns)',lr:1,n:'{s} body vibration and proprioception loss',st:'body'},
+ scort:{l:'Cortical sensory loss',h:'Astereognosis, agraphesthesia, extinction',lr:1,n:'{s} cortical sensory loss (astereognosis, agraphesthesia)',st:'body'},
+
+ hh:{l:'Homonymous hemianopia',h:'Mark the side of the field that is lost',lr:1,n:'{s} homonymous hemianopia',st:'cn'},
+ sq:{l:'Superior quadrantanopia',h:'“Pie in the sky”: temporal (Meyer’s loop) or lower occipital bank',lr:1,n:'{s} superior quadrantanopia',st:'cn'},
+ iq:{l:'Inferior quadrantanopia',h:'“Pie on the floor”: parietal radiations or upper occipital bank',lr:1,n:'{s} inferior quadrantanopia',st:'cn'},
+ ms:{l:'Macular sparing',h:'Central vision kept within the cut',n:'macular sparing',st:'cn',u:.3},
+ cb:{l:'Cortical blindness',h:'Both fields lost, pupils still react',n:'cortical blindness with reactive pupils',st:'cn'},
+ mono:{l:'Monocular vision loss',h:'Mark the eye; transient (amaurosis) or fixed',lr:1,n:'{s} monocular vision loss',st:'cn'},
+ gp:{l:'Eyes deviate toward',h:'Mark the side the eyes look to',lr:1,n:'gaze deviation to the {s}',st:'cn'},
+ hgb:{l:'Horizontal gaze lost both ways',h:'Vertical movements and blink preserved',n:'bilateral horizontal gaze palsy with vertical movements preserved',st:'cn'},
+ vgp:{l:'Vertical gaze palsy',h:'Upgaze most often',n:'vertical gaze palsy',st:'cn'},
+ cn3:{l:'CN III palsy',h:'Ptosis, down and out, ± dilated pupil',lr:1,n:'{s} third nerve palsy',st:'cn'},
+ cn6:{l:'CN VI palsy',h:'Cannot abduct that eye',lr:1,n:'{s} sixth nerve palsy',st:'cn'},
+ ino:{l:'INO',h:'Mark the eye that cannot adduct; abducting eye nystagmus',lr:1,n:'{s} internuclear ophthalmoplegia',st:'cn'},
+ skew:{l:'Skew deviation',h:'Vertical misalignment on cover test',n:'skew deviation',st:'cn'},
+ nys:{l:'Nystagmus',h:'Direction-changing or vertical is central',n:'nystagmus',st:'cn',u:.4},
+ horner:{l:'Horner syndrome',h:'Ptosis and miosis',lr:1,n:'{s} Horner syndrome',st:'cn'},
+ flmn:{l:'Face weakness, whole face',h:'Peripheral (LMN): forehead involved',lr:1,n:'{s} peripheral facial weakness (forehead involved)',st:'cn'},
+ hear:{l:'Hearing loss',h:'Sudden, unilateral',lr:1,n:'{s} hearing loss',st:'cn'},
+ bulb:{l:'Dysphagia or hoarseness',h:'Weak palate, uvula pulled away, poor gag',n:'dysphagia and hoarseness',st:'cn'},
+ cn12:{l:'Tongue deviates toward',h:'Mark the side the tongue points to',lr:1,n:'tongue deviation to the {s}',st:'cn'},
+
+ neg:{l:'Hemineglect',h:'Mark the side that is ignored',lr:1,n:'{s} hemispatial neglect',st:'cort'},
+ anos:{l:'Anosognosia',h:'Unaware of the deficit',n:'anosognosia',st:'cort'},
+ aprax:{l:'Apraxia',h:'Cannot perform learned movements on command',n:'apraxia',st:'cort',u:.4},
+ gerst:{l:'Gerstmann syndrome',h:'Acalculia, agraphia, finger agnosia, left–right confusion',n:'Gerstmann syndrome',st:'cort'},
+ alex:{l:'Alexia without agraphia',h:'Can write but cannot read it back',n:'alexia without agraphia',st:'cort'},
+ pros:{l:'Prosopagnosia',h:'Cannot recognize faces',n:'prosopagnosia',st:'cort'},
+ amn:{l:'Amnesia',h:'Cannot form new memories',n:'anterograde amnesia',st:'cort'},
+ abul:{l:'Abulia',h:'Apathetic, slow to respond, little spontaneous speech or movement',n:'abulia',st:'cort'},
+ inc:{l:'Urinary incontinence',n:'urinary incontinence',st:'cort',u:.3},
+ delir:{l:'Agitated confusion',h:'Acute confusional state without a metabolic cause',n:'acute confusional state',st:'cort',u:.5},
+ loc:{l:'Decreased consciousness',h:'Somnolent to comatose',n:'decreased level of consciousness',st:'cort'},
+ anar:{l:'Anarthric but alert',h:'Mute, cannot move, awake; communicates by eye movement',n:'anarthria with preserved alertness',st:'cort'},
+ ax:{l:'Limb ataxia',h:'Finger–nose, heel–shin out of proportion to weakness',lr:1,n:'{s} limb ataxia',st:'cort'},
+ gait:{l:'Truncal or gait ataxia',h:'Cannot sit or stand unsupported, wide-based',n:'truncal and gait ataxia',st:'cort'},
+ dys:{l:'Dysarthria',n:'dysarthria',st:'cort',u:.3},
+ vert:{l:'Vertigo',h:'Acute, continuous',n:'vertigo',st:'cort',u:.4},
+ nv:{l:'Nausea and vomiting',n:'nausea and vomiting',st:'cort',u:.15},
+ hic:{l:'Hiccups',h:'Persistent',n:'intractable hiccups',st:'cort',u:.3},
+ /* aphasia types are set by the classifier on the cortex step */
+ aph_b:{l:'Broca (expressive) aphasia',n:'nonfluent (Broca) aphasia with intact comprehension',aph:1},
+ aph_w:{l:'Wernicke (receptive) aphasia',n:'fluent (Wernicke) aphasia with impaired comprehension',aph:1},
+ aph_g:{l:'Global aphasia',n:'global aphasia',aph:1},
+ aph_c:{l:'Conduction aphasia',n:'conduction aphasia (repetition impaired)',aph:1},
+ aph_tm:{l:'Transcortical motor aphasia',n:'transcortical motor aphasia (repetition preserved)',aph:1},
+ aph_ts:{l:'Transcortical sensory aphasia',n:'transcortical sensory aphasia (repetition preserved)',aph:1},
+ aph_mt:{l:'Mixed transcortical aphasia',n:'mixed transcortical aphasia (isolated repetition)',aph:1},
+ aph_a:{l:'Anomic aphasia',n:'anomic aphasia',aph:1,u:.3}
+};
+const APH=Object.keys(FX).filter(k=>FX[k].aph);
+const GROUPS={
+ body:[['Weakness',['fw','aw','lw']],['Pattern of weakness',['fal','lga','eq','prox']],['Coordination and movement',['ch','hb']],['Sensation',['sf','sfpt','sb','sbpt','sbdc','scort']]],
+ cn:[['Visual fields',['hh','sq','iq','ms','cb','mono']],['Gaze and eye movements',['gp','hgb','vgp','cn3','cn6','ino','skew','nys']],['Face, ear and bulbar',['horner','flmn','hear','bulb','cn12']]],
+ cort:[['Neglect and higher function',['neg','anos','aprax','gerst','alex','pros','amn','abul','inc','delir']],['Arousal',['loc','anar']],['Cerebellar and vestibular',['ax','gait','dys','vert','nv','hic']]]
+};
+const PAT=['fal','lga','eq'];
+
+/* Aphasia: fluency, comprehension, repetition → type */
+function aphType(){const {flu,comp,rep}=S.aph;if(!flu||!comp||!rep)return null;
+  return {nii:'aph_b',nip:'aph_tm',nmi:'aph_g',nmp:'aph_mt',fmi:'aph_w',fmp:'aph_ts',fii:'aph_c',fip:'aph_a'}[flu+comp+rep]||null}
+/* Effective findings: chips plus the aphasia type */
+function E(){const f={};for(const k in S.f)if(S.f[k])f[k]=S.f[k];const a=aphType();if(a)f[a]=true;return f}
+
+/* ---------- Conditions ----------
+   c:x  finding x contralateral to the lesion (or both sides)
+   i:x  finding x ipsilateral to the lesion (or both sides)
+   b:x  finding x on both sides
+   n:x  finding x present (non-lateral, or any side)
+   suffix @D / @N: counts only if the lesion side is the dominant / nondominant hemisphere
+   | any of, & all of */
+function atom(a,x,f){let m=a.match(/^([cibn]):(\w+)(@[DN])?$/);if(!m)return false;const [,p,id,h]=m;
+  if(h==='@D'&&x!==S.dom)return false;if(h==='@N'&&x===S.dom)return false;
+  const v=f[id];if(!v)return false;
+  if(p==='n')return true;if(p==='b')return v==='B';
+  if(x==='M')return v==='B'||v===true;
+  if(p==='c')return v==='B'||v===opp(x);if(p==='i')return v==='B'||v===x;return false}
+const test=(cond,x,f)=>cond.split('|').some(alt=>alt.split('&').every(a=>atom(a,x,f)));
+const ids=cond=>[...new Set(cond.split(/[|&]/).map(a=>a.replace(/^[cibn]:/,'').replace(/@[DN]$/,'')))];
+/* Which present findings a matched condition explains */
+const explains=(cond,x,f)=>cond.split('|').filter(alt=>alt.split('&').every(a=>atom(a,x,f))).flatMap(ids);
+
+const CORT=['aph_b','aph_w','aph_g','aph_c','aph_tm','aph_ts','aph_mt','neg','anos','gerst','alex','pros','scort'];
+const FIELD=['hh','sq','iq','cb'];
+const BS=['cn3','cn6','flmn','ino','horner','hear','cn12','bulb','vgp','skew','hgb','hic','sfpt'];
+const SENS=['sf','sfpt','sb','sbpt','sbdc'];
+const WEAK=['fw','aw','lw'];
+const no=(list,w)=>list.map(id=>['n:'+id,w]);
+
+/* ---------- Syndromes ----------
+   core/sup: [condition, weight, structure-or-role]. ag: [condition, penalty]. gate: at least one must be met to be considered.
+   bilat: midline or bilateral lesion. lvo: large-vessel occlusion, candidate for thrombectomy. */
+const SY=[
+ {id:'m1',grp:'Anterior circulation',n:'MCA stem (M1)',v:'Middle cerebral artery, proximal (M1)',lvl:'Cortex and deep white matter',hemi:1,lvo:1,
+  where:'The whole MCA territory: frontal, parietal and superior temporal cortex plus the lenticulostriate-supplied basal ganglia and internal capsule.',
+  core:[['c:aw',2,'Precentral gyrus and internal capsule'],['c:fw',1,'Precentral gyrus (face area)'],['c:hh',2,'Optic radiations'],['i:gp',2,'Frontal eye field (eyes look toward the lesion)'],['n:aph_g@D',3,'Broca and Wernicke areas together'],['c:neg@N',3,'Nondominant inferior parietal lobule'],['c:sb|c:sf',1,'Postcentral gyrus and thalamocortical fibers']],
+  sup:[['n:fal',1.5,'MCA spares the medial leg area'],['c:lw',.8,'Internal capsule carries the leg too'],['n:anos@N',1,'Nondominant parietal'],['n:aph_b@D|n:aph_w@D',1,'Dominant perisylvian cortex'],['c:scort',.5,'Parietal cortex'],['n:loc',.5,'Large infarct, edema']],
+  ag:[['n:lga',-2],['n:prox',-1]],
+  gate:['c:aw&n:aph_g@D','c:fw&n:aph_g@D','c:aw&c:neg@N','i:gp&c:aw','c:hh&c:aw'],
+  pearl:'Hemiplegia, hemianesthesia, hemianopia and gaze deviation together, with global aphasia (dominant) or neglect and anosognosia (nondominant). Malignant edema peaks at 2–5 days, earlier in the young.',
+  next:'CTA head and neck now for thrombectomy; CT perfusion if late or unknown onset.'},
+ {id:'mcas',grp:'Anterior circulation',n:'MCA superior division',v:'MCA, superior M2 division',lvl:'Cortex: frontal and anterior parietal',hemi:1,lvo:1,
+  where:'Lateral frontal lobe (Broca area, precentral gyrus, frontal eye field) and anterior parietal lobe, above the Sylvian fissure.',
+  core:[['c:aw',2,'Precentral gyrus (hand and arm)'],['c:fw',1.5,'Precentral gyrus (face)'],['n:aph_b@D',3,'Broca area (inferior frontal gyrus)'],['c:neg@N',2.5,'Nondominant frontoparietal'],['i:gp',1.5,'Frontal eye field']],
+  sup:[['n:fal',1.5,'Lateral convexity spares the leg'],['c:sf|c:sb',.6,'Postcentral gyrus'],['c:scort',1,'Anterior parietal'],['n:aprax',.5,'Dominant frontal (buccofacial apraxia)'],['n:anos@N',1,'Nondominant parietal'],['n:aph_tm@D',.5,'Frontal language cortex']],
+  ag:[['c:hh',-1.5],['n:aph_w',-1.5],['n:lga',-2],['n:aph_g',-.5]],
+  gate:['n:aph_b@D','c:neg@N','i:gp&c:aw','c:fw&c:aw&c:scort','n:aph_tm@D&c:aw'],
+  pearl:'Face and arm more than leg with expressive aphasia (dominant) or neglect (nondominant). Usually no field cut; a hemianopia points to the stem or inferior division.',
+  next:'CTA for a proximal M2 occlusion; thrombectomy may be considered for dominant or proximal M2.'},
+ {id:'mcai',grp:'Anterior circulation',n:'MCA inferior division',v:'MCA, inferior M2 division',lvl:'Cortex: temporal and posterior parietal',hemi:1,lvo:1,
+  where:'Superior temporal gyrus (Wernicke area), inferior parietal lobule (angular and supramarginal gyri) and the optic radiations below the Sylvian fissure.',
+  core:[['n:aph_w@D',3,'Wernicke area (posterior superior temporal gyrus)'],['c:hh|c:sq',2,'Optic radiations (Meyer’s loop gives the superior quadrant)'],['c:neg@N',2,'Nondominant inferior parietal lobule'],['n:gerst@D',1.5,'Dominant angular gyrus'],['n:aph_c@D',1.5,'Arcuate fasciculus, supramarginal gyrus']],
+  sup:[['n:anos@N',1.5,'Nondominant parietal'],['n:delir@N',1,'Nondominant temporal and parietal'],['c:scort',.5,'Parietal cortex'],['c:iq',.5,'Parietal radiations'],['n:aph_ts@D',.5,'Temporoparietal'],['n:alex@D',.3,'Angular gyrus (alexia with agraphia)']],
+  ag:[['c:aw',-1],['c:lw',-1.5],['n:aph_b',-1.5],['c:fw',-.5]],
+  gate:['n:aph_w@D','c:neg@N&c:hh','n:gerst@D','n:aph_c@D','n:anos@N','n:delir@N&c:hh','c:neg@N&c:sq'],
+  pearl:'Fluent aphasia or neglect with little or no weakness: the patient who is “confused,” not weak. Easy to miss as delirium or psychiatric.',
+  next:'CTA; an isolated Wernicke aphasia scores low on NIHSS but is disabling.'},
+ {id:'aca',grp:'Anterior circulation',n:'ACA',v:'Anterior cerebral artery',lvl:'Cortex: medial frontal and parietal',hemi:1,
+  where:'Medial hemisphere: paracentral lobule (leg motor and sensory), supplementary motor area, cingulate and anterior corpus callosum.',
+  core:[['c:lw',3,'Paracentral lobule (leg homunculus)'],['n:lga',2,'Medial cortex holds the leg'],['n:abul',2,'Medial frontal and cingulate'],['n:inc',1.5,'Medial frontal micturition center']],
+  sup:[['c:aw',.5,'Proximal arm, mild'],['c:sb',.5,'Leg sensory cortex'],['n:aph_tm@D',1.5,'Supplementary motor area'],['n:aprax',.7,'Callosal disconnection (left-hand apraxia)']],
+  ag:[['c:fw',-1.5],['c:hh',-1.5],['n:aph_b',-1],['n:fal',-2],['n:aph_w',-1.5]],
+  gate:['c:lw'],
+  pearl:'Leg more than arm, face spared, with abulia, incontinence and a grasp reflex. Bilateral ACA (a single azygos ACA or vasospasm after ACom aneurysm) gives paraparesis that looks like a cord lesion.',
+  next:'CTA; if both legs are weak, image the brain before assuming the cord.'},
+ {id:'acab',grp:'Anterior circulation',n:'Bilateral ACA',v:'Both ACAs, or a single azygos ACA',lvl:'Cortex: both medial frontal lobes',bilat:1,
+  where:'Both paracentral lobules and medial frontal lobes.',
+  core:[['b:lw',3,'Both paracentral lobules'],['n:abul',2,'Bilateral medial frontal (akinetic mutism if severe)'],['n:inc',1.5,'Medial frontal']],
+  sup:[['n:lga',1,'Leg homunculus'],['n:aph_tm',.8,'Supplementary motor area']],
+  ag:[['b:aw',-1],['n:hh',-1],['b:sbpt',-1.5]],
+  gate:['b:lw&n:abul','b:lw&n:inc','b:lw&n:aph_tm'],
+  pearl:'Paraparesis with abulia or incontinence and a normal spine: think azygos ACA, ACom aneurysm vasospasm, or a falcine mass.',
+  next:'CTA head; MRI spine if the brain is clear.'},
+ {id:'ica',grp:'Anterior circulation',n:'ICA / carotid terminus',v:'Internal carotid artery',lvl:'Cortex and deep white matter (MCA ± ACA)',hemi:1,lvo:1,
+  where:'MCA territory, ACA territory when the circle of Willis is incomplete, and the ophthalmic artery to the ipsilateral eye.',
+  core:[['i:mono',3,'Ophthalmic artery (ipsilateral eye)'],['c:aw',2,'MCA territory'],['c:lw',1.5,'ACA territory (leg)'],['i:gp',1.5,'Frontal eye field'],['n:aph_g@D',2.5,'Dominant perisylvian cortex'],['c:neg@N',2.5,'Nondominant parietal'],['c:hh',1.5,'Optic radiations']],
+  sup:[['i:horner',1.5,'Pericarotid sympathetics (dissection)'],['c:fw',.7,'Precentral gyrus'],['c:sb|c:sf',.6,'Sensory cortex'],['n:eq',.7,'MCA plus ACA'],['n:loc',.8,'Large infarct'],['n:abul',.5,'ACA territory']],
+  ag:[['n:prox',-.5]],
+  gate:['i:mono','i:horner&c:aw','c:lw&c:aw&n:aph_g@D','c:lw&c:aw&c:neg@N','c:lw&c:aw&i:gp'],
+  pearl:'Ipsilateral eye, contralateral body (optic-cerebral syndrome). Horner on the side of the eye with neck pain means carotid dissection until proven otherwise.',
+  next:'CTA head and neck; carotid terminus (T) occlusion has the worst outcomes and the most to gain from thrombectomy.'},
+ {id:'achor',grp:'Anterior circulation',n:'Anterior choroidal artery',v:'Anterior choroidal artery (from the ICA)',lvl:'Subcortical: internal capsule and optic tract',hemi:1,
+  where:'Posterior limb of the internal capsule, optic tract and lateral geniculate body, medial temporal lobe.',
+  core:[['c:aw',2,'Posterior limb of the internal capsule'],['c:lw',2,'Posterior limb of the internal capsule'],['c:sb',2,'Thalamocortical fibers in the capsule'],['c:hh',2.5,'Optic tract or lateral geniculate']],
+  sup:[['c:fw',1,'Genu and posterior limb'],['n:eq',1,'Compact fibers in the capsule'],['c:sf',.6,'Thalamocortical fibers']],
+  ag:[...CORT.map(id=>['n:'+id,-2]),['c:gp|i:gp',-1.5]],
+  gate:['c:hh&c:aw','c:hh&c:lw'],
+  pearl:'Hemiplegia, hemianesthesia and hemianopia with no cortical signs. The field defect may be a wedge (sectoranopia) from the lateral geniculate.',
+  next:'MRI: the infarct is small and deep; CT may be normal early.'},
+ {id:'ws',allowB:1,grp:'Anterior circulation',n:'ACA–MCA watershed',v:'Border zone between ACA and MCA (hypoperfusion)',lvl:'Cortex and subcortex: border zone',
+  where:'The strip of frontal and parietal cortex between ACA and MCA territories, which holds the shoulder and hip.',
+  core:[['n:prox',3,'Proximal limb area sits in the border zone'],['c:aw',1,'Border zone motor cortex'],['c:lw',1,'Border zone motor cortex'],['n:aph_tm@D|n:aph_ts@D|n:aph_mt@D',2,'Language cortex isolated, repetition spared']],
+  sup:[['b:aw',1,'Both border zones (“man in a barrel”)'],['c:sb',.4,'Border zone sensory cortex']],
+  ag:[['n:fal',-1],['c:hh',-.5]],
+  gate:['n:prox','n:aph_tm@D&c:aw','n:aph_mt@D'],
+  pearl:'“Man in a barrel” when bilateral: proximal arms (and legs) weak, hands and face spared. Look for hypotension, cardiac arrest or severe carotid stenosis.',
+  next:'Review blood pressure history; carotid imaging; avoid lowering pressure.'},
+
+ {id:'pm',grp:'Lacunar',n:'Pure motor hemiparesis',v:'Lenticulostriate (MCA) or paramedian pontine perforators (basilar)',lvl:'Subcortical: posterior limb of the internal capsule, corona radiata or basis pontis',lac:1,
+  where:'Posterior limb of the internal capsule (most often), corona radiata, cerebral peduncle or basis pontis, where the corticospinal and corticobulbar fibers run together.',
+  core:[['c:aw',2,'Corticospinal tract'],['c:lw',2,'Corticospinal tract'],['c:fw',1,'Corticobulbar fibers'],['n:eq',1.5,'Fibers packed together, so all three are involved']],
+  sup:[['n:dys',.5,'Corticobulbar fibers']],
+  ag:[...no(CORT,-3),...no(FIELD,-3),...no(SENS,-2.5),...no(BS,-2),['n:loc',-2],['n:gp',-2],['n:ax',-1],['n:mono',-2]],
+  gate:['c:aw&c:lw','c:fw&c:aw','c:fw&c:lw'],
+  pearl:'Fisher’s commonest lacune: face, arm and leg equally weak, with no sensory, visual, language or cortical signs. The capsular warning syndrome stutters on and off over hours.',
+  next:'MRI DWI; small-vessel workup (blood pressure, glucose, lipids). A fluctuating course needs close watch.'},
+ {id:'ps',grp:'Lacunar',n:'Pure sensory stroke',v:'Thalamogeniculate perforators (PCA)',lvl:'Subcortical: ventral posterior thalamus (VPL and VPM)',lac:1,
+  where:'Ventral posterolateral (body) and ventral posteromedial (face) nuclei of the thalamus.',
+  core:[['c:sb',3,'VPL nucleus (body)'],['c:sf',2,'VPM nucleus (face)'],['c:sbpt|c:sbdc',1,'VPL, partial']],
+  sup:[['c:sfpt',.5,'VPM, partial']],
+  ag:[...no(WEAK,-2.5),...no(CORT,-3),...no(FIELD,-2),...no(BS.filter(x=>x!=='sfpt'),-2),['n:loc',-1.5],['n:ax',-.8]],
+  gate:['c:sb','c:sbpt&c:sf','c:sbdc&c:sf','c:sbpt&c:sfpt'],
+  pearl:'Numbness of face, arm and leg on one side, splitting exactly at the midline, with no weakness. Thalamic pain (Déjerine–Roussy) can follow weeks later. Cheiro-oral numbness (hand and mouth) is a thalamic or pontine variant.',
+  next:'MRI DWI; small-vessel workup.'},
+ {id:'sms',grp:'Lacunar',n:'Sensorimotor stroke',v:'Thalamogeniculate and lenticulostriate perforators',lvl:'Subcortical: thalamus and adjacent internal capsule',lac:1,
+  where:'Ventral posterior thalamus together with the adjacent posterior limb of the internal capsule (thalamocapsular).',
+  core:[['c:aw',2,'Posterior limb of the internal capsule'],['c:lw',1.5,'Posterior limb of the internal capsule'],['c:fw',1,'Corticobulbar fibers'],['c:sb',2,'VPL thalamus'],['c:sf',1,'VPM thalamus']],
+  sup:[['n:eq',1,'Compact capsular fibers'],['c:sbpt|c:sbdc',.5,'Thalamus, partial']],
+  ag:[...no(CORT,-3),...no(FIELD,-2),...no(BS.filter(x=>x!=='sfpt'),-2),['n:loc',-1.5],['n:gp',-1.5]],
+  gate:['c:sb&c:aw','c:sb&c:lw','c:sf&c:aw','c:sbpt&c:aw'],
+  pearl:'Weakness and numbness on the same side without cortical signs. Without a field cut or language deficit, a deep lesion is far more likely than a large MCA stroke.',
+  next:'MRI DWI; small-vessel workup.'},
+ {id:'ah',grp:'Lacunar',n:'Ataxic hemiparesis',v:'Paramedian pontine perforators or lenticulostriate',lvl:'Subcortical: basis pontis, internal capsule or corona radiata',lac:1,
+  where:'Basis pontis (corticospinal and pontocerebellar fibers together), posterior limb of the internal capsule or corona radiata.',
+  core:[['c:ax',3,'Corticopontocerebellar fibers'],['c:lw',2,'Corticospinal tract (leg most)'],['n:lga',1,'Leg predominates']],
+  sup:[['c:aw',.6,'Corticospinal tract'],['n:dys',.5,'Pontine fibers'],['c:fw',.3,'Corticobulbar']],
+  ag:[...no(CORT,-3),...no(FIELD,-2),...no(SENS,-1.5),['n:loc',-1.5],['i:ax',-1]],
+  gate:['c:ax&c:lw','c:ax&c:aw'],
+  pearl:'Weakness and ataxia on the same side, the ataxia out of proportion to the weakness. Ataxia opposite the weak side points instead to the cerebellum or a crossed brainstem lesion.',
+  next:'MRI DWI (posterior fossa poorly seen on CT).'},
+ {id:'dch',grp:'Lacunar',n:'Dysarthria–clumsy hand',v:'Paramedian pontine perforators (basilar)',lvl:'Subcortical: basis pontis or genu of the internal capsule',lac:1,
+  where:'Upper basis pontis at the junction of its upper and middle thirds, or the genu of the internal capsule.',
+  core:[['n:dys',2.5,'Corticobulbar fibers'],['c:ch',3,'Corticospinal and pontocerebellar fibers'],['c:fw',1,'Corticobulbar fibers']],
+  sup:[['n:cn12',.3,'Corticobulbar fibers']],
+  ag:[...no(CORT,-3),...no(FIELD,-2),...no(SENS,-1.5),['c:lw',-.5],['n:loc',-1.5]],
+  gate:['n:dys&c:ch'],
+  pearl:'Slurred speech and a clumsy, mildly weak hand, often with central facial weakness and dysphagia. The mildest of Fisher’s classic five.',
+  next:'MRI DWI.'},
+
+ {id:'pca',grp:'Posterior circulation',n:'PCA, cortical (occipital)',v:'Posterior cerebral artery, distal (P2–P4)',lvl:'Cortex: occipital and medial temporal',hemi:1,
+  where:'Calcarine cortex, occipital lobe, splenium of the corpus callosum, and inferomedial temporal lobe including the hippocampus.',
+  core:[['c:hh',3,'Calcarine (primary visual) cortex'],['n:ms',2,'Occipital pole keeps a dual MCA–PCA supply'],['n:alex@D',3,'Dominant occipital cortex plus splenium'],['c:sq|c:iq',1.5,'One bank of the calcarine fissure']],
+  sup:[['n:pros',1.5,'Fusiform gyrus (usually bilateral or right)'],['n:amn',1.5,'Hippocampus'],['n:aph_ts@D|n:aph_a@D',.5,'Dominant temporo-occipital'],['n:delir',.5,'Medial temporal']],
+  ag:[['c:aw',-2],['c:lw',-2],['c:fw',-1],['n:aph_b',-2],['n:aph_w',-1],['c:neg',-.5]],
+  gate:['c:hh','c:sq','c:iq&n:ms','n:alex@D'],
+  pearl:'A homonymous hemianopia with macular sparing and no weakness. Patients often say only that they bump into things on one side. Dominant: alexia without agraphia.',
+  next:'CTA; check for basilar or vertebral source. Formal visual fields; no driving.'},
+ {id:'pcap',grp:'Posterior circulation',n:'PCA, proximal (with thalamus)',v:'PCA, P1–P2 with thalamogeniculate and thalamoperforating branches',lvl:'Thalamus and occipital cortex',hemi:1,
+  where:'Lateral thalamus and occipital cortex, sometimes the cerebral peduncle.',
+  core:[['c:hh',2.5,'Occipital cortex'],['c:sb',2,'Lateral thalamus (VPL)'],['c:sf',1,'VPM']],
+  sup:[['c:aw|c:lw',1,'Cerebral peduncle (P1)'],['n:amn',1,'Hippocampus, medial thalamus'],['n:ms',.5,'Occipital pole'],['n:alex@D',1,'Dominant occipital'],['c:hb',.5,'Subthalamic region']],
+  ag:[['n:aph_b',-1.5],['n:fal',-1],['c:neg@D',-.5]],
+  gate:['c:hh&c:sb','c:hh&c:sf'],
+  pearl:'Hemianopia with hemisensory loss and little weakness. With dense weakness too, consider the anterior choroidal artery or a large MCA infarct.',
+  next:'CTA including the posterior circulation.'},
+ {id:'tob',grp:'Posterior circulation',n:'Top of the basilar',v:'Distal basilar artery (both PCAs, thalamoperforators)',lvl:'Midbrain, thalami, occipital lobes',bilat:1,lvo:1,
+  where:'Rostral midbrain, both thalami and both occipital and medial temporal lobes.',
+  core:[['n:cb|b:hh',3,'Both occipital lobes'],['n:vgp',2,'Rostral midbrain (riMLF)'],['n:loc',2,'Midbrain and thalamic reticular activating system'],['n:amn',1.5,'Medial temporal lobes, thalami']],
+  sup:[['n:delir',1,'Thalami, medial temporal'],['n:skew',.5,'Midbrain'],['b:cn3|n:cn3',1,'Oculomotor nuclei'],['n:hgb',.3,'Upper brainstem']],
+  ag:[],
+  gate:['n:cb','b:hh','n:vgp&n:loc','n:cb&n:amn'],
+  pearl:'Visual, oculomotor and behavioral deficits with little or no weakness. Anton syndrome: cortically blind patients who deny it and confabulate.',
+  next:'CTA now; basilar occlusion is an emergency with benefit from thrombectomy.'},
+ {id:'perch',grp:'Posterior circulation',n:'Artery of Percheron',v:'Single artery of Percheron (from one P1)',lvl:'Both paramedian thalami ± rostral midbrain',bilat:1,
+  where:'Both paramedian thalami, with or without the rostral midbrain.',
+  core:[['n:loc',3,'Intralaminar thalamic nuclei'],['n:vgp',3,'Rostral midbrain (riMLF)'],['n:amn',2,'Dorsomedial thalamus, mammillothalamic tract']],
+  sup:[['b:cn3|n:cn3',1,'Oculomotor nuclei'],['n:delir',.7,'Thalamus']],
+  ag:[['b:aw',-1],['n:hh',-1]],
+  gate:['n:loc&n:vgp','n:loc&n:amn'],
+  pearl:'An unexplained coma or hypersomnolence with a vertical gaze palsy and normal CT. The bithalamic infarct is often only seen on MRI.',
+  next:'MRI DWI; CT is often normal.'},
+ {id:'stn',grp:'Posterior circulation',n:'Subthalamic nucleus',v:'Thalamoperforators (PCA) or lenticulostriate',lvl:'Subcortical: subthalamic nucleus',hemi:1,
+  where:'Subthalamic nucleus, opposite the flinging limbs.',
+  core:[['c:hb',4,'Subthalamic nucleus (loss of its inhibitory output)']],
+  sup:[['c:aw|c:lw',.3,'Adjacent internal capsule']],ag:[...no(CORT,-2)],
+  gate:['c:hb'],
+  pearl:'Abrupt flinging of one arm and leg. Nonketotic hyperglycemia is the classic mimic in older diabetics.',
+  next:'Glucose; MRI.'},
+ {id:'weber',grp:'Brainstem: midbrain',n:'Weber syndrome',v:'Paramedian branches of the PCA and top of the basilar',lvl:'Ventral midbrain',
+  where:'Cerebral peduncle and the fascicles of CN III as they leave the ventral midbrain.',
+  core:[['i:cn3',3,'CN III fascicles'],['c:aw',2,'Cerebral peduncle (corticospinal)'],['c:lw',1.5,'Cerebral peduncle'],['c:fw',1,'Cerebral peduncle (corticobulbar)']],
+  sup:[['n:dys',.3,'Corticobulbar']],ag:[],
+  gate:['i:cn3&c:aw','i:cn3&c:lw','i:cn3&c:fw'],
+  pearl:'Third nerve palsy on one side, hemiparesis on the other. Uncal herniation can produce the same combination, so look at the CT.',
+  next:'CT for hemorrhage or herniation; CTA; MRI.'},
+ {id:'bened',grp:'Brainstem: midbrain',n:'Claude / Benedikt syndrome',v:'Paramedian branches of the PCA',lvl:'Midbrain tegmentum',
+  where:'Red nucleus and superior cerebellar peduncle fibers (Claude), extending to the peduncle (Benedikt), with the CN III fascicles.',
+  core:[['i:cn3',3,'CN III fascicles'],['c:ax',3,'Red nucleus and crossed dentatorubral fibers']],
+  sup:[['c:hb',1,'Red nucleus (tremor, chorea)'],['c:aw|c:lw',1,'Cerebral peduncle (Benedikt)']],ag:[],
+  gate:['i:cn3&c:ax','i:cn3&c:hb'],
+  pearl:'Third nerve palsy with contralateral ataxia (Claude); add tremor or hemiparesis and it is Benedikt.',
+  next:'MRI; CTA.'},
+ {id:'parin',grp:'Brainstem: midbrain',n:'Dorsal midbrain (Parinaud)',v:'Posterior thalamoperforators, or compression',lvl:'Dorsal midbrain, pretectum',
+  where:'Pretectal area and posterior commissure.',
+  core:[['n:vgp',3,'Pretectum and posterior commissure (upgaze)']],
+  sup:[['n:skew',.5,'Midbrain'],['n:nys',.5,'Convergence-retraction nystagmus']],
+  ag:[['n:aw',-1],['n:loc',-1.5],['n:amn',-1]],
+  gate:['n:vgp'],
+  pearl:'Upgaze palsy, light-near dissociation of the pupils, convergence-retraction nystagmus and lid retraction. More often a pineal mass or hydrocephalus than a stroke.',
+  next:'CT or MRI for a mass or hydrocephalus.'},
+ {id:'mg',grp:'Brainstem: pons',n:'Millard–Gubler syndrome',v:'Paramedian and short circumferential branches of the basilar',lvl:'Ventral caudal pons',
+  where:'Basis pontis with the fascicles of CN VI and CN VII.',
+  core:[['i:cn6',2.5,'CN VI fascicles'],['i:flmn',2.5,'CN VII fascicles'],['c:aw',2,'Basis pontis (corticospinal)'],['c:lw',1.5,'Basis pontis']],
+  sup:[],ag:[['c:fw',-.5]],
+  gate:['i:cn6&c:aw','i:flmn&c:aw','i:flmn&c:lw','i:cn6&c:lw'],
+  pearl:'Peripheral facial palsy and an abducens palsy on one side, hemiparesis on the other.',
+  next:'MRI DWI; CTA for basilar disease.'},
+ {id:'fov',grp:'Brainstem: pons',n:'Foville syndrome',v:'Basilar paramedian and circumferential branches',lvl:'Dorsal caudal pons',
+  where:'Abducens nucleus or PPRF, CN VII fascicles looping around it, and the corticospinal tract.',
+  core:[['c:gp',3,'PPRF or abducens nucleus (cannot look toward the lesion, so eyes drift away)'],['i:flmn',2,'Facial colliculus'],['c:aw',2,'Corticospinal tract'],['c:lw',1.5,'Corticospinal tract']],
+  sup:[['i:cn6',1,'Abducens nucleus'],['i:ino',.8,'MLF (one-and-a-half)'],['i:horner',.5,'Descending sympathetics'],['i:sf|i:sfpt',.5,'Trigeminal nucleus']],
+  ag:[],
+  gate:['c:gp&c:aw','c:gp&i:flmn','c:gp&c:lw'],
+  pearl:'The eyes look toward the hemiparesis. A hemispheric stroke does the opposite (eyes look at the lesion, away from the weak side); a seizure focus or a thalamic hemorrhage can also give “wrong-way eyes.”',
+  next:'MRI DWI; CTA; EEG if seizure is possible.'},
+ {id:'ino',grp:'Brainstem: pons',n:'MLF lesion (INO)',v:'Paramedian branches of the basilar',lvl:'Dorsal pons or midbrain, medial longitudinal fasciculus',
+  where:'The medial longitudinal fasciculus on the side of the eye that cannot adduct.',
+  core:[['i:ino',4,'Medial longitudinal fasciculus']],
+  sup:[['n:nys',1,'Abducting-eye nystagmus'],['n:skew',1,'Otolith pathways in the MLF'],['c:gp',.5,'PPRF (one-and-a-half)'],['n:vert',.3,'Vestibular connections']],
+  ag:[],
+  gate:['i:ino'],
+  pearl:'The eye on the side of the lesion fails to adduct and the other eye beats when it abducts; convergence is spared. Stroke in older patients, multiple sclerosis in the young. Add an ipsilateral gaze palsy and it is one-and-a-half syndrome.',
+  next:'MRI DWI.'},
+ {id:'lock',grp:'Brainstem: pons',n:'Locked-in syndrome',v:'Basilar artery (mid-basilar occlusion)',lvl:'Bilateral ventral pons',bilat:1,lvo:1,
+  where:'Both halves of the basis pontis, sparing the tegmentum and its reticular activating system.',
+  core:[['b:aw',3,'Both corticospinal tracts'],['b:lw',3,'Both corticospinal tracts'],['n:anar',3,'Both corticobulbar tracts']],
+  sup:[['n:hgb',1.5,'Abducens nuclei and PPRF'],['b:flmn|b:fw',1,'Corticobulbar or facial nuclei'],['n:dys',.5,'Corticobulbar']],
+  ag:[['n:loc',-2],['n:cb',-1]],
+  gate:['b:aw&b:lw&n:anar','b:aw&n:anar'],
+  pearl:'Awake and aware, unable to move or speak, communicating by vertical eye movements and blinks. Ask the patient to look up and down before calling it coma.',
+  next:'CTA now: basilar occlusion; thrombectomy.'},
+ {id:'basil',grp:'Brainstem: pons',n:'Basilar artery occlusion',v:'Basilar artery',lvl:'Pons and midbrain, often bilateral',bilat:1,lvo:1,
+  where:'The pons and midbrain, with any combination of both corticospinal tracts, cranial nerve nuclei, and the reticular activating system.',
+  core:[['n:loc',2.5,'Pontine and midbrain reticular activating system'],['b:aw|b:lw',2,'Both corticospinal tracts'],['n:hgb|n:gp',1.2,'PPRF or abducens nuclei'],['n:vgp|n:skew',1,'Midbrain'],['n:dys|n:anar',1,'Corticobulbar tracts']],
+  sup:[['n:cn3',1,'Oculomotor nuclei'],['n:flmn|n:fw',.8,'Facial nuclei or fibers'],['n:vert',.5,'Vestibular nuclei'],['n:ino',.8,'MLF'],['n:aw|n:lw',.6,'Corticospinal tract'],['n:cb',.5,'Both PCAs'],['n:nys',.4,'Vestibular nuclei']],
+  ag:[],
+  gate:['n:loc&n:aw','n:loc&n:lw','b:aw','b:lw&n:loc','n:loc&n:vgp','n:loc&n:cn3','n:hgb','n:loc&n:hgb','n:ino&n:aw'],
+  pearl:'Fluctuating, often with a prodrome of vertigo, diplopia or dysarthria. Bilateral or crossed signs, pinpoint pupils and decreased consciousness. Easy to miss and highly lethal untreated.',
+  next:'CTA now; thrombectomy has benefit (ATTENTION, BAOCHE).'},
+ {id:'aica',grp:'Brainstem: pons',n:'AICA (lateral inferior pons)',v:'Anterior inferior cerebellar artery',lvl:'Lateral caudal pons and middle cerebellar peduncle',
+  where:'Lateral caudal pons, middle cerebellar peduncle, and the inner ear through the labyrinthine artery.',
+  core:[['i:hear',3,'Labyrinthine artery or cochlear nucleus'],['i:flmn',2,'Facial nucleus'],['i:ax',2,'Middle cerebellar peduncle'],['i:sfpt|i:sf',1.5,'Spinal trigeminal nucleus'],['c:sbpt|c:sb',1.5,'Spinothalamic tract'],['n:vert',1,'Vestibular nuclei and labyrinth']],
+  sup:[['i:horner',1,'Descending sympathetics'],['n:nys',.6,'Vestibular nuclei'],['n:nv',.4,'Vestibular'],['n:gait',.5,'Cerebellum'],['i:cn6',.3,'Nearby']],
+  ag:[['n:aw',-1.5],['n:lw',-1.5],['n:bulb',-1]],
+  gate:['i:hear&n:vert','i:hear&i:ax','i:hear&i:flmn','i:flmn&i:ax&c:sbpt','i:flmn&i:sfpt&c:sbpt'],
+  pearl:'Like Wallenberg, but with ipsilateral deafness and a peripheral facial palsy instead of dysphagia. Sudden hearing loss with vertigo can be the first sign.',
+  next:'MRI DWI; CTA (often basilar or vertebral disease).'},
+ {id:'sca',grp:'Cerebellum',n:'SCA (superior cerebellum)',v:'Superior cerebellar artery',lvl:'Superior cerebellum ± lateral rostral pons',
+  where:'Superior cerebellar hemisphere, dentate nucleus and superior cerebellar peduncle, sometimes the lateral pontine tegmentum.',
+  core:[['i:ax',3,'Superior cerebellar hemisphere and peduncle'],['n:dys',1.5,'Superior cerebellum'],['n:gait',1.5,'Vermis']],
+  sup:[['c:sbpt',1.5,'Lateral pons (spinothalamic)'],['i:horner',1,'Lateral pons'],['n:nys',.5,'Cerebellum'],['n:nv',.5,'Cerebellum'],['n:vert',.3,'Less prominent than PICA']],
+  ag:[['n:hear',-1.5],['n:aw',-1],['n:lw',-1],['n:bulb',-1]],
+  gate:['i:ax'],
+  pearl:'Limb ataxia and dysarthria more than vertigo. Ipsilateral limb, because cerebellar output crosses twice.',
+  next:'MRI DWI; watch for edema and hydrocephalus.'},
+ {id:'wall',grp:'Brainstem: medulla',n:'Lateral medullary (Wallenberg)',v:'Intracranial vertebral artery (most often) or PICA',lvl:'Lateral medulla',
+  where:'Lateral medulla: spinal trigeminal nucleus and tract, spinothalamic tract, nucleus ambiguus, descending sympathetics, vestibular nuclei and inferior cerebellar peduncle.',
+  core:[['i:sfpt|i:sf',2.5,'Spinal trigeminal nucleus and tract'],['c:sbpt|c:sb',2.5,'Lateral spinothalamic tract'],['i:horner',2,'Descending sympathetic fibers'],['n:bulb',2,'Nucleus ambiguus (CN IX, X)'],['n:vert',1.5,'Vestibular nuclei'],['i:ax',1.5,'Inferior cerebellar peduncle']],
+  sup:[['n:nys',1,'Vestibular nuclei'],['n:hic',1,'Medullary respiratory centers'],['n:nv',.5,'Vestibular nuclei, area postrema'],['n:gait',.6,'Inferior cerebellar peduncle'],['n:skew',.5,'Vestibular nuclei']],
+  ag:[['n:aw',-2.5],['n:lw',-2.5],['n:cn12',-1.5],['n:fw',-1],['n:hear',-1],['n:sbdc',-1]],
+  gate:['i:sfpt&c:sbpt','i:sf&c:sb','i:sfpt&c:sb','i:sf&c:sbpt','i:horner&n:bulb','i:horner&n:vert','n:bulb&n:vert&i:ax','i:sfpt&n:bulb'],
+  pearl:'Crossed sensory loss (face on the lesion side, body on the other) with no weakness. Hoarseness and dysphagia set it apart from AICA. Neck pain: vertebral dissection.',
+  next:'CTA head and neck (vertebral dissection); MRI DWI; formal swallow screen before anything by mouth.'},
+ {id:'medm',grp:'Brainstem: medulla',n:'Medial medullary (Dejerine)',v:'Anterior spinal artery or vertebral paramedian branches',lvl:'Medial medulla',
+  where:'Medullary pyramid, medial lemniscus and the hypoglossal fascicles.',
+  core:[['i:cn12',3,'Hypoglossal nucleus or fascicles'],['c:aw',2,'Pyramid (corticospinal)'],['c:lw',2,'Pyramid'],['c:sbdc',2.5,'Medial lemniscus']],
+  sup:[['c:sb',.5,'Medial lemniscus']],
+  ag:[['n:fw',-1.5],['n:flmn',-1],['n:sbpt',-1],['n:horner',-1],['n:sfpt',-1]],
+  gate:['i:cn12&c:aw','i:cn12&c:lw','i:cn12&c:sbdc','c:sbdc&c:aw&c:lw'],
+  pearl:'The tongue points toward the lesion and away from the hemiparesis, and the face is spared. Vibration and position, not pain, are lost.',
+  next:'MRI DWI; CTA.'},
+ {id:'pica',grp:'Cerebellum',n:'PICA (inferior cerebellum)',v:'Posterior inferior cerebellar artery, medial branch',lvl:'Inferior cerebellum and vermis',
+  where:'Inferior vermis and cerebellar hemisphere (nodulus and flocculus); the medulla is spared in the cerebellar-only form.',
+  core:[['n:gait',2.5,'Inferior vermis'],['n:vert',2,'Nodulus and flocculus'],['n:nys',1.5,'Flocculonodular lobe'],['i:ax',1.5,'Cerebellar hemisphere'],['n:nv',1,'Vestibulocerebellum']],
+  sup:[['n:skew',1,'Central vestibular pathway'],['n:dys',.5,'Cerebellum']],
+  ag:[['n:aw',-1.5],['n:lw',-1.5],['n:hear',-1]],
+  gate:['n:vert&n:gait','n:gait&n:nys','i:ax&n:vert','n:vert&n:nys','n:gait&n:nv'],
+  pearl:'Can look like vestibular neuritis. Inability to sit or walk unaided is central until proven otherwise. Edema at 24–96 h can compress the brainstem and cause hydrocephalus.',
+  next:'HINTS if continuous vertigo with nystagmus; MRI DWI (CT misses most). Neurosurgery aware for large infarcts.'},
+ {id:'ret',grp:'Eye',n:'Retinal artery (CRAO or amaurosis fugax)',v:'Ophthalmic artery branches (from the ICA)',lvl:'Retina',
+  where:'Central retinal artery or its branches.',
+  core:[['i:mono',4,'Central retinal artery']],
+  sup:[['i:horner',.5,'Carotid dissection']],ag:[],
+  gate:['i:mono'],
+  pearl:'Painless monocular loss is a stroke equivalent: same urgency, same workup. Over 50, check ESR and CRP for giant cell arteritis.',
+  next:'Ophthalmology now; carotid imaging, ECG and stroke workup; consider thrombolysis per local protocol.'},
+ {id:'asa',grp:'Spinal cord',n:'Anterior spinal artery (cord infarct)',v:'Anterior spinal artery',lvl:'Spinal cord, anterior two-thirds',bilat:1,
+  where:'Both corticospinal tracts, both spinothalamic tracts and the anterior horns, sparing the dorsal columns.',
+  core:[['b:lw',3,'Both corticospinal tracts'],['b:sbpt',3,'Both spinothalamic tracts, below a level'],['n:inc',1,'Autonomic fibers']],
+  sup:[['b:aw',1,'Cervical cord']],
+  ag:[['n:fw',-3],['n:flmn',-3],...no(CORT,-3),...no(BS,-2),['n:sbdc',-2],['n:hh',-2]],
+  gate:['b:lw&b:sbpt'],
+  pearl:'Sudden back pain, paraparesis and a sensory level for pain, with vibration and position preserved. Think aortic dissection or recent aortic surgery.',
+  next:'MRI spine with DWI; CTA chest if dissection is possible.'}
+];
+
+/* ---------- Scoring ---------- */
+function scoreSy(s,x,f){
+  const present=Object.keys(f);const exp=new Set();let sc=0;const why=[];const miss=[];
+  for(const [c,w,role] of s.core){if(test(c,x,f)){sc+=w;explains(c,x,f).forEach(i=>exp.add(i));why.push([c,role,1])}else miss.push([c,w,role])}
+  for(const [c,w,role] of s.sup){if(test(c,x,f)){sc+=w;explains(c,x,f).forEach(i=>exp.add(i));why.push([c,role,0])}}
+  const against=[];
+  for(const [c,w] of s.ag){if(test(c,x,f)){sc+=w;against.push(c)}}
+  /* Findings the syndrome cannot account for */
+  const un=present.filter(id=>!exp.has(id));
+  for(const id of un)sc-=(FX[id].u??.7);
+  /* Aphasia on the nondominant side, for hemispheric syndromes */
+  if(s.hemi&&x!==S.dom&&present.some(id=>FX[id].aph&&id!=='aph_a'))sc-=2;
+  /* A unilateral syndrome cannot explain a bilateral motor or sensory deficit */
+  if(!s.bilat&&!s.allowB)for(const id of present)if(f[id]==='B'&&['aw','lw','fw','sb','sbpt','sbdc','hh'].includes(id))sc-=1.2;
+  return {s,x,sc,why,miss,un,against}}
+function results(){const f=E();if(!Object.keys(f).length)return[];
+  const out=[];
+  for(const s of SY){const sides=s.bilat?['M']:['L','R'];let best=null;
+    for(const x of sides){if(!s.gate.some(g=>test(g,x,f)))continue;const r=scoreSy(s,x,f);if(!best||r.sc>best.sc)best=r}
+    if(best&&best.sc>0){
+      /* No lateralized finding explained: the side is not yet known */
+      const lat=new Set(best.why.flatMap(([c])=>explains(c,best.x,f)).filter(id=>FX[id].lr&&f[id]!==true));
+      if(!s.bilat&&!lat.size)best.xu=1;if(!s.bilat&&lat.size&&[...lat].every(id=>f[id]==='B'))best.xb=1;out.push(best)}}
+  return out.sort((a,b)=>b.sc-a.sc)}
+const sideL=r=>r.x==='M'?'Bilateral or midline':r.xb?'Bilateral':r.xu?'Side not yet lateralized':`${cap(SW[r.x])} lesion`;
+
+/* Text for a finding as marked */
+function fText(id,v){const t=FX[id].n;if(!FX[id].lr)return t;
+  if(id==='gp')return v==='B'?'gaze deviation in both directions':t.replace('{s}',SW[v]);
+  if(id==='cn12')return v==='B'?'bilateral tongue weakness':t.replace('{s}',SW[v]);
+  return t.replace('{s}',SW[v])}
+/* What a condition looks like on this patient for this lesion side, for “look for” prompts */
+function condText(c,x,xu){const alt=c.split('|')[0];return alt.split('&').map(a=>{const m=a.match(/^([cibn]):(\w+)(@[DN])?$/);if(!m)return a;const [,p,id]=m;
+  if(!FX[id].lr||p==='n')return FX[id].n.replace('{s} ','').replace(' to the {s}','');
+  const v=p==='b'||x==='M'?'B':p==='c'?opp(x):x;
+  if(xu&&v!=='B')return FX[id].n.replace('{s}',p==='c'?'contralateral':'ipsilateral').replace('to the contralateral','away from the lesion').replace('to the ipsilateral','toward the lesion');
+  return fText(id,v)}).join(' with ')}
+
+/* Clues that do not depend on any one syndrome */
+function clues(f){const C=[];const L=id=>f[id]&&f[id]!==true?f[id]:null;
+  const crn=['flmn','cn3','cn6','cn12','horner','hear','sfpt','ino'],body=['aw','lw','sb','sbpt','sbdc'];
+  const bs=body.map(L).filter(v=>v==='L'||v==='R');const cs=crn.map(id=>[id,L(id)]).filter(([,v])=>v==='L'||v==='R');
+  let crossed=null;for(const [id,v] of cs){const sd=id==='cn12'?v:v;if(bs.length&&bs.every(b=>b===opp(sd)))crossed=sd}
+  if(crossed)C.push(['Crossed signs',`Cranial nerve signs on the ${SW[crossed]}, body signs on the ${SW[opp(crossed)]}: a brainstem lesion on the ${SW[crossed]}. The cranial nerve involved gives the level.`]);
+  const cort=CORT.filter(id=>f[id]).concat(FIELD.filter(id=>f[id]));if(f.gp)cort.push('gp');
+  if(cort.length)C.push(['Cortical signs',`${cap(cort.map(id=>FX[id].l.toLowerCase()).slice(0,4).join(', '))}: the lesion reaches cortex or the visual pathway, not a lacune.`]);
+  else if(body.some(id=>f[id])&&!crossed)C.push(['No cortical signs','Weakness or numbness without aphasia, neglect, field cut or gaze deviation: deep (lacunar) or brainstem.']);
+  const faceBody=(f.fw||f.sf)&&bs.length&&[f.fw,f.sf].filter(v=>v==='L'||v==='R').every(v=>bs.includes(v));
+  if(faceBody&&!crossed)C.push(['Face and body together','Face on the same side as the body: above the mid-pons (hemisphere, capsule, thalamus or upper brainstem).']);
+  if(['aw','lw','sb','sbpt'].some(id=>f[id]==='B'))C.push(['Bilateral signs','Both sides of the body: brainstem (basilar), bilateral hemispheres, or the spinal cord. Look for a sensory level and for cranial nerve signs.']);
+  const aph=APH.some(id=>f[id]&&id!=='aph_a');
+  if(aph){const wk=['aw','fw','lw'].map(L).filter(v=>v==='L'||v==='R');
+    if(wk.length&&wk.every(v=>v===S.dom))C.push(['Aphasia with weakness on the same side as the dominant hemisphere',`Aphasia and ${SW[S.dom]}-sided weakness do not fit one hemispheric lesion: crossed dominance, two lesions, or a seizure.`]);
+    else C.push(['Aphasia',`Localizes to the dominant (${SW[S.dom]}) hemisphere.`])}
+  if(f.neg&&f.neg!=='B'&&f.neg===S.dom)C.push(['Neglect',`${cap(SW[f.neg])} neglect points to the ${SW[opp(f.neg)]} (nondominant) parietal lobe.`]);
+  if(f.gp&&f.gp!=='B'){const wk=['aw','lw','fw'].map(L).filter(v=>v==='L'||v==='R');
+    if(wk.length&&wk.every(v=>v===opp(f.gp)))C.push(['Eyes look away from the weak side',`Typical of a ${SW[f.gp]} hemispheric lesion (frontal eye field).`]);
+    else if(wk.length&&wk.every(v=>v===f.gp))C.push(['Eyes look toward the weak side',`“Wrong-way eyes”: a ${SW[opp(f.gp)]} pontine lesion, a seizure focus, or a thalamic hemorrhage.`])}
+  if(['ax','gait','vert','nys'].some(id=>f[id])&&!body.some(id=>f[id])&&!crossed)C.push(['Cerebellar or vestibular only','Vertigo, nystagmus or ataxia without long-tract signs: cerebellum or vestibular system. Gait matters: inability to walk unaided is central.']);
+  return C}
+
+/* ---------- Don’t miss ---------- */
+function misses(R,f){const M=[['glu','Fingerstick glucose','Hypoglycemia mimics any focal deficit.'],['lkw','Last known well and NIHSS','NIHSS is in Px. Posterior strokes score low on NIHSS.'],['ct','Noncontrast CT head','Hemorrhage first; it does not localize by syndrome.']];
+  const top=R[0];const post=R.slice(0,3).some(r=>['Posterior circulation','Brainstem: midbrain','Brainstem: pons','Brainstem: medulla','Cerebellum'].includes(r.s.grp));
+  if(R.slice(0,3).some(r=>r.s.lvo)||(CORT.some(id=>f[id])&&(f.aw||f.fw||f.lw)))M.push(['lvo','CTA head and neck for large-vessel occlusion','Cortical signs with weakness. Thrombectomy windows extend to 24 h in selected patients.']);
+  if(post)M.push(['mri','MRI DWI for the posterior fossa','CT misses most posterior fossa strokes; DWI can still be falsely negative in the first 24–48 h.']);
+  if(f.vert||f.nys)M.push(['hints','HINTS by someone trained in it','Only for continuous vertigo with nystagmus. Normal head impulse, direction-changing nystagmus or skew means central.']);
+  if(f.gait)M.push(['walk','Watch him try to walk','Inability to sit or stand unaided is central until proven otherwise.']);
+  if(f.cn3)M.push(['pcom','Pupil-involving CN III: CTA for a PCOM aneurysm','A dilated pupil with ptosis is compressive until proven otherwise; a headache makes it more urgent.']);
+  if(f.horner)M.push(['dis','Horner with neck pain or headache: dissection','Carotid (with hemispheric signs) or vertebral (with posterior signs); CTA neck.']);
+  if(f.flmn&&!['cn6','hear','ax','aw','lw','sfpt','sf','horner'].some(id=>f[id]))M.push(['bell','Isolated peripheral facial palsy','Bell’s palsy is likely, but look for CN VI, hearing loss, ataxia or limb signs that make it pontine.']);
+  if(f.mono)M.push(['gca','Over 50 with monocular loss: ESR and CRP','Giant cell arteritis; and ophthalmology now for CRAO.']);
+  if(f.hb)M.push(['hyp','Hemiballismus: check glucose','Nonketotic hyperglycemia causes it in older diabetics.']);
+  if(R.slice(0,3).some(r=>['pica','sca','aica'].includes(r.s.id)))M.push(['edema','Cerebellar infarct: watch for swelling','Edema peaks at 24–96 h; falling consciousness or hydrocephalus needs neurosurgery.']);
+  if(f.loc)M.push(['bao','Decreased consciousness with any brainstem sign','Basilar occlusion until the CTA says otherwise.']);
+  if(R.some(r=>r.s.id==='asa'))M.push(['aorta','Cord infarct: aortic dissection','Back or chest pain, pulse deficits; CTA chest.']);
+  M.push(['mim','Mimics: seizure (Todd), migraine aura, hypertensive encephalopathy, conversion','Sudden onset, negative symptoms and a vascular pattern favor stroke.']);
+  return M}
+
+/* ---------- Note ---------- */
+function examText(f){const parts=[];const used=new Set();
+  /* combine weakness on one side */
+  const wk=['fw','aw','lw'].filter(id=>f[id]&&f[id]!==true);
+  for(const v of ['L','R','B']){const ws=wk.filter(id=>f[id]===v);if(ws.length>1){const nm={fw:'lower face',aw:'arm',lw:'leg'};const l=ws.map(id=>nm[id]);
+    parts.push(`${SW[v]} ${l.length===3?`${l[0]}, ${l[1]} and ${l[2]}`:l.join(' and ')} weakness${f.fw===v?' (forehead spared)':''}`);ws.forEach(id=>used.add(id))}}
+  const sx=['sf','sb'].filter(id=>f[id]&&f[id]!==true);
+  for(const v of ['L','R','B']){const ss=sx.filter(id=>f[id]===v);if(ss.length===2){parts.push(`${SW[v]} face, arm and leg numbness`);ss.forEach(id=>used.add(id))}}
+  for(const id in f){if(used.has(id))continue;if(PAT.includes(id)||id==='prox'||id==='ms')continue;parts.push(fText(id,f[id]))}
+  const mod=[];PAT.concat('prox').forEach(id=>{if(f[id])mod.push(FX[id].n)});
+  if(mod.length){const wi=parts.findIndex(t=>/weakness/.test(t));if(wi>=0)parts[wi]+=`, ${mod.join(', ')}`;else parts.push(mod.join(', '))}
+  let s=parts.join('; ');if(f.ms)s=s.replace(/homonymous hemianopia/,'homonymous hemianopia with macular sparing');
+  return cap(s)}
+function noteText(R){const f=E();if(!Object.keys(f).length||!R.length)return'';const t=R[0];
+  let s=`Neuro exam: ${examText(f)}.\n`;
+  s+=`Localization: most consistent with ${t.s.n} (${t.x==='M'?'bilateral or midline lesion':t.xu?'side not lateralized':SW[t.x]+'-sided lesion'}): ${lcFirst(t.s.lvl)}. Vessel: ${t.s.v}.`;
+  if(t.s.lac)s+=' No cortical signs, consistent with a lacunar (small-vessel) syndrome.';
+  if(t.s.lvo)s+=' Concerning for large-vessel occlusion.';
+  const alt=R.slice(1,3).filter(r=>r.sc>=t.sc*.5);if(alt.length)s+=`\nAlso considered: ${alt.map(r=>`${r.s.n} (${r.x==='M'?'bilateral':r.xu?'side unclear':SW[r.x]})`).join('; ')}.`;
+  s+=`\nPlan: ${t.s.next}`;return s}
+const lcFirst=t=>t.replace(/^([A-Z])([a-z]+\b)/,(m,a,b)=>a.toLowerCase()+b);
+
+/* ---------- Rendering ---------- */
+const ph=(n,t,cue)=>`<div class="ph"><span class="eb">${n}</span><h2>${t}</h2><p class="cue">${cue}</p></div>`;
+const foot=(prev,next)=>`<div class="pfoot">${prev?`<button class="btn" data-step="${prev[0]}" type="button">← ${prev[1]}</button>`:'<span></span>'}${next?`<button class="btn primary" data-step="${next[0]}" type="button">${next[1]} →</button>`:'<span></span>'}</div>`;
+function lrRow(id){const v=S.f[id]||'';const x=FX[id];
+  return `<div class="lr${v?' set':''}"><div class="lrl"><b>${esc(x.l)}</b>${x.h?`<small>${esc(x.h)}</small>`:''}</div><div class="seg3" role="group" aria-label="${esc(x.l)}">${['L','R','B'].map(s=>`<button type="button" data-lr="${id}" data-v="${s}" aria-pressed="${v===s}">${s==='B'?'Both':s}</button>`).join('')}</div></div>`}
+const chipF=id=>`<button type="button" class="chip" data-f="${id}" aria-pressed="${!!S.f[id]}">${esc(FX[id].l)}${FX[id].h?`<small>${esc(FX[id].h)}</small>`:''}</button>`;
+function group([t,list]){const lr=list.filter(id=>FX[id].lr),nl=list.filter(id=>!FX[id].lr);
+  return `<div class="sec"><h3>${t}</h3>${lr.length?`<div class="lrs">${lr.map(lrRow).join('')}</div>`:''}${nl.length?`<div class="chips">${nl.map(chipF).join('')}</div>`:''}</div>`}
+function countStep(k){const f=E();return Object.keys(f).filter(id=>FX[id].st===k||(k==='cort'&&FX[id].aph)).length}
+function renderSteps(){$('steps').innerHTML=STEPS.map(([k,t,sh],i)=>{const n=k==='loc'?0:countStep(k);return `<button type="button" class="stepbtn" data-step="${k}" ${S.step===k?'aria-current="step"':''}><span class="n">${i+1}${n?` · ${n}`:''}</span><span class="t"><span class="lg">${t}</span><span class="sh">${sh}</span></span></button>`}).join('')}
+function paneBody(){return ph(1,'Motor and sensory','Mark each deficit on the side of the patient where you find it. Leave anything normal blank. Whether the forehead is spared splits a central face from a peripheral one (the peripheral face is on the next step).')+
+  `<div class="sec"><h3>Dominant hemisphere</h3><div class="chips">${[['L','Left','Most right-handers and most left-handers'],['R','Right','Some left-handers']].map(([v,l,h])=>`<button type="button" class="chip" data-dom="${v}" aria-pressed="${S.dom===v}">${l}<small>${h}</small></button>`).join('')}</div></div>`+
+  GROUPS.body.map(group).join('')+foot(null,['cn','Eyes & cranial nerves'])}
+function paneCn(){return ph(2,'Eyes and cranial nerves','The cranial nerve on one side and the body on the other is a brainstem lesion, at the level of that nerve. Mark gaze by where the eyes look, fields by the side that is lost.')+
+  GROUPS.cn.map(group).join('')+foot(['body','Motor & sensory'],['cort','Cortex & cerebellum'])}
+function paneCort(){const a=S.aph,t=aphType();const seg=(k,opts)=>`<div class="seg"><span class="sl">${{flu:'Fluency',comp:'Comprehension',rep:'Repetition'}[k]}</span>${opts.map(([v,l])=>`<button type="button" data-aph="${k}" data-v="${v}" class="${a[k]===v?'on':''}">${l}</button>`).join('')}</div>`;
+  return ph(3,'Cortex and cerebellum','Language, neglect and field cuts mean cortex. Ataxia out of proportion to weakness means cerebellum or its pathways.')+
+  `<div class="sec"><h3>Language</h3><p class="fine">Classify the aphasia from three bedside tests. Clear these if speech is normal.</p>
+  ${seg('flu',[['n','Nonfluent'],['f','Fluent']])}${seg('comp',[['i','Intact'],['m','Impaired']])}${seg('rep',[['i','Impaired'],['p','Preserved']])}
+  <div class="aphout">${t?`<b>${esc(FX[t].l)}</b> <button type="button" class="btn sm ghost" id="aphclr">Clear</button>`:(a.flu||a.comp||a.rep)?'<span class="fine">Choose all three.</span>':'<span class="fine">No aphasia marked.</span>'}</div></div>`+
+  GROUPS.cort.map(group).join('')+foot(['cn','Eyes & cranial nerves'],['loc','Localize'])}
+function whyChips(r,f){const pos=[];const seen=new Set();for(const [c] of r.why){for(const id of explains(c,r.x,f)){if(seen.has(id))continue;seen.add(id);pos.push(`<li>${esc(cap(fText(id,f[id])))}</li>`)}}
+  const neg=[...new Set([...r.un,...r.against.flatMap(ids).filter(id=>f[id])])].filter(id=>!seen.has(id)).map(id=>`<li class="neg">${esc(cap(fText(id,f[id])))}</li>`);
+  return `<ul class="why">${pos.join('')}${neg.join('')}</ul>`}
+function strength(r,top){return r.sc>=Math.max(6,top*.85)?'Best fit':r.sc>=top*.6?'Fits':'Possible'}
+function paneLoc(){const R=results(),f=E();
+  if(!R.length)return ph(4,'Localize','Mark findings on the first three steps.')+`<p class="empty">Nothing marked yet, or nothing fits a vascular syndrome. A single nonspecific finding (dizziness alone, nausea) does not localize.</p>`+refCards()+foot(['cort','Cortex & cerebellum'],null);
+  const focus=R.find(r=>r.s.id===S.focus)||R[0];const s=focus.s;
+  const classic=s.core.map(([c,w,role])=>{const hit=test(c,focus.x,f);return `<tr class="${hit?'hit':''}"><td>${hit?'✓':'–'}</td><td>${esc(cap(condText(c,focus.x,focus.xu)))}</td><td>${esc(role)}</td></tr>`}).join('');
+  const others=R.filter(r=>r!==focus).slice(0,5);
+  const diff=R[0]===focus?R[1]:R[0];
+  let dtx='';if(diff){const want=diff.miss.filter(([c])=>!test(c,diff.x,f)).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([c])=>condText(c,diff.x,diff.xu));
+    const mine=focus.miss.sort((a,b)=>b[1]-a[1]).slice(0,2).map(([c])=>condText(c,focus.x,focus.xu));
+    dtx=`<div class="note-box"><b>Versus ${esc(diff.s.n)} (${esc(diff.x==='M'?'bilateral':diff.xu?'side unclear':SW[diff.x])}):</b> ${mine.length?`look for ${esc(mine.join(' or '))} to support this one`:'this one already has its classic findings'}${want.length?`; ${esc(want.join(' or '))} would favor the alternative`:''}.</div>`}
+  return ph(4,'Localize','The best fit and what each finding tells you. Tap another syndrome on the right to see it here.')+
+  `<div class="sec"><div class="hero"><span class="eb2">${esc(s.grp)}</span><h3>${esc(s.n)}</h3><p class="side">${esc(sideL(focus))}</p><p>${esc(s.v)}</p>${s.lvo?'<span class="tag lvo">LVO</span>':''}${s.lac?'<span class="tag">Lacunar</span>':''}</div>
+   <table class="set"><tr><th>Lesion</th><td><b>${esc(focus.x==='M'?'Bilateral or midline':focus.xu?'Side not yet lateralized:':cap(SW[focus.x]))}</b> ${esc(lcFirst(s.lvl))}<small>${esc(s.where)}</small></td></tr></table></div>
+  <div class="sec"><h3>Classic findings</h3><table class="cls"><thead><tr><th></th><th>Finding</th><th>Structure</th></tr></thead><tbody>${classic}</tbody></table></div>
+  ${focus.why.filter(w=>!w[2]).length?`<div class="sec"><h3>Also explained</h3><ul class="list">${focus.why.filter(w=>!w[2]).map(([c,role])=>`<li>${esc(cap(condText(c,focus.x,focus.xu)))}: ${esc(lcFirst(role))}</li>`).join('')}</ul></div>`:''}
+  ${focus.un.length?`<div class="sec"><h3>Not explained by this syndrome</h3><ul class="list">${focus.un.map(id=>`<li>${esc(cap(fText(id,f[id])))}</li>`).join('')}</ul></div>`:''}
+  <div class="sec"><h3>Pearl</h3><p class="tx">${esc(s.pearl)}</p></div>
+  ${dtx?`<div class="sec"><h3>Telling it apart</h3>${dtx}</div>`:''}
+  <div class="sec"><h3>Next</h3><p class="tx">${esc(s.next)}</p></div>`+refCards()+foot(['cort','Cortex & cerebellum'],null)}
+function refCards(){const r=S.ref;
+  const card=(k,t,body)=>`<div class="refc"><button type="button" class="refh" data-ref="${k}" aria-expanded="${r===k}">${t}<span>${r===k?'−':'+'}</span></button>${r===k?`<div class="refb">${body}</div>`:''}</div>`;
+  return `<div class="sec"><h3>Reference</h3>`+
+  card('rules','Five questions that localize',`<ol class="list"><li><b>Cortical signs?</b> Aphasia, neglect, field cut, gaze deviation, cortical sensory loss: cortex, usually a branch or stem occlusion. None: deep or brainstem.</li><li><b>Crossed?</b> Cranial nerve on one side, body on the other: brainstem, on the cranial nerve side.</li><li><b>Face with the body?</b> Same side: above the mid-pons. Face spared: medulla, cord, or medial cortex (ACA).</li><li><b>Pattern of weakness?</b> Face and arm more than leg: MCA. Leg more than arm: ACA. All equal: internal capsule or pons. Proximal only: watershed.</li><li><b>Bilateral?</b> Basilar, bilateral hemispheres, or cord (look for a level).</li></ol>`)+
+  card('r4','Rule of 4 (brainstem)',`<p class="fine">Gates, Pract Neurol 2005. Four medial structures start with M, four lateral with S; four cranial nerves in each level below the midbrain.</p><table class="cls"><thead><tr><th>Medial “M”</th><th>Deficit</th></tr></thead><tbody><tr><td>Motor pathway</td><td>Contralateral weakness</td></tr><tr><td>Medial lemniscus</td><td>Contralateral vibration, position</td></tr><tr><td>MLF</td><td>Ipsilateral INO</td></tr><tr><td>Motor nucleus (III, IV, VI, XII)</td><td>Ipsilateral loss of that nerve</td></tr></tbody></table><table class="cls"><thead><tr><th>Lateral “S”</th><th>Deficit</th></tr></thead><tbody><tr><td>Spinocerebellar</td><td>Ipsilateral ataxia</td></tr><tr><td>Spinothalamic</td><td>Contralateral pain, temperature</td></tr><tr><td>Sensory nucleus of V</td><td>Ipsilateral face pain, temperature</td></tr><tr><td>Sympathetic</td><td>Ipsilateral Horner</td></tr></tbody></table><table class="cls"><thead><tr><th>Level</th><th>Cranial nerves</th></tr></thead><tbody><tr><td>Above pons</td><td>I–IV (III, IV in midbrain, medial)</td></tr><tr><td>Pons</td><td>V–VIII (VI medial; V, VII, VIII lateral)</td></tr><tr><td>Medulla</td><td>IX–XII (XII medial; IX, X, XI lateral)</td></tr></tbody></table>`)+
+  card('lac','Fisher’s lacunar syndromes',`<table class="cls"><thead><tr><th>Syndrome</th><th>Usual site</th></tr></thead><tbody><tr><td>Pure motor</td><td>Posterior limb internal capsule, corona radiata, basis pontis</td></tr><tr><td>Pure sensory</td><td>VPL/VPM thalamus</td></tr><tr><td>Sensorimotor</td><td>Thalamus and adjacent internal capsule</td></tr><tr><td>Ataxic hemiparesis</td><td>Basis pontis, internal capsule, corona radiata</td></tr><tr><td>Dysarthria–clumsy hand</td><td>Basis pontis, genu internal capsule</td></tr></tbody></table><p class="fine">No cortical signs, no field cut, consciousness preserved. A field cut or aphasia excludes a lacune.</p>`)+
+  card('aph','Aphasia by three tests',`<table class="cls"><thead><tr><th>Type</th><th>Fluent</th><th>Comprehends</th><th>Repeats</th><th>Where</th></tr></thead><tbody><tr><td>Broca</td><td>No</td><td>Yes</td><td>No</td><td>Inferior frontal</td></tr><tr><td>Wernicke</td><td>Yes</td><td>No</td><td>No</td><td>Posterior superior temporal</td></tr><tr><td>Global</td><td>No</td><td>No</td><td>No</td><td>Whole perisylvian (M1, ICA)</td></tr><tr><td>Conduction</td><td>Yes</td><td>Yes</td><td>No</td><td>Arcuate, supramarginal</td></tr><tr><td>Transcortical motor</td><td>No</td><td>Yes</td><td>Yes</td><td>SMA, ACA–MCA watershed</td></tr><tr><td>Transcortical sensory</td><td>Yes</td><td>No</td><td>Yes</td><td>MCA–PCA watershed</td></tr><tr><td>Mixed transcortical</td><td>No</td><td>No</td><td>Yes</td><td>Both watersheds</td></tr><tr><td>Anomic</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Nonspecific</td></tr></tbody></table>`)+
+  `<p class="cite">After Blumenfeld, Neuroanatomy through Clinical Cases; Adams and Victor’s Principles of Neurology; Fisher, Neurology 1982; Gates, Pract Neurol 2005; Tintinalli’s Emergency Medicine, 9th ed.</p></div>`}
+function renderOut(){const R=results(),f=E();let h='';
+  const C=clues(f);
+  h+=`<h3>Clues</h3>`+(C.length?`<ul class="clues">${C.map(([t,d])=>`<li><b>${esc(t)}</b> ${esc(d)}</li>`).join('')}</ul>`:`<p class="empty">Mark deficits by side. The pattern localizes before the syndrome does.</p>`);
+  if(R.length){const top=R[0].sc,max=Math.max(8,top);const foc=(R.find(r=>r.s.id===S.focus)||R[0]).s.id;
+    h+=`<h3>Localization</h3><div class="ddx">${R.slice(0,6).map(r=>`<button type="button" class="dx${foc===r.s.id?' on':''}" data-focus="${r.s.id}"><div class="h"><b>${esc(r.s.n)}</b><small>${strength(r,top)}</small></div><div class="sub"><b>${esc(sideL(r))}</b> · ${esc(r.s.lvl)}${r.s.lvo?' · <span class="lvoi">LVO</span>':''}</div><div class="bar"><i style="width:${Math.min(100,r.sc/max*100)}%"></i></div>${whyChips(r,f)}</button>`).join('')}</div>`;
+    if(R[0].s.lvo||R.slice(0,2).some(r=>r.s.lvo&&r.sc>=top*.8))h+=`<p class="warnbox">Pattern fits a large-vessel occlusion: CTA head and neck now, and call the stroke team.</p>`}
+  else if(Object.keys(f).length)h+=`<h3>Localization</h3><p class="empty">These findings don’t yet fit a vascular syndrome. Add the rest of the exam, or consider a mimic.</p>`;
+  if(Object.keys(f).length){const M=misses(R,f);h+=`<h3>Don’t miss</h3><ul class="miss">${M.map(([id,t,s])=>`<li data-done="${id}" class="${S.done[id]?'done':''}"><span class="bx">${S.done[id]?'✓':''}</span><span class="tx">${esc(t)}<small>${esc(s)}</small></span></li>`).join('')}</ul>`}
+  const n=noteText(R);if(n)h+=`<h3>Note</h3><pre class="dict">${esc(n)}</pre><button class="btn primary" id="copy" type="button">Copy note</button>`;
+  h+=`<p class="fine">Classic syndromes are teaching patterns; real infarcts overlap and are often incomplete. Localization does not replace imaging, and time matters more than precision: activate the stroke pathway first.</p>`;
+  $('out').innerHTML=h;
+  $('mbarmid').innerHTML=R.length?`<b>${esc(R[0].s.n)}</b> · ${esc(sideL(R[0]))}`:'Mark deficits by side';
+}
+function renderPane(){$('pane').innerHTML={body:paneBody,cn:paneCn,cort:paneCort,loc:paneLoc}[S.step]()}
+function render(keep){const y=window.scrollY;renderSteps();renderPane();renderOut();if(keep)window.scrollTo(0,y)}
+
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');if(st){S.step=st.dataset.step;render();window.scrollTo(0,0);return}
+  const lr=e.target.closest('[data-lr]');if(lr){const id=lr.dataset.lr,v=lr.dataset.v;S.f[id]=S.f[id]===v?'':v;if(!S.f[id])delete S.f[id];render(true);return}
+  const fc=e.target.closest('[data-f]');if(fc){const id=fc.dataset.f;if(S.f[id])delete S.f[id];else{S.f[id]=true;if(PAT.includes(id))PAT.forEach(p=>{if(p!==id)delete S.f[p]})}render(true);return}
+  const dm=e.target.closest('[data-dom]');if(dm){S.dom=dm.dataset.dom;render(true);return}
+  const ap=e.target.closest('[data-aph]');if(ap){const k=ap.dataset.aph;S.aph[k]=S.aph[k]===ap.dataset.v?'':ap.dataset.v;render(true);return}
+  if(e.target.closest('#aphclr')){S.aph={flu:'',comp:'',rep:''};render(true);return}
+  const fo=e.target.closest('[data-focus]');if(fo){S.focus=fo.dataset.focus;if(S.step!=='loc'){S.step='loc';render();window.scrollTo(0,0)}else render(true);return}
+  const rf=e.target.closest('[data-ref]');if(rf){S.ref=S.ref===rf.dataset.ref?'':rf.dataset.ref;renderPane();return}
+  const dn=e.target.closest('[data-done]');if(dn){S.done[dn.dataset.done]=!S.done[dn.dataset.done];renderOut();return}
+  if(e.target.closest('#copy')){copy(noteText(results()));return}
+  if(e.target.closest('#seeRecs')){$('out').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(e.target.closest('#reset')){const b=$('reset');if(b.dataset.armed){S=blank();render();window.scrollTo(0,0)}else{b.dataset.armed='1';b.textContent='Tap again to clear';setTimeout(()=>{delete b.dataset.armed;b.textContent='New patient'},2500)}return}
+});
+async function copy(t){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  const el=document.createElement('div');el.className='toast';el.textContent=ok?'Note copied.':'Couldn’t copy on this device.';document.body.appendChild(el);setTimeout(()=>el.remove(),1800)}
+render();
+</script>
+<link rel="stylesheet" href="../ehr.css"><script src="../ehr.js"></script>
+</body>
+</html>
