@@ -471,10 +471,10 @@ wrist:{n:'Wrist injury',g:'Upper extremity injury',cc:'{side} wrist pain after a
    '[o=open]Open fracture: irrigation and debridement; check for a volar puncture wound'],
   kp:['The distal radius remodels faster than any other site because its physis supplies about 75% of radial growth and the deformity lies in the plane of wrist motion.','Watch for acute carpal tunnel syndrome after displaced fractures: median numbness that progresses needs urgent reduction and release.','Physeal fractures should not be manipulated late, because repeat reduction after 5 to 7 days risks physeal injury.'],
   src:'Sarwark Ch 42 and 44; Staheli Ch 4 (remodeling of the wrist)'},
- {id:'scaph',t:'{side} scaphoid fracture, {d}',a:'Findings are {d}.',pk:[['d','Status',['consistent with a nondisplaced scaphoid fracture','consistent with a displaced scaphoid fracture','concerning for an occult scaphoid fracture (snuffbox tenderness, XR negative)']]],
-  p:['[d=consistent with a nondisplaced scaphoid fracture]Thumb spica cast for 6 weeks (up to 10 weeks if found late)',
-   '[d=consistent with a displaced scaphoid fracture]Open reduction and internal fixation (nonunion and osteonecrosis risk)',
-   '[d=concerning for an occult scaphoid fracture (snuffbox tenderness, XR negative)]Thumb spica splint or cast with repeat XR {side} scaphoid series out of plaster in 2 weeks, or MRI {side} wrist if an answer is needed now',
+ {id:'scaph',t:'{side} scaphoid fracture, {d}',a:'Findings are most consistent with a {d} scaphoid fracture.',pk:[['d','Status',['nondisplaced','displaced','suspected (snuffbox tenderness, XR negative)']]],
+  p:['[d=nondisplaced]Thumb spica cast for 6 weeks (up to 10 weeks if found late)',
+   '[d=displaced]Open reduction and internal fixation (nonunion and osteonecrosis risk)',
+   '[d=suspected (snuffbox tenderness, XR negative)]Thumb spica splint or cast with repeat XR {side} scaphoid series out of plaster in 2 weeks, or MRI {side} wrist if an answer is needed now',
    'No contact sports in the cast; follow-up in clinic in 2 weeks'],
   kp:['Scaphoid fractures are rare in young children and peak around 15 years.','Many are not visible on the first XR, so treat snuffbox tenderness as a fracture until proven otherwise.'],src:'Sarwark Ch 44'}
  ]},
@@ -1110,6 +1110,102 @@ cphip:{n:'Neuromuscular hip (cerebral palsy surveillance)',g:'Neuromuscular',cc:
    'Coordinate with physical medicine and rehabilitation for tone management','Follow-up in clinic in 6 months with XR pelvis'],
   kp:['Hip displacement risk rises with GMFCS level; it is about 90% at level V.','Migration percentage over 30 to 40% indicates progressive displacement; a dislocated spastic hip often becomes painful.'],src:'Sarwark Ch 61; Joseph Ch 22 and 53'}]}
 };
+/* ---------- Follow-up visits ----------
+   Setting "Clinic follow-up" swaps the injury story for an interval history, adds immobilization and wound checks
+   to the exam, and gives each diagnosis follow-up plans keyed to today's findings (dx.fu), or the generic ones. */
+const FU_H=['Interval history','sx',['!numbness or tingling','!increasing pain','!swelling or color change of the fingers or toes','problems with the splint or cast (wet, broken, too tight)','skin irritation or sores under the cast','stiffness','return to sports or activity|which']];
+const FU_OP=['Since surgery','sx',['!fever','!wound or pin site drainage','!redness around the incision or pins','pain controlled with acetaminophen or ibuprofen alone']];
+E.fu_imm=['Immobilization','Splint or cast intact, clean, and dry, removed for the exam; skin intact without pressure areas or maceration.',['splint or cast intact|splint or cast damaged or loose','clean and dry|wet or soiled','skin intact without pressure areas|pressure area or skin breakdown','no maceration|skin maceration']];
+E.fu_wound=['Incisions and pin sites','Incisions and pin sites clean, dry, and intact without erythema or drainage.',['incisions clean, dry, and intact|incision erythema or drainage','pin sites clean without erythema|pin site erythema or drainage','!no purulence|purulent drainage','pins in place|pin migration or a loose pin']];
+const FU_F=['no fracture','a fracture line now visible','periosteal reaction','callus formation','maintained alignment','loss of reduction','hardware in good position','a healed fracture','no evidence of physeal arrest'];
+const GENFU={pk:[['fs','Follow-up status',['healing as expected','clinically healed','not healed or still tender','complication']]],
+ p:['[fs=healing as expected]Alignment maintained; continue the current immobilization',
+  '[fs=healing as expected]Follow-up in clinic in *** weeks with repeat XR',
+  '[fs=clinically healed]Clinically and radiographically healed: discontinue immobilization',
+  '[fs=clinically healed]Gradual return to activity with home range-of-motion exercises; contact sports at *** weeks',
+  '[fs=clinically healed]?Follow-up as needed',
+  '[fs=not healed or still tender]Not yet healed: continue immobilization for *** more weeks; repeat XR at the next visit',
+  '[fs=complication]Complication: ***',
+  '?Physical therapy for motion and strength'],
+ a:'Follow-up of {hdr}: {fs}.'};
+const FUX={
+'wrist.scaph':{pk:[['r','Today',['repeat XR shows a scaphoid fracture','repeat XR negative, still tender','repeat XR negative, nontender','MRI shows a scaphoid fracture','MRI negative']]],
+ p:['[r=repeat XR shows a scaphoid fracture,MRI shows a scaphoid fracture]Nondisplaced scaphoid fracture: thumb spica cast for a total of about 6 weeks from injury (longer for proximal pole fractures or late recognition)',
+  '[r=repeat XR shows a scaphoid fracture,MRI shows a scaphoid fracture]?Displacement over 1 mm or a proximal pole fracture: CT {side} wrist and discuss ORIF',
+  '[r=repeat XR shows a scaphoid fracture,MRI shows a scaphoid fracture]Follow-up in clinic in 4 weeks with XR {side} scaphoid series out of the cast; CT if union is uncertain',
+  '[r=repeat XR negative, still tender]Persistent snuffbox tenderness with negative films: MRI {side} wrist (or continue the thumb spica and repeat XR in 2 weeks)',
+  '[r=repeat XR negative, still tender]Continue the thumb spica splint until the MRI',
+  '[r=repeat XR negative, nontender,MRI negative]No fracture: discontinue the splint; return to activity as tolerated',
+  '[r=repeat XR negative, nontender,MRI negative]Follow-up as needed; return if pain persists beyond 2 to 3 weeks',
+  'No contact sports while immobilized'],
+ a:'Snuffbox tenderness after a fall with initially negative radiographs; today {r}.'},
+'wrist.buck':{pk:[['r','Today',['nontender, healed','still tender']]],
+ p:['[r=nontender, healed]Discontinue the splint; return to activity as tolerated; no further follow-up needed','[r=still tender]Still tender: XR {side} wrist (PA and lateral); continue the splint 2 more weeks','[r=still tender]Follow-up in clinic in 2 weeks'],
+ a:'Distal radius buckle fracture, {r}.'},
+'wrist.drf':{pk:[['wk','Weeks from injury',['1 to 2 weeks','3 to 4 weeks','5 to 6 weeks']],['r','Alignment',['alignment maintained','loss of reduction']]],
+ p:['[r=alignment maintained;wk=1 to 2 weeks]Alignment maintained: continue the cast; repeat XR {side} wrist in 1 to 2 weeks',
+  '[r=loss of reduction]Loss of reduction: accept if within remodeling limits for age (about 20 degrees sagittal under 10 years); otherwise re-reduce within about 2 weeks for metaphyseal fractures; do not re-manipulate a physeal fracture after 5 to 7 days',
+  '[wk=3 to 4 weeks,5 to 6 weeks;r=alignment maintained]Callus present and nontender: cast off (usually 4 to 6 weeks total); removable splint for comfort as needed',
+  '[wk=5 to 6 weeks]Home range of motion; return to sports 2 to 4 weeks after cast removal',
+  '?Physeal fracture: XR at 3 to 6 months to look for growth arrest'],
+ a:'Distal radius fracture, {wk} from injury, with {r}.'},
+'elbow.occ':{pk:[['r','Today',['periosteal reaction confirms an occult fracture','no fracture on repeat XR, nontender']]],
+ p:['[r=periosteal reaction confirms an occult fracture]Discontinue immobilization at 3 weeks from injury; active range of motion at home','[r=no fracture on repeat XR, nontender]No fracture: discontinue the splint now','Elbow motion returns over 2 to 6 weeks without formal therapy','Follow-up as needed; return if motion has not returned by 6 weeks'],
+ a:'Elbow injury with a posterior fat pad sign; {r}.'},
+'elbow.sch':{pk:[['wk','Visit',['1 week post-op','3 to 4 weeks post-op (pin removal)','6 or more weeks post-op']],['nvf','Nerve status',['nerves intact','nerve palsy improving','nerve palsy unchanged']]],
+ p:['[wk=1 week post-op]Alignment maintained on XR; continue the splint or cast; keep pins covered and dry',
+  '[wk=3 to 4 weeks post-op (pin removal)]XR shows healing: cast and pins removed in clinic; dry dressing on pin sites',
+  '[wk=3 to 4 weeks post-op (pin removal)]Begin gentle active range of motion; no formal therapy needed; avoid falls and rough play for 3 more weeks',
+  '[wk=6 or more weeks post-op]Compare carrying angle and motion with the other side; full activity when motion and strength are near normal (usually by 3 months)',
+  '[nvf=nerve palsy improving,nerve palsy unchanged]Document motor and sensory recovery each visit; EMG and nerve conduction study if no recovery by 3 to 6 months',
+  'Follow-up in clinic in *** weeks'],
+ a:'Status post CRPP of a {side} supracondylar humerus fracture, {wk}, {nvf}.'},
+'elbow.lc':{pk:[['wk','Weeks from injury',['1 week','2 weeks','4 to 6 weeks']],['r','Today',['no further displacement','displacement increased to 2 mm or more','healed']]],
+ p:['[r=no further displacement]No interval displacement on the internal oblique: continue the long-arm cast; repeat XR in 1 week',
+  '[r=displacement increased to 2 mm or more]Interval displacement: CRPP or ORIF',
+  '[r=healed]Bridging callus on the oblique: discontinue the cast; home range of motion',
+  '[r=healed]Follow-up in 6 to 12 weeks with XR to confirm union and watch for a lateral spur or cubitus valgus'],
+ a:'Lateral condyle fracture, {wk} from injury, with {r}.'},
+'forearm.bbfa':{pk:[['wk','Weeks from injury',['1 week','2 to 3 weeks','4 to 6 weeks']],['r','Alignment',['alignment acceptable','alignment beyond acceptable limits','healed']]],
+ p:['[r=alignment acceptable;wk=1 week,2 to 3 weeks]Alignment acceptable: continue the long-arm cast; repeat XR {side} forearm in 1 week',
+  '[r=alignment beyond acceptable limits]Loss of reduction: cast wedging or re-reduction under sedation, or flexible nails if unstable',
+  '[wk=4 to 6 weeks;r=alignment acceptable]Callus present: convert to a short-arm cast for the last 2 weeks',
+  '[r=healed]Cast off; home range of motion for forearm rotation',
+  '[r=healed]No contact sports for 6 to 8 weeks after cast removal (refracture risk)',
+  '?If treated with flexible nails: removal at about 4 to 6 months'],
+ a:'Both-bone forearm fracture, {wk} from injury, {r}.'},
+'shoulder.clav':{pk:[['r','Today',['healing, nontender','still painful','clinically healed']]],
+ p:['[r=healing, nontender,still painful]Sling as needed for comfort; range of motion as tolerated','[r=clinically healed]Clinically healed with callus: discontinue the sling; full motion','[r=clinically healed]Return to contact sports when nontender with full motion and strength, usually 6 to 8 weeks after injury','A palpable callus bump is expected and remodels over 6 to 12 months','?XR only if symptoms do not fit'],
+ a:'Clavicle fracture, {r}.'},
+'ankle.sh1f':{pk:[['r','Today',['nontender, walking without pain','still tender']]],
+ p:['[r=nontender, walking without pain]Discontinue the brace or boot; return to sport; brace for sport for the rest of the season is optional','[r=nontender, walking without pain]Home balance and proprioception exercises','[r=still tender]Still tender: continue the brace or boot 2 more weeks; XR {side} ankle if not done or if tenderness has changed','Follow-up as needed'],
+ a:'Lateral ankle injury (Salter-Harris I fibula versus sprain), {r}.'},
+'leg.todd':{pk:[['r','Today',['walking comfortably','still limping']]],
+ p:['[r=walking comfortably]Cast or boot removed; no repeat XR needed; full activity','[r=still limping]Persistent limp: XR {side} tibia (periosteal reaction confirms the fracture); if unexplained, CBC, ESR, and CRP to look for infection','Follow-up as needed'],
+ a:'Toddler’s fracture of the distal tibia, {r}.'},
+'leg.tib':{pk:[['wk','Weeks from injury',['1 to 2 weeks','3 to 4 weeks','6 or more weeks']],['r','Today',['alignment maintained','varus drift or loss of alignment','healed']]],
+ p:['[r=alignment maintained]Alignment maintained; continue the long-leg cast','[r=varus drift or loss of alignment]Loss of alignment: cast wedging or re-manipulation','[wk=3 to 4 weeks,6 or more weeks;r=alignment maintained]Callus visible: change to a weight-bearing walking cast','[r=healed]Healed: out of the cast; physical therapy as needed for knee and ankle motion','Repeat XR {side} tibia in *** weeks'],
+ a:'Tibial shaft fracture, {wk} from injury, {r}.'},
+'femur.fem':{pk:[['tx','Treatment',['spica cast','flexible nails','plate or rigid nail']],['r','Today',['alignment acceptable','shortening or angulation beyond limits','healed']]],
+ p:['[tx=spica cast;r=alignment acceptable]Spica in good position; skin and perineal care reviewed; remove at about 4 to 6 weeks (longer in older children)','[r=shortening or angulation beyond limits]Loss of alignment: wedge or change the spica, or convert to fixation','[tx=flexible nails]Weight bearing as tolerated once callus forms; nail removal at about 6 to 12 months','[r=healed]Healed: progressive activity; a temporary limp for several weeks is expected','Check limb lengths for 1 to 2 years (overgrowth of 1 to 2 cm is common)','Follow-up in clinic in *** weeks with XR {side} femur'],
+ a:'Femoral shaft fracture treated with {tx}, {r}.'},
+'hand.phal':{pk:[['r','Today',['healing, nontender','still tender','rotational deformity']]],
+ p:['[r=healing, nontender]Discontinue the splint; buddy tape for 1 to 2 weeks; begin motion','[r=still tender]Continue protection 1 to 2 more weeks','[r=rotational deformity]Rotational malalignment: reduction and pinning','Follow-up as needed'],
+ a:'Phalanx fracture, {r}.'},
+'knee.pdis':{pk:[['r','Today',['improving with therapy','persistent instability or apprehension']]],
+ p:['[r=improving with therapy]Continue physical therapy; return to sport when strength is symmetric and there is no apprehension','[r=persistent instability or apprehension]MRI {side} knee and discuss MPFL reconstruction','Follow-up in clinic in 6 weeks'],
+ a:'Lateral patellar dislocation, {r}.'},
+'hip.scfe':{pk:[['wk','Visit',['2 weeks post-op','6 weeks post-op','3 or more months post-op']],['r','Today',['no new symptoms','new contralateral hip, thigh, or knee pain']]],
+ p:['[wk=2 weeks post-op]Wound check; continue protected weight bearing with crutches','[wk=6 weeks post-op]XR pelvis AP and frog lateral; advance to full weight bearing if pain-free','[wk=3 or more months post-op]No sports until physeal closure is seen on XR','[r=new contralateral hip, thigh, or knee pain]Contralateral symptoms: XR pelvis today; non-weight-bearing until reviewed','XR pelvis every 3 to 6 months until both physes close'],
+ a:'Status post in situ fixation of a {side} SCFE, {wk}, with {r}.'},
+'limp.ts':{pk:[['r','Today',['resolved','persistent symptoms']]],
+ p:['[r=resolved]Symptoms resolved: no further workup; return for recurrence','[r=persistent symptoms]Persistent beyond 1 to 2 weeks: XR pelvis AP and frog lateral (Perthes); CBC, ESR, and CRP; consider MRI'],
+ a:'Transient synovitis of the hip, {r}.'}
+};
+FUX['limp.sah']=FUX['limp.osteo']={pk:[['ab','Antibiotics',['on IV antibiotics','on oral antibiotics']],['r','Today',['improving with CRP falling','not improving or CRP rising']]],
+ p:['[r=improving with CRP falling]Continue antibiotics to complete *** weeks total (septic arthritis at least 3 weeks; osteomyelitis at least 4 weeks and until the ESR normalizes)','[r=improving with CRP falling;ab=on IV antibiotics]Transition to high-dose oral antibiotics','[r=not improving or CRP rising]Not improving: repeat MRI for an undrained abscess or sequestrum; ID input; consider repeat debridement','CBC, CRP, and ESR every 1 to 2 weeks while on therapy (CBC also for antibiotic toxicity)','?XR at the end of therapy and at 3 to 6 months for growth disturbance or pathologic fracture'],
+ a:'Bone or joint infection {ab}, {r}.'};
+FUX['infection.sah']=FUX['limp.sah'];FUX['infection.osteo']=FUX['limp.osteo'];
 
 /* ================= ENGINE ================= */
 const C=Object.assign({},C1,C2,C3);
@@ -1119,6 +1215,12 @@ const NP={intoe:'in-toeing',bowleg:'leg alignment',flatfoot:'flat feet',toewalk:
 /* resolve shared diagnoses ("@complaint.dx") */
 for(const k in C){C[k].dx=C[k].dx.map(d=>{if(d.id&&d.id[0]==='@'){const [ck,dk]=d.id.slice(1).split('.');const src=C[ck].dx.find(x=>x.id===dk);return Object.assign({},src,{id:dk});}return d;});}
 
+for(const key in FUX){const [ck,dk]=key.split('.');const d=C[ck]&&C[ck].dx.find(x=>x.id===dk);if(d)d.fu=FUX[key];}
+const FU=()=>S.set==='fu';
+function hSecs(){const c=cc();if(!c)return[];if(!FU())return c.h;const r=[FU_H].concat(c.h.filter(x=>x[1]==='pmh'));if(S.ftx.includes('surgery')||S.fvis==='post-op'||S.fvis==='pins out')r.push(FU_OP);return r;}
+function planOf(d){return FU()?(d.fu||GENFU):d;}
+function pickList(d){return (d.pk||[]).concat(FU()?(planOf(d).pk||[]):[]);}
+const pkey=id=>FU()?'f_'+id:id;
 const MODS={
  analg:{n:'Analgesia',p:['{apap}','{ibu}','?{oxy}','?{mor}','?{fent}','?{ond}','Ice and elevation']},
  nv:{n:'Neurovascular and compartment checks',p:['Neurovascular checks q1h for 24 hours, then q4h','Elevate the extremity at heart level; no tight circumferential dressings','Call orthopaedics now for escalating analgesic need, agitation, or anxiety (3 As), pain with passive stretch, new numbness or weakness, or a cool or pale extremity','?Split or bivalve the cast if swelling increases']},
@@ -1183,19 +1285,30 @@ function blank(){return{step:0,age:'',unit:'y',sex:'',wt:'',set:'',by:'',src:[],
   marks:{},idet:{},det:{},picks:{},resp:'',
   ex:{},exm:{},exd:{},
   xr:[],f:[],ftxt:'',dx:[],dp:{},plan:{},mods:{},modsSet:false,asm:{},
-  hpi:'',hpiDirty:false};}
+  hpi:'',hpiDirty:false,fwhere:'',fwhen:'',fdx:'',fimg:'',ftx:[],fsurg:'',fago:'',fagoU:'weeks',fvis:'',fcomp:'',fpain:''};}
 let S=blank();
 
 /* ---------- HPI ---------- */
 function hItems(){const c=cc();if(!c)return[];const r=[];
-  c.h.forEach((sec,si)=>{if(sec[1]==='pick')return;sec[2].forEach((raw,ii)=>{const it=P(raw);if(gateOK(it.gate))r.push({si,ii,key:si+'.'+ii,it,sec});});});return r;}
+  hSecs().forEach((sec,si)=>{if(sec[1]==='pick')return;sec[2].forEach((raw,ii)=>{const it=P(raw);if(gateOK(it.gate))r.push({si,ii,key:si+'.'+ii,it,sec});});});return r;}
 function hTally(){const all=hItems();const left=all.filter(x=>!S.marks[x.key]);return{all:all.length,left:left.length,red:left.filter(x=>x.it.red).length,leftList:left};}
 function useLine(c){const ue=isUE(c);return{unable:ue?`${He()} has been unable to use the arm since.`:`${He()} has been unable to bear weight since.`,limited:ue?`${He()} has used the arm only minimally since.`:`${He()} has been able to bear weight only with a limp since.`,normal:ue?`${He()} has been using the arm normally since.`:`${He()} has been able to bear weight since.`}[S.use]||'';}
+function immNoun(){const m=S.ftx.find(x=>/splint|cast|sling|boot|brace/.test(x));return m?m.replace(/^an? /,''):'immobilization';}
+function fuStory(c,out){
+  const mech=S.mech==='other'?S.mechTxt.trim():S.mech;
+  if(c.tr&&(mech||S.when.trim()))out.push(sent(`${He()} ${mech||'was injured'}${S.when.trim()?' '+S.when.trim():''}`));
+  if(S.fwhere||S.fwhen.trim())out.push(sent(`${He()} was initially seen ${S.fwhere?'at '+S.fwhere:''}${S.fwhen.trim()?' '+S.fwhen.trim():''}`));
+  const im={negative:'XR at that time was negative for fracture.',fracture:`XR at that time demonstrated ${S.fdx.trim()?S.fdx.trim().replace(/^(a|an) /,'a '):'a fracture'}.`,none:'No imaging was obtained at that time.'}[S.fimg];if(im)out.push(im);
+  if(S.ftx.length)out.push(`${He()} was treated with ${andL(S.ftx)}${S.fsurg.trim()?' ('+S.fsurg.trim()+')':''}.`);
+  if(S.fago)out.push(`It has been about ${S.fago} ${parseFloat(S.fago)===1?S.fagoU.replace(/s$/,''):S.fagoU} since the ${S.ftx.includes('surgery')||S.fvis==='post-op'?'surgery':'injury'}.`);
+  const n=immNoun();const cp={as:`${He()} reports wearing the ${n} as instructed.`,part:`${He()} reports wearing the ${n} only part of the time.`,not:`${He()} has not been wearing the ${n}.`}[S.fcomp];if(cp)out.push(cp);
+  const pt={improving:'Pain has been improving',unchanged:'Pain has been unchanged',worsening:'Pain has been worsening',resolved:'Pain has resolved'}[S.fpain];
+  if(pt)out.push(pt+(S.sev!=null&&S.fpain!=='resolved'?` and is currently rated ${S.sev}/10.`:'.'));else if(S.sev!=null)out.push(`Pain is currently rated ${S.sev}/10.`);}
 function buildHPI(){
-  const c=cc();if(!c)return'';const out=[];
+  const c=cc();if(!c)return'';const out=[];const H=hSecs();
   const lab=(it,key)=>{const d=(S.idet[key]||'').trim();return d?it.t+' ('+d+')':it.t;};
   const secPN=(si,sec)=>{const pos=[],neg=[];sec[2].forEach((raw,ii)=>{const it=P(raw);if(!gateOK(it.gate))return;const key=si+'.'+ii,m=S.marks[key];if(m==='p')pos.push(lab(it,key));if(m==='n')neg.push(it.t);});return{pos,neg};};
-  const by=k=>{const pos=[],neg=[];c.h.forEach((sec,si)=>{if(sec[1]!==k)return;const r=secPN(si,sec);pos.push(...r.pos);neg.push(...r.neg);});return{pos,neg};};
+  const by=k=>{const pos=[],neg=[];H.forEach((sec,si)=>{if(sec[1]!==k)return;const r=secPN(si,sec);pos.push(...r.pos);neg.push(...r.neg);});return{pos,neg};};
   const y=ageY();const young=y!=null&&y<6;
   const cgOnly=S.src.length&&!S.src.includes('patient');
   const subj=cgOnly?(S.src.length===1?{mother:'Mother',father:'Father',parents:'Parents',grandparent:'Grandparent',guardian:'Guardian',ems:'EMS',chart:'Chart review'}[S.src[0]]||'Family':'Family'):He();
@@ -1203,12 +1316,13 @@ function buildHPI(){
   const ph=by('pmh');const other=S.opmh.split(/[,;]/).map(x=>x.trim()).filter(Boolean);const pmhAll=other.concat(ph.pos);
   const ag=String(S.age).trim();const art=/^8/.test(ag)||/^1[18]$/.test(ag)?'an':'a';
   const unit={y:'y/o',m:'m/o',d:'d/o'}[S.unit];
-  out.push(`The patient is ${ag?art+' '+ag:'a ***'} ${unit} ${sexL()} with a PMHx of ${pmhAll.length?andL(pmhAll):'***'} presenting today for evaluation of ${ccp}.`);
+  out.push(`The patient is ${ag?art+' '+ag:'a ***'} ${unit} ${sexL()} with a PMHx of ${pmhAll.length?andL(pmhAll):'***'} presenting today for ${FU()?'follow-up of '+(S.fdx.trim()||ccp):'evaluation of '+ccp}.`);
   if(S.set==='ed'||S.set==='inpt')out.push(`Pediatric orthopaedic surgery was consulted by ${S.by.trim()||(S.set==='ed'?'the emergency department':'the primary team')}.`);
   if(S.src.length&&!(S.src.length===1&&S.src[0]==='patient')){const m={patient:'the patient',mother:'mother',father:'father',parents:'parents',grandparent:'grandparent',guardian:'guardian',ems:'EMS',chart:'chart review'};out.push('History was obtained from '+andL(S.src.map(x=>m[x]))+'.');}
   if(S.interp.trim())out.push((/^[aeiou]/i.test(S.interp.trim())?'An ':'A ')+S.interp.trim()+' interpreter was used.');
   if(isUE(c)&&S.hand)out.push(`${He()} is ${S.hand}-hand dominant.`);
-  if(c.tr){
+  if(FU()){fuStory(c,out);}
+  else if(c.tr){
     const mech=S.mech==='other'?S.mechTxt.trim():S.mech;
     if(mech||S.when){let t=`${He()} ${mech||'sustained the injury'}${S.ht?` (estimated ${S.ht} ft)`:''}${S.when.trim()?' '+S.when.trim():''}`;out.push(sent(t));}
     const wv={parent:'The injury was witnessed by a parent.',adult:'The injury was witnessed by another adult.',none:'The injury was unwitnessed.'}[S.wit];if(wv)out.push(wv);
@@ -1231,27 +1345,29 @@ function buildHPI(){
     if(tc)out.push(`${young?'They have':'It has'} been ${tc}${S.sev!=null?` and is rated ${S.sev}/10 at its worst`:''}.`);else if(S.sev!=null)out.push(`It is rated ${S.sev}/10 at its worst.`);
   }
   if(S.prior==='first')out.push('This is the first episode.');if(S.prior==='similar')out.push(`${He()} has had similar episodes before.`);
-  c.h.forEach((sec,si)=>{if(sec[1]==='pick'&&S.picks[si]!=null)out.push(sent(sec[3].pre+sec[2][S.picks[si]]));});
+  H.forEach((sec,si)=>{if(sec[1]==='pick'&&S.picks[si]!=null)out.push(sent(sec[3].pre+sec[2][S.picks[si]]));});
   if(S.sports.trim())out.push(`${He()} participates in ${S.sports.trim().replace(/\.$/,'')}.`);
   const sv=by('sx');if(sv.pos.length)out.push(`${subj} reports ${andL(sv.pos)}.`);if(sv.neg.length)out.push(`${subj} denies ${orL(sv.neg)}.`);
-  c.h.forEach((sec,si)=>{if(sec[1]==='sx'&&S.det[si])out.push(sent(S.det[si]));});
+  H.forEach((sec,si)=>{if(sec[1]==='sx'&&S.det[si])out.push(sent(S.det[si]));});
   if(ph.neg.length)out.push(`${He()} has no known history of ${orL(ph.neg)}.`);
-  c.h.forEach((sec,si)=>{if(sec[1]==='pmh'&&S.det[si])out.push(sent(S.det[si]));});
-  c.h.forEach((sec,si)=>{const k=sec[1];if(!['rf','tx','fhx'].includes(k))return;const {pos,neg}=secPN(si,sec);const o=sec[3]||{};
+  H.forEach((sec,si)=>{if(sec[1]==='pmh'&&S.det[si])out.push(sent(S.det[si]));});
+  H.forEach((sec,si)=>{const k=sec[1];if(!['rf','tx','fhx'].includes(k))return;const {pos,neg}=secPN(si,sec);const o=sec[3]||{};
     if(k==='rf'||k==='fhx'){if(pos.length)out.push((o.l||'Notable for')+' '+andL(pos)+'.');if(neg.length)out.push((o.n||'No')+' '+orL(neg.map(x=>x.replace(/^(a|an|the) /,'')))+'.');}
-    if(k==='tx'){const rv={full:' with relief',partial:' with partial relief',none:' without relief'}[S.resp]||'';const pre=c.tr?' prior to arrival':'';if(pos.length)out.push(`${He()} ${c.tr?'received':'has tried'} ${andL(pos)}${pre}${rv}.`);if(neg.length)out.push(`${He()} has not ${c.tr?'received':'tried'} ${orL(neg)}.`);}
+    if(k==='tx'){const rv={full:' with relief',partial:' with partial relief',none:' without relief'}[S.resp]||'';const pre=c.tr&&!FU()?' prior to arrival':'';if(pos.length)out.push(`${He()} ${c.tr?'received':'has tried'} ${andL(pos)}${pre}${rv}.`);if(neg.length)out.push(`${He()} has not ${c.tr?'received':'tried'} ${orL(neg)}.`);}
     if(S.det[si])out.push(sent(S.det[si]));});
-  if(c.tr&&c.or&&S.lastPO.trim())out.push(`Last oral intake was ${S.lastPO.trim().replace(/\.$/,'')}.`);
+  if(!FU()&&c.tr&&c.or&&S.lastPO.trim())out.push(`Last oral intake was ${S.lastPO.trim().replace(/\.$/,'')}.`);
   if(S.extra.trim())out.push(sent(S.extra));
-  out.push(`The patient's chief concern is ${(S.concern||'').trim().replace(/\.$/,'')||ccp}.`);
+  out.push(`The patient's chief concern is ${(S.concern||'').trim().replace(/\.$/,'')||(FU()?'healing and return to activity':ccp)}.`);
   out.push(`${He()} denies any further complaints today.`);
   return out.join(' ');}
 
 /* ---------- Exam ---------- */
 function exGroups(){const c=cc();if(!c)return[];
-  return c.ex.split('|').map(g=>{g=g.trim();const i=g.indexOf(':');const lab=g.slice(0,i).trim(),ids=g.slice(i+1).trim().split(/\s+/).filter(x=>E[x]);
+  const gs=c.ex.split('|').map(g=>{g=g.trim();const i=g.indexOf(':');const lab=g.slice(0,i).trim(),ids=g.slice(i+1).trim().split(/\s+/).filter(x=>E[x]);
     let h='';if(lab==='G')h='';else if(lab.startsWith('R=')){const r=lab.slice(2);h=(sideW()&&sideW()!=='bilateral'?cap(sideW())+' '+r:(sideW()==='bilateral'?'Bilateral '+r:cap(r)));}else h=lab;
-    return{h,ids};});}
+    return{h,ids:FU()?ids.filter(x=>x!=='survey'):ids};});
+  if(FU()){const ids=['fu_imm'];if(S.ftx.includes('surgery')||S.fvis==='post-op'||S.fvis==='pins out')ids.push('fu_wound');gs.splice(1,0,{h:'',ids});}
+  return gs;}
 function elems(id){return E[id][2].map((raw,i)=>{let s=raw,must=false;if(s[0]==='!'){must=true;s=s.slice(1);}const [n,a]=s.split('|');return{i,must,n,a};});}
 function itemText(id){
   const [title,norm,,meas]=E[id];const els=elems(id);
@@ -1274,14 +1390,14 @@ function nvIntact(){let any=false,ok=true;exGroups().forEach(g=>g.ids.forEach(id
 function dxList(){const c=cc();return c?c.dx:[];}
 function dxById(id){return dxList().find(d=>d.id===id);}
 function pk(d){return S.dp[d.id]||(S.dp[d.id]={});}
-function pickDefault(d){const p=pk(d);(d.pk||[]).forEach(([k,,o])=>{if(p[k]==null&&o.includes(''))p[k]='';});}
-function fillDx(d,t){const p=pk(d);t=t.replace(/\{(\w+)\}/g,(m,k)=>{if(k==='side'||k==='Side')return m;if((d.pk||[]).some(x=>x[0]===k))return p[k]!=null?p[k]:'***';return m;});return tok(fillSide(t));}
+function pickDefault(d){const p=pk(d);pickList(d).forEach(([k,,o])=>{if(p[k]==null&&o.includes(''))p[k]='';});}
+function fillDx(d,t){const p=pk(d);t=t.replace(/\{(\w+)\}/g,(m,k)=>{if(k==='side'||k==='Side')return m;if(k==='hdr')return m;if(pickList(d).some(x=>x[0]===k))return p[k]!=null?p[k]:'***';return m;});return tok(fillSide(t));}
 function condOK(d,cond){const p=pk(d);return cond.split(';').every(cl=>{const ne=cl.includes('!=');const [k,list]=cl.split(ne?'!=':'=');const v=p[k.trim()];
   const inL=v!=null&&(list===v||list.startsWith(v+',')||list.endsWith(','+v)||list.includes(','+v+','));return ne?!inL:inL;});}
 function planLines(lines){return lines.map((raw,i)=>{let t=raw,cond=null,opt=false,gate=null;const m=t.match(/^\[([^\]]*)\]/);if(m){cond=m[1];t=t.slice(m[0].length);}if(t[0]==='?'){opt=true;t=t.slice(1);}const g=t.match(/^([IYOFM]):/);if(g){gate=g[1];t=t.slice(2);}return{i,t,cond,opt,gate};});}
-function visLines(d){return planLines(d.p).filter(l=>(!l.cond||condOK(d,l.cond))&&gateOK(l.gate));}
+function visLines(d){return planLines(planOf(d).p).filter(l=>(!l.cond||condOK(d,l.cond))&&gateOK(l.gate));}
 function lineOn(key,l){const v=(S.plan[key]||{})[l.i];return v==null?!l.opt:v;}
-function headerOf(d){return cap(fillDx(d,d.t).replace(/^\s*,\s*/,'').replace(/\s*\(\s*\)/,''));}
+function headerOf(d){return cap(fillDx(d,d.t).replace(/\{hdr\}/g,'').replace(/^\s*,\s*/,'').replace(/\s*\(\s*\)/,''));}
 function mechWords(){const c=cc();if(!c)return'';if(c.tr){const m=S.mech==='other'?S.mechTxt.trim():S.mech;return m?`who ${m}${S.when.trim()?' '+S.when.trim():''}`:'';}
   if(NP[S.cc]){return S.ago?`with ${NP[S.cc]} first noticed about ${S.ago} ${parseFloat(S.ago)===1?S.agoU.replace(/s$/,''):S.agoU} ago`:'';}
   return S.ago?`with ${S.ago} ${parseFloat(S.ago)===1?S.agoU.replace(/s$/,''):S.agoU} of ${fillSide(c.cc)}`:'';}
@@ -1293,14 +1409,17 @@ function imgSentence(){const st=S.xr.map(fillSide),f=S.f.map(fillSide);const t=S
 function autoAsm(d){const c=cc();const parts=[];
   const other=S.opmh.split(/[,;]/).map(x=>x.trim()).filter(Boolean);
   const mw=mechWords();
-  parts.push(`${ageTxt()} ${sexL()}${other.length?' with a PMHx of '+andL(other):''} ${mw||'presenting with '+fillSide(c.cc)}.`.replace(/\s+\./,'.'));
+  if(FU()){const since=S.fago?`about ${S.fago} ${parseFloat(S.fago)===1?S.fagoU.replace(/s$/,''):S.fagoU} after ${S.ftx.includes('surgery')||S.fvis==='post-op'?'surgery':'injury'}`:'';
+    const tx=S.ftx.length?`treated with ${andL(S.ftx)}`:'';const fi={negative:'initially negative radiographs',fracture:'a fracture on initial radiographs'}[S.fimg]||'';
+    parts.push(`${ageTxt()} ${sexL()}${other.length?' with a PMHx of '+andL(other):''} seen in follow-up${since?' '+since:''}${fi?', with '+fi:''}${tx?', '+tx:''}.`);}
+  else parts.push(`${ageTxt()} ${sexL()}${other.length?' with a PMHx of '+andL(other):''} ${mw||'presenting with '+fillSide(c.cc)}.`.replace(/\s+\./,'.'));
   const ab=exAbn();if(ab.length)parts.push(`Exam is notable for ${andL(ab)}.`);
   if(nvIntact())parts.push(`${He()} is neurovascularly intact distally.`);
   const im=imgSentence();if(im)parts.push(im);
-  parts.push(fillDx(d,d.a));
+  const pa=FU()&&planOf(d).a?planOf(d).a:d.a;parts.push(fillDx(d,pa).replace(/\{hdr\}/g,headerOf(d).replace(/^./,x=>x.toLowerCase())));
   return parts.join(' ').replace(/\s{2,}/g,' ');}
 function asmOf(d){const e=S.asm[d.id];return e&&e.dirty?e.t:autoAsm(d);}
-function suggestedMods(){const c=cc();if(!c)return{};const m={};(c.mods||[]).forEach(k=>m[k]=true);
+function suggestedMods(){const c=cc();if(!c)return{};const m={};if(FU()){if(c.tr)m.cast=true;return m;}(c.mods||[]).forEach(k=>m[k]=true);
   if(c.tr)m.cast=true;
   if(S.dx.some(id=>{const p=S.dp[id]||{};return p.o==='open';}))m.open=true;
   const y=ageY();const natPos=hItems().some(x=>x.sec[0]==='Injury screen'&&S.marks[x.key]==='p');
@@ -1308,7 +1427,7 @@ function suggestedMods(){const c=cc();if(!c)return{};const m={};(c.mods||[]).for
   return m;}
 function modOn(k){return S.modsSet&&k in S.mods?S.mods[k]:!!suggestedMods()[k];}
 function blocks(){const out=[];const c=cc();if(!c)return out;
-  S.dx.forEach(id=>{const d=dxById(id);if(!d)return;const pl=visLines(d).filter(l=>lineOn(id,l)).map(l=>fillDx(d,l.t));out.push({h:['# '+headerOf(d)],a:asmOf(d),pl,id});});
+  S.dx.forEach(id=>{const d=dxById(id);if(!d)return;const pl=visLines(d).filter(l=>lineOn(pkey(id),l)).map(l=>fillDx(d,l.t));out.push({h:['# '+headerOf(d)],a:asmOf(d),pl,id});});
   const extra=[];MOD_ORDER.forEach(k=>{if(!modOn(k)||MODS[k].sep)return;planLines(MODS[k].p).forEach(l=>{if(lineOn('m_'+k,l))extra.push(tok(fillSide(l.t)));});});
   if(extra.length){if(out.length)out[0].pl=out[0].pl.concat(extra.filter(x=>!out[0].pl.includes(x)));else out.push({h:['# '+cap(fillSide(c.cc))],a:'',pl:extra});}
   if(modOn('nat')){const flags=hItems().filter(x=>x.sec[0]==='Injury screen'&&S.marks[x.key]==='p').map(x=>x.it.t);
@@ -1342,7 +1461,7 @@ function vPatient(){
     <div class="in" style="max-width:none"><span>Sex</span>${one('sex',S.sex,['female','male'],['Female','Male'])}</div>
     <p class="dose" id="doseEx">${wt()?`Example: acetaminophen ${fmt(dz(15,1000))} mg, ibuprofen ${fmt(dz(10,600))} mg.`:''}</p>
     <div class="row">${inp('opmh','Other PMHx, separated by commas','asthma, ADHD','wide')}</div></div>
-  <div class="sec"><h3>Setting</h3>${one('set',S.set,['ed','inpt','clinic'],['ED consult','Inpatient consult','Clinic'])}
+  <div class="sec"><h3>Setting</h3>${one('set',S.set,['ed','inpt','clinic','fu'],['ED consult','Inpatient consult','Clinic, new','Clinic follow-up'])}
     ${S.set==='ed'||S.set==='inpt'?`<div class="row">${inp('by','Consulted by','the ED team, Dr. ***','wide')}</div>`:''}</div>
   <div class="sec"><h3>Source of history</h3>${multi('src',S.src,['patient','mother','father','parents','grandparent','guardian','ems','chart'],['Patient','Mother','Father','Parents','Grandparent','Guardian','EMS','Chart review'])}
     <div class="row">${inp('interp','Interpreter language','Spanish')}</div>
@@ -1362,6 +1481,7 @@ function triChip(x){const v=S.marks[x.key];const cls=v==='p'?' pos':v==='n'?' ne
   return `<button type="button" class="chip${cls}" data-a="tri" data-v="${x.key}" aria-label="${esc(shown(x.it.t))}${v==='p'?', yes':v==='n'?', no':', not asked'}"><span class="mk">${v==='p'?'+':v==='n'?'−':''}</span>${esc(shown(x.it.t))}</button>`;}
 const KIND={sx:'Ask about',pmh:'Past history',rf:'History',tx:'Tried',fhx:'Family history'};
 function vStory(c){
+  if(FU())return vFU(c);
   if(c.tr){const mechs=c.mech||[];
     return `<div class="sec"><h3>Injury</h3>
       <div class="flab">Mechanism (completes “${He()} ___”)</div>${one('mech',S.mech,mechs.concat(['other']),mechs.map(shown).concat(['Other']))}
@@ -1383,9 +1503,23 @@ function vStory(c){
     <div class="flab">Course</div>${one('course',S.course,['worsening','improving','unchanged','resolved'])}
     <div class="flab">Severity at worst (0 to 10)</div><div class="seg">${[...Array(11).keys()].map(n=>`<button type="button" class="${S.sev===n?'on':''}" data-a="sev" data-v="${n}">${n}</button>`).join('')}</div>
     <div class="flab">Prior episodes</div>${one('prior',S.prior,['first','similar'],['First episode','Similar before'])}</div>`;}
+function vFU(c){const mechs=c.mech||[];
+  return `<div class="sec"><h3>Follow-up visit</h3>
+    <div class="flab">Visit</div>${one('fvis',S.fvis,['injury','post-op','cast off','pins out','recheck'],['Injury follow-up','Post-op check','Cast or splint removal','Pin removal','Symptom recheck'])}
+    <div class="row">${inp('fdx','Diagnosis being followed (opens the HPI)',`a suspected ${sideW()?sideW()+' ':''}scaphoid fracture`,'wide')}</div>
+    ${c.tr?`<div class="flab">Original injury (optional)</div>${one('mech',S.mech,mechs.concat(['other']),mechs.map(shown).concat(['Other']))}${S.mech==='other'?`<div class="row">${inp('mechTxt','Mechanism, as it should read','fell off a horse','wide')}</div>`:''}<div class="row">${inp('when','When','on 11/2','wide')}</div>`:''}
+    <div class="flab">Initially seen at</div>${one('fwhere',S.fwhere,['an outside emergency department','our emergency department','an urgent care','the pediatrician’s office','our clinic'],['Outside ED','Our ED','Urgent care','Pediatrician','Our clinic'])}
+    <div class="row">${inp('fwhen','Date of that visit','on 11/2','wide')}</div>
+    <div class="flab">Imaging at that visit</div>${one('fimg',S.fimg,['negative','fracture','none'],['XR negative','XR showed the fracture','No imaging'])}
+    <div class="flab">Treatment so far</div>${multi('ftx',S.ftx,['a splint','a thumb spica splint','a cast','a sling','a walking boot','a brace','crutches','a closed reduction','surgery'])}
+    ${S.ftx.includes('surgery')?`<div class="row">${inp('fsurg','Procedure and date','CRPP on 11/3','wide')}</div>`:''}
+    <div class="row">${inp('fago','Time since injury or surgery','10','xs','number','decimal')}<div class="in" style="max-width:none;flex:0 1 auto"><span>Unit</span>${one('fagoU',S.fagoU,['days','weeks','months'])}</div></div>
+    <div class="flab">Wearing the ${esc(immNoun())}</div>${one('fcomp',S.fcomp,['as','part','not'],['As instructed','Part of the time','Not wearing it'])}
+    <div class="flab">Pain since</div>${one('fpain',S.fpain,['improving','unchanged','worsening','resolved'])}
+    <div class="flab">Pain now (0 to 10)</div><div class="seg">${[...Array(11).keys()].map(n=>`<button type="button" class="${S.sev===n?'on':''}" data-a="sev" data-v="${n}">${n}</button>`).join('')}</div></div>`;}
 function vHPI(){const c=cc();if(!c)return needCC();const all=hItems();
   let pert='';
-  c.h.forEach((sec,si)=>{
+  hSecs().forEach((sec,si)=>{
     if(sec[1]==='pick'){pert+=`<div class="sec"><h3>${esc(sec[0])}</h3><div class="chips">${sec[2].map((o,ii)=>chip('hpick',si+'.'+ii,S.picks[si]===ii,shown(o))).join('')}</div></div>`;return;}
     const mine=all.filter(x=>x.si===si);if(!mine.length)return;const done=mine.filter(x=>S.marks[x.key]).length;
     pert+=`<div class="sec"><h3>${esc(sec[0])}<span class="kind">${KIND[sec[1]]}</span><span class="aside${done===mine.length?' done':''}">${done} of ${mine.length}</span></h3>
@@ -1428,14 +1562,14 @@ function vExam(){const c=cc();if(!c)return needCC();
 function vAP(){const c=cc();if(!c)return needCC();
   let body=`<div class="sec"><h3>Imaging and labs</h3>
     <div class="flab">Studies</div>${multi('xr',S.xr,c.xr,c.xr.map(fillSide))}
-    <div class="flab">Findings</div>${multi('f',S.f,c.f,c.f.map(x=>cap(fillSide(x))))}
+    <div class="flab">Findings</div>${(()=>{const F=FU()?FU_F.concat(c.f):c.f;return multi('f',S.f,F,F.map(x=>cap(fillSide(x))));})()}
     <textarea class="full" data-t="ftxt" placeholder="Other findings or values (written into each assessment)">${esc(S.ftxt)}</textarea>
     <p class="fine">Fill any *** in the note after copying.</p></div>
    <div class="sec"><h3>Diagnoses</h3><p class="fine">Pick one or more. Each becomes a # problem with its own assessment and plan.</p><div class="chips">${c.dx.map(d=>chip('dx',d.id,S.dx.includes(d.id),cap(fillSide(d.t.replace(/\{(?!side|Side)\w+\}/g,'')).replace(/\s*,\s*$/,'').replace(/\(\s*\)/,'').replace(/\s{2,}/g,' ').replace(/ ,/g,',')))).join('')}</div></div>`;
   S.dx.forEach(id=>{const d=dxById(id);if(!d)return;pickDefault(d);const p=pk(d);
     body+=`<div class="dxcard"><h4># ${esc(headerOf(d))}</h4>
-     ${(d.pk||[]).map(([k,l,o])=>`<div class="pick"><div class="flab">${esc(l)}</div><div class="chips">${o.map(v=>chip('dp',id+'\u0001'+k+'\u0001'+v,p[k]===v,v===''?'None':cap(v.replace(/^[\s,]+/,'').replace(/^\((.*)\)$/,'$1')))).join('')}</div></div>`).join('')}
-     <div class="flab">Plan</div><ul class="plan">${visLines(d).map(l=>{const on=lineOn(id,l);return `<li class="${on?'on':'off'}" data-a="pl" data-v="${id}\u0001${l.i}" role="checkbox" aria-checked="${on}" tabindex="0"><span class="bx">${on?'✓':''}</span><span class="tx">${hl(fillDx(d,l.t))}</span></li>`;}).join('')}</ul>
+     ${pickList(d).map(([k,l,o])=>`<div class="pick"><div class="flab">${esc(l)}</div><div class="chips">${o.map(v=>chip('dp',id+'\u0001'+k+'\u0001'+v,p[k]===v,v===''?'None':cap(v.replace(/^[\s,]+/,'').replace(/^\((.*)\)$/,'$1')))).join('')}</div></div>`).join('')}
+     <div class="flab">Plan</div><ul class="plan">${visLines(d).map(l=>{const on=lineOn(pkey(id),l);return `<li class="${on?'on':'off'}" data-a="pl" data-v="${pkey(id)}\u0001${l.i}" role="checkbox" aria-checked="${on}" tabindex="0"><span class="bx">${on?'✓':''}</span><span class="tx">${hl(fillDx(d,l.t))}</span></li>`;}).join('')}</ul>
      <div class="flab">Assessment</div><textarea class="full" data-asm="${id}" rows="4">${esc(asmOf(d))}</textarea>
      ${S.asm[id]&&S.asm[id].dirty?`<div class="row"><button class="btn sm" type="button" data-a="asmre" data-v="${id}">Rebuild assessment</button></div>`:''}
      ${d.kp?`<details class="kp"><summary>Key points</summary><ul>${d.kp.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><div class="cite">${esc(d.src||'')}</div></details>`:''}</div>`;});
@@ -1491,10 +1625,11 @@ function resetComplaint(){Object.assign(S,{side:'',when:'',mech:'',mechTxt:'',ht
 
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
-  const singles=['unit','sex','set','hand','side','wit','use','onset','agoU','course','prior','resp'];
+  const singles=['unit','sex','set','hand','side','wit','use','onset','agoU','course','prior','resp','fvis','fwhere','fimg','fagoU','fcomp','fpain'];
+  const wasFU=FU();
   if(singles.includes(a)){S[a]=S[a]===v&&!['unit','agoU'].includes(a)?'':v;if(a==='side'){/* headers depend on side */}}
   else if(a==='mech'){S.mech=S.mech===v?'':v;}
-  else if(['src','imm','timing','loc','agg','rel','xr','f'].includes(a))toggle(S[a],v);
+  else if(['src','imm','timing','loc','agg','rel','xr','f','ftx'].includes(a))toggle(S[a],v);
   else if(a==='sev'){const n=+v;S.sev=S.sev===n?null:n;}
   else if(a==='cc'){if(S.cc!==v){S.cc=v;resetComplaint();}if(C[v].sd===0){S.step=2;window.scrollTo(0,0);}else if(S.side){S.step=2;window.scrollTo(0,0);}render(S.step===1);return;}
   else if(a==='hpick'){const [si,ii]=v.split('.').map(Number);S.picks[si]=S.picks[si]===ii?null:ii;if(S.picks[si]==null)delete S.picks[si];}
@@ -1506,13 +1641,14 @@ document.addEventListener('click',e=>{
   else if(a==='allnorm'){exGroups().forEach(g=>g.ids.forEach(id=>elems(id).forEach(el=>{if(!S.ex[id+'.'+el.i])S.ex[id+'.'+el.i]='n';})));}
   else if(a==='exclear'){S.ex={};S.exm={};S.exd={};}
   else if(a==='dx'){toggle(S.dx,v);}
-  else if(a==='dp'){const [id,k,val]=v.split('\u0001');const p=S.dp[id]||(S.dp[id]={});p[k]=p[k]===val&&!dxById(id).pk.find(x=>x[0]===k)[2].includes('')?undefined:val;if(p[k]===undefined)delete p[k];}
-  else if(a==='pl'){const [k,i]=v.split('\u0001');const l=(k.startsWith('m_')?planLines(MODS[k.slice(2)].p):planLines(dxById(k).p))[+i];S.plan[k]=S.plan[k]||{};S.plan[k][+i]=!lineOn(k,l);}
+  else if(a==='dp'){const [id,k,val]=v.split('\u0001');const p=S.dp[id]||(S.dp[id]={});p[k]=p[k]===val&&!pickList(dxById(id)).find(x=>x[0]===k)[2].includes('')?undefined:val;if(p[k]===undefined)delete p[k];}
+  else if(a==='pl'){const [k,i]=v.split('\u0001');const l=(k.startsWith('m_')?planLines(MODS[k.slice(2)].p):planLines(planOf(dxById(k.replace(/^f_/,''))).p))[+i];S.plan[k]=S.plan[k]||{};S.plan[k][+i]=!lineOn(k,l);}
   else if(a==='mod'){if(!S.modsSet){S.modsSet=true;const sm=suggestedMods();MOD_ORDER.forEach(k=>S.mods[k]=!!sm[k]);}S.mods[v]=!S.mods[v];}
   else if(a==='asmre'){delete S.asm[v];}
   else if(a==='go'){S.step=+v;window.scrollTo(0,0);render();return;}
   else if(a==='copy'){doCopy(v);return;}
   else return;
+  if(FU()!==wasFU){S.marks={};S.idet={};S.det={};S.asm={};S.hpiDirty=false;S.mods={};S.modsSet=false;}
   render(true);});
 document.addEventListener('keydown',e=>{const li=e.target.closest&&e.target.closest('li[data-a]');if(li&&(e.key==='Enter'||e.key===' ')){e.preventDefault();li.click();}});
 document.addEventListener('input',e=>{const el=e.target;
