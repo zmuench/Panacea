@@ -96,6 +96,16 @@ textarea{min-height:64px;resize:vertical;line-height:1.4}
 .exam li.done span.t{color:var(--muted);text-decoration:line-through}
 .exam .must{font:700 .66rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--pos);margin-left:6px}
 .fine{font-size:12px;color:var(--muted);margin:0}
+/* "In the note" preview under each free-text field: the sentence it lands in, with the typed words marked */
+.how{margin:-2px 0 2px;padding:7px 10px;background:var(--paper);border:1px dashed var(--line);border-radius:8px;display:flex;flex-direction:column;gap:3px}
+.how:empty{display:none}
+.how .hk{font:700 .64rem var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.how .hk.ex{color:var(--muted)}
+.how .hs{font:400 .92rem/1.45 var(--f-note);color:var(--ink)}
+.how .hs .pv{color:var(--muted)}
+.how mark{background:var(--accent-soft);color:var(--ink);border-bottom:2px solid var(--accent);padding:0 1px;border-radius:2px}
+.how mark.ex{background:transparent;color:var(--muted);font-style:italic;border-bottom:2px dashed var(--muted)}
+.how .hr{font:400 11.5px/1.35 var(--f-body);color:var(--muted)}
 .ok{padding:9px 11px;border-radius:9px;background:var(--neg-soft);color:var(--neg);font-size:13px;font-weight:600}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;z-index:40}
 footer.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -759,8 +769,8 @@ function items(){ // every visible tri-state item: {si,ii,key,it,sec}
 function tally(){const all=items();const left=all.filter(x=>!s.marks[x.key]);return{all:all.length,left:left.length,red:left.filter(x=>x.it.red).length,leftList:left};}
 
 /* ---------- HPI writer ---------- */
-function build(){
-  const c=cc();if(!c)return'';const out=[];
+function build(parts){
+  const c=cc();if(!c)return parts?[]:'';const out=[];
   const lab=(it,key)=>{const d=(s.idet[key]||'').trim();return d?it.t+' ('+d+')':it.t;};
   const secPN=(si,sec)=>{const pos=[],neg=[];sec.i.forEach((raw,ii)=>{const it=P(raw);if(!visible(it))return;const key=si+'.'+ii,m=s.marks[key];if(m==='p')pos.push(lab(it,key));if(m==='n')neg.push(it.t);});return{pos,neg};};
   const by=k=>{const pos=[],neg=[];c.sec.forEach((sec,si)=>{if(sec.k!==k)return;const r=secPN(si,sec);pos.push(...r.pos);neg.push(...r.neg);});return{pos,neg};};
@@ -793,7 +803,7 @@ function build(){
   const adv=ev?'':({sudden:'suddenly',gradual:'gradually'}[s.onset]||'');
   const ago=s.ago?('about '+s.ago+' '+(parseFloat(s.ago)===1?s.agoU.replace(/s$/,''):s.agoU)+' ago'):'';
   const began=adv||ago||s.ctx;
-  if(began)out.push(sent(N+' '+(m.v||'began')+' '+[adv,ago].filter(Boolean).join(' ')+ctxPhrase(s.ctx,{male:'him',female:'her'}[s.sex])).replace(/ \./,'.'));
+  if(began)out.push(sent(N+' '+(m.v||'began')+' '+[adv,ago].filter(Boolean).join(' ')+ctxPhrase(s.ctx,{male:'him',female:'her'}[s.sex])).replace(/ {2,}/g,' ').replace(/ \./,'.'));
   if(c.lkw&&s.lkw)out.push(sent('Last known well was '+s.lkw));
   let subjUsed=!!began;
   const clause=(cl)=>{if(!cl.length)return;const j=cl.length===2&&cl.some(x=>/ and /.test(x))?cl.join(', and '):joinL(cl,'and');out.push((subjUsed?It:N)+' '+j+'.');subjUsed=true;};
@@ -865,7 +875,7 @@ function build(){
   // fixed closing lines
   out.push(`The patient's chief concern is ${(s.concern||'').trim().replace(/\.$/,'')||ccp}.`);
   out.push(`${He} denies any further complaints today.`);
-  return out.join(' ');}
+  return parts?out:out.join(' ');}
 /* turn whatever was typed about how it started into a phrase that fits after "began ... ago" */
 function ctxPhrase(raw,obj){
   let t=String(raw||'').trim().replace(/[.]+$/,'');if(!t)return'';
@@ -876,6 +886,56 @@ function ctxPhrase(raw,obj){
   if(/^(woke|waking|awoke)( (up|him|her|the patient))? from sleep$/.test(low))return' and woke '+(obj||'the patient')+' from sleep';
   if(/^\w+ing\b/.test(low))return' while '+t;
   return' in the setting of '+t;}
+/* ---------- "In the note" previews ----------
+   Each free-text field gets a box showing the exact sentence its text lands in, built by the real HPI writer,
+   with the typed words marked. Empty fields show the same sentence with a sample value so the format is clear. */
+const HOW={
+  opmh:{ex:'asthma, hypothyroidism',r:'Lowercase diagnoses, separated by commas; abbreviations are fine. Joined with any history you mark positive.'},
+  interp:{ex:'Spanish',r:'Just the language, capitalized.'},
+  ccText:{ex:'right hand numbness',r:'Lowercase phrase, no period. Also closes the HPI if the chief concern is left blank.'},
+  concern:{ex:'that this could be something serious',r:'Lowercase phrase that finishes the sentence, no period. Starting with "that" works well.'},
+  ctx:{ex:'carrying groceries up stairs',r:'Start with an -ing verb ("while" is added), a word like after, during or at (kept as typed), or a noun ("in the setting of" is added). "None" reads as no inciting event.'},
+  lkw:{ex:'21:30 per spouse',r:'Time and who saw them; finishes "Last known well was".'},
+  lmp:{ex:'about 3 weeks ago',r:'A date or a phrase; finishes "LMP was".'},
+  ga:{ex:'8 weeks by LMP',r:'Finishes "currently pregnant at".'},
+  extra:{ex:'Seen at urgent care yesterday, told to come here',r:'Its own sentence, placed just before the chief concern line. Capital and period are added if missing.'}};
+const DETEX={sx:'Symptoms are worse at night',pmh:'Last echo in 2024 was normal',rf:'Flew back from Europe 3 days ago',med:'Last dose was this morning',tx:'Took 400 mg ibuprofen at 08:00'};
+const howBox=spec=>`<div class="how" data-how="${spec}" aria-live="polite"></div>`;
+function howHTML(spec){
+  // before a complaint is picked (Patient screen), preview against Other so the opening line still shows
+  if(!cc()&&C.other){const was=s.cc;s.cc='other';try{return howHTML(spec);}finally{s.cc=was;}}
+  const c=cc();if(!c)return'';
+  const [k,id]=[spec.slice(0,1),spec.slice(2)];
+  let get,set,ex,rule;
+  if(k==='t'){get=()=>s[id];set=v=>{s[id]=v;};ex=HOW[id].ex;rule=HOW[id].r;}
+  else if(k==='d'){const sec=c.sec[+id];if(!sec)return'';get=()=>s.det[id]||'';set=v=>{if(v)s.det[id]=v;else delete s.det[id];};ex=DETEX[sec.k]||'Your details here';
+    rule='Its own sentence, placed right after this section’s line. Capital and period are added if missing.';}
+  else if(k==='i'){get=()=>s.idet[id]||'';set=v=>{if(v)s.idet[id]=v;else delete s.idet[id];};ex='details';
+    rule='Short lowercase phrase. It goes in parentheses after the item.';}
+  else return'';
+  const cur=get(),typed=String(cur||'').trim(),useEx=!typed,val=useEx?ex:cur;
+  // section detail boxes are many per screen; show their sample only while that box is focused
+  if(k==='d'&&useEx&&!(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.d===id))return'';
+  let a,b;
+  try{set('');b=build(true);set(val);a=build(true);}finally{set(cur);}
+  let i=a.findIndex((x,j)=>x!==b[j]);
+  // needles: the words to mark inside the sentence
+  const clean=String(val).trim().replace(/[.]+$/,'');
+  let needles=id==='opmh'?String(val).split(/[,;]/).map(x=>x.trim()).filter(Boolean):[clean];
+  if(i<0)i=a.findIndex(x=>x.toLowerCase().includes(needles[0].toLowerCase()));
+  if(i<0)return'';
+  const part=a[i],low=part.toLowerCase();
+  if(id==='ctx'&&!low.includes(clean.toLowerCase())){const ph=ctxPhrase(val).trim();if(ph)needles=[ph];}
+  const rg=[];let from=0;
+  needles.forEach(n=>{const at=low.indexOf(n.toLowerCase(),from);if(at>=0){rg.push([at,at+n.length]);from=at+n.length;}});
+  let html='',p=0;
+  rg.forEach(([x,y])=>{html+=esc(part.slice(p,x))+`<mark${useEx?' class="ex"':''}>${esc(part.slice(x,y))}</mark>`;p=y;});
+  html+=esc(part.slice(p));
+  // a few words of the sentence before, so it is clear where this one lands
+  let pre='';
+  if(i>0){const w=a[i-1].split(' ');pre=`<span class="pv">${w.length>7?'…'+esc(w.slice(-6).join(' ')):esc(a[i-1])}</span> `;}
+  return `<span class="hk${useEx?' ex':''}">${useEx?'In the note, with a sample':'In the note'}</span><span class="hs">${pre}${html}</span><span class="hr">${esc(rule)}</span>`;}
+function refreshHow(){document.querySelectorAll('[data-how]').forEach(el=>{el.innerHTML=howHTML(el.dataset.how);});}
 function pregOn(){const c=cc();if(!c||!c.preg||s.sex!=='female')return false;const y=ageY();return y==null||(y>=10&&y<=55);}
 
 /* ---------- views ---------- */
@@ -890,11 +950,11 @@ function vPatient(){
     <label class="f">Age<input id="age" type="number" inputmode="decimal" data-t="age" value="${esc(s.age)}" placeholder="45"></label>
     <div class="fld"><span class="fl">Unit</span>${one('unit',s.unit,['y.o.','m.o.','days old'],['Years','Months','Days'])}</div></div>
     <div class="fld"><span class="fl">Sex</span>${one('sex',s.sex,['female','male'],['Female','Male'])}</div>
-    <label class="f">Other PMHx, separated by commas<input id="opmh" type="text" data-t="opmh" value="${esc(s.opmh)}" placeholder="asthma, hypothyroidism"></label>
+    <label class="f">Other PMHx, separated by commas<input id="opmh" type="text" data-t="opmh" value="${esc(s.opmh)}" placeholder="asthma, hypothyroidism"></label>${howBox('t:opmh')}
     <p class="fine">Added to the opening line along with any history you mark positive on the Pertinents screen.</p>
     <div class="fld"><span class="fl">Arrival</span>${one('arr',s.arr,['walkin','ems','family','referral','transfer'],['Walk-in','EMS','With family','Clinic referral','Transfer'])}</div></div>
   <div class="sec"><h2>Source of history</h2>${multi('src',s.src,['patient','family','caregiver','ems','chart','facility'],['Patient','Family','Caregiver','EMS','Chart review','Facility staff'])}
-    <label class="f">Interpreter language<input id="interp" type="text" data-t="interp" value="${esc(s.interp)}" placeholder="Spanish"></label>
+    <label class="f">Interpreter language<input id="interp" type="text" data-t="interp" value="${esc(s.interp)}" placeholder="Spanish"></label>${howBox('t:interp')}
     <div class="fld"><span class="fl">History limited by</span>${multi('lim',s.lim,['altered mental status','clinical acuity','intoxication','patient age','language barrier'],['Altered mental status','Acuity','Intoxication','Patient age','Language barrier'])}</div></div>`;}
 
 function vComplaint(){
@@ -904,7 +964,7 @@ function vComplaint(){
   return `<h1 class="step"><span class="k">2</span>Chief complaint</h1><p class="lede">Pick the complaint. Each one loads its own checklist of pertinent positives, negatives, and red flags.</p>
   <div class="sec"><input type="search" id="q" data-t="q" value="${esc(s.q)}" placeholder="Search complaints" aria-label="Search complaints">
     <div class="picker">${groups||'<p class="fine">No complaint matches that search. Try a shorter word, or pick Other.</p>'}</div>
-    ${s.cc==='other'?`<label class="f">Chief complaint, as it should read in the note<input id="ccText" type="text" data-t="ccText" value="${esc(s.ccText)}" placeholder="right hand numbness"></label>`:''}</div>`;}
+    ${s.cc==='other'?`<label class="f">Chief complaint, as it should read in the note<input id="ccText" type="text" data-t="ccText" value="${esc(s.ccText)}" placeholder="right hand numbness"></label>${howBox('t:ccText')}`:''}</div>`;}
 
 function vStory(){
   const c=cc();if(!c)return needCC();
@@ -912,15 +972,15 @@ function vStory(){
   const mainName=m.n?m.n.replace(/^The /,'').toLowerCase():'symptoms';const ev=m.v==='occurred';
   let h=`<h1 class="step"><span class="k">3</span>Story</h1><p class="lede">Laid out in OLDCARTS order: onset, location, duration, character, aggravating and alleviating factors, radiation, timing, and severity.</p>
   <div class="sec"><h2>Chief concern</h2>
-    <label class="f">What worries the patient most, in their words<input id="concern" type="text" data-t="concern" value="${esc(s.concern)}" placeholder="${esc(s.cc==='other'?'***':c.cc)}"></label>
+    <label class="f">What worries the patient most, in their words<input id="concern" type="text" data-t="concern" value="${esc(s.concern)}" placeholder="${esc(s.cc==='other'?'***':c.cc)}"></label>${howBox('t:concern')}
     <p class="fine">Closes the HPI. Leave blank to use the chief complaint.</p></div>
   <div class="sec"><h2>Onset of the ${esc(mainName)}</h2>
     ${ev?'':`<div class="fld">${L('O','How it started')}${one('onset',s.onset,['sudden','gradual'])}</div>`}
     <div class="grid"><label class="f">How long ago<input id="ago" type="number" inputmode="decimal" data-t="ago" value="${esc(s.ago)}" placeholder="2"></label>
       <div class="fld"><span class="fl">Unit</span>${one('agoU',s.agoU,['minutes','hours','days','weeks','months'])}</div></div>
     <label class="f">What were they doing when it started?<input id="ctx" type="text" data-t="ctx" value="${esc(s.ctx)}" placeholder="carrying groceries up stairs"></label>
-    <div class="chips">${['no inciting event','at rest','during exertion','woke from sleep','after eating'].map(x=>chip('ctxq',x,s.ctx===x,cap(x))).join('')}</div>
-    ${c.lkw?`<label class="f">Last known well<input id="lkw" type="text" data-t="lkw" value="${esc(s.lkw)}" placeholder="21:30 per spouse"></label>`:''}</div>`;
+    <div class="chips">${['no inciting event','at rest','during exertion','woke from sleep','after eating'].map(x=>chip('ctxq',x,s.ctx===x,cap(x))).join('')}</div>${howBox('t:ctx')}
+    ${c.lkw?`<label class="f">Last known well<input id="lkw" type="text" data-t="lkw" value="${esc(s.lkw)}" placeholder="21:30 per spouse"></label>${howBox('t:lkw')}`:''}</div>`;
   const locF=()=>(f.includes('l')&&c.loc)?`<div class="fld">${L('L','Location')}${multi('loc',s.loc,c.loc)}</div>`:'';
   const sideF=()=>c.side?`<div class="fld">${L('L','Side')}${one('side',s.side,['left','right','bilateral'])}</div>`:'';
   const painF=()=>{let x='';
@@ -954,18 +1014,18 @@ function vPert(){
   let h=`<h1 class="step"><span class="k">4</span>Pertinents</h1><p class="lede">Tap once for yes, twice for no, a third time to clear. Anything left blank stays out of the note and shows up on the HPI screen as still to ask.</p>
   <div class="legend"><span><i class="dot p"></i>Positive</span><span><i class="dot n"></i>Negative</span><span><i class="dot r"></i>Red flag not yet asked</span></div>`;
   if(pregOn())h+=`<div class="sec"><h2>Pregnancy<span class="kind">${esc(KIND.rf)}</span></h2>
-    <div class="grid"><label class="f">LMP<input id="lmp" type="text" data-t="lmp" value="${esc(s.lmp)}" placeholder="about 3 weeks ago"></label></div>
+    <div class="grid"><label class="f">LMP<input id="lmp" type="text" data-t="lmp" value="${esc(s.lmp)}" placeholder="about 3 weeks ago"></label></div>${howBox('t:lmp')}
     ${one('preg',s.preg,['possible','not','unsure','pregnant'],['Possible','Not possible','Unsure','Currently pregnant'])}
-    ${s.preg==='pregnant'?`<label class="f">Gestational age<input id="ga" type="text" data-t="ga" value="${esc(s.ga)}" placeholder="8 weeks by LMP"></label>`:''}</div>`;
+    ${s.preg==='pregnant'?`<label class="f">Gestational age<input id="ga" type="text" data-t="ga" value="${esc(s.ga)}" placeholder="8 weeks by LMP"></label>${howBox('t:ga')}`:''}</div>`;
   c.sec.forEach((sec,si)=>{if(!TRI.includes(sec.k))return;
     const mine=all.filter(x=>x.si===si);if(!mine.length)return;
     const done=mine.filter(x=>s.marks[x.key]).length;
     h+=`<div class="sec"><h2>${esc(sec.t)}<span class="kind">${KIND[sec.k]}</span><span class="aside${done===mine.length?' done':''}">${done} of ${mine.length}</span></h2>
       <div class="chips">${mine.map(triChip).join('')}</div>
-      ${mine.filter(x=>s.marks[x.key]==='p'&&x.it.ask).map(x=>`<label class="f ask">${esc(shown(x.it.t))}: ${esc(x.it.ask)}<input type="text" id="i-${x.key}" data-i="${x.key}" value="${esc(s.idet[x.key]||'')}"></label>`).join('')}
+      ${mine.filter(x=>s.marks[x.key]==='p'&&x.it.ask).map(x=>`<label class="f ask">${esc(shown(x.it.t))}: ${esc(x.it.ask)}<input type="text" id="i-${x.key}" data-i="${x.key}" value="${esc(s.idet[x.key]||'')}"></label>${howBox('i:'+x.key)}`).join('')}
       ${sec.k==='tx'&&mine.some(x=>s.marks[x.key]==='p')?`<div class="fld"><span class="fl">Response</span>${one('resp',s.resp,['full','partial','none'],['Relief','Partial relief','No relief'])}</div>`:''}
       <div class="row"><button type="button" class="btn sm" data-a="restneg" data-v="${si}">Mark the rest negative</button></div>
-      <input type="text" id="det-${si}" data-d="${si}" value="${esc(s.det[si]||'')}" placeholder="${esc(detHint(sec))}" aria-label="Details for ${esc(sec.t)}"></div>`;});
+      <input type="text" id="det-${si}" data-d="${si}" value="${esc(s.det[si]||'')}" placeholder="${esc(detHint(sec))}" aria-label="Details for ${esc(sec.t)}">${howBox('d:'+si)}</div>`;});
   return h;}
 function detHint(sec){return{sx:'Details, such as timing or severity',pmh:'Details, such as dates or prior workup',rf:'Details',med:'Details, such as drug name, dose, last dose',tx:'Details, such as dose and time'}[sec.k]||'Details';}
 
@@ -985,7 +1045,7 @@ function vHPI(){
   ${s.dirty?`<div class="banner"><span>You edited this text, so new answers are not added until you rebuild.</span><button class="btn sm" type="button" data-a="rebuild">Rebuild</button></div>`:''}
   <div class="sec"><textarea id="out" class="out" aria-label="HPI text">${esc(s.out)}</textarea>
     <div class="row"><button class="btn primary" type="button" data-a="copy">Copy HPI</button>
-    <label class="f" style="flex:1 1 220px">Add a closing line<input id="extra" type="text" data-t="extra" value="${esc(s.extra)}" placeholder="Seen at urgent care yesterday, told to come here"></label></div></div>
+    <label class="f" style="flex:1 1 220px">Add a closing line<input id="extra" type="text" data-t="extra" value="${esc(s.extra)}" placeholder="Seen at urgent care yesterday, told to come here"></label></div>${howBox('t:extra')}</div>
   ${coach}
   ${examCard(c)}`;}
 function examItems(c){return (c.ex||[]).map((raw,i)=>({i,it:P(raw)})).filter(x=>visible(x.it));}
@@ -1005,7 +1065,7 @@ function render(){
   $('view').innerHTML=[vPatient,vComplaint,vStory,vPert,vHPI][s.step]();
   $('notice').innerHTML=s.example?`<div class="banner"><span>This is an example chest pain case. Tap New patient to start your own.</span></div>`:'';
   $('example').classList.toggle('on',s.example);
-  footer();}
+  refreshHow();footer();}
 function footer(){
   $('back').disabled=s.step===0;$('back').style.visibility=s.step===0?'hidden':'visible';
   $('next').textContent=s.step===4?'Copy':'Next';
@@ -1057,8 +1117,11 @@ document.addEventListener('input',e=>{
     else footer();}
   else if(el.dataset.d!=null){s.det[el.dataset.d]=el.value;}
   else if(el.dataset.i!=null){s.idet[el.dataset.i]=el.value;}
-  else if(el.id==='out'){s.out=el.value;if(!s.dirty){s.dirty=true;const n=document.createElement('div');n.className='banner';n.innerHTML='<span>You edited this text, so new answers are not added until you rebuild.</span><button class="btn sm" type="button" data-a="rebuild">Rebuild</button>';el.closest('.sec').before(n);}}});
+  else if(el.id==='out'){s.out=el.value;if(!s.dirty){s.dirty=true;const n=document.createElement('div');n.className='banner';n.innerHTML='<span>You edited this text, so new answers are not added until you rebuild.</span><button class="btn sm" type="button" data-a="rebuild">Rebuild</button>';el.closest('.sec').before(n);}}
+  if(el.dataset.t!=='q'&&el.id!=='out')refreshHow();});
 document.addEventListener('change',e=>{if(e.target.dataset.t==='age')render();});
+document.addEventListener('focusin',e=>{if(e.target.dataset&&e.target.dataset.d!=null)refreshHow();});
+document.addEventListener('focusout',e=>{if(e.target.dataset&&e.target.dataset.d!=null)setTimeout(refreshHow,0);});
 $('back').onclick=()=>{if(s.step>0){s.step--;render();window.scrollTo(0,0);}};
 $('next').onclick=()=>{if(s.step===4){copy();return;}if(s.step===1&&!s.cc){toast('Pick a complaint first');return;}s.step++;render();window.scrollTo(0,0);};
 function newPatient(){s=blank();render();window.scrollTo(0,0);}
