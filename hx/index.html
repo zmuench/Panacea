@@ -731,7 +731,27 @@ const MAIN={
   oral_swelling:{n:'The swelling',v:'began',lv:'involves the'},
   numbness:{n:'The numbness',v:'began',lv:'involves the'},
   envenom:{n:'The bite or sting',v:'occurred'},
-  cold:{n:'Symptoms',v:'began',pl:1,lv:'involve the'}
+  cold:{n:'Symptoms',v:'began',pl:1,lv:'involve the'},
+  leg_swelling:{n:'The swelling',v:'began',ap:1,lv:'involves the'},
+  /* non-pain complaints: name the complaint itself instead of "Symptoms" */
+  sore_throat:{n:'The sore throat',v:'began'},
+  sob:{n:'The shortness of breath',v:'began'},
+  palpitations:{n:'The palpitations',v:'began',pl:1},
+  dizzy:{n:'The dizziness',v:'began'},
+  weakness:{n:'The weakness',v:'began'},
+  ams:{n:'The change in mental status',v:'began'},
+  vomiting:{n:'The nausea and vomiting',v:'began',pl:1},
+  diarrhea:{n:'The diarrhea',v:'began'},
+  gi_bleed:{n:'The bleeding',v:'began'},
+  retention:{n:'The difficulty urinating',v:'began'},
+  constipation:{n:'The constipation',v:'began'},
+  hematuria:{n:'The blood in the urine',v:'began'},
+  epistaxis:{n:'The bleeding',v:'began'},
+  allergic:{n:'The reaction',v:'began'},
+  fever:{n:'The fever',v:'began'},
+  peds_fever:{n:'The fever',v:'began'},
+  peds_gi:{n:'The vomiting and diarrhea',v:'began',pl:1},
+  crying:{n:'The fussiness',v:'began'}
 };
 Object.keys(MAIN).forEach(k=>{C[k].main=MAIN[k];});
 const GROUPS=["Cardiopulmonary","Neuro","GI / GU","OB / GYN","HEENT","Trauma / MSK","Skin / wound","Endocrine / metabolic","Heme / renal","Tox / psych","Fever / infection","Environmental","Pediatric","General"];
@@ -797,8 +817,11 @@ function build(parts){
   // OLDCARTS, combined into a few sentences in that order
   const m=c.main||{},ap=!!m.ap,ev=m.v==='occurred';
   const pain=(c.f||'').includes('q')&&!ap;
-  const N=m.n||(pain?(c.term||'The pain'):'Symptoms');
-  const pl=m.n?!!m.pl:!pain, It=pl?'They':'It';
+  // Other: name the complaint as typed, never assume it is pain
+  const ot=s.cc==='other'?String(s.ccText||'').trim().replace(/^(a|an|the) /i,''):'';
+  const otPl=!!ot&&(/ and /.test(ot)||/[^siu]s$/i.test(ot));
+  const N=m.n||(ot?'The '+ot:s.cc==='other'?'Symptoms':(pain?(c.term||'The pain'):'Symptoms'));
+  const pl=m.n?!!m.pl:(s.cc==='other'?(ot?otPl:true):!pain), It=pl?'They':'It';
   const v=(sg,p)=>pl?p:sg;
   const adv=ev?'':({sudden:'suddenly',gradual:'gradually'}[s.onset]||'');
   const ago=s.ago?('about '+s.ago+' '+(parseFloat(s.ago)===1?s.agoU.replace(/s$/,''):s.agoU)+' ago'):'';
