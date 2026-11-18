@@ -162,6 +162,9 @@ const ETOH="alcohol use|How much, and when was the last drink?";
 const IVDU="IV drug use|When was the last use?";
 const TRAVEL="recent travel|Where, and when?";
 const NEWMED="new medications|Which ones?";
+/* seizure vs syncope differentiators, shared by syncope, seizure, head injury, and fall */
+const SZF=["!lateral tongue biting","!shaking lasting more than a few seconds|How long, and what did it look like?","!head turning or eye deviation","!shoulder pain or muscle soreness","cyanosis during the event","!prolonged confusion after the event|How long until back to baseline?","urinary incontinence"];
+const SYNF=["warning symptoms before losing consciousness","lightheadedness","warmth or nausea","tunnel vision","sweating","pallor","prolonged standing beforehand"];
 const IMMUNO="immunocompromise|What is the cause?";
 const SURG="prior abdominal surgery|Which surgery, and when?";
 const PE=["prior DVT/PE|When, and how was it treated?","surgery or major trauma in the last 4 weeks|What, and when?","recent immobilization or long travel",CANCER,"estrogen use|Which product?","F:pregnancy or delivery in the last 6 weeks","known clotting disorder"];
@@ -224,8 +227,10 @@ htn:{g:"Cardiopulmonary",name:"Elevated blood pressure",cc:"elevated blood press
 syncope:{g:"Cardiopulmonary",name:"Syncope",cc:"a syncopal episode",f:"",preg:1,
   sec:[pick("Position at onset","The episode occurred while ",["standing","sitting","lying down","exerting","urinating or defecating","coughing"]),
     pick("Witnessed","The episode was ",["witnessed","unwitnessed"]),
-    sx("Before the event",["lightheadedness","warmth or nausea","tunnel vision","warning symptoms before losing consciousness","!palpitations","!chest pain"]),
-    sx("During and after",["!head injury","tongue biting","incontinence","confusion after the event","!focal weakness after the event","!headache"]),
+    sx("Favors syncope",SYNF),
+    sx("Favors seizure",SZF),
+    sx("Cardiac red flags",["!palpitations before the event","!chest pain"]),
+    sx("After the event",["!head injury","!focal weakness after the event","!headache"]),
     sx("Other symptoms",["!shortness of breath","!abdominal or back pain","!melena or hematochezia","vomiting or diarrhea","decreased oral intake"]),
     pmh("Relevant history",["CHF","structural heart disease","aortic stenosis","arrhythmia","CAD","prior syncope|How many episodes, and any workup?","seizure disorder","diabetes"]),
     rf("Family history",["!sudden cardiac death before age 50","inherited arrhythmia"],"Family history is notable for","No family history of"),
@@ -253,8 +258,11 @@ headache:{g:"Neuro",name:"Headache",cc:"headache",f:"lqrs",preg:1,
 head_injury:{g:"Neuro",name:"Head injury",cc:"a head injury",f:"lqs",
   loc:["frontal region","occipital region","parietal region","temporal region","face"],qual:["aching","throbbing","sharp"],
   sec:[pick("Mechanism","Mechanism was ",["a fall from standing","a fall from height","an MVC","an assault","being struck by an object","a sports injury"]),
+    pick("Before the injury","The patient ",["tripped or slipped","lost consciousness before the injury","does not recall what happened before the injury"]),
     sx("Red flags",["!loss of consciousness","!amnesia for the event","!vomiting","!worsening headache","!confusion","!seizure","!focal weakness or numbness","!vision changes","!P:acting abnormally per caregiver"]),
     sx("Associated symptoms",["neck pain","dizziness","scalp laceration","nausea","clear fluid from the nose or ear"]),
+    sx("If they passed out: seizure features",SZF),
+    sx("If they passed out: syncope features",SYNF.concat(["!palpitations or chest pain beforehand"])),
     rf("Risk factors",["alcohol or drug use before the injury","a bleeding disorder","prior neurosurgery"],"Notable for","No"),
     med(BLEED)],
   ex:["!GCS","!pupils: size, symmetry, and reactivity","!scalp: hematoma, laceration, or step-off","!Battle sign (mastoid bruising)","!raccoon eyes","!hemotympanum","!CSF rhinorrhea or otorrhea","facial bones and malocclusion","!cervical spine midline tenderness","!cranial nerves","!motor strength and sensation in all extremities","!gait if able","P:fontanelle in infants"]},
@@ -309,7 +317,9 @@ ams:{g:"Neuro",name:"Altered mental status",cc:"altered mental status",f:"",lkw:
 seizure:{g:"Neuro",name:"Seizure",cc:"a seizure",f:"",
   sec:[pick("Description","The event was described as ",["generalized shaking","focal shaking","a staring spell"]),
     pick("Witnessed","The event was ",["witnessed","unwitnessed"]),
-    sx("Associated features",["tongue biting","incontinence","post-event confusion","aura","!head injury","!more than one seizure","!seizure lasting over 5 minutes","!failure to return to baseline","!fever","!headache","!focal weakness after the event","!neck stiffness"]),
+    sx("Favors seizure",SZF.concat(["aura"])),
+    sx("Favors syncope",SYNF.concat(["!palpitations or chest pain before the event"])),
+    sx("Red flags",["!head injury","!more than one seizure","!fever","!headache","!focal weakness after the event","!neck stiffness"]),
     pmh("Relevant history",["seizure disorder|Usual seizure type and frequency?","prior head injury","brain tumor or neurosurgery","alcohol use disorder"]),
     rf("Triggers",["missed antiseizure medication doses|How many?","sleep deprivation","alcohol use or withdrawal","drug use","a recent illness",NEWMED,"F:pregnancy or delivery in the last 6 weeks"],"Possible triggers include","No"),
     med(["antiseizure medication|Which one, and what dose?"])],
@@ -514,7 +524,9 @@ fall:{g:"Trauma / MSK",name:"Fall in an older adult",cc:"a fall",f:"lqs",
   loc:["head","neck","hip","back","wrist","shoulder","knee"],qual:["aching","sharp"],
   sec:[pick("Mechanism","The fall was ",["a mechanical trip or slip","from standing","down stairs","from a height","unwitnessed"]),
     pick("Baseline","At baseline, the patient ",["walks independently","uses a cane","uses a walker","uses a wheelchair"]),
-    sx("Before the fall",["!lightheadedness","!chest pain or palpitations","!loss of consciousness"]),
+    sx("Before the fall",["!loss of consciousness","!chest pain or palpitations"]),
+    sx("If they passed out: seizure features",SZF),
+    sx("If they passed out: syncope features",SYNF),
     sx("After the fall",["!head strike","!headache","!neck pain","!hip pain","!inability to bear weight","!confusion","!a long time on the floor|About how long?"]),
     sx("Recent illness",["fever","urinary symptoms","cough","decreased oral intake"]),
     rf("Fall risk",["prior falls|How many in the last year?","living alone",NEWMED,ETOH],"Notable for","No"),
