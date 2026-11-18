@@ -751,8 +751,13 @@ const MAIN={
   fever:{n:'The fever',v:'began'},
   peds_fever:{n:'The fever',v:'began'},
   peds_gi:{n:'The vomiting and diarrhea',v:'began',pl:1},
-  crying:{n:'The fussiness',v:'began'}
+  crying:{n:'The fussiness',v:'began'},
+  /* single events: written like an injury; duration is how long the event lasted, timing is return to baseline */
+  syncope:{n:'The episode',v:'occurred',evd:[['seconds','A few seconds','a few seconds'],['minute','About a minute','about a minute'],['minutes','Several minutes','several minutes']]},
+  seizure:{n:'The event',v:'occurred',evd:[['under1','Under 1 minute','less than 1 minute'],['1to5','1 to 5 minutes','1 to 5 minutes'],['over5','Over 5 minutes','more than 5 minutes']]},
+  brue:{n:'The event',v:'occurred',evd:[['under1','Under 1 minute','less than 1 minute'],['over1','Over 1 minute','more than 1 minute']]}
 };
+const EVST=[['resolved','Back to baseline','has since returned to baseline'],['improving','Improving','is improving but not yet back to baseline'],['unchanged','Not at baseline','has not returned to baseline']];
 Object.keys(MAIN).forEach(k=>{C[k].main=MAIN[k];});
 const GROUPS=["Cardiopulmonary","Neuro","GI / GU","OB / GYN","HEENT","Trauma / MSK","Skin / wound","Endocrine / metabolic","Heme / renal","Tox / psych","Fever / infection","Environmental","Pediatric","General"];
 const COURSE=["worsening","improving","unchanged","resolved"];
@@ -827,6 +832,8 @@ function build(parts){
   const ago=s.ago?('about '+s.ago+' '+(parseFloat(s.ago)===1?s.agoU.replace(/s$/,''):s.agoU)+' ago'):'';
   const began=adv||ago||s.ctx;
   if(began)out.push(sent(N+' '+(m.v||'began')+' '+[adv,ago].filter(Boolean).join(' ')+ctxPhrase(s.ctx,{male:'him',female:'her'}[s.sex])).replace(/ {2,}/g,' ').replace(/ \./,'.'));
+  if(m.evd){const d=m.evd.find(x=>x[0]===s.dur);if(d)out.push((began?'It':N)+' lasted '+d[2]+'.');
+    const st=EVST.find(x=>x[0]===s.course);if(st)out.push(`${He} ${st[2]}.`);}
   if(c.lkw&&s.lkw)out.push(sent('Last known well was '+s.lkw));
   let subjUsed=!!began;
   const clause=(cl)=>{if(!cl.length)return;const j=cl.length===2&&cl.some(x=>/ and /.test(x))?cl.join(', and '):joinL(cl,'and');out.push((subjUsed?It:N)+' '+j+'.');subjUsed=true;};
@@ -870,7 +877,7 @@ function build(parts){
     if(s.sev!=null){if(p2.length)p2.unshift('is rated '+s.sev+'/10');else pp.push('rated '+s.sev+'/10');}
     out.push(t+(pp.length?', '+(pp.length===2&&pp.some(x=>/ and /.test(x))?pp.join(', and '):joinL(pp,'and')):'')+'.');
     if(p2.length)out.push('It '+joinL(p2,'and')+'.');}
-  if(s.prior==='first')out.push('This is the first episode of these symptoms.');
+  if(s.prior==='first')out.push(m.evd?'This is the first such episode.':'This is the first episode of these symptoms.');
   if(s.prior==='similar')out.push(`${He} has had similar episodes in the past.`);
   // complaint-specific picks
   c.sec.forEach((sec,si)=>{if(sec.k==='pick'&&s.picks[si]!=null){out.push(sent(sec.pre+P(sec.i[s.picks[si]]).t));}});
@@ -1016,7 +1023,12 @@ function vStory(){
   const timeF=`<div class="fld">${L('D','Duration')}${one('dur',s.dur,['constant','seconds','minutes','hours'],['Constant since onset','Episodes last seconds','Episodes last minutes','Episodes last hours'])}</div>
     <div class="fld">${L('T','Timing')}${one('course',s.course,COURSE,['Worsening','Improving','Unchanged','Resolved'])}</div>
     <div class="fld"><span class="fl">Prior episodes</span>${one('prior',s.prior,['first','similar'],['First episode','Similar before'])}</div>`;
-  if(ap){
+  if(m.evd){
+    h+=`<div class="sec"><h2>The ${esc(mainName)}</h2>
+      <div class="fld">${L('D','How long it lasted')}${one('dur',s.dur,m.evd.map(x=>x[0]),m.evd.map(x=>x[1]))}</div>
+      <div class="fld">${L('T','Since the '+esc(mainName))}${one('course',s.course,EVST.map(x=>x[0]),EVST.map(x=>x[1]))}</div>
+      <div class="fld"><span class="fl">Prior episodes</span>${one('prior',s.prior,['first','similar'],['First episode','Similar before'])}</div></div>`;
+  } else if(ap){
     const mainBody=sideF()+(m.locPain?'':locF())+(ev?'':timeF);
     if(mainBody)h+=`<div class="sec"><h2>The ${esc(mainName)}</h2>${mainBody}</div>`;
     h+=`<div class="sec"><h2>Associated pain</h2>
