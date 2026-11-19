@@ -35,6 +35,7 @@ div.top,section.top{border-bottom:1px solid var(--line);padding-bottom:10px}
   background:linear-gradient(var(--ehr-band),var(--ehr-band2));color:#fff!important;margin:-14px -14px 4px!important;padding:6px 12px!important;border-radius:2px 2px 0 0}
 .pane>.ph:first-child{margin:-20px -20px 0!important;padding:8px 20px!important}
 .sec>h2:first-child *,.card>.cardhd:first-child *,.pane>.ph:first-child *{color:#fff!important}
+.card>h3:first-child .x{color:rgba(255,255,255,.82)!important}
 .pane>.ph:first-child h2{font-size:1.05rem!important}
 .pane>.ph:first-child .cue{opacity:.85}
 .out h3,.rec h3{color:var(--ehr-band2)}
@@ -83,3 +84,6 @@ footer.bar,.bar{background:linear-gradient(#EEF2F6,#DCE3EA)!important;border-top
 a.tile,a.svc,.tile,.svc{border-radius:3px!important}
 .tile:hover,.svc:hover{background:#E6F0FA!important}
 .chip[data-s="neg"]{background:#E1F2E9!important;border-color:#1D6E49!important;color:#1D6E49!important}
+
+/* The title bar is for the screen only */
+@media print{.ehr-title{display:none!important}}
