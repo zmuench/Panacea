@@ -202,6 +202,36 @@ pre.out{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.9rem;l
 .proc dt{font-weight:700;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
 .proc dd{margin:0}
 .res{font-size:.88rem;margin:4px 0 0;padding-left:1.1em}.res li{margin:2px 0}
+/* Tutorial PDF: link a file, read pages in the app */
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.reader{display:flex;flex-direction:column;gap:10px;align-items:stretch;margin-top:12px}
+.pg{background:#fff;border:1px solid var(--line);border-radius:6px;position:relative}
+.pg{overflow-x:auto;-webkit-overflow-scrolling:touch}.pg canvas{display:block;width:100%;border-radius:6px;cursor:zoom-in}
+.pg.zoom canvas{width:230%;cursor:zoom-out}
+.pg .pn{position:absolute;right:8px;bottom:6px;font-size:.72rem;color:var(--muted);background:rgba(255,255,255,.88);padding:1px 6px;border-radius:6px}
+.pgl{font-size:.78rem!important;padding:2px 0!important;display:inline-block}
+.stan li .t small{display:inline;margin-left:6px}
+.dosewt{display:flex;gap:8px;align-items:center;margin:0 0 8px}.dosewt input{width:110px}
+/* Half-page carry card: two per landscape letter sheet, cut on the dashed line */
+.sheet.hp{display:flex;justify-content:space-between;height:8in;position:relative}
+.sheet.hp::before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed #999}
+.sheet .hcol{width:5in;height:8in;overflow:hidden}
+.sheet .half{height:8in;display:flex;flex-direction:column;font-size:8pt;line-height:1.22}
+.sheet .half .hh{display:flex;gap:8px;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:2px;margin-bottom:3px}
+.sheet .half .hh>div:first-child{flex:1;min-width:0}
+.sheet .half .hh b{font-size:1.32em;display:block;line-height:1.1}
+.sheet .half .hh small{display:block;font-size:.84em}
+.sheet .half .hr{text-align:right;flex:none}.sheet .half .hr b{font-size:1.12em}
+.sheet .half .one{margin:0 0 3px}
+.sheet .half .blk{margin:0 0 3px}
+.sheet .half .al{margin:0 0 3px;padding:2px 5px}
+.sheet .half .kv2{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:1px 6px}
+.sheet .half .kv2 dt{font-weight:700}.sheet .half .kv2 dd{margin:0}
+.sheet .half table.dz td{padding:0 3px;border-bottom:1px solid #ddd}
+.sheet .half table.dz td:last-child{white-space:nowrap}
+.sheet .half ul.ck{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.sheet .half .notes{flex:1;min-height:.45in;border:1px solid #999;border-radius:3px;margin-top:2px}
 /* Day sheet: one landscape page with a mini H&P for every case that day */
 .sheet.day .cols{column-count:3}
 .sheet.day.n2 .cols{column-count:2}
@@ -460,6 +490,54 @@ const WEEKS=[
   r:[['ACCRAC','31 Massive Transfusion; 69 Intro to Trauma; 37 OR Crises; 260 Malignant Hyperthermia; 36 Pediatric Respiratory Anatomy and Physiology'],['Stanford guide','8 Difficult Airway Algorithm; 16 Laryngospasm & Aspiration; 18 Anaphylaxis; 20 Malignant Hyperthermia'],['Baby Miller','34 Pediatrics; 41 Critical Care Medicine; 42 Anesthesia for Trauma; 45 Cardiopulmonary Resuscitation']]}
 ];
 
+/* ================= STANFORD CA-1 TUTORIAL (2022, 16th ed.; PDF page numbers) ================= */
+const STAN=[[1,'Standard monitors',15,19],[2,'Inhalational agents',20,23],[3,'MAC and awareness',24,26],[4,'IV anesthetic agents',27,30],[5,'Rational opioid use',31,35],[6,'Intraoperative hypotension and hypertension',36,38],[7,'Neuromuscular blocking agents',39,43],
+ [8,'Difficult airway algorithm',44,47],[9,'Fluid management',48,51],[10,'Transfusion therapy',52,56],[11,'Hypoxemia',57,60],[12,'Electrolyte abnormalities',61,65],[13,'Hypothermia and shivering',66,68],[14,'PONV',69,71],[15,'Extubation criteria and delayed emergence',72,74],
+ [16,'Laryngospasm and aspiration',75,77],[17,'Oxygen failure in the OR',78,80],[18,'Anaphylaxis',81,83],[19,'Local anesthetics',84,86],[20,'Malignant hyperthermia',87,89],[21,'Pre-operative evaluation',90,94],[22,'OR setup',95,96],[23,'Perioperative antibiotics',97,99],
+ [24,'Topics for discussion',100,100],[25,'Exams and how to study',101,101],[26,'Subspecialty appendix (regional, pain, OB, cardiac)',102,108]];
+const STAND=Object.fromEntries(STAN.map(x=>[x[0],x]));
+const stanPg=n=>{const x=STAND[n];return x?x[2]+(x[3]>x[2]?'-'+x[3]:''):''};
+/* Grouped the way the tutorial's mentorship checklist (p. 12) orders the lectures */
+const STAN_GROUPS=[['Start here',[21,22]],['Week 1',[1,2,3,4,5,6,7]],['Week 2',[8,9,10,11,12,13,14,15]],['Week 3',[16,17,18,19,20,23]],['Also',[24,25,26]]];
+/* Doses from the tutorial (page noted). d: [low, high, unit per kg, label, short label]; s: short fixed text; fs(w): short text by weight */
+const DOSE={
+ prop:{d:[[1.5,2.5,'mg/kg','induction']],pg:30},etom:{d:[[0.2,0.3,'mg/kg','induction']],pg:30},ket:{d:[[1,2,'mg/kg','induction']],pg:30},
+ midaz:{f:'1–2 mg',s:'1–2 mg',pg:96},lido:{d:[[1,1,'mg/kg','with induction']],pg:96},
+ fent:{d:[[1,2,'mcg/kg','induction']],f2:'then about 50 mcg every 30–60 min',pg:34},
+ remi:{d:[[0.1,0.1,'mcg/kg/min','starting infusion','start']],pg:34},sufent:{d:[[0.2,0.2,'mcg/kg/h','starting infusion','start']],pg:34},
+ succ:{d:[[1,1,'mg/kg','intubating']],pg:40},roc:{d:[[0.6,0.6,'mg/kg','intubating'],[1.2,1.2,'mg/kg','RSI','RSI']],pg:40},
+ vec:{d:[[0.1,0.2,'mg/kg','intubating']],pg:40},cis:{d:[[0.15,0.2,'mg/kg','intubating']],pg:40},
+ sugam:{d:[[2,2,'mg/kg','1–2 twitches'],[4,4,'mg/kg','deep (post-tetanic count ≥ 2)','deep'],[16,16,'mg/kg','cannot intubate, cannot ventilate','CICV']],pg:42},
+ nalox:{f:'40–80 mcg IV increments until breathing is adequate',s:'40–80 mcg',pg:34},
+ phenyl:{f:'50–100 mcg bolus; infusion 0.2–2 mcg/kg/min',s:'50–100 mcg',pg:38},ephed:{f:'5–10 mg',s:'5–10 mg',pg:38},
+ norepi:{f:'5–10 mcg bolus; infusion 0.02–0.3 mcg/kg/min',s:'5–10 mcg',pg:38},vasopr:{f:'0.5–1 unit bolus; infusion 0.01–0.04 units/min',s:'0.5–1 U',pg:38},
+ epi:{f:'5–10 mcg bolus for hypotension; infusion 0.02–0.3 mcg/kg/min',s:'5–10 mcg',pg:38},
+ ond:{f:'4–8 mg about 30 min before emergence',s:'4–8 mg at end',pg:70},dexa:{f:'4–10 mg after induction (not awake: perineal burning)',s:'4–10 mg after ind.',pg:70},
+ drop:{f:'0.625–1.25 mg',s:'0.625–1.25 mg',pg:70},halo:{f:'about 1 mg',s:'1 mg',pg:70},scop:{f:'1.5 mg patch behind the ear, pre-op (2–4 h onset)',s:'1.5 mg patch',pg:70},
+ cefaz:{f:'2 g (3 g if 120 kg or more); redose every 4 h',fs:w=>(w>=120?'3 g':'2 g')+' q4h',pg:98},
+ vanc:{f:'Under 80 kg 1 g; 80–99 kg 1.25 g; 100–120 kg 1.5 g; over 120 kg 2 g. Over 30–60+ min, start 60–120 min before incision',fs:w=>(w<80?'1 g':w<100?'1.25 g':w<=120?'1.5 g':'2 g')+' over ≥ 60 min',pg:98},
+ clinda:{f:'900 mg; redose every 6 h',s:'900 mg q6h',pg:98},metro:{f:'500 mg',s:'500 mg',pg:98},amsulb:{f:'3 g; redose every 2 h',s:'3 g q2h',pg:98},
+ cefox:{f:'2 g; redose every 2 h',s:'2 g q2h',pg:98},gent:{d:[[5,5,'mg/kg','single dose']],pg:98},
+ dantro:{d:[[2.5,2.5,'mg/kg','repeat until signs resolve']],pg:88},
+ lipid:{f:'20%: 1.5 mL/kg bolus (100 mL if over 70 kg), then 0.25 mL/kg/min (200–250 mL over 15–20 min if over 70 kg) (ASRA)',fs:w=>w>70?'100 mL, then 200–250 mL/15–20 min':`${Math.round(1.5*w)} mL, then ${r1(.25*w)} mL/min`}};
+const rnd=v=>v>=200?Math.round(v/10)*10:v>=20?Math.round(v/5)*5:v>=2?Math.round(v):r1(v);
+const perU=u=>{const[a,b]=u.split('/kg');return a+(b||'')};
+function doseStr(id,w){const D=DOSE[id];if(!D)return'';const o=[];
+  if(D.d)D.d.forEach(([lo,hi,u,lab])=>o.push(`${lo===hi?lo:lo+'–'+hi} ${u}${w?' = '+(lo===hi?rnd(lo*w):rnd(lo*w)+'–'+rnd(hi*w))+' '+perU(u):''}${lab?' ('+lab+')':''}`));
+  if(D.fs&&w)o.push(D.fs(w));else if(D.f)o.push(D.f);
+  if(D.f2)o.push(D.f2);return o.join('; ')}
+function doseShort(id,w){const D=DOSE[id];if(!D)return'';
+  if(D.d&&w)return D.d.map(([lo,hi,u,lab,sh])=>(lo===hi?rnd(lo*w):rnd(lo*w)+'–'+rnd(hi*w))+' '+perU(u)+(sh?' '+sh:'')).join(' · ');
+  if(D.fs&&w)return D.fs(w);return D.s||''}
+/* Day-of-surgery checks in pre-op holding (tutorial p. 91) */
+const PREOP_CK=['Name, procedure, site','Allergies and the reaction','NPO times','Own or family anesthesia problems','METs, chest pain, dyspnea, reflux','Meds taken or held this morning','Airway: MP, TMD, neck, teeth','Heart and lungs (± neuro)','IV running well','Consent, including blood'];
+/* Scenarios to talk through (tutorial p. 100), reworded */
+const SCEN=['Your IV infiltrates during induction: what are your options?','You get a needlestick: how do you protect yourself and the patient?','You can’t deliver positive pressure: what next?','You see an unprofessional exchange in the OR: who do you talk to?','Unexpected difficult airway: who exactly do you call, and what do you ask for?','You give the wrong drug: what do you do and who do you tell?','The patient wants only the attending doing invasive procedures: how do you respond?','The surgeon says the patient isn’t relaxed 5 min after a paralytic redose: options?','Antibiotic given at induction, still no incision an hour later: what now?','The surgeon is struggling with fast bleeding and declines help: what do you do?'];
+/* Tutorial pages behind each reference row */
+const REFPG={'M · Machine':'95-96','D · Drugs':'96','A · Airway':'96','Oxygenation':'15-19','Ventilation':'15-19','Circulation':'15-19','Temperature':'15-19',
+ 'Hypotension':'36-38','Hypertension':'36-38','Hypoxia':'57-60','High airway pressure':'57-58','Extubation criteria':'72-74','Delayed emergence':'72-74','Hypothermia and shivering':'66-68','Hyperkalemia':'61-64',
+ 'Malignant hyperthermia':'87-89','Anaphylaxis':'81-83','Laryngospasm':'75-77','Local anesthetic toxicity (LAST)':'84-86','Massive transfusion':'52-56','Cannot intubate':'44-47','Oxygen pipeline failure':'78-80'};
+
 /* ================= REFERENCE CONTENT ================= */
 const REF_SETUP=[
  ['M · Machine','Power on for the self-test; attach the breathing circuit and reservoir bag and run the full test (includes the leak test). Vaporizers filled, circuit connections tight, ventilator settings right for this patient (age, predicted body weight, tidal volume).'],
@@ -485,6 +563,8 @@ const REF_INTRA=[
  ['High airway pressure','Separate peak from plateau. High peak with normal plateau: resistance (kinked or bitten tube, secretions, bronchospasm). Both high: compliance (mainstem, insufflation, Trendelenburg, pneumothorax, edema, light anesthesia or weak paralysis).'],
  ['Extubation criteria','Awake: follows commands (opens eyes, squeezes hand, head lift 5 s); regular spontaneous breathing with adequate tidal volume and RR under about 30; adequate SpO₂ on FiO₂ 0.4–0.5 or less; full reversal (quantitative TOF ratio ≥ 0.9); stable hemodynamics; normothermic; protective reflexes back; no major airway edema or bleeding. Deep extubation only with an easy mask airway and low aspiration risk.'],
  ['Delayed emergence','Drugs: residual volatile, opioid, benzodiazepine, propofol, residual paralysis (check TOF), central anticholinergic syndrome. Metabolic: hypoglycemia or hyperglycemia, hyponatremia, hypercarbia, hypoxia, hypothermia, uremia or hepatic encephalopathy. Neurologic: stroke, seizure or postictal state, raised ICP. Work-up: TOF, glucose, ABG and electrolytes, temperature, pupils and a focal exam. Reverse what you can (naloxone, flumazenil, sugammadex; physostigmine for anticholinergic); CT head if focal.'],
+ ['Hypothermia and shivering','Core temperature under 36 °C. Most heat is lost in the first hour as anesthesia redistributes core heat to the periphery; prevention beats treatment. Costs: more wound infection, bleeding and transfusion, slower drug clearance and emergence, arrhythmia, shivering, longer PACU stays. Prewarm, forced-air warmer, fluid warmer, warm room and humidified gases. Shivering: rewarm; meperidine 12.5–25 mg IV.'],
+ ['Hyperkalemia','Peaked T waves, then wide QRS, sine wave. Stop potassium and succinylcholine; calcium (chloride or gluconate) to protect the heart, insulin with glucose, hyperventilate, bicarbonate if acidotic, albuterol; dialysis if refractory.'],
  ['PACU complications','Airway obstruction (soft tissue, laryngospasm, edema, residual paralysis), hypoxemia (hypoventilation, atelectasis, aspiration, edema), hypotension or hypertension, arrhythmia, PONV, pain, shivering and hypothermia, emergence delirium, urinary retention, bleeding. Discharge from PACU when awake, stable, breathing well, comfortable, and not vomiting (Aldrete or local criteria).'],
  ['PACU handoff','Patient and procedure; allergies; anesthetic (technique, airway and how easy, lines); key history; drugs given (opioids and timing, antiemetics, reversal, antibiotic and redose time); fluids in and out (crystalloid, blood, EBL, urine); events; current vitals and concerns; plan for pain, PONV, labs, and disposition. Questions before you leave.']];
 const REF_CRISIS=[
@@ -495,6 +575,7 @@ const REF_CRISIS=[
  ['Local anesthetic toxicity (LAST)','CNS (perioral numbness, tinnitus, metallic taste, agitation, seizures) then cardiovascular (hypertension and tachycardia, then bradycardia, arrhythmia, collapse); bupivacaine is the most cardiotoxic. Stop injecting, call for help, airway and 100% O₂, avoid hypoxia and acidosis; benzodiazepine for seizures. Lipid emulsion 20%: over 70 kg, 100 mL over 2–3 min then 200–250 mL over 15–20 min; 70 kg or less, 1.5 mL/kg then 0.25 mL/kg/min; repeat bolus or double the infusion if still unstable. ACLS with small epinephrine doses (≤ 1 mcg/kg); avoid vasopressin, calcium-channel blockers, beta-blockers, and other local anesthetics. Consider bypass.'],
  ['Airway fire','Fuel, oxidizer, ignition. Prevent: lowest FiO₂ that keeps SpO₂ up (≤ 30%), no nitrous, wet sponges, laser-safe tubes. Fire: stop ventilation and gas flow, pull the ETT, remove burning material, pour saline in the airway; then mask ventilate with air, bronchoscopy to assess, reintubate.'],
  ['Massive transfusion','Call the blood bank and activate the protocol; balanced 1:1:1 red cells, plasma, platelets; TXA in trauma (1 g over 10 min within 3 h, then 1 g over 8 h); large-bore access, rapid infuser, warmer. Labs every 30–60 min: Hgb, platelets, coagulation, fibrinogen, ABG, K, ionized calcium. Give calcium (citrate). Cryo for low fibrinogen; viscoelastic testing if available. Avoid the lethal triad: hypothermia, acidosis, coagulopathy.'],
+ ['Oxygen pipeline failure','Low pipeline pressure alarm or falling inspired O₂. Open the backup E-cylinder (keep it closed otherwise; check it is over half full every morning). If the analyzer shows a hypoxic mix (crossed pipeline), disconnect the pipeline hose and ventilate with the cylinder or a self-inflating bag on room air. Save oxygen: low fresh gas flows, hand-ventilate (a pneumatic ventilator uses O₂ to drive the bellows). Minutes left ≈ psi ÷ 3 ÷ flow in L/min (full cylinder about 1900 psi, 660 L). Call for help and facilities.'],
  ['Cannot intubate','Call for help early. Oxygenate between attempts; limit laryngoscopy attempts and change something each time (position, blade, video, bougie). Plan B: second-generation SGA. Plan C: face mask, two hands with adjuncts; wake the patient if you can ventilate. Plan D (cannot intubate, cannot oxygenate): front-of-neck access, scalpel-bougie-tube.'],
  ['Shock','Prism in PANACEA sorts hypovolemic, cardiogenic, obstructive, and distributive causes with POCUS.']];
 const REF_PROC=[
@@ -897,7 +978,7 @@ const why=(c,k,W)=>(c.p.why[k]||'').trim()||(W||whySug(c))[k]||'';
 function testsFor(c){const T=[],l=c.lab,n=nums(c),add=(t,ok)=>{if(!T.some(x=>x[0]===t))T.push([t,!!ok])},oth=(l.other||'')+' '+(c.aw.prior||'');
   if(['cspine','ra','ankspond','t21'].some(k=>has(c,k)))add('C-spine imaging (may change the airway plan)',/c-?spine|flex|ext/i.test(oth));
   if(has(c,'dm1')||has(c,'dm2'))add('A1c (is diabetes controlled?)',l.a1c||/a1c/i.test((c.hx.dm1||'')+(c.hx.dm2||''))),add('Glucose on the day',l.glu);
-  if(['cad','mi','stent','hf','af','cied','aos'].some(k=>has(c,k))||rcri(c).pts>=2)add('ECG',st(c,'ecg'));
+  if(['cad','mi','stent','hf','af','cied','aos'].some(k=>has(c,k))||rcri(c).pts>=2||c.hrs)add('ECG',st(c,'ecg'));
   if(['hf','aos','mst','ar','mr','hcm','pht'].some(k=>has(c,k)))add('Echo',st(c,'tte'));
   if(has(c,'hf'))add('BNP if recent exacerbation',/bnp/i.test(oth));
   if(has(c,'stent')||has(c,'mi'))add('Stress test or cath',st(c,'lhc')||st(c,'stress'));
@@ -908,7 +989,9 @@ function testsFor(c){const T=[],l=c.lab,n=nums(c),add=(t,ok)=>{if(!T.some(x=>x[0
   if(has(c,'ckd')||has(c,'esrd')||med(c,'diur')||med(c,'acei'))add('Cr and K',l.cr&&l.k);
   if(has(c,'cirr')||has(c,'hepa'))add('AST/ALT, INR, platelets',l.inr&&l.plt&&/ast|alt|lft/i.test(oth));
   if(med(c,'warf')||med(c,'doac')||med(c,'hep')||has(c,'cirr'))add('INR / coags',l.inr);
-  if(['bleed','thrombocyt','anemia','scd'].some(k=>has(c,k))||num(c.ebl)>=500)add('Hgb and platelets',l.hgb&&l.plt);
+  if(['bleed','thrombocyt','anemia','scd'].some(k=>has(c,k))||num(c.ebl)>=500||(n.age>65&&c.hrs)||pl(c,'tech','Neuraxial'))add('Hgb and platelets',l.hgb&&l.plt);
+  if((n.age>50&&c.hrs)||has(c,'dm1')||has(c,'dm2'))add('Cr and K',l.cr&&l.k);
+  if(has(c,'hypothy'))add('TSH (treat moderate–severe hypothyroidism first)',/tsh/i.test(oth));
   if(num(c.ebl)>=500||has(c,'bleed')||has(c,'jw'))add('Valid type and screen',/sent|Cross/.test(l.ts));
   if(med(c,'lith'))add('Lithium level',/lith/i.test(oth));
   if(has(c,'gerd')&&/\bTEE\b/i.test((c.proc||'')+' '+(c.procNote||'')+' '+c.p.mon.join(' ')))add('Swallowing history or study (TEE planned)',/swallow/i.test(oth));
@@ -930,7 +1013,8 @@ function topics(c){const p=c.p,A=airway(c),asp=aspiration(c),AP=apfel(c),les=les
   if(num(c.ebl)>=500)T.push('Transfusion triggers and allowable blood loss');
   if(isGA(c))T.push('Ventilator settings for this patient','Extubation criteria');
   T.push('Why this induction agent for this patient?');
-  return[...new Set(T)].filter(t=>!(c.p.q||'').includes(t)).slice(0,7)}
+  {let x=0;for(const ch of c.id)x=(x*31+ch.charCodeAt(0))>>>0;T.push('Scenario: '+SCEN[x%SCEN.length])}
+  const sc=T.pop();return[...[...new Set(T)].filter(t=>!(c.p.q||'').includes(t)).slice(0,7),...((c.p.q||'').includes(sc)?[]:[sc])]}
 const EMAIL_SYS=[['Neuro',['Neurologic']],['Endocrine',['Endocrine']],['Cardiac',['Cardiovascular']],['Pulmonary',['Pulmonary']],['GI',['GI and aspiration']],['Nephro/Hepatic',['Renal and hepatic']],['Heme',['Hematologic']],['Other',['Musculoskeletal and airway','Pregnancy, substance use, other']]];
 function emailOne(c){if(c.one.trim())return c.one.trim();const n=nums(c);
   const who=[n.age!=null?n.age+' year old':'',c.sex==='M'?'male':c.sex==='F'?'female':'patient'].filter(Boolean).join(' ');
@@ -1120,6 +1204,90 @@ function planLines(c,card){const p=c.p,n=nums(c),L=[];const j=a=>a.join(', ');co
   if(p.dispo||p.pacu.length)L.push(['Disposition',[p.dispo,j(p.pacu)].filter(Boolean).join('; ')]);
   return L}
 
+/* ================= TUTORIAL PDF (kept in this browser) ================= */
+const BKKEY='panacea.ether.books';let BK={};try{BK=JSON.parse(localStorage.getItem(BKKEY)||'{}')||{}}catch(e){}
+const saveBK=()=>{try{localStorage.setItem(BKKEY,JSON.stringify(BK))}catch(e){}};
+let edbP=null;
+function edb(){return edbP||(edbP=new Promise((res,rej)=>{const r=indexedDB.open('ether-books',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function idb(mode,fn){const d=await edb();return new Promise((res,rej)=>{const tx=d.transaction('files',mode);const q=fn(tx.objectStore('files'));tx.oncomplete=()=>res(q&&q.result);tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)})}
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';let pdfjsP=null;
+function loadPdfjs(){return pdfjsP||(pdfjsP=new Promise((res,rej)=>{if(window.pdfjsLib){res();return}const sc=document.createElement('script');sc.src=PDFJS;
+  sc.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace('pdf.min.js','pdf.worker.min.js');res()};sc.onerror=()=>{pdfjsP=null;rej(new Error('Couldn’t load the PDF reader. Check your connection.'))};document.head.appendChild(sc)}))}
+let STANDOC=null,stanBusy=false;
+async function stanDoc(){if(STANDOC)return STANDOC;const blob=await idb('readonly',st=>st.get('stan'));if(!blob)throw new Error('The tutorial isn’t on this device anymore. Link it again on the Rotation page.');
+  await loadPdfjs();STANDOC=await pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise;return STANDOC}
+async function linkStan(file){stanBusy=true;render(true);
+  try{try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+    await idb('readwrite',st=>st.put(file,'stan'));STANDOC=null;let pages=null;
+    try{await loadPdfjs();STANDOC=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;pages=STANDOC.numPages}catch(e){}
+    BK.stan={name:file.name,size:file.size,pages,at:Date.now()};saveBK();
+    toast(!pages?'Saved, but it couldn’t be read as a PDF.':pages!==108?`Linked. This copy has ${pages} pages; section pages are set for the 2022 edition (108).`:'Tutorial linked on this device.')}
+  catch(e){toast(e&&e.name==='QuotaExceededError'?'Not enough storage on this device for that file.':'Couldn’t save that file on this device.')}
+  stanBusy=false;render(true)}
+async function unlinkStan(){try{await idb('readwrite',st=>st.delete('stan'))}catch(e){}STANDOC=null;delete BK.stan;saveBK();render(true)}
+let RD=null;
+async function renderPdf(a,b){const me=RD={dead:false};
+  document.title='CA-1 tutorial · Ether';
+  hd.innerHTML=`${HOME}<button class="back" data-a="refback" aria-label="Back">‹</button><h1>CA-1 tutorial<small>${a===b?'p. '+a:'pp. '+a+'–'+b}</small></h1>`;tabsEl.innerHTML='';
+  if(!BK.stan){app.innerHTML=`<div class="card" style="margin-top:12px"><p class="sub">Link your copy of the Stanford CA-1 tutorial on this device to read it here.</p><div class="btnrow" style="margin-top:8px"><a class="btn sm" href="#rot">Link it on the Rotation page</a></div></div>`;return}
+  app.innerHTML=`<p class="hint" style="margin-top:10px">Tap a page to zoom in; tap again to fit.</p><div class="reader" id="rdr"><div class="empty">Opening…</div></div>`;
+  let doc;try{doc=await stanDoc()}catch(e){if(RD===me)app.innerHTML=`<div class="card" style="margin-top:12px"><p class="sub">${esc(e.message||'Couldn’t open the PDF.')}</p></div>`;return}
+  if(RD!==me)return;const box=document.getElementById('rdr');if(!box)return;box.innerHTML='';
+  const W=box.clientWidth||340,dpr=Math.min(window.devicePixelRatio||1,2.5),last=Math.min(b,doc.numPages);
+  for(let p=Math.max(1,a);p<=last;p++){const pg=await doc.getPage(p);if(RD!==me)return;
+    const v1=pg.getViewport({scale:1}),vp=pg.getViewport({scale:W/v1.width*dpr*2});
+    const wrap=document.createElement('div');wrap.className='pg';const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+    wrap.appendChild(cv);wrap.insertAdjacentHTML('beforeend',`<span class="pn">p. ${p}</span>`);box.appendChild(wrap);
+    await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise}
+  if(RD===me&&!box.dataset.z){box.dataset.z=1;box.addEventListener('click',ev=>{const w=ev.target.closest('.pg');if(w&&ev.target.tagName==='CANVAS')w.classList.toggle('zoom')})}
+  if(RD===me&&last<doc.numPages)box.insertAdjacentHTML('beforeend',`<div class="btnrow"><button class="btn sm" data-a="stan" data-v="${last+1}-${Math.min(last+3,doc.numPages)}">Next pages ›</button></div>`)}
+
+/* ---------- dose reference (tutorial doses at a chosen weight) ---------- */
+let refWt='';
+function doseRows(w){const ids=Object.keys(DOSE);return RXCATS.flatMap(([k,l])=>RX.filter(d=>d.cat===k&&DOSE[d.id]).map(d=>`<tr><td>${esc(d.n)}${DOSE[d.id].pg?`<br><button type="button" class="linkbtn pgl" data-a="stan" data-v="${DOSE[d.id].pg}">CA-1 p. ${DOSE[d.id].pg} ›</button>`:''}</td><td>${esc(doseStr(d.id,w))}</td></tr>`)).join('')}
+function doseRef(){const w=num(refWt);
+  return`<div class="card refsec"><h3>Doses</h3><div class="dosewt"><input id="refwt" inputmode="decimal" placeholder="Weight" value="${esc(refWt)}" aria-label="Weight in kg"><span class="sub">kg (total body weight)</span></div>
+   <table class="reftable" id="dosetbl">${doseRows(w)}</table>
+   <p class="hint">Adult doses from the Stanford CA-1 tutorial (page shown); lipid emulsion from ASRA. In obesity, induction agents and opioids are usually dosed on lean weight and rocuronium on ideal weight (tutorial p. 95: ideal = 22 × height in m²; lean = ideal × 1.2). Confirm every dose with your attending.</p></div>`}
+
+/* ================= HALF-PAGE CARRY CARD ================= */
+let cardFmt='full';try{cardFmt=localStorage.getItem('panacea.ether.fmt')==='half'?'half':'full'}catch(e){}
+function halfCard(c){const n=nums(c),e=esc,A=airway(c),R=rcri(c),SB=stopbang(c),AP=apfel(c),p=c.p;
+  const proc=[c.side&&c.side!=='N/A'?c.side:'',c.proc].filter(Boolean).join(' ')||'Procedure';
+  const where=[c.date?pd(c.date).toLocaleDateString([],{weekday:'short',month:'numeric',day:'numeric'}):'',c.room?'OR '+c.room.replace(/^OR\s*/i,''):'',tm(c.time)].filter(Boolean).join(' · ');
+  const top=[n.age!=null?n.age+(c.sex||''):'',c.r.asa?'ASA '+c.r.asa+(c.r.e||c.urg==='emergent'?'E':''):''].filter(Boolean).join(' · ');
+  let h=`<div class="half"><div class="hh"><div><b>${e(proc)}</b><small>${e([c.surgeon,c.svc,c.urg].filter(Boolean).join(' · '))}</small></div><div class="hr"><b>${e(top||'—')}</b><br>${e(where)}</div></div>`;
+  h+=`<p class="one">${e(oneLiner(c))}</p>`;
+  const ibw=n.ht?r1(22*(n.ht/100)**2):null;
+  const body=[n.wt?n.wt+' kg':'',n.bmi?'BMI '+n.bmi:'',n.pbw?'PBW '+n.pbw:'',n.bmi>=30&&ibw?'lean '+r1(ibw*1.2):''].filter(Boolean).join(' · ');
+  const np=[n.h_sol!=null?'solids '+n.h_sol+' h':'',n.h_clr!=null?'clears '+n.h_clr+' h':'',c.npo.note].filter(Boolean).join(', ');
+  const vit=[c.vit.bp?'BP '+c.vit.bp:'',c.vit.hr?'HR '+c.vit.hr:'',c.vit.spo2?'Sat '+c.vit.spo2+'%':''].filter(Boolean).join(', ');
+  const al=algText(c);
+  h+=`<div class="blk"><dl class="kv2"><dt>Allergy</dt><dd><b>${e(al||'—')}</b>${c.algTxt?' ('+e(c.algTxt)+')':''}</dd><dt>NPO</dt><dd>${e(np||'—')}</dd>
+   <dt>Body</dt><dd>${e(body||'—')}</dd><dt>Vitals</dt><dd>${e(vit||'—')}</dd>
+   <dt>Access</dt><dd>${e([c.ex.iv,c.p.accTxt].filter(Boolean).join('; ')||'—')}</dd><dt>Code</dt><dd>${e(c.code||'—')}</dd></dl></div>`;
+  const F=flags(c).filter(f=>f.k==='warn'||f.k==='amb');
+  if(F.length)h+=`<div class="al"><b>ALERTS:</b> ${F.slice(0,10).map(f=>e(f.t)).join(' · ')}</div>`;
+  h+=`<div class="blk"><h4>Airway${A.diff?' · difficult predicted':''}</h4><p>${e(awText(c))}.${A.dl.length||A.dmv.length?` <span class="mut">DL: ${e(A.dl.join(', ')||'—')}. DMV: ${e(A.dmv.join(', ')||'—')}.</span>`:''}</p>${p.dev||p.ett||p.backup?`<p><b>Plan:</b> ${e([p.dev,p.ett,p.backup?'backup: '+p.backup:'',p.rescue.length?'rescue: '+p.rescue.join(', '):''].filter(Boolean).join('; '))}</p>`:''}</div>`;
+  const hx=SYS.map(sy=>{const it=sy.c.filter(([id])=>has(c,id)).map(([id])=>shortCond(id,c));return it.length?sy.n.split(/[ ,]/)[0]+': '+it.join(', '):''}).filter(Boolean);
+  const an=c.anes.map(x=>ANESN[x]);
+  if(hx.length||an.length||c.hxTxt)h+=`<div class="blk"><h4>History</h4><p>${e([...hx,c.hxTxt,an.length?'Anesthesia: '+an.join(', '):''].filter(Boolean).join('. '))}.</p></div>`;
+  const ms=Object.keys(c.meds);
+  if(ms.length)h+=`<div class="blk"><h4>Meds</h4><p>${ms.map(k=>`<b>${e(MD[k].n.split(' (')[0])}</b>${c.meds[k]?' '+e(c.meds[k]):''}: ${e(MD[k].s)}`).join('; ')}</p></div>`;
+  const sl=studyLines(c);if(sl.length)h+=`<div class="blk"><h4>Studies</h4><p>${sl.map(([k,v])=>`<b>${e(k)}</b> ${e(v)}`).join('; ')}</p></div>`;
+  h+=`<div class="blk"><p><b>Risk</b> RCRI ${R.pts} · ${c.r.mets==='y'?'≥ 4 METs':c.r.mets==='n'?'< 4 METs':'METs ?'} · STOP-BANG ${SB.sc}${SB.unk?'+':''} · Apfel ${AP.sc} (${AP.risk}%)${labText(c)?` · <b>Labs</b> ${e(labText(c))}`:''}</p></div>`;
+  const PL=planLines(c,true).filter(([k])=>!['Airway','Backup / rescue'].includes(k));
+  if(PL.length)h+=`<div class="blk"><h4>Plan</h4><dl>${PL.map(([k,v])=>`<dt>${e(k)}</dt><dd>${e(v)}</dd>`).join('')}</dl></div>`;
+  const ds=RXCATS.flatMap(([k])=>RX.filter(d=>d.cat===k&&uses(c,d.id)));
+  if(ds.length)h+=`<div class="blk"><h4>Drugs${n.wt?' · '+n.wt+' kg':''}</h4><table class="dz">${ds.map(d=>`<tr><td>☐ <b>${e(d.n)}</b></td><td>${e(doseShort(d.id,n.wt))}</td></tr>`).join('')}</table></div>`;
+  const nb=[n.tv6?'TV '+n.tv6+'–'+n.tv8:'',n.mapB?'MAP '+n.mapLo+'–'+n.mapHi:'',n.abl?'ABL '+n.abl:'',n.maint?'maint '+n.maint+' mL/h':''].filter(Boolean);
+  if(nb.length)h+=`<p class="mut">${e(nb.join(' · '))}</p>`;
+  h+=`<div class="blk"><h4>Pre-op holding</h4><ul class="ck">${PREOP_CK.map(x=>`<li>☐ ${e(x)}</li>`).join('')}</ul></div>`;
+  h+=`<div class="notes"></div></div>`;return h}
+function halfSheets(list){const o=[];for(let i=0;i<list.length;i+=2)o.push(`<section class="sheet hp"><div class="hcol">${halfCard(list[i])}</div><div class="hcol">${list[i+1]?halfCard(list[i+1]):''}</div></section>`);return o.join('')}
+function fitHalves(sh){let fs0=8,ok=true;sh.querySelectorAll('.half').forEach(el=>{let fs=8;el.style.fontSize=fs+'pt';while(el.scrollHeight>PAGE_H+1&&fs>5.8){fs=r1(fs-0.2);el.style.fontSize=fs+'pt'}fs0=Math.min(fs0,fs);if(el.scrollHeight>PAGE_H+1)ok=false});return{fs:fs0,fits:ok}}
+const cardHtml=list=>cardFmt==='half'?halfSheets(list):list.map(sheet).join('');
+
 /* ================= VIEW STATE ================= */
 const hd=document.getElementById('hd'),tabsEl=document.getElementById('tabs'),app=document.getElementById('app');
 let showDone=false,refSec='meds';
@@ -1127,10 +1295,11 @@ function parseHash(){return location.hash.slice(1).split('/')}
 function curId(){const h=parseHash();return h[0]==='c'?h[1]:null}
 function cur(){const id=curId();return id?P(id):null}
 function render(keep){
-  const h=parseHash();const y=window.scrollY;
+  const h=parseHash();const y=window.scrollY;RD=null;
   if(h[0]==='c'&&P(h[1]))renderCase(P(h[1]),h[2]||'chart');
   else if(h[0]==='ref')renderRef();
   else if(h[0]==='rot')renderRot();
+  else if(h[0]==='pdf'){const[a,b]=String(h[1]||'1').split('-').map(Number);renderPdf(a||1,b||a||1)}
   else renderHome();
   window.scrollTo(0,keep?y:0);
   if(h[2]==='card')requestAnimationFrame(fitPreview);
@@ -1155,7 +1324,7 @@ function renderHome(){
   if(!act.length)h+=`<div class="empty">No cases yet. Start one for tomorrow’s OR list.</div>`;
   const days=[...new Set(act.map(c=>c.date||''))];
   days.forEach(d=>{const list=act.filter(c=>(c.date||'')===d);
-    h+=`<div class="day-h">${esc(dayLabel(d))}<span style="font-weight:400;letter-spacing:0;text-transform:none">${list.length} case${list.length>1?'s':''}</span><button class="btn sm" data-a="printdaysheet" data-v="${esc(d)}" style="margin-left:auto">Day sheet</button><button class="btn sm" data-a="printday" data-v="${esc(d)}" style="margin-left:0">${list.length>1?'All cards':'OR card'}</button></div>`;
+    h+=`<div class="day-h">${esc(dayLabel(d))}<span style="font-weight:400;letter-spacing:0;text-transform:none">${list.length} case${list.length>1?'s':''}</span><button class="btn sm" data-a="printdaysheet" data-v="${esc(d)}" style="margin-left:auto">Day sheet</button><button class="btn sm" data-a="printday" data-v="${esc(d)}" style="margin-left:0">${cardFmt==='half'?'Half cards':list.length>1?'All cards':'OR card'}</button></div>`;
     list.forEach(c=>h+=caseRow(c))});
   if(done.length){h+=`<details class="dd" ${showDone?'open':''} id="doned"><summary>Done (${done.length})</summary>`;done.forEach(c=>h+=caseRow(c));h+='</details>'}
   h+=`<div style="margin-top:18px">${syncCard()}</div>
@@ -1361,11 +1530,11 @@ function vPlan(c){const p=c.p,n=nums(c),A=airway(c),AP=apfel(c),F=flags(c).filte
 
 const rxChip=(c,id)=>`<button type="button" class="chip${uses(c,id)?' on':''}" data-a="rx" data-v="${id}">${esc(RXD[id].n)}</button>`;
 function vDrugs(c){const p=c.p;
-  let h=`<div class="card"><h3>Drugs <span class="x">what you’ll draw up; doses with your attending</span></h3>
+  let h=`<div class="card"><h3>Drugs <span class="x">doses from the CA-1 tutorial; confirm with your attending</span></h3>
    <div class="btnrow" style="gap:6px"><span class="sub" style="font-size:.85rem">Quick add:</span>${RXSETS.map(([k,l])=>`<button type="button" class="btn sm" data-a="rxset" data-v="${k}">${l}</button>`).join('')}${p.rx.length?'<button type="button" class="linkbtn danger" data-a="rxclear" style="color:var(--warn)">Clear</button>':''}</div>`;
   RXCATS.forEach(([k,l])=>{h+=`<div class="sysh">${esc(l)}</div><div class="chips">${RX.filter(d=>d.cat===k).map(d=>rxChip(c,d.id)).join('')}${k==='nmb'?`<button type="button" class="chip${p.noNmb?' on':''}" data-a="bool" data-p="p.noNmb">No paralytic</button>`:''}${k==='rev'?`<button type="button" class="chip${p.noRev?' on':''}" data-a="bool" data-p="p.noRev">No reversal needed</button>`:''}</div>`});
   const sel=RXCATS.flatMap(([k])=>RX.filter(d=>d.cat===k&&uses(c,d.id)));
-  if(sel.length)h+=`<details class="dd" open><summary>Why and watch-outs (${sel.length})</summary>${sel.map(d=>`<div class="medrow"><b style="font-size:.92rem">${esc(d.n)}</b><p class="medn">${esc(d.p)}</p></div>`).join('')}</details>`;
+  if(sel.length)h+=`<details class="dd" open><summary>Why and watch-outs (${sel.length})</summary>${sel.map(d=>`<div class="medrow"><b style="font-size:.92rem">${esc(d.n)}</b><p class="medn">${esc(d.p)}</p>${DOSE[d.id]?`<p class="medn"><b style="color:var(--ink)">Dose:</b> ${esc(doseStr(d.id,nums(c).wt))}${DOSE[d.id].pg?` <button type="button" class="linkbtn pgl" data-a="stan" data-v="${DOSE[d.id].pg}">CA-1 p. ${DOSE[d.id].pg} ›</button>`:''}</p>`:''}</div>`).join('')}</details>`;
   return h+`</div>`}
 function rxSet(c,k){const A=airway(c),mh=anes(c,'mh')||anes(c,'mhfam'),q=num(stv(c,'ecg','qtc')),old=nums(c).age>=65||has(c,'dem')||anes(c,'podel');
   const S={ga:['prop','fent','roc','sevo','dexa','ond','sugam','phenyl','ephed'],rsi:['prop','roc','sugam','phenyl'],mac:['prop','midaz','fent'],spinal:['bupi','phenyl','prop'],block:['ropi','lipid','midaz','fent']}[k]||[];
@@ -1386,8 +1555,9 @@ function vCard(c){
 
 ${esc(emailText(c))}</pre></details></div>
   <div class="card"><h3>One-liner</h3>${area('Edit to override the generated one','one',c.one,2,oneLiner(Object.assign({},c,{one:''})))}</div>
+  <div class="fld"><span>Carry card</span><div class="seg" data-fmt="1"><button type="button" data-a="fmt" data-v="full" aria-pressed="${cardFmt==='full'}">Full page</button><button type="button" data-a="fmt" data-v="half" aria-pressed="${cardFmt==='half'}">Half page</button></div></div>
   <div class="btnrow" style="margin:4px 0 12px"><button class="btn primary" data-a="print">Print / save PDF</button><button class="btn" data-a="copy">Copy pre-op note</button></div>
-  <div class="pvwrap" id="pvwrap">${sheet(c)}</div>
+  <div class="pvwrap" id="pvwrap">${cardHtml([c])}</div>
   <p class="hint" id="pvfit"></p>
   <details class="dd"><summary>Pre-op note text</summary><pre class="out">${esc(noteText(c))}</pre></details>
   <div class="card" style="margin-top:16px"><h3>After the case <span class="x">for your daily card and log</span></h3>
@@ -1396,7 +1566,7 @@ ${esc(emailText(c))}</pre></details></div>
    <button type="button" class="linkbtn" data-a="gotoref" data-v="proc" style="margin-top:6px">Risks, benefits, indications, contraindications ›</button>
    ${area('Feedback','log.fb',c.log.fb,2,'What to keep doing, what to work on')}${area('Topics discussed','log.topics',c.log.topics,2,'Sugammadex mechanism; LMA vs ETT for this case')}</div>
   <div class="btnrow" style="margin-top:16px"><button class="btn sm" data-a="done">${c.done?'Move back to active':'Mark done'}</button><button class="btn sm" data-a="dup">Duplicate</button><button class="btn sm danger" data-a="del">Delete</button></div>
-  <p class="hint">Print opens your device’s print sheet: choose Save as PDF or AirPrint. The card is landscape, quarter-inch margins, and sized to one page.</p>`}
+  <p class="hint">Print opens your device’s print sheet: choose Save as PDF or AirPrint. Full page: landscape, two columns, one page. Half page: half a landscape letter sheet (5 × 8 in) with weight-based doses and the pre-op holding checks; printing a day puts two cases on each sheet. Cut on the dashed line and fold to pocket size.</p>`}
 
 /* ---------- OR card (landscape, two columns) ---------- */
 function sheet(c){const n=nums(c),e=esc,A=airway(c),R=rcri(c),SB=stopbang(c),AP=apfel(c),D=dasi(c);
@@ -1429,7 +1599,7 @@ function sheet(c){const n=nums(c),e=esc,A=airway(c),R=rcri(c),SB=stopbang(c),AP=
   const nb=[n.tv6?'TV '+n.tv6+'–'+n.tv8+' mL':'',n.mapB?'MAP '+n.mapB+' (±20% '+n.mapLo+'–'+n.mapHi+')':'',n.ebv?'EBV '+n.ebv:'',n.abl?'ABL '+n.abl+' (Hgb '+n.hbT+')':'',n.maint?'maint '+n.maint+' mL/h':''].filter(Boolean);
   if(nb.length)h+=`<div class="blk"><h4>Numbers</h4><p>${e(nb.join(' · '))}</p></div>`;
   if(c.p.rx.length){const g=RXCATS.map(([k,l])=>[k,l,RX.filter(d=>d.cat===k&&uses(c,d.id))]).filter(x=>x[2].length);
-    h+=`<div class="blk"><h4>Drugs</h4><dl>${g.map(([k,l,ds])=>`<dt>${e(RXSHORT[k]||l)}</dt><dd>${ds.map(d=>'☐ '+e(d.n)).join('&nbsp; ')}</dd>`).join('')}</dl></div>`}
+    h+=`<div class="blk"><h4>Drugs</h4><dl>${g.map(([k,l,ds])=>`<dt>${e(RXSHORT[k]||l)}</dt><dd>${ds.map(d=>{const z=doseShort(d.id,n.wt);return'☐ '+e(d.n)+(z?' <span class="mut">'+e(z)+'</span>':'')}).join('&nbsp; ')}</dd>`).join('')}</dl></div>`}
   const PL=planLines(c,true);
   h+=`<div class="blk"><h4>Plan</h4>${PL.length?`<dl>${PL.map(([k,v])=>`<dt>${e(k)}</dt><dd>${e(v)}</dd>`).join('')}</dl>`:'<p class="mut">No plan entered yet.</p>'}</div>`;
   if(c.p.consent.length)h+=`<div class="blk"><h4>Consent</h4><p>${e(c.p.consent.join(', '))}</p></div>`;
@@ -1446,18 +1616,18 @@ function fitSheet(el){let fs=8.8;el.style.fontSize=fs+'pt';
   while(el.scrollHeight>PAGE_H&&fs>6.6){fs=r1(fs-0.2);el.style.fontSize=fs+'pt'}
   return{fs,fits:el.scrollHeight<=PAGE_H}}
 function fitPreview(){const w=document.getElementById('pvwrap');if(!w)return;const sh=w.querySelector('.sheet');
-  sh.style.transform='none';const r=fitSheet(sh);
+  sh.style.transform='none';const half=sh.classList.contains('hp');const r=half?fitHalves(sh):fitSheet(sh);
   const sc=(w.clientWidth-20)/PAGE_W;sh.style.transform=`scale(${sc})`;w.style.height=Math.max(PAGE_H,sh.scrollHeight)*sc+20+'px';
-  const m=document.getElementById('pvfit');if(m)m.textContent=r.fits?`Fits one page at ${r.fs} pt.`:'Too much to fit one page even at the smallest size: it will run onto a second page. Trim history or notes to keep it to one.'}
+  const m=document.getElementById('pvfit');if(m)m.textContent=half?(r.fits?`Fits a half page at ${r.fs} pt.`:'Too much for a half page even at the smallest size: the end is cut off. Trim history or notes, or print the full page.'):r.fits?`Fits one page at ${r.fs} pt.`:'Too much to fit one page even at the smallest size: it will run onto a second page. Trim history or notes to keep it to one.'}
 window.addEventListener('resize',()=>{if(parseHash()[2]==='card')fitPreview()});
 
-function printCases(list){if(!list.length){toast('No cases to print.');return}printHtml(list.map(sheet).join(''))}
+function printCases(list){if(!list.length){toast('No cases to print.');return}printHtml(cardHtml(list))}
 function printHtml(html){
   const el=document.getElementById('print');
   el.innerHTML=html;
   /* measure off-screen at page width, then fit each sheet */
   el.style.cssText='display:block;position:absolute;left:-20000px;top:0';
-  el.querySelectorAll('.sheet').forEach(fitSheet);
+  el.querySelectorAll('.sheet').forEach(x=>x.classList.contains('hp')?fitHalves(x):fitSheet(x));
   el.style.cssText='';
   document.body.classList.add('printing');
   const done=()=>{document.body.classList.remove('printing');el.innerHTML='';window.removeEventListener('afterprint',done)};
@@ -1482,10 +1652,18 @@ function renderRot(){
    <div class="btnrow" style="margin-top:10px"><button class="btn sm" data-a="copylog">Copy log</button></div><p class="hint">For the Direct Observation and Feedback card you turn in on Canvas at the end of the block.</p></div>`;
   const ppl={};S.pts.forEach(c=>[c.team.att,c.team.prov].filter(Boolean).forEach(x=>{(ppl[x]=ppl[x]||new Set()).add(c.date)}));
   if(Object.keys(ppl).length)h+=`<div class="card"><h3>Worked with</h3><ul class="items">${Object.entries(ppl).map(([k,d])=>`<li><span class="t">${esc(k)}<small>${[...d].filter(Boolean).sort().map(x=>pd(x).toLocaleDateString([],{month:'numeric',day:'numeric'})).join(', ')}</small></span></li>`).join('')}</ul><p class="hint">Each of them gets a daily feedback form the day after. If a day went especially well, tell Dr. Shaw or Ariana so they can make sure that evaluation comes in.</p></div>`;
+  const sr=S.rot.stan||{},nr=STAN.filter(x=>sr[x[0]]).length;
+  h+=`<h2 class="sec">Stanford CA-1 tutorial</h2><div class="card"><h3>Your copy <span class="x">${BK.stan?'linked on this device':'not linked'}</span></h3>
+   <p class="sub">${stanBusy?'Saving…':BK.stan?esc(BK.stan.name)+(BK.stan.pages?' · '+BK.stan.pages+' pages':''):'Pick the PDF once on each device. Sections then open at their pages, here and from the Reference and drug doses.'}</p>
+   <div class="btnrow" style="margin-top:8px"><label class="btn sm filebtn">${BK.stan?'Replace':'Choose PDF'}<input type="file" accept="application/pdf,.pdf" data-file="stan"></label>${BK.stan?'<button type="button" class="linkbtn" data-a="unstan" style="color:var(--warn)">Remove</button>':''}</div>
+   <p class="hint">Stays in this browser only; it isn’t uploaded anywhere. ${nr} of ${STAN.length} sections read.</p></div>`;
+  STAN_GROUPS.forEach(([g,ids])=>{const dn=ids.filter(i=>sr[i]).length;
+    h+=`<div class="card stan"><h3>${esc(g)} <span class="x">${dn} of ${ids.length}</span></h3><ul class="items">${ids.map(i=>{const x=STAND[i],on=!!sr[i];return`<li class="${on?'on':''}"><span class="m">${on?'✓':''}</span><span class="t">${i}. ${esc(x[1])}<small>p. ${x[2]}${x[3]>x[2]?'–'+x[3]:''}</small></span><button type="button" class="chip" data-a="stan" data-v="${stanPg(i)}">Open</button><button type="button" class="chip${on?' on':''}" data-a="stanread" data-v="${i}">${on?'Read':'Mark'}</button></li>`}).join('')}</ul></div>`});
+  h+=`<div class="card"><h3>Scenarios to talk through <span class="x">p. 100</span></h3><ul class="res">${SCEN.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
   h+=`<h2 class="sec">Weekly goals</h2>`;
   WEEKS.forEach((w,wi)=>{const done=w.g.filter((_,i)=>g[wi+'.'+i]).length;
     h+=`<div class="card"><h3>${esc(w.n)} <span class="x">${done} of ${w.g.length}</span></h3><ul class="items">${w.g.map((t,i)=>{const k=wi+'.'+i,on=!!g[k];return`<li class="${on?'on':''}"><span class="m">${on?'✓':''}</span><span class="t">${esc(t)}</span><button type="button" class="chip${on?' on':''}" data-a="goal" data-v="${k}">${on?'Done':'Mark'}</button></li>`}).join('')}</ul>
-     ${w.r?`<details class="dd"><summary>Resources</summary><ul class="res">${w.r.map(([s,x])=>`<li><b>${esc(s)}:</b> ${esc(x)}</li>`).join('')}</ul></details>`:''}</div>`});
+     ${w.r?`<details class="dd"><summary>Resources</summary><ul class="res">${w.r.map(([s,x])=>`<li><b>${esc(s)}:</b> ${s==='Stanford guide'?x.split('; ').map(it=>{const k=+it.split(' ')[0];return STAND[k]?`<button type="button" class="linkbtn pgl" data-a="stan" data-v="${stanPg(k)}">${esc(it)}</button>`:esc(it)}).join('; '):esc(x)}</li>`).join('')}</ul></details>`:''}</div>`});
   h+=`<p class="hint">ACCRAC: podcast (episode numbers). Stanford: CA-1 tutorial guide sections. Baby Miller: Basics of Anesthesia, 7th ed., chapters (free through Ebling). Open Anesthesia and Jaffe’s Manual of Surgical Procedures are also suggested.</p>`;
   h+=`<h2 class="sec">What the daily card asks</h2><div class="card"><ul class="items">${DAILY.map(([t,d])=>`<li><span class="m">·</span><span class="t">${esc(t)}${d?`<small>${esc(d)}</small>`:''}</span></li>`).join('')}</ul></div>`;
   h+=`<div class="card"><h3>Also on the rotation</h3><ul class="res"><li>SIM session with faculty (required; part of your evaluation). Watch the airway and IV videos before it.</li><li>Four-week elective: a 10-minute capstone presentation on an anesthesia topic.</li><li>Grand rounds Wednesdays 7:00 (location changes weekly).</li><li>You don’t place notes or orders in the chart.</li></ul></div>`;
@@ -1495,11 +1673,12 @@ function renderRot(){
 function renderRef(){
   document.title='Reference · Ether';
   hd.innerHTML=`${HOME}<button class="back" data-a="refback" aria-label="Back">‹</button><h1>Reference</h1>`;
-  const T=[['setup','Setup'],['meds','Meds'],['les','Lesions'],['aw','Airway'],['intra','Intra-op'],['crisis','Crises'],['proc','Procedures'],['misc','Pearls']];
+  const T=[['setup','Setup'],['dose','Doses'],['meds','Home meds'],['les','Lesions'],['aw','Airway'],['intra','Intra-op'],['crisis','Crises'],['proc','Procedures'],['misc','Pearls']];
   tabsEl.innerHTML=`<nav class="tabs scroll">${T.map(([k,l])=>`<a href="#ref" data-a="refsec" data-v="${k}" ${refSec===k?'aria-current="page"':''}>${l}</a>`).join('')}</nav>`;
-  let h='';const tbl=(t,rows,x='')=>`<div class="card refsec"><h3>${t}</h3>${x}<table class="reftable">${rows.map(([a,b])=>`<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</table></div>`;
+  let h='';const tbl=(t,rows,x='')=>`<div class="card refsec"><h3>${t}</h3>${x}<table class="reftable">${rows.map(([a,b])=>`<tr><td>${esc(a)}${REFPG[a]?`<br><button type="button" class="linkbtn pgl" data-a="stan" data-v="${REFPG[a]}">CA-1 p. ${REFPG[a].replace('-','–')} ›</button>`:''}</td><td>${esc(b)}</td></tr>`).join('')}</table></div>`;
   if(refSec==='setup')h=tbl('Room setup (MS MAIDS)',REF_SETUP,'<p class="hint" style="margin-top:0">Every morning, before the first patient.</p>')+tbl('ASA standard monitors',REF_MON);
-  else if(refSec==='intra')h=tbl('Intra-op problems',REF_INTRA.slice(0,6))+tbl('Emergence and PACU',REF_INTRA.slice(6));
+  else if(refSec==='intra'){const EM=['Extubation criteria','Delayed emergence','PACU complications','PACU handoff'];h=tbl('Intra-op problems',REF_INTRA.filter(r=>!EM.includes(r[0])))+tbl('Emergence and PACU',REF_INTRA.filter(r=>EM.includes(r[0])))}
+  else if(refSec==='dose')h=doseRef();
   else if(refSec==='crisis')h=tbl('OR crises',REF_CRISIS,'<p class="hint" style="margin-top:0">First step in every crisis: call for help. Follow the cognitive aid in the room.</p>');
   else if(refSec==='proc')h=`<p class="sub" style="margin:4px 0 10px">Be ready to describe these before each attempt: the daily card asks.</p>`+REF_PROC.map(x=>`<div class="card proc"><h3>${esc(x.n)}</h3><dl><dt>Indications</dt><dd>${esc(x.i)}</dd><dt>Contra&shy;indications</dt><dd>${esc(x.c)}</dd><dt>Risks</dt><dd>${esc(x.r)}</dd><dt>Benefits</dt><dd>${esc(x.b)}</dd><dt>How</dt><dd>${esc(x.t)}</dd></dl></div>`).join('');
   else if(refSec==='meds')h=`<div class="card refsec"><h3>Perioperative medications</h3><p class="hint" style="margin-top:0">Study-level defaults. The attending, the surgeon, and local protocol make the final call.</p><table class="reftable">${MEDS.map(m=>`<tr><td>${esc(m.n)}</td><td>${esc(m.d)}</td></tr>`).join('')}</table></div>`;
@@ -1525,7 +1704,7 @@ function renderRef(){
     <tr><td>Before induction (MS MAIDS)</td><td>Machine, Suction, Monitors, Airway, IV, Drugs, Special equipment.</td></tr>
     <tr><td>Sugammadex</td><td>Reduces hormonal contraceptive efficacy for 7 days: counsel backup contraception.</td></tr>
     <tr><td>Cardiac evaluation</td><td>Emergency → proceed. Low risk (RCRI 0–1) → proceed. Elevated risk with ≥ 4 METs → proceed. Elevated with poor or unknown capacity → consider BNP and testing only if it changes management.</td></tr>
-    <tr><td>Sedation vs GA</td><td>Minimal: normal response to voice. Moderate: purposeful response to voice or touch; airway and breathing fine. Deep: purposeful response only to repeated or painful stimulus; airway may need help. GA: not arousable to pain; airway usually needs support. MAC is the anesthesia service (any depth, ready to convert to GA), not a depth.</td></tr></table></div>`+tbl('METs by activity',METS.map(([m,a])=>[m+' MET'+(m==='1'?'':'s'),a]),'<p class="hint" style="margin-top:0">Under 4 METs (can’t climb two flights or walk briskly) is poor functional capacity.</p>');
+    <tr><td>Sedation vs GA</td><td>Minimal: normal response to voice. Moderate: purposeful response to voice or touch; airway and breathing fine. Deep: purposeful response only to repeated or painful stimulus; airway may need help. GA: not arousable to pain; airway usually needs support. MAC is the anesthesia service (any depth, ready to convert to GA), not a depth.</td></tr></table></div>`+tbl('Antibiotic prophylaxis',[['Timing','Within 60 min before incision (ideally 15–45); vancomycin and fluoroquinolones need longer infusions. Whole dose in before a tourniquet goes up.'],['Doses (Stanford 2017 table)','Cefazolin 2 g (3 g if 120 kg or more), redose 4 h. Clindamycin 900 mg, 6 h. Vancomycin 1–2 g by weight, over 60 min or more. Ampicillin-sulbactam 3 g, 2 h. Cefoxitin 2 g, 2 h. Metronidazole 500 mg. Gentamicin 5 mg/kg once. Check your hospital’s own protocol.'],['Penicillin allergy','Fewer than 10% of reported penicillin allergies are real. Cross-reactivity with 1st and 2nd generation cephalosporins is low and with 3rd generation near zero. The tutorial avoids cephalosporins after penicillin anaphylaxis; newer allergy guidance allows cefazolin for most, because its side chain is unique. Ask your attending.']],'<p class="hint" style="margin-top:0"><button type="button" class="linkbtn pgl" data-a="stan" data-v="97-99">CA-1 pp. 97–99 ›</button></p>')+tbl('METs by activity',METS.map(([m,a])=>[m+' MET'+(m==='1'?'':'s'),a]),'<p class="hint" style="margin-top:0">Under 4 METs (can’t climb two flights or walk briskly) is poor functional capacity.</p>');
   app.innerHTML=h}
 
 /* ================= EVENTS ================= */
@@ -1533,15 +1712,15 @@ function setPath(o,path,v){const k=path.split('.');let x=o;for(let i=0;i<k.lengt
 function getPath(o,path){return path.split('.').reduce((x,k)=>x==null?x:x[k],o)}
 function rerenderKeepFocus(){setTimeout(()=>{const ae=document.activeElement;const ap=ae&&ae.dataset&&ae.dataset.p;render(true);if(ap){const el=app.querySelector(`[data-p="${CSS.escape(ap)}"]`);if(el){el.focus({preventScroll:true});try{if(el.type==='text'||el.tagName==='TEXTAREA'){const l=el.value.length;el.setSelectionRange(l,l)}}catch(_){}}}},0)}
 
-app.addEventListener('input',e=>{const t=e.target,c=cur();if(!c||!t.dataset.p)return;
+app.addEventListener('input',e=>{const t=e.target,c=cur();if(t.id==='refwt'){refWt=t.value;const tb=document.getElementById('dosetbl');if(tb)tb.innerHTML=doseRows(num(refWt));return}if(!c||!t.dataset.p)return;
   setPath(c,t.dataset.p,t.value);save();
   if(t.dataset.p==='proc'){const h1=hd.querySelector('h1');if(h1)h1.firstChild.textContent=t.value||'New case'}
-  if(t.dataset.p==='one'){const w=document.getElementById('pvwrap');if(w){w.innerHTML=sheet(c);fitPreview()}}});
-app.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.rr&&cur())rerenderKeepFocus()});
+  if(t.dataset.p==='one'){const w=document.getElementById('pvwrap');if(w){w.innerHTML=cardHtml([c]);fitPreview()}}});
+app.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.file==='stan'&&t.files&&t.files[0]){linkStan(t.files[0]);t.value='';return}if(t.dataset&&t.dataset.rr&&cur())rerenderKeepFocus()});
 
 app.addEventListener('click',async e=>{const c=cur();
   const sb=e.target.closest('.seg button');
-  if(sb&&c){const k=sb.parentElement.dataset.seg,v=sb.dataset.v;setPath(c,k,getPath(c,k)===v?'':v);save();render(true);return}
+  if(sb&&c&&sb.parentElement.dataset.seg){const k=sb.parentElement.dataset.seg,v=sb.dataset.v;setPath(c,k,getPath(c,k)===v?'':v);save();render(true);return}
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
   if(a==='new'){const n=newCase();S.pts.unshift(n);save();location.hash='c/'+n.id+'/chart';return}
   if(a==='syncnow'){syncNow();return}
@@ -1551,6 +1730,10 @@ app.addEventListener('click',async e=>{const c=cur();
   if(a==='goal'){S.rot.goals[v]=!S.rot.goals[v];if(!S.rot.goals[v])delete S.rot.goals[v];S.rot._mod=Date.now();save();render(true);return}
   if(a==='copylog'){const ok=await copyText(logText());toast(ok?'Log copied.':'Couldn’t copy on this device.');return}
   if(a==='gotoref'){refSec=v;location.hash='ref';return}
+  if(a==='stan'){location.hash='pdf/'+v;return}
+  if(a==='stanread'){S.rot.stan=S.rot.stan||{};S.rot.stan[v]=!S.rot.stan[v];if(!S.rot.stan[v])delete S.rot.stan[v];S.rot._mod=Date.now();save();render(true);return}
+  if(a==='unstan'){if(confirm('Remove the tutorial PDF from this device?'))unlinkStan();return}
+  if(a==='fmt'){cardFmt=v;try{localStorage.setItem('panacea.ether.fmt',v)}catch(_){}render(true);return}
   if(!c)return;
   if(a==='multi'){let arr=getPath(c,b.dataset.p);if(!Array.isArray(arr)){arr=[];setPath(c,b.dataset.p,arr)}const i=arr.indexOf(v);if(i>=0)arr.splice(i,1);else{arr.push(v);
       if(b.dataset.p==='alg'&&v!=='nkda'){const j=arr.indexOf('nkda');if(j>=0)arr.splice(j,1)}if(b.dataset.p==='alg'&&v==='nkda')arr.splice(0,arr.length,'nkda');
