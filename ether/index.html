@@ -232,6 +232,15 @@ pre.out{white-space:pre-wrap;word-wrap:break-word;font:inherit;font-size:.9rem;l
 .sheet .half table.dz td:last-child{white-space:nowrap}
 .sheet .half ul.ck{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
 .sheet .half .notes{flex:1;min-height:.45in;border:1px solid #999;border-radius:3px;margin-top:2px}
+/* Quick prep: tri-state chips (+ present, − denied) */
+.chip.neg{background:var(--bg);color:var(--muted);border-style:dashed}
+.chip .pm{display:inline-block;min-width:.9em;font-weight:700}
+.qleg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.82rem;color:var(--muted);margin:8px 0 4px}
+.qleg b{color:var(--ink)}
+.qsec .allneg{margin-top:6px}
+.qbasic .row>.fld{min-width:90px}
+.minipv{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;overflow:hidden}
+.minipv .sheet{width:auto!important;font-size:10.5pt!important}
 /* Day sheet: one landscape page with a mini H&P for every case that day */
 .sheet.day .cols{column-count:3}
 .sheet.day.n2 .cols{column-count:2}
@@ -490,6 +499,61 @@ const WEEKS=[
   r:[['ACCRAC','31 Massive Transfusion; 69 Intro to Trauma; 37 OR Crises; 260 Malignant Hyperthermia; 36 Pediatric Respiratory Anatomy and Physiology'],['Stanford guide','8 Difficult Airway Algorithm; 16 Laryngospasm & Aspiration; 18 Anaphylaxis; 20 Malignant Hyperthermia'],['Baby Miller','34 Pediatrics; 41 Critical Care Medicine; 42 Anesthesia for Trauma; 45 Cardiopulmonary Resuscitation']]}
 ];
 
+/* ================= QUICK PREP (mini H&P with pertinent positives and negatives) =================
+   Each item: [id, label, where a "present" answer is stored]. hx/anes/med/awx/dent write the same fields the Chart tab uses;
+   sx is a symptom kept in c.sx. A "denied" answer is kept in c.neg[id]. */
+const QP=[
+ {s:'NPO and aspiration',k:'npo',it:[['q_gerd','Reflux symptoms',{hx:'gerd'}],['q_nv','Nausea or vomiting',{hx:'nv'}],['q_glp','GLP-1 agonist',{med:'glp1'}],['q_gastro','Gastroparesis',{hx:'gastro'}],['q_sbo','Obstruction or ileus',{hx:'sbo'}],['q_preg','Pregnant',{hx:'preg'},'F']]},
+ {s:'Airway',k:'aw',it:[['q_diffaw','Prior difficult airway',{anes:'diffaw'}],['q_snore','Snoring',{awx:'Snoring'}],['q_osa','Sleep apnea',{hx:'osa'}],['q_beard','Beard',{awx:'Beard'}],['q_loose','Loose teeth',{dent:'Loose teeth'}],['q_dentures','Dentures',{dent:'Dentures'}],['q_mouth','Limited mouth opening',{awx:'Limited jaw opening'}],['q_cspine','C-spine disease',{hx:'cspine'}],['q_ra','Rheumatoid arthritis',{hx:'ra'}],['q_hn','Neck surgery or radiation',{hx:'hnrad'}],['q_stridor','Stridor or hoarseness',{awx:'Stridor or hoarseness'}]]},
+ {s:'Cardiac',k:'card',it:[['q_htn','Hypertension',{hx:'htn'}],['q_cad','Coronary disease',{hx:'cad'}],['q_stent','Stent',{hx:'stent'}],['q_mi','Prior MI',{hx:'mi'}],['q_hf','Heart failure',{hx:'hf'}],['q_af','AF',{hx:'af'}],['q_aos','Aortic stenosis',{hx:'aos'}],['q_cied','Pacemaker or ICD',{hx:'cied'}],['q_pht','Pulmonary hypertension',{hx:'pht'}],['q_cp','Chest pain',{sx:'cp'}],['q_doe','Dyspnea on exertion',{sx:'doe'}],['q_orth','Orthopnea',{sx:'orth'}],['q_sync','Syncope',{sx:'sync'}],['q_palp','Palpitations',{sx:'palp'}]]},
+ {s:'Pulmonary',k:'pulm',it:[['q_asthma','Asthma',{hx:'asthma'}],['q_copd','COPD',{hx:'copd'}],['q_smoke','Current smoker',{hx:'smoke'}],['q_uri','URI in the last 4 weeks',{hx:'uri'}],['q_o2','Home oxygen',{hx:'homeo2'}],['q_cough','Productive cough',{sx:'cough'}],['q_wheeze','Wheezing',{sx:'wheeze'}]]},
+ {s:'Other systems',k:'oth',it:[['q_cva','Stroke or TIA',{hx:'cva'}],['q_sz','Seizures',{hx:'sz'}],['q_dm2','Type 2 diabetes',{hx:'dm2'}],['q_dm1','Type 1 diabetes',{hx:'dm1'}],['q_hypothy','Hypothyroidism',{hx:'hypothy'}],['q_adrenal','Adrenal insufficiency',{hx:'adrenal'}],['q_ckd','CKD',{hx:'ckd'}],['q_esrd','Dialysis',{hx:'esrd'}],['q_cirr','Cirrhosis',{hx:'cirr'}],['q_anemia','Anemia',{hx:'anemia'}],['q_bleed','Bleeding problems',{hx:'bleed'}],['q_vte','Prior clot',{hx:'vtehx'}],['q_etoh','Heavy alcohol',{hx:'etoh'}],['q_oud','Chronic opioids or OUD',{hx:'oud'}],['q_anx','Severe anxiety',{hx:'anx'}]]},
+ {s:'Medications',k:'meds',it:[['q_bb','Beta-blocker',{med:'bb'}],['q_acei','ACEi / ARB',{med:'acei'}],['q_diur','Diuretic',{med:'diur'}],['q_asa','Aspirin',{med:'asa'}],['q_p2y12','P2Y12 inhibitor',{med:'p2y12'}],['q_warf','Warfarin',{med:'warf'}],['q_doac','DOAC',{med:'doac'}],['q_ins','Insulin',{med:'ins'}],['q_sglt2','SGLT2 inhibitor',{med:'sglt2'}],['q_ster','Chronic steroids',{med:'ster'}],['q_bup','Buprenorphine',{med:'bup'}],['q_maoi','MAO inhibitor',{med:'maoi'}]]},
+ {s:'Anesthesia history',k:'anes',it:[['q_ponv','PONV',{anes:'ponv'}],['q_motion','Motion sickness',{anes:'motion'}],['q_emdel','Emergence delirium',{anes:'emdel'}],['q_delayed','Delayed emergence',{anes:'delayed'}],['q_mh','MH (self)',{anes:'mh'}],['q_mhfam','MH in family',{anes:'mhfam'}],['q_pche','Pseudocholinesterase deficiency',{anes:'pche'}],['q_aware','Awareness',{anes:'aware'}]]},
+ {s:'Access',k:'acc',it:[['q_ivhard','Hard IV access',{sx:'ivhard'}],['q_noarm','Arm to avoid (fistula, node dissection)',{sx:'noarm'}]]}
+];
+const QPD=Object.fromEntries(QP.flatMap(g=>g.it.map(x=>[x[0],{id:x[0],l:x[1],m:x[2],sex:x[3],g:g.s}])));
+const SXN={cp:'chest pain',doe:'dyspnea on exertion',orth:'orthopnea',sync:'syncope',palp:'palpitations',cough:'productive cough',wheeze:'wheezing',ivhard:'hard IV access',noarm:'an arm to avoid'};
+function qpPos(c,m){if(m.hx)return has(c,m.hx);if(m.anes)return anes(c,m.anes);if(m.med)return med(c,m.med);if(m.awx)return c.aw.x.includes(m.awx);if(m.dent)return c.aw.dent.includes(m.dent);if(m.sx)return!!(c.sx||{})[m.sx];return false}
+function qpSet(c,m,on){const arr=(a,v)=>{const i=a.indexOf(v);if(on&&i<0)a.push(v);if(!on&&i>=0)a.splice(i,1)};
+  if(m.hx){if(on){if(!has(c,m.hx))c.hx[m.hx]=''}else delete c.hx[m.hx]}
+  else if(m.anes){arr(c.anes,m.anes);if(on){const j=c.anes.indexOf('first');if(j>=0&&m.anes!=='diffaw')c.anes.splice(j,1)}}
+  else if(m.med){if(on){if(!med(c,m.med))c.meds[m.med]=''}else delete c.meds[m.med]}
+  else if(m.awx)arr(c.aw.x,m.awx);else if(m.dent){arr(c.aw.dent,m.dent);if(on){const j=c.aw.dent.indexOf('Intact');if(j>=0)c.aw.dent.splice(j,1)}}
+  else if(m.sx){c.sx=c.sx||{};if(on)c.sx[m.sx]=true;else delete c.sx[m.sx]}}
+const qpState=(c,x)=>qpPos(c,x.m)?'+':(c.neg||{})[x.id]?'-':'';
+const qpApplies=(c,x)=>!x.sex||!c.sex||c.sex===x.sex;
+/* Denied items (only those not marked present elsewhere) and symptoms marked present */
+const negs=c=>Object.keys(c.neg||{}).filter(k=>QPD[k]&&!qpPos(c,QPD[k].m)).map(k=>QPD[k]);
+const negText=c=>negs(c).map(x=>(/^[A-Z][a-z]/.test(x.l)?lc1(x.l):x.l)).join(', ');
+const negGroups=c=>QP.map(g=>[g.s,negs(c).filter(x=>x.g===g.s).map(x=>/^[A-Z][a-z]/.test(x.l)?lc1(x.l):x.l)]).filter(x=>x[1].length);
+const sxText=c=>Object.keys(c.sx||{}).filter(k=>SXN[k]&&!['ivhard','noarm'].includes(k)).map(k=>SXN[k]).join(', ');
+/* One-tap plan starting points; everything stays editable */
+const QPLAN=[
+ ['gaett','GA · ETT',{tech:['General'],gaw:'Endotracheal tube',ind:'Standard IV',mnt:'Volatile',emg:'Awake extubation'},['prop','fent','roc','sevo','sugam','phenyl','ephed']],
+ ['galma','GA · LMA',{tech:['General'],gaw:'Supraglottic airway',ind:'Standard IV',mnt:'Volatile',emg:'Awake extubation'},['prop','fent','sevo','phenyl','ephed']],
+ ['rsi','RSI · ETT',{tech:['General'],gaw:'Endotracheal tube',ind:'Rapid sequence',mnt:'Volatile',emg:'Awake extubation'},['prop','fent','roc','sevo','sugam','phenyl','ephed']],
+ ['tiva','GA · TIVA',{tech:['General'],gaw:'Endotracheal tube',ind:'Standard IV',mnt:'TIVA',emg:'Awake extubation'},['prop','fent','roc','propInf','remi','sugam','phenyl','ephed']],
+ ['mac','MAC',{tech:['MAC / sedation'],gaw:'',ind:'',mnt:'',emg:''},['prop','midaz','fent']],
+ ['spinal','Spinal + sedation',{tech:['Neuraxial','MAC / sedation'],nax:'Spinal',gaw:'',ind:'',mnt:'',emg:''},['bupi','phenyl','prop','midaz']],
+ ['blockga','Block + GA',{tech:['General','Peripheral nerve block'],gaw:'Supraglottic airway',ind:'Standard IV',mnt:'Volatile',emg:'Awake extubation'},['prop','fent','sevo','ropi','lipid','phenyl','ephed']]];
+function applyQPlan(c,k){const q=QPLAN.find(x=>x[0]===k);if(!q)return;Object.assign(c.p,JSON.parse(JSON.stringify(q[2])));
+  const A=airway(c),asp=aspiration(c),mh=anes(c,'mh')||anes(c,'mhfam'),old=nums(c).age>=65||has(c,'dem')||anes(c,'podel');
+  let ids=q[3].slice();if(mh)ids=ids.map(x=>x==='sevo'?'propInf':x).concat('dantro');if(old)ids=ids.filter(x=>x!=='midaz');if(med(c,'maoi'))ids=ids.filter(x=>x!=='ephed');
+  if(k==='galma'&&asp.length)toast('Aspiration risk: '+andL(asp)+'. Consider an ETT.');
+  if(k==='gaett'&&asp.length){c.p.ind='Modified RSI'}
+  c.p.rx=[...new Set([...c.p.rx.filter(id=>!['ind','opi','nmb','mnt','rev','la'].includes(RXD[id].cat)),...ids])];
+  if(c.p.mnt==='TIVA'||mh){c.p.ponv=c.p.ponv.filter(x=>x!=='Propofol TIVA')}
+  if(!c.p.mon.length)c.p.mon=['Standard ASA monitors'];if(!c.p.acc.length)c.p.acc=['One PIV'];
+  if(!c.p.an.length)c.p.an=['Acetaminophen'];if(!c.p.dispo)c.p.dispo=c.setting==='Outpatient'?'PACU → home':'PACU → floor'}
+/* PONV prophylaxis sized to the Apfel score, skipping what doesn't fit the patient */
+function applyPonv(c){const AP=apfel(c),q=num(stv(c,'ecg','qtc')),old=nums(c).age>=65||has(c,'dem');
+  let want=AP.sc>=3?['dexa','ond','scop']:AP.sc>=1?['dexa','ond']:['ond'];
+  if(q>=470)want=want.filter(x=>x!=='ond').concat('aprep');if(old||has(c,'pd'))want=want.filter(x=>x!=='scop').concat(AP.sc>=3?['aprep']:[]);
+  if((has(c,'dm1')||has(c,'dm2'))&&/A1c\s*(\d+)/i.test(c.hx.dm2||c.hx.dm1||'')&&+RegExp.$1>=9)want=want.filter(x=>x!=='dexa');
+  let n=0;[...new Set(want)].forEach(id=>{if(!uses(c,id)){c.p.rx.push(id);n++}});
+  if(AP.sc>=3&&!c.p.ponv.includes('Minimize opioids')){c.p.ponv.push('Minimize opioids');n++}return n}
+
 /* ================= STANFORD CA-1 TUTORIAL (2022, 16th ed.; PDF page numbers) ================= */
 const STAN=[[1,'Standard monitors',15,19],[2,'Inhalational agents',20,23],[3,'MAC and awareness',24,26],[4,'IV anesthetic agents',27,30],[5,'Rational opioid use',31,35],[6,'Intraoperative hypotension and hypertension',36,38],[7,'Neuromuscular blocking agents',39,43],
  [8,'Difficult airway algorithm',44,47],[9,'Fluid management',48,51],[10,'Transfusion therapy',52,56],[11,'Hypoxemia',57,60],[12,'Electrolyte abnormalities',61,65],[13,'Hypothermia and shivering',66,68],[14,'PONV',69,71],[15,'Extubation criteria and delayed emergence',72,74],
@@ -695,7 +759,7 @@ function syncCard(){
 
 function newCase(){return{id:uid(),created:today(),date:today(),time:'',room:'',done:false,
  proc:'',indic:'',side:'',svc:'',surgeon:'',preop:'',
- team:{att:'',prov:'',contacted:false,staffed:false},log:{proc:{},fb:'',topics:''},urg:'',setting:'',dur:'',ebl:'',pos:[],srisk:'',hrs:false,procNote:'',
+ team:{att:'',prov:'',contacted:false,staffed:false},log:{proc:{},fb:'',topics:''},sx:{},neg:{},urg:'',setting:'',dur:'',ebl:'',pos:[],srisk:'',hrs:false,procNote:'',
  age:'',sex:'',ht:'',wt:'',vit:{bp:'',hr:'',spo2:'',rr:'',t:''},
  hx:{},hxTxt:'',psh:'',anes:[],anesTxt:'',alg:[],algTxt:'',meds:{},medTxt:'',
  npo:{sol:'',clr:'',note:''},func:'',code:'',ad:'',
@@ -943,6 +1007,10 @@ function flags(c){
   if(RX.some(d=>d.cat==='la'&&uses(c,d.id))&&pl(c,'tech','Peripheral nerve block')&&!uses(c,'lipid'))add('info','Plan: lipid emulsion','Know where lipid emulsion is before the block.',{pl:1});
   if(/DNR|DNI/.test(c.code))add('amb','Code status: '+c.code,'Required reconsideration: discuss whether the DNR is suspended, maintained, or modified in the OR and PACU, and document.');
   if(c.setting==='Outpatient'&&(has(c,'osa')||A.diff||n.bmi>=50))add('info','Outpatient','Confirm an escort and that outpatient discharge is appropriate.');
+  {const sx=c.sx||{},a=[sx.cp?'chest pain':'',sx.sync?'syncope':'',sx.orth?'orthopnea':'',sx.doe&&(has(c,'hf')||has(c,'aos')||has(c,'cad'))?'exertional dyspnea with heart disease':''].filter(Boolean);
+   if(a.length)add(c.urg==='Elective'||!c.urg?'warn':'amb','Active cardiac symptoms',`${sent(andL(a))} New or worsening symptoms before ${c.urg==='Elective'||!c.urg?'elective ':''}surgery may need evaluation first (ECG, echo, cardiology); raise it with the attending.`)}
+  if((c.sx||{}).ivhard)add('info','Hard IV access','Plan for ultrasound or extra time; ask early for help.');
+  if((c.sx||{}).noarm)add('info','Arm to avoid','No IV, BP cuff, or line on that arm (fistula or node dissection): note which side.');
   return F}
 
 function oneLiner(c){
@@ -1050,7 +1118,7 @@ function emailText(c){const n=nums(c),p=c.p,L=[],j=a=>a.join(', '),W=whySug(c),w
   L.push('','Past medical history:');
   const pm=EMAIL_SYS.map(([lab,ss])=>{const it=SYS.filter(s=>ss.includes(s.n)).flatMap(s=>s.c.filter(([id])=>has(c,id)).map(([id,nm])=>nm+(c.hx[id]?' ('+c.hx[id]+')':'')));return it.length?`- ${lab}: ${it.join('; ')}`:''}).filter(Boolean);
   L.push(...(pm.length?pm:['- None significant']));
-  if(c.hxTxt)L.push('- Also: '+c.hxTxt);if(c.psh)L.push('- PSH: '+c.psh);
+  if(c.hxTxt)L.push('- Also: '+c.hxTxt);if(sxText(c))L.push('- Symptoms: '+sxText(c));negGroups(c).forEach(([g,l])=>L.push(`- ${g}: denies ${l.join(', ')}`));if(c.psh)L.push('- PSH: '+c.psh);
   if(c.func||c.r.mets)L.push('- Functional capacity: '+[c.r.mets==='y'?'≥ 4 METs':c.r.mets==='n'?'< 4 METs':'',c.func].filter(Boolean).join('; '));
   L.push('','Labs/imaging:');
   const lb=labText(c),sl=studyLines(c),miss=testsFor(c).filter(x=>!x[1]).map(x=>x[0].replace(/ \(.*\)$/,''));
@@ -1111,6 +1179,7 @@ function mini(c){const n=nums(c),e=esc,A=airway(c);
    ${row('NPO',np,1)}${row('Allergies',al?al+(c.algTxt?' ('+c.algTxt+')':''):'',1,al&&al!=='NKDA'?'al2':'')}
    ${row('Airway',aw!=='not entered'?aw+(A.diff?' · DIFFICULT':''):'',1)}${row('Vitals',vit,1)}
    ${row('Cardiac',card)}${row('Pulm',pulm)}${row('Other',other)}${row('Anesthesia',an)}${row('Meds',meds)}
+   ${row('Symptoms',sxText(c))}${row('Denies',negText(c))}
    ${row('Access',acc,1)}${warn.length?row('Alerts',warn.join('; '),0,'al2'):''}</dl></div>`}
 function daySheet(list){const d=list[0]&&list[0].date;
   const team=[...new Set(list.flatMap(c=>[c.team.att,c.team.prov]).filter(Boolean))].join(', ');
@@ -1130,6 +1199,7 @@ function noteText(c){
   if(c.preop.trim())L.push('Seen in pre-op: '+sent(c.preop.trim()));
   const hx=SYS.map(s=>{const it=s.c.filter(([id])=>has(c,id)).map(([id,nm])=>nm+(c.hx[id]?' ('+c.hx[id]+')':''));return it.length?`${s.n}: ${it.join('; ')}`:''}).filter(Boolean);
   L.push('','PMH:'+(hx.length?'\n'+hx.map(x=>'- '+x).join('\n'):' none entered')+(c.hxTxt?'\n- Other: '+c.hxTxt:''));
+  if(sxText(c))L.push('Symptoms: '+sent(sxText(c)));if(negs(c).length)L.push('Pertinent negatives: '+negGroups(c).map(([g,l])=>lc1(g)+': denies '+l.join(', ')).join('; ')+'.');
   if(c.psh)L.push('PSH: '+c.psh);
   const an=c.anes.filter(x=>!['mhfam','pche'].includes(x)).map(x=>ANESN[x]);
   L.push('Anesthesia history: '+(an.length?an.join('; '):'not entered')+(c.anesTxt?'. '+c.anesTxt:'')+'.');
@@ -1271,7 +1341,7 @@ function halfCard(c){const n=nums(c),e=esc,A=airway(c),R=rcri(c),SB=stopbang(c),
   h+=`<div class="blk"><h4>Airway${A.diff?' · difficult predicted':''}</h4><p>${e(awText(c))}.${A.dl.length||A.dmv.length?` <span class="mut">DL: ${e(A.dl.join(', ')||'—')}. DMV: ${e(A.dmv.join(', ')||'—')}.</span>`:''}</p>${p.dev||p.ett||p.backup?`<p><b>Plan:</b> ${e([p.dev,p.ett,p.backup?'backup: '+p.backup:'',p.rescue.length?'rescue: '+p.rescue.join(', '):''].filter(Boolean).join('; '))}</p>`:''}</div>`;
   const hx=SYS.map(sy=>{const it=sy.c.filter(([id])=>has(c,id)).map(([id])=>shortCond(id,c));return it.length?sy.n.split(/[ ,]/)[0]+': '+it.join(', '):''}).filter(Boolean);
   const an=c.anes.map(x=>ANESN[x]);
-  if(hx.length||an.length||c.hxTxt)h+=`<div class="blk"><h4>History</h4><p>${e([...hx,c.hxTxt,an.length?'Anesthesia: '+an.join(', '):''].filter(Boolean).join('. '))}.</p></div>`;
+  if(hx.length||an.length||c.hxTxt||negs(c).length||sxText(c))h+=`<div class="blk"><h4>History</h4><p>${e([...hx,c.hxTxt,an.length?'Anesthesia: '+an.join(', '):'',sxText(c)?'Symptoms: '+sxText(c):''].filter(Boolean).join('. '))}${hx.length||an.length||c.hxTxt||sxText(c)?'.':''}${negs(c).length?` <span class="mut">Denies ${e(negText(c))}.</span>`:''}</p></div>`;
   const ms=Object.keys(c.meds);
   if(ms.length)h+=`<div class="blk"><h4>Meds</h4><p>${ms.map(k=>`<b>${e(MD[k].n.split(' (')[0])}</b>${c.meds[k]?' '+e(c.meds[k]):''}: ${e(MD[k].s)}`).join('; ')}</p></div>`;
   const sl=studyLines(c);if(sl.length)h+=`<div class="blk"><h4>Studies</h4><p>${sl.map(([k,v])=>`<b>${e(k)}</b> ${e(v)}`).join('; ')}</p></div>`;
@@ -1296,7 +1366,7 @@ function curId(){const h=parseHash();return h[0]==='c'?h[1]:null}
 function cur(){const id=curId();return id?P(id):null}
 function render(keep){
   const h=parseHash();const y=window.scrollY;RD=null;
-  if(h[0]==='c'&&P(h[1]))renderCase(P(h[1]),h[2]||'chart');
+  if(h[0]==='c'&&P(h[1]))renderCase(P(h[1]),h[2]||'quick');
   else if(h[0]==='ref')renderRef();
   else if(h[0]==='rot')renderRot();
   else if(h[0]==='pdf'){const[a,b]=String(h[1]||'1').split('-').map(Number);renderPdf(a||1,b||a||1)}
@@ -1332,7 +1402,7 @@ function renderHome(){
   app.innerHTML=h}
 function caseRow(c){const n=nums(c),F=flags(c).filter(f=>f.k==='warn');
   const sub=[n.age!=null?n.age+(c.sex||''):'',c.r.asa?'ASA '+c.r.asa+(c.r.e||c.urg==='emergent'?'E':''):'',c.p.tech.length?c.p.tech.join(' + '):''].filter(Boolean).join(' · ');
-  return`<a class="pt" href="#c/${c.id}/chart"><span class="ab">${esc(c.room?'OR '+c.room.replace(/^OR\s*/i,''):'—')}<small>${esc(tm(c.time)||'')}</small></span><span class="txt"><span class="nm">${esc(c.proc||'New case')}</span><span class="ds">${esc(sub||'Details not entered')}</span>${F.length?`<span class="tag warn">${F.length} alert${F.length>1?'s':''}</span>`:''}${!c.done&&['Today','Tomorrow'].includes(dayLabel(c.date))?(c.team.staffed?'<span class="tag">emailed</span>':'<span class="tag amb">email not sent</span>'):''}</span>${GO}</a>`}
+  return`<a class="pt" href="#c/${c.id}/quick"><span class="ab">${esc(c.room?'OR '+c.room.replace(/^OR\s*/i,''):'—')}<small>${esc(tm(c.time)||'')}</small></span><span class="txt"><span class="nm">${esc(c.proc||'New case')}</span><span class="ds">${esc(sub||'Details not entered')}</span>${F.length?`<span class="tag warn">${F.length} alert${F.length>1?'s':''}</span>`:''}${!c.done&&['Today','Tomorrow'].includes(dayLabel(c.date))?(c.team.staffed?'<span class="tag">emailed</span>':'<span class="tag amb">email not sent</span>'):''}</span>${GO}</a>`}
 
 /* ---------- case ---------- */
 function renderCase(c,tab){
@@ -1340,8 +1410,51 @@ function renderCase(c,tab){
   const where=[c.room?'OR '+c.room.replace(/^OR\s*/i,''):'',tm(c.time)].filter(Boolean).join(' · ');
   hd.innerHTML=`${HOME}<button class="back" data-a="home" aria-label="All cases">‹</button><h1>${esc(c.proc||'New case')}<small>${esc(where)}</small></h1><a class="refbtn" href="#ref">Reference</a>`;
   const nw=flags(c).filter(f=>f.k==='warn').length;
-  tabsEl.innerHTML=`<nav class="tabs">${[['chart','Chart'],['risk','Risk'+(nw?`<span class="n">${nw}</span>`:'')],['plan','Plan'],['card','Outputs']].map(([k,l])=>`<a href="#c/${c.id}/${k}" ${tab===k?'aria-current="page"':''}>${l}</a>`).join('')}</nav>`;
-  app.innerHTML=tab==='risk'?vRisk(c):tab==='plan'?vPlan(c):tab==='card'?vCard(c):vChart(c)}
+  tabsEl.innerHTML=`<nav class="tabs">${[['quick','Quick'],['chart','Chart'],['risk','Risk'+(nw?`<span class="n">${nw}</span>`:'')],['plan','Plan'],['card','Outputs']].map(([k,l])=>`<a href="#c/${c.id}/${k}" ${tab===k?'aria-current="page"':''}>${l}</a>`).join('')}</nav>`;
+  app.innerHTML=tab==='quick'?vQuick(c):tab==='risk'?vRisk(c):tab==='plan'?vPlan(c):tab==='card'?vCard(c):vChart(c)}
+
+/* ---------- quick prep: one screen, mini H&P order, tap to mark ---------- */
+const qchip=(c,x)=>{const st=qpState(c,x);return`<button type="button" class="chip${st==='+'?' on':st==='-'?' neg':''}" data-a="qp" data-v="${x.id}"><span class="pm">${st==='+'?'+':st==='-'?'−':''}</span>${esc(x.l)}</button>`};
+function qsec(c,g,extra=''){const items=g.it.map(x=>QPD[x[0]]).filter(x=>qpApplies(c,x));
+  const on=items.filter(x=>qpState(c,x)==='+'),open=items.some(x=>!qpState(c,x));
+  const det=on.filter(x=>x.m.hx||x.m.med).map(x=>x.m.hx?`<label class="det"><b>${esc(x.l)}</b><input data-p="hx.${x.m.hx}" value="${esc(c.hx[x.m.hx])}" placeholder="${esc(COND[x.m.hx].ph||'detail')}" data-rr="1"></label>`:`<label class="det"><b>${esc(x.l)}</b><input data-p="meds.${x.m.med}" value="${esc(c.meds[x.m.med])}" placeholder="drug, last dose" data-rr="1"></label>`).join('');
+  return`<div class="card qsec"><h3>${esc(g.s)}</h3>${extra}<div class="chips">${items.map(x=>qchip(c,x)).join('')}</div>
+   ${open?`<button type="button" class="linkbtn allneg" data-a="qneg" data-v="${g.k}">Mark the rest denied</button>`:''}${det?`<div class="dets">${det}</div>`:''}</div>`}
+function vQuick(c){const n=nums(c),p=c.p,A=airway(c),AP=apfel(c),G=k=>QP.find(g=>g.k===k);
+  let h=`<div class="qleg"><span>Tap once: <b>+ present</b></span><span>twice: <b>− denied</b></span><span>three times: clear</span></div>`;
+  h+=`<div class="card qbasic"><h3>Case</h3>
+   <div class="row">${fld('Procedure','proc',c.proc,'placeholder="Lap chole"')}${fld('Surgeon','surgeon',c.surgeon,'placeholder="Dr. Liepert"')}</div>
+   <div class="row">${fld('Age','age',c.age,'inputmode="numeric" data-rr="1"','s')}<div class="fld"><span>Sex</span>${seg('sex',c.sex,[['M','M'],['F','F']])}</div>${fld('Wt <i>kg</i>','wt',c.wt,'inputmode="decimal" data-rr="1"','s')}${fld('Ht <i>cm</i>','ht',c.ht,'inputmode="decimal" data-rr="1"','s')}</div>
+   <div class="row">${fld('OR','room',c.room,'','s')}${fld('Start','time',c.time,'type="time" data-rr="1"')}${fld('Date','date',c.date,'type="date" data-rr="1"')}</div>
+   ${segF('Urgency','urg',c.urg,['Elective','Urgent','Emergent'])}${segF('Setting','setting',c.setting,['Outpatient','Same-day admit','Inpatient'])}</div>`;
+  h+=`<div class="card"><h3>Allergies</h3>${multi('alg',c.alg,ALG)}${fld('Reaction','algTxt',c.algTxt,'placeholder="Penicillin: hives"')}</div>`;
+  const npoHint=n.h_sol!=null||n.h_clr!=null?`<p class="hint">${[n.h_sol!=null?'Solids '+n.h_sol+' h':'',n.h_clr!=null?'clears '+n.h_clr+' h':''].filter(Boolean).join(', ')} before the ${c.time?tm(c.time):'7:30a (assumed)'} start.</p>`:'';
+  const asp=aspiration(c);
+  h+=qsec(c,G('npo'),`<div class="btnrow" style="margin-bottom:4px"><button type="button" class="btn sm" data-a="npomn">NPO after midnight</button><button type="button" class="btn sm" data-a="npoclr">Clears until 2 h before</button></div>${npoHint}${asp.length?`<div class="flag warn" style="margin-bottom:6px"><b>Aspiration risk:</b> ${esc(andL(asp))}.</div>`:''}`);
+  h+=qsec(c,G('aw'),`${segF('Mallampati','aw.mp',c.aw.mp,[['1','I'],['2','II'],['3','III'],['4','IV']])}${fld('Prior airway','aw.prior',c.aw.prior,'placeholder="Grade 1, MAC 3, 7.0 ETT"')}`)+(A.diff?`<div class="flag warn" style="margin:-6px 0 12px"><b>Difficult airway predicted.</b> ${esc(andL(A.dl)||'prior difficult airway')}.</div>`:'');
+  h+=qsec(c,G('card'),segF('Climbs 2 flights without stopping?','r.mets',c.r.mets,[['y','Yes (≥ 4 METs)'],['n','No'],['u','Unknown']]));
+  h+=qsec(c,G('pulm'));
+  h+=qsec(c,G('oth'));
+  h+=qsec(c,G('meds'));
+  h+=qsec(c,G('anes'),`<div class="chips" style="margin-bottom:6px">${[['fine','Prior anesthesia: no problems'],['first','Never had anesthesia']].map(([v,l])=>`<button type="button" class="chip${c.anes.includes(v)?' on':''}" data-a="multi" data-p="anes" data-v="${v}">${l}</button>`).join('')}</div>`);
+  h+=qsec(c,G('acc'),`<div class="row">${fld('BP','vit.bp',c.vit.bp,'placeholder="132/84" data-rr="1"')}${fld('HR','vit.hr',c.vit.hr,'inputmode="numeric"','s')}${fld('SpO2','vit.spo2',c.vit.spo2,'inputmode="numeric"','s')}</div>${fld('IV / access','ex.iv',c.ex.iv,'placeholder="20g L hand"')}${fld('In pre-op','preop',c.preop,'placeholder="Anxious; confused but cooperative"')}`);
+  /* plan */
+  h+=`<h2 class="sec">Plan</h2><div class="card"><h3>Start from</h3><div class="chips">${QPLAN.map(([k,l])=>`<button type="button" class="chip" data-a="qplan" data-v="${k}">${esc(l)}</button>`).join('')}</div>
+   <p class="hint">Sets technique, airway, induction, maintenance, emergence, and the usual drugs, adjusted for MH, age, and MAOIs. Change anything below or on the Plan tab.</p>
+   ${multi('p.tech',p.tech,P_TECH)}
+   ${isGA(c)?`${segF('Airway','p.gaw',p.gaw,P_GAW)}${segF('Induction','p.ind',p.ind,P_IND)}${segF('Maintenance','p.mnt',p.mnt,P_MNT)}${segF('Emergence','p.emg',p.emg,P_EMG)}`:''}
+   ${pl(c,'tech','Neuraxial')?segF('Neuraxial','p.nax',p.nax,P_NAX):''}${pl(c,'tech','Peripheral nerve block')?fld('Block','p.blk',p.blk,'placeholder="Interscalene"'):''}
+   <div class="fld"><span>Drugs</span><div class="chips">${RX.filter(d=>uses(c,d.id)).map(d=>`<button type="button" class="chip on" data-a="rx" data-v="${d.id}">${esc(d.n)}${doseShort(d.id,n.wt)?' · '+esc(doseShort(d.id,n.wt)):''}</button>`).join('')||'<span class="sub">None yet: pick a starting point above.</span>'}</div></div>
+   <div class="fld"><span>PONV <i>(Apfel ${AP.sc}, ~${AP.risk}%: ${esc(AP.agents)})</i></span><div class="btnrow"><button type="button" class="btn sm" data-a="qponv">Add prophylaxis for Apfel ${AP.sc}</button></div></div>
+   <div class="fld"><span>Monitors and access</span>${multi('p.mon',p.mon,['Standard ASA monitors','Arterial line','Central line','Processed EEG (BIS)','Quantitative TOF'])}${multi('p.acc',p.acc,P_ACC)}</div>
+   <div class="fld"><span>Analgesia</span>${multi('p.an',p.an,['Acetaminophen','NSAID / ketorolac','Ketamine','Local infiltration','Single-shot block','IV opioid','PO opioid'])}</div>
+   ${segF('Disposition','p.dispo',p.dispo,P_DISPO)}
+   <p class="hint">Reasons, fluids, blood, ventilation, positioning, and consent are on the Plan tab.</p></div>`;
+  /* result */
+  h+=`<h2 class="sec">Mini H&amp;P</h2><div class="minipv"><section class="sheet day n2">${mini(c)}</section></div>
+   <div class="btnrow" style="margin-top:10px"><button type="button" class="btn primary" data-a="printhalf">Print half card</button><button type="button" class="btn" data-a="printdaysheet" data-v="${esc(c.date||'')}">Day sheet</button><button type="button" class="btn" data-a="copyemail">Copy staffing email</button></div>
+   <p class="hint">Everything here also fills the Chart, Risk, and Plan tabs.</p>`;
+  return h}
 
 function vChart(c){const n=nums(c);
   let h=`<div class="card"><h3>Case</h3>
@@ -1722,7 +1835,7 @@ app.addEventListener('click',async e=>{const c=cur();
   const sb=e.target.closest('.seg button');
   if(sb&&c&&sb.parentElement.dataset.seg){const k=sb.parentElement.dataset.seg,v=sb.dataset.v;setPath(c,k,getPath(c,k)===v?'':v);save();render(true);return}
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
-  if(a==='new'){const n=newCase();S.pts.unshift(n);save();location.hash='c/'+n.id+'/chart';return}
+  if(a==='new'){const n=newCase();S.pts.unshift(n);save();location.hash='c/'+n.id+'/quick';return}
   if(a==='syncnow'){syncNow();return}
   if(a==='printday'){printCases(S.pts.filter(x=>!x.done&&(x.date||'')===v).sort((x,y)=>(x.time||'99')<(y.time||'99')?-1:1));return}
   if(a==='refsec'){e.preventDefault();refSec=v;render();return}
@@ -1758,9 +1871,17 @@ app.addEventListener('click',async e=>{const c=cur();
   if(a==='copy'){const ok=await copyText(noteText(c));toast(ok?'Pre-op note copied.':'Couldn’t copy on this device.');return}
   if(a==='copyemail'){const ok=await copyText(emailText(c));toast(ok?'Email copied. Subject: '+emailSubject(c):'Couldn’t copy on this device.');return}
   if(a==='topic'){c.p.q=(c.p.q.trim()?c.p.q.trimEnd()+'\n':'')+v;save();render(true);return}
+  if(a==='qp'){const x=QPD[v];if(!x)return;c.neg=c.neg||{};const st=qpState(c,x);
+    if(st===''){qpSet(c,x.m,true);delete c.neg[v]}else if(st==='+'){qpSet(c,x.m,false);c.neg[v]=1}else delete c.neg[v];save();render(true);return}
+  if(a==='qneg'){const g=QP.find(g=>g.k===v);c.neg=c.neg||{};g.it.forEach(([id])=>{const x=QPD[id];if(qpApplies(c,x)&&!qpState(c,x))c.neg[id]=1});save();render(true);return}
+  if(a==='npomn'){if(!c.date){toast('Set the date first.');return}c.npo.sol=c.date+'T00:00';save();render(true);return}
+  if(a==='npoclr'){const st0=caseStart(c);if(!st0){toast('Set the date first.');return}const d=new Date(st0.getTime()-2*36e5);c.npo.clr=iso(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes());save();render(true);return}
+  if(a==='qplan'){applyQPlan(c,v);save();render(true);toast('Plan started. Adjust below.');return}
+  if(a==='qponv'){const k=applyPonv(c);save();render(true);toast(k?k+' added.':'Already covered.');return}
+  if(a==='printhalf'){printHtml(halfSheets([c]));return}
   if(a==='proc'){const s=c.log.proc[v];if(!s)c.log.proc[v]='a';else if(s==='a')c.log.proc[v]='s';else delete c.log.proc[v];save();render(true);return}
   if(a==='done'){c.done=!c.done;save();toast(c.done?'Marked done.':'Moved back to active.');location.hash='';return}
-  if(a==='dup'){const d=JSON.parse(JSON.stringify(c));d.id=uid();delete d._mod;d.done=false;d.created=today();S.pts.unshift(d);save();location.hash='c/'+d.id+'/chart';toast('Duplicated.');return}
+  if(a==='dup'){const d=JSON.parse(JSON.stringify(c));d.id=uid();delete d._mod;d.done=false;d.created=today();S.pts.unshift(d);save();location.hash='c/'+d.id+'/quick';toast('Duplicated.');return}
   if(a==='del'){if(confirm('Delete this case and everything entered for it?')){S.pts=S.pts.filter(x=>x.id!==c.id);save();location.hash=''}return}
 });
 hd.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;
